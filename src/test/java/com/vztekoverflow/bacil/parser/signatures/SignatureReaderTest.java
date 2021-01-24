@@ -33,4 +33,31 @@ public class SignatureReaderTest {
         assertEquals(268435455, reader.getSigned());
         assertEquals(-268435456, reader.getSigned());
     }
+
+    @Test
+    public void peekTest()
+    {
+        byte[] data = {0x06, 0x7B};
+        SignatureReader reader = new SignatureReader(data);
+        assertEquals(6, reader.peekUnsigned());
+        assertEquals(3, reader.peekSigned());
+        assertEquals(6, reader.peekUnsigned());
+        assertEquals(3, reader.peekSigned());
+        assertEquals(3, reader.getSigned());
+
+        assertEquals(-3, reader.peekSigned());
+        assertEquals(0x7B, reader.peekUnsigned());
+        assertEquals(-3, reader.peekSigned());
+        assertEquals(0x7B, reader.peekUnsigned());
+        assertEquals(0x7B, reader.getUnsigned());
+    }
+
+    @Test(expected = IndexOutOfBoundsException.class)
+    public void readTooMuch()
+    {
+        byte[] data = {0x06};
+        SignatureReader reader = new SignatureReader(data);
+        assertEquals(6, reader.getUnsigned());
+        reader.getUnsigned();
+    }
 }

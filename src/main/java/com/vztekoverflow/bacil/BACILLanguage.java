@@ -56,7 +56,7 @@ public class BACILLanguage extends TruffleLanguage<BACILContext> {
         }
 
         CLITablePtr entryPtr = CLITablePtr.fromToken(c.getCliHeader().getEntryPointToken());
-        CLIMethodDefTableRow entryMethodDef = c.getTables().getTableHeads().getMethodDefTableHead().skip(entryPtr);
+        CLIMethodDefTableRow entryMethodDef = c.getTableHeads().getMethodDefTableHead().skip(entryPtr);
 
         CILMethod entryMethod = new CILMethod(c, entryMethodDef);
         return entryMethod.getCallTarget();

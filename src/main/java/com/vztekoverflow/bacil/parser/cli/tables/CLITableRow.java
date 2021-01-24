@@ -40,7 +40,7 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
     public final T skip(CLITablePtr ptr) {
         if (getTableId() != ptr.getTableId())
         {
-            throw new BACILInternalError(String.format("Wrongly typed ptr used to index into table: %d, expected %d",
+            throw new BACILInternalError(String.format("Wrongly typed ptr used to index into table: used %d, expected %d",
                     ptr.getTableId(), getTableId()));
         }
 

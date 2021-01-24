@@ -4,6 +4,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.vztekoverflow.bacil.bytecode.BytecodeBuffer;
 import com.vztekoverflow.bacil.parser.cil.CILMethod;
+import com.vztekoverflow.bacil.parser.signatures.LocalVarSig;
 
 public class BytecodeNode extends Node {
 

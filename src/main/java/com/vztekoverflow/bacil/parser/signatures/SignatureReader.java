@@ -2,6 +2,7 @@ package com.vztekoverflow.bacil.parser.signatures;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.bacil.BACILInternalError;
+import com.vztekoverflow.bacil.parser.BACILParserException;
 import com.vztekoverflow.bacil.parser.CompressedInteger;
 import com.vztekoverflow.bacil.parser.Positionable;
 
@@ -83,5 +84,12 @@ public class SignatureReader implements Positionable {
         return toSigned(peekUnsigned());
     }
 
+
+    public void assertUnsigned(int expected, String type)
+    {
+        int result = getUnsigned();
+        if (result != expected)
+            throw new BACILParserException(String.format("Unexpected value when parsing %s: expected %d, got %d", type, expected, result));
+    }
 
 }

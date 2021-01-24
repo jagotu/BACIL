@@ -32,7 +32,7 @@ public class DebugNode extends RootNode {
 
     @Override
     public Object execute(VirtualFrame frame) {
-        for(CLIMethodDefTableRow methodRow : component.getTables().getTableHeads().getMethodDefTableHead())
+        for(CLIMethodDefTableRow methodRow : component.getTableHeads().getMethodDefTableHead())
         {
             System.out.println(methodRow.getName().read(component.getStringHeap()));
         }

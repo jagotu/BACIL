@@ -9,6 +9,7 @@ import com.vztekoverflow.bacil.parser.BACILParserException;
 import com.vztekoverflow.bacil.parser.ByteSequenceBuffer;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITables;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablesHeader;
+import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableHeads;
 import com.vztekoverflow.bacil.parser.pe.PEFile;
 import org.graalvm.polyglot.io.ByteSequence;
 
@@ -52,10 +53,6 @@ public class CLIComponent {
 
     public byte[] getGuidHeap() {
         return guidHeap;
-    }
-
-    public CLITables getTables() {
-        return tables;
     }
 
     public int getFileOffsetForRVA(int RVA) {
@@ -114,6 +111,9 @@ public class CLIComponent {
         return new CLIComponent(cliHeader, cliMetadata, blobHeap, stringHeap, guidHeap, tables, peFile, language);
     }
 
-
+    public CLITableHeads getTableHeads()
+    {
+        return tables.getTableHeads();
+    }
 
 }
