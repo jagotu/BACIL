@@ -1,11 +1,8 @@
 package com.vztekoverflow.bacil;
 
 import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
-import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.source.Source;
-import com.vztekoverflow.bacil.nodes.DebugNode;
 import com.vztekoverflow.bacil.parser.BACILParserException;
 import com.vztekoverflow.bacil.parser.cil.CILMethod;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
@@ -13,8 +10,6 @@ import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLIMethodDefTableRow;
 import com.vztekoverflow.bacil.runtime.BACILContext;
 import org.graalvm.polyglot.io.ByteSequence;
-
-import java.lang.reflect.Method;
 
 @TruffleLanguage.Registration(id = BACILLanguage.ID, name = BACILLanguage.NAME, interactive = false, defaultMimeType = BACILLanguage.CIL_PE_MIME_TYPE,
 byteMimeTypes = {BACILLanguage.CIL_PE_MIME_TYPE})
@@ -33,6 +28,22 @@ public class BACILLanguage extends TruffleLanguage<BACILContext> {
     @Override
     protected BACILContext createContext(Env env) {
         return new BACILContext(this, env);
+    }
+
+    private static class AddCLIArgsCallTarget implements CallTarget
+    {
+
+        private final CallTarget inner;
+
+        private AddCLIArgsCallTarget(CallTarget inner) {
+            this.inner = inner;
+        }
+
+        @Override
+        public Object call(Object... arguments) {
+            assert arguments.length == 0;
+            return inner.call((Object) null);
+        }
     }
 
     @Override
@@ -56,9 +67,8 @@ public class BACILLanguage extends TruffleLanguage<BACILContext> {
         }
 
         CLITablePtr entryPtr = CLITablePtr.fromToken(c.getCliHeader().getEntryPointToken());
-        CLIMethodDefTableRow entryMethodDef = c.getTableHeads().getMethodDefTableHead().skip(entryPtr);
 
-        CILMethod entryMethod = new CILMethod(c, entryMethodDef);
-        return entryMethod.getCallTarget();
+        CILMethod entryMethod = c.getLocalMethod(entryPtr);
+        return new AddCLIArgsCallTarget(entryMethod.getCallTarget());
     }
 }

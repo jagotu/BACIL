@@ -23,7 +23,10 @@ public class BogoMain {
         try {
             final Source source = Source.newBuilder(CIL, new File(args[0])).build();
             final Context context = Context.newBuilder(CIL).allowNativeAccess(true).build();
-            context.eval(source);
+            final long start = System.currentTimeMillis();
+            System.out.println("Returned: " + context.eval(source));
+            final long done = System.currentTimeMillis();
+            System.out.println("Runtime: " + (done-start) + "ms");
 /*            final String path = "kernel32.dll";
             String loadExpression;
             loadExpression = String.format("load \"%s\"", path);

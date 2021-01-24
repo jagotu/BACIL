@@ -1,5 +1,6 @@
 package com.vztekoverflow.bacil.runtime.types;
 
+import com.vztekoverflow.bacil.BACILInternalError;
 import com.vztekoverflow.bacil.parser.BACILParserException;
 import com.vztekoverflow.bacil.parser.signatures.SignatureReader;
 
@@ -61,6 +62,7 @@ public abstract class Type {
             case ELEMENT_TYPE_U8:
             case ELEMENT_TYPE_I8:
             case ELEMENT_TYPE_R4:
+            case ELEMENT_TYPE_R8:
             case ELEMENT_TYPE_I:
             case ELEMENT_TYPE_U:
             case ELEMENT_TYPE_OBJECT:
@@ -114,4 +116,18 @@ public abstract class Type {
         return type;
     }
 
+    public Object defaultConstructor()
+    {
+        return null;
+    }
+
+    public Object fromStackVar(Object ref, long primitive)
+    {
+        throw new BACILInternalError("Conversion from stack var to type " + getTypeCategory() + "not implemented!");
+    }
+
+    public void toStackVar(Object[] refs, long[] primitives, int slot, Object value)
+    {
+        refs[slot] = value;
+    }
 }

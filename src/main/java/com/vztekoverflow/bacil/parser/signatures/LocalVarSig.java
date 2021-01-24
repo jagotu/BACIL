@@ -68,4 +68,8 @@ public class LocalVarSig {
         return new LocalVarSig(varTypes);
 
     }
+
+    public Type[] getVarTypes() {
+        return varTypes;
+    }
 }

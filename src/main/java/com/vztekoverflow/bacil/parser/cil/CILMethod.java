@@ -25,9 +25,14 @@ public class CILMethod {
 
     private final LocalVarSig localVarSig;
     private final MethodDefSig methodDefSig;
+    private final String name;
+
+    private final boolean initLocals;
 
     private static final byte CORILMETHOD_TINYFORMAT = 2;
     private static final byte CORILMETHOD_FATFORMAT = 3;
+    private static final byte CORILMETHOD_INITLOCALS = 0x10;
+    private static final byte CORILMETHOD_MORESECTS = 0x8;
 
     public CILMethod(CLIComponent component, CLIMethodDefTableRow methodDef)
     {
@@ -45,6 +50,7 @@ public class CILMethod {
             this.flags = CORILMETHOD_TINYFORMAT;
             this.maxStack = 8;
             this.localVarSig = null;
+            this.initLocals = false;
             size = firstByte >> 2;
         } else if((firstByte & 3) == CORILMETHOD_FATFORMAT) {
             short firstWord = (short)(firstByte | (buf.getByte() << 8));
@@ -69,10 +75,17 @@ public class CILMethod {
                 this.localVarSig = LocalVarSig.read(localVarSig);
             }
 
+            initLocals = (flags & CORILMETHOD_INITLOCALS) != 0;
+            if((flags & CORILMETHOD_MORESECTS) != 0)
+            {
+                throw new BACILParserException("Multiple sections in CIL method header not supported.");
+            }
 
         } else {
             throw new BACILParserException("Invalid CorILMethod flags");
         }
+
+        this.name = methodDef.getName().read(component.getStringHeap());
 
         final byte[] body = buf.subSequence(size).toByteArray();
         //TODO other method types
@@ -88,5 +101,34 @@ public class CILMethod {
     public CallTarget getCallTarget() {
         return callTarget;
     }
+
+    public short getMaxStack() {
+        return maxStack;
+    }
+
+    public CLIMethodDefTableRow getMethodDef() {
+        return methodDef;
+    }
+
+    public int getFlags() {
+        return flags;
+    }
+
+    public LocalVarSig getLocalVarSig() {
+        return localVarSig;
+    }
+
+    public MethodDefSig getMethodDefSig() {
+        return methodDefSig;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public boolean isInitLocals() {
+        return initLocals;
+    }
+
 
 }

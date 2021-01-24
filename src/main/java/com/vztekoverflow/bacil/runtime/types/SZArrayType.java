@@ -27,6 +27,9 @@ public class SZArrayType extends Type {
         Type inner = Type.create(reader);
 
         return new SZArrayType(inner);
-
     }
+
+
+
+
 }

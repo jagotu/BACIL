@@ -2,6 +2,7 @@ package com.vztekoverflow.bacil.parser.cli.tables;
 
 
 import com.vztekoverflow.bacil.BACILInternalError;
+import com.vztekoverflow.bacil.bytecode.Bytes;
 import com.vztekoverflow.bacil.parser.BACILParserException;
 
 import java.util.Iterator;
@@ -55,39 +56,26 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
 
     protected final byte getByte(int offset)
     {
-        return tables.getTablesData()[cursor+offset];
+        final byte[] tableData = tables.getTablesData();
+        return tableData[cursor+offset];
     }
 
     protected final short getShort(int offset)
     {
         final byte[] tableData = tables.getTablesData();
-        short result = (short)(tableData[cursor+offset] & 0xff);
-        result |= (tableData[cursor+offset+1] & 0xff) << 8;
-        return result;
+        return Bytes.getShort(tableData, cursor+offset);
     }
 
     protected final int getInt(int offset)
     {
         final byte[] tableData = tables.getTablesData();
-        int result = (tableData[cursor+offset] & 0xff);
-        result |= (tableData[cursor+offset+1] & 0xff) << 8;
-        result |= (tableData[cursor+offset+2] & 0xff) << 16;
-        result |= (tableData[cursor+offset+3] & 0xff) << 24;
-        return result;
+        return Bytes.getInt(tableData, cursor+offset);
     }
 
     protected final long getLong(int offset)
     {
         final byte[] tableData = tables.getTablesData();
-        long result = (tableData[cursor+offset] & 0xff);
-        result |= (tableData[cursor+offset+1] & 0xff) << 8;
-        result |= (tableData[cursor+offset+2] & 0xff) << 16;
-        result |= ((long)tableData[cursor+offset+3] & 0xff) << 24;
-        result |= ((long)tableData[cursor+offset+4] & 0xff) << 32;
-        result |= ((long)tableData[cursor+offset+5] & 0xff) << 40;
-        result |= ((long)tableData[cursor+offset+6] & 0xff) << 48;
-        result |= ((long)tableData[cursor+offset+7] & 0xff) << 56;
-        return result;
+        return Bytes.getLong(tableData, cursor+offset);
     }
 
     @Override

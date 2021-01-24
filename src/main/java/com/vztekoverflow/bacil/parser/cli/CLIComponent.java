@@ -7,11 +7,15 @@ import com.oracle.truffle.api.source.Source;
 import com.vztekoverflow.bacil.BACILLanguage;
 import com.vztekoverflow.bacil.parser.BACILParserException;
 import com.vztekoverflow.bacil.parser.ByteSequenceBuffer;
+import com.vztekoverflow.bacil.parser.cil.CILMethod;
+import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITables;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablesHeader;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableHeads;
 import com.vztekoverflow.bacil.parser.pe.PEFile;
 import org.graalvm.polyglot.io.ByteSequence;
+
+import java.util.HashMap;
 
 public class CLIComponent {
 
@@ -54,6 +58,8 @@ public class CLIComponent {
     public byte[] getGuidHeap() {
         return guidHeap;
     }
+
+    public final HashMap<Integer, CILMethod> localMethods = new HashMap<>();
 
     public int getFileOffsetForRVA(int RVA) {
         return pe.getFileOffsetForRVA(RVA);
@@ -109,6 +115,15 @@ public class CLIComponent {
         final byte[] guidHeap = cliMetadata.getStream("#GUID", bytes).toByteArray();
 
         return new CLIComponent(cliHeader, cliMetadata, blobHeap, stringHeap, guidHeap, tables, peFile, language);
+    }
+
+    public CILMethod getLocalMethod(CLITablePtr token)
+    {
+        if(!localMethods.containsKey(token.getRowNo()))
+        {
+            localMethods.put(token.getRowNo(), new CILMethod(this, tables.getTableHeads().getMethodDefTableHead().skip(token)));
+        }
+        return localMethods.get(token.getRowNo());
     }
 
     public CLITableHeads getTableHeads()

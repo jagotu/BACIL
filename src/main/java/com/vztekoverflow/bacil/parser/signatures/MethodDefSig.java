@@ -61,6 +61,34 @@ public class MethodDefSig {
 
         return new MethodDefSig(hasThis, explicitThis, (byte)callingConvention, genParamCount, retType, paramTypes);
 
+    }
 
+    public int getParamCount()
+    {
+        return paramTypes.length;
+    }
+
+    public boolean isHasThis() {
+        return hasThis;
+    }
+
+    public boolean isExplicitThis() {
+        return explicitThis;
+    }
+
+    public byte getCallingConvention() {
+        return callingConvention;
+    }
+
+    public int getGenParamCount() {
+        return genParamCount;
+    }
+
+    public Type getRetType() {
+        return retType;
+    }
+
+    public Type[] getParamTypes() {
+        return paramTypes;
     }
 }
