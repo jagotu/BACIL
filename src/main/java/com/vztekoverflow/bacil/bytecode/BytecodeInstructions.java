@@ -397,7 +397,8 @@ public class BytecodeInstructions {
         return stackEffectArray[opcode];
     }
 
-    public static ExecutionStackType[][] binaryNumericResultTypes = new ExecutionStackType[EXECUTION_STACK_TAG_MAX+1][EXECUTION_STACK_TAG_MAX+1];
+    @CompilationFinal(dimensions = 2)
+    public static final ExecutionStackType[][] binaryNumericResultTypes = new ExecutionStackType[EXECUTION_STACK_TAG_MAX+1][EXECUTION_STACK_TAG_MAX+1];
 
     public static void binaryNumericResult(byte arg1, byte arg2, ExecutionStackType result)
     {

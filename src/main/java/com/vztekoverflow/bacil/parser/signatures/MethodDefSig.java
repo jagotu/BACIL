@@ -1,5 +1,6 @@
 package com.vztekoverflow.bacil.parser.signatures;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.bacil.runtime.types.Type;
 
 public class MethodDefSig {
@@ -9,6 +10,8 @@ public class MethodDefSig {
     private final byte callingConvention;
     private final int genParamCount;
     private final Type retType;
+
+    @CompilerDirectives.CompilationFinal(dimensions = 1)
     private final Type[] paramTypes;
 
     public MethodDefSig(boolean hasThis, boolean explicitThis, byte callingConvention, int genParamCount, Type retType, Type[] paramTypes) {

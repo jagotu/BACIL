@@ -22,7 +22,7 @@ public class BogoMain {
     public static void main(String[] args) {
         try {
             final Source source = Source.newBuilder(CIL, new File(args[0])).build();
-            final Context context = Context.newBuilder(CIL).allowNativeAccess(true).build();
+            final Context context = Context.newBuilder(CIL).allowNativeAccess(true).allowExperimentalOptions(true).build();
             final long start = System.currentTimeMillis();
             System.out.println("Returned: " + context.eval(source));
             final long done = System.currentTimeMillis();

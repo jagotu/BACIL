@@ -197,6 +197,7 @@ public class BytecodeNode extends Node {
 
     }
 
+    @ExplodeLoop
     public static void prepareLocals(int argsCount, int varsCount, Type[] localTypes, CILMethod method, Object[] locals, Object[] args)
     {
         if(method.isInitLocals())
@@ -210,16 +211,21 @@ public class BytecodeNode extends Node {
         if (argsCount >= 0) System.arraycopy(args, 0, locals, varsCount, argsCount);
     }
 
+    @ExplodeLoop
     public static Object[] prepareArgs(long[] primitives, Object[] refs, int top, CILMethod method)
     {
-        final int argsCount = method.getMethodDefSig().getParamCount();
 
+        final int argsCount = method.getMethodDefSig().getParamCount();
         final Object[] args = new Object[argsCount];
         final int firstArg = top - argsCount;
+        final Type[] targetTypes = method.getMethodDefSig().getParamTypes();
+
+        CompilerAsserts.partialEvaluationConstant(argsCount);
+
 
         for(int i = 0; i < argsCount; i++)
         {
-            args[i] = method.getMethodDefSig().getParamTypes()[i].fromStackVar(refs[firstArg+i], primitives[firstArg+i]);
+            args[i] = targetTypes[i].fromStackVar(refs[firstArg+i], primitives[firstArg+i]);
         }
 
         return args;
@@ -303,6 +309,7 @@ public class BytecodeNode extends Node {
             refs[slot1] = ExecutionStackType.EXECUTION_STACK_INT32;
 
         } else {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILInternalError("Unimplemented.");
         }
     }

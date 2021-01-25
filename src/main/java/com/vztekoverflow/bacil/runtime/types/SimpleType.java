@@ -1,6 +1,7 @@
 package com.vztekoverflow.bacil.runtime.types;
 
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.bacil.BACILInternalError;
 import com.vztekoverflow.bacil.runtime.ExecutionStackType;
 
@@ -81,13 +82,15 @@ public class SimpleType extends Type {
                 case ELEMENT_TYPE_R8:
                 case ELEMENT_TYPE_I:
                 case ELEMENT_TYPE_U:
-                    if(ref == ExecutionStackType.EXECUTION_STACK_INT32)
+                    if(ref == ExecutionStackType.EXECUTION_STACK_INT32) {
+                        CompilerDirectives.transferToInterpreterAndInvalidate();
                         throw new BACILInternalError("Attempting to store int32 stack slot to an int64 object slot");
+                    }
                     return value;
             }
 
         }
-
+        CompilerDirectives.transferToInterpreterAndInvalidate();
         throw new BACILInternalError("Unrecognized stack var type");
     }
 
