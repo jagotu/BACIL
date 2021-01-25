@@ -1,5 +1,6 @@
 package com.vztekoverflow.bacil.parser.cli;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.TruffleLanguage;
@@ -11,6 +12,7 @@ import com.vztekoverflow.bacil.parser.cil.CILMethod;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITables;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablesHeader;
+import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableConstants;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableHeads;
 import com.vztekoverflow.bacil.parser.pe.PEFile;
 import org.graalvm.polyglot.io.ByteSequence;
@@ -59,7 +61,9 @@ public class CLIComponent {
         return guidHeap;
     }
 
-    public final HashMap<Integer, CILMethod> localMethods = new HashMap<>();
+    //public final HashMap<Integer, CILMethod> localMethods = new HashMap<>();
+    @CompilationFinal(dimensions = 1)
+    public final CILMethod[] localMethods;
 
     public int getFileOffsetForRVA(int RVA) {
         return pe.getFileOffsetForRVA(RVA);
@@ -80,6 +84,7 @@ public class CLIComponent {
         this.tables = tables;
         this.pe = pe;
         this.language = language;
+        localMethods = new CILMethod[tables.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_METHOD_DEF)];
     }
 
     public static CLIComponent parseComponent(ByteSequence bytes, Source source, BACILLanguage language) {
@@ -119,11 +124,15 @@ public class CLIComponent {
 
     public CILMethod getLocalMethod(CLITablePtr token)
     {
-        if(!localMethods.containsKey(token.getRowNo()))
+
+        if(localMethods[token.getRowNo()] == null)
         {
-            localMethods.put(token.getRowNo(), new CILMethod(this, tables.getTableHeads().getMethodDefTableHead().skip(token)));
+            //it's the responsibility of method finder to not be in compilation when this can fail
+            CompilerAsserts.neverPartOfCompilation();
+            localMethods[token.getRowNo()] = new CILMethod(this, tables.getTableHeads().getMethodDefTableHead().skip(token));
         }
-        return localMethods.get(token.getRowNo());
+
+        return localMethods[token.getRowNo()];
     }
 
     public CLITableHeads getTableHeads()

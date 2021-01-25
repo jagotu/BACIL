@@ -21,6 +21,7 @@ public class CILMethod {
     private final CLIMethodDefTableRow methodDef;
     private final int flags;
     private final short maxStack;
+
     private final CallTarget callTarget;
 
     private final LocalVarSig localVarSig;

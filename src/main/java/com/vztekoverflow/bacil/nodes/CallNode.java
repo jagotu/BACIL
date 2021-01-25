@@ -9,8 +9,7 @@ import com.vztekoverflow.bacil.runtime.types.Type;
 
 public class CallNode extends Node {
 
-    @CompilerDirectives.CompilationFinal
-    protected CILMethod method;
+    protected final CILMethod method;
 
     protected final int top;
 
@@ -20,18 +19,10 @@ public class CallNode extends Node {
     public CallNode(CILMethod method, int top) {
         this.method = method;
         this.top = top;
+        directCallNode = DirectCallNode.create(this.method.getCallTarget());
     }
 
     public int execute(VirtualFrame frame, long[] primitives, Object[] refs) {
-
-        // TODO(peterssen): Constant fold this check.
-        if (directCallNode == null) {
-            CompilerDirectives.transferToInterpreterAndInvalidate();
-            // insert call node though insertion method so that
-            // stack frame iteration will see this node as parent
-            directCallNode = insert(DirectCallNode.create(method.getCallTarget()));
-        }
-
         Object[] args = BytecodeNode.prepareArgs(primitives, refs, top, method);
         Object returnValue = directCallNode.call(args);
         Type returnType = method.getMethodDefSig().getRetType();
