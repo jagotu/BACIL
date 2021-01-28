@@ -210,6 +210,9 @@ public class BytecodeInstructions {
     public static final int MAX = 0xE0;
     public static final int PREFIXED = 0xFE;
 
+    public static final int TRUFFLE_NODE = 0xF0; //allowed by III.1.2.1
+
+
     public static final int CEQ = 0xFE01;
     public static final int CGT = 0xFE02;
     public static final int CGT_UN = 0xFE03;
@@ -326,6 +329,8 @@ public class BytecodeInstructions {
         defPrefixed(CGT, "cgt", "b", -1);
         defPrefixed(CEQ, "ceq", "b", -1);
         defPrefixed(CLT, "clt", "b", -1);
+
+        def(TRUFFLE_NODE, "truffle.node", "biiii", 0);
     }
 
     /**

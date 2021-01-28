@@ -61,7 +61,6 @@ public class CLIComponent {
         return guidHeap;
     }
 
-    //public final HashMap<Integer, CILMethod> localMethods = new HashMap<>();
     @CompilationFinal(dimensions = 1)
     public final CILMethod[] localMethods;
 

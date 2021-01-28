@@ -13,6 +13,8 @@ import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.runtime.ExecutionStackType;
 import com.vztekoverflow.bacil.runtime.types.Type;
 
+import java.util.Arrays;
+
 import static com.vztekoverflow.bacil.bytecode.BytecodeInstructions.*;
 
 public class BytecodeNode extends Node {
@@ -25,14 +27,12 @@ public class BytecodeNode extends Node {
     @CompilerDirectives.CompilationFinal(dimensions = 1)
     private final Type[] localsTypes;
 
-    @CompilerDirectives.CompilationFinal(dimensions = 1)
-    private final CallNode[] callNodesMap; //todo save space
+    @Children private CallNode[] nodes = new CallNode[0];
 
     public BytecodeNode(CILMethod method, byte[] bytecode)
     {
         this.method = method;
         this.bytecodeBuffer = new BytecodeBuffer(bytecode);
-        this.callNodesMap = new CallNode[bytecode.length];
         argsCount = method.getMethodDefSig().getParamTypes().length;
         varsCount = method.getLocalVarSig().getVarTypes().length;
         localsTypes = new Type[varsCount+argsCount];
@@ -49,7 +49,6 @@ public class BytecodeNode extends Node {
 
     }
 
-    @Children private CallNode[] nodes;
 
 
 
@@ -184,7 +183,10 @@ public class BytecodeNode extends Node {
                     doCompareBinary(curOpcode, primitives, refs, top-2, top-1); break;
 
                 case CALL:
-                    top = doCallToken(frame, primitives, refs, top, bytecodeBuffer.getImmToken(pc), pc); break;
+                    top = nodeizeCallToken(frame, primitives, refs, top, bytecodeBuffer.getImmToken(pc), pc, curOpcode); break;
+
+                case TRUFFLE_NODE:
+                    top = nodes[bytecodeBuffer.getImmInt(pc)].execute(frame, primitives, refs); break;
 
                 default:
                     CompilerDirectives.transferToInterpreterAndInvalidate();
@@ -231,19 +233,36 @@ public class BytecodeNode extends Node {
         return args;
     }
 
-    public int doCallToken(VirtualFrame frame, long[] primitives, Object[] refs, int top, CLITablePtr token, int pc)
+    private int addNode(CallNode node)
     {
-        if(callNodesMap[pc] == null)
-        {
-            CompilerDirectives.transferToInterpreterAndInvalidate(); // because we are about to change something that is compilation final
-            final CILMethod toCall = method.getComponent().getLocalMethod(token);
-            CallNode node = new CallNode(toCall, top);
-            callNodesMap[pc] = this.insert(node);
+        nodes = Arrays.copyOf(nodes, nodes.length + 1);
+        int nodeIndex = nodes.length - 1; // latest empty slot
+        nodes[nodeIndex] = insert(node);
+        return nodeIndex;
+    }
 
-            //return callNodesMap.get(pc).execute(frame, primitives, refs);
-        }
+    private static byte[] preparePatch(byte opcode, int imm, int targetLength)
+    {
+        byte[] patch = new byte[targetLength];
+        patch[0] = opcode;
+        patch[1] = (byte)(imm & 0xFF);
+        patch[2] = (byte)((imm >> 8) & 0xFF);
+        patch[3] = (byte)((imm >> 16) & 0xFF);
+        patch[4] = (byte)((imm >> 24) & 0xFF);
+        return patch;
+    }
 
-        return callNodesMap[pc].execute(frame, primitives, refs);
+    public int nodeizeCallToken(VirtualFrame frame, long[] primitives, Object[] refs, int top, CLITablePtr token, int pc, int opcode)
+    {
+
+        CompilerDirectives.transferToInterpreterAndInvalidate(); // because we are about to change something that is compilation final
+        final CILMethod toCall = method.getComponent().getLocalMethod(token);
+        CallNode node = new CallNode(toCall, top);
+        int index = addNode(node);
+        byte[] patch = preparePatch((byte)TRUFFLE_NODE, index, BytecodeInstructions.getLength(opcode));
+        bytecodeBuffer.patchBytecode(pc, patch);
+
+        return nodes[index].execute(frame, primitives, refs);
 
 
         //assume local method for now
@@ -331,16 +350,16 @@ public class BytecodeNode extends Node {
                     result = primitives[slot1] + primitives[slot2];
                     break;
                 case SUB:
-                    result = primitives[slot1] - primitives[slot2]; //TODO spravne poradi?
+                    result = primitives[slot1] - primitives[slot2];
                     break;
                 case MUL:
                     result = primitives[slot1] * primitives[slot2];
                     break;
                 case DIV:
-                    result = primitives[slot1] / primitives[slot2]; //TODO spravne poradi?
+                    result = primitives[slot1] / primitives[slot2];
                     break;
                 case REM:
-                    result = primitives[slot1] % primitives[slot2]; //TODO spravne poradi?
+                    result = primitives[slot1] % primitives[slot2];
                     break;
 
             }

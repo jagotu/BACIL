@@ -1,5 +1,6 @@
 package com.vztekoverflow.bacil.bytecode;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.bacil.BACILInternalError;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
@@ -68,6 +69,12 @@ public class BytecodeBuffer {
     public long getImmLong(int position)
     {
         return Bytes.getLong(bytecode, position+1);
+    }
+
+    public void patchBytecode(int position, byte[] patch)
+    {
+        CompilerAsserts.neverPartOfCompilation();
+        System.arraycopy(patch, 0, bytecode, position, patch.length);
     }
 
     public CLITablePtr getImmToken(int position)
