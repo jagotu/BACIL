@@ -9,12 +9,11 @@ import com.vztekoverflow.bacil.BACILInternalError;
 import com.vztekoverflow.bacil.BACILLanguage;
 import com.vztekoverflow.bacil.bytecode.BytecodeBuffer;
 import com.vztekoverflow.bacil.bytecode.BytecodeInstructions;
-import com.vztekoverflow.bacil.parser.BACILParserException;
 import com.vztekoverflow.bacil.parser.cil.CILMethod;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.runtime.ExecutionStackPrimitiveMarker;
+import com.vztekoverflow.bacil.runtime.LocalReference;
 import com.vztekoverflow.bacil.runtime.ManagedReference;
-import com.vztekoverflow.bacil.runtime.types.ByRefWrapped;
 import com.vztekoverflow.bacil.runtime.types.Type;
 
 import java.util.Arrays;
@@ -126,7 +125,7 @@ public class BytecodeNode extends Node {
                     loadStack(primitives, refs, top, localsTypes, locals, bytecodeBuffer.getImmUByte(pc)); break;
 
                 case LDLOCA_S:
-                    refs[top] = getManagedReference(bytecodeBuffer.getImmUByte(pc), locals, localsTypes); break;
+                    refs[top] = getLocalReference(bytecodeBuffer.getImmUByte(pc), locals, localsTypes); break;
 
                 case LDARG_0:
                 case LDARG_1:
@@ -137,7 +136,23 @@ public class BytecodeNode extends Node {
                     loadStack(primitives, refs, top, localsTypes, locals, varsCount + bytecodeBuffer.getImmUByte(pc)); break;
 
                 case LDARGA_S:
-                    refs[top] = getManagedReference(varsCount + bytecodeBuffer.getImmUByte(pc), locals, localsTypes); break;
+                    refs[top] = getLocalReference(varsCount + bytecodeBuffer.getImmUByte(pc), locals, localsTypes); break;
+
+
+                case STIND_I1:
+                    storeIndirect(primitives, refs, top-2, top-1, Type.ELEMENT_TYPE_I1); break;
+                case STIND_I2:
+                    storeIndirect(primitives, refs, top-2, top-1, Type.ELEMENT_TYPE_I2); break;
+                case STIND_I4:
+                    storeIndirect(primitives, refs, top-2, top-1, Type.ELEMENT_TYPE_I4); break;
+                case STIND_I8:
+                    storeIndirect(primitives, refs, top-2, top-1, Type.ELEMENT_TYPE_I8); break;
+                case STIND_I:
+                    storeIndirect(primitives, refs, top-2, top-1, Type.ELEMENT_TYPE_I); break;
+                case STIND_R4:
+                    storeIndirect(primitives, refs, top-2, top-1, Type.ELEMENT_TYPE_R4); break;
+                case STIND_R8:
+                    storeIndirect(primitives, refs, top-2, top-1, Type.ELEMENT_TYPE_R8); break;
 
                 case LDIND_I1:
                     loadIndirect(primitives, refs, top-1, Type.ELEMENT_TYPE_I1); break;
@@ -219,9 +234,9 @@ public class BytecodeNode extends Node {
 
     }
 
-    public static ManagedReference getManagedReference(int offset, Object[] locals, Type[] localsTypes)
+    public static ManagedReference getLocalReference(int offset, Object[] locals, Type[] localsTypes)
     {
-        return new ManagedReference(locals[offset], localsTypes[offset]);
+        return new LocalReference(locals, offset, localsTypes[offset]);
     }
 
     @ExplodeLoop
@@ -424,7 +439,19 @@ public class BytecodeNode extends Node {
             throw new BACILInternalError(String.format("Wrong indirect load: trying to load %d, was referring to %d", expectedTypeCategory, managed.getType().getTypeCategory()));
         }
 
-        managed.getType().toStackVar(refs, primitives, slot, managed.getReferee());
+        managed.getType().toStackVar(refs, primitives, slot, managed.getValue());
+    }
+
+    public static void storeIndirect(long[] primitives, Object[] refs, int ptrSlot, int valueSlot, byte storingTypeCategory)
+    {
+        ManagedReference managed = (ManagedReference)refs[ptrSlot];
+        if(Type.getVerificationType(managed.getType().getTypeCategory()) != Type.getVerificationType(storingTypeCategory))
+        {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            throw new BACILInternalError(String.format("Wrong indirect save: trying to save %d, was referring to %d", storingTypeCategory, managed.getType().getTypeCategory()));
+        }
+        managed.setValue(managed.getType().fromStackVar(refs[valueSlot], primitives[valueSlot]));
+
     }
 
     public static void loadStack(long[] primitives, Object[] refs, int slot, Type[] localTypes, Object[] locals, int localSlot)
@@ -452,4 +479,6 @@ public class BytecodeNode extends Node {
     public CILMethod getMethod() {
         return method;
     }
+
+
 }

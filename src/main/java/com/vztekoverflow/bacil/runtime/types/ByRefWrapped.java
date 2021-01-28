@@ -21,13 +21,11 @@ public class ByRefWrapped extends Type {
 
     @Override
     public Object fromStackVar(Object ref, long primitive) {
-        ManagedReference managed = (ManagedReference)ref;
-
-        return managed.getReferee();
+        return ref;
     }
 
     @Override
     public void toStackVar(Object[] refs, long[] primitives, int slot, Object value) {
-        refs[slot] = new ManagedReference(value, inner);
+        refs[slot] = value;
     }
 }

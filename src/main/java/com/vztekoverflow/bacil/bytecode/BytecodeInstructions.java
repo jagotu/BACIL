@@ -318,6 +318,15 @@ public class BytecodeInstructions {
         def(LDIND_R4, "ldind.r4", "b", 0);
         def(LDIND_R8, "ldind.r8", "b", 0);
 
+        def(STIND_I1, "stind.i1", "b", -2);
+        def(STIND_I2, "stind.i2", "b", -2);
+        def(STIND_I4, "stind.i4", "b", -2);
+        def(STIND_I8, "stind.i8", "b", -2);
+        def(STIND_I, "stind.i", "b", -2);
+        def(STIND_R4, "stind.r4", "b", -2);
+        def(STIND_R8, "stind.r8", "b", -2);
+
+
 
 
         def(RET, "ret", "b", 0);
