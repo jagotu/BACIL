@@ -6,11 +6,15 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.vztekoverflow.bacil.BACILInternalError;
+import com.vztekoverflow.bacil.BACILLanguage;
 import com.vztekoverflow.bacil.bytecode.BytecodeBuffer;
 import com.vztekoverflow.bacil.bytecode.BytecodeInstructions;
+import com.vztekoverflow.bacil.parser.BACILParserException;
 import com.vztekoverflow.bacil.parser.cil.CILMethod;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
-import com.vztekoverflow.bacil.runtime.ExecutionStackType;
+import com.vztekoverflow.bacil.runtime.ExecutionStackPrimitiveMarker;
+import com.vztekoverflow.bacil.runtime.ManagedReference;
+import com.vztekoverflow.bacil.runtime.types.ByRefWrapped;
 import com.vztekoverflow.bacil.runtime.types.Type;
 
 import java.util.Arrays;
@@ -21,11 +25,8 @@ public class BytecodeNode extends Node {
 
     private final CILMethod method;
     private final BytecodeBuffer bytecodeBuffer;
-    private final int argsCount;
-    private final int varsCount;
 
-    @CompilerDirectives.CompilationFinal(dimensions = 1)
-    private final Type[] localsTypes;
+
 
     @Children private CallNode[] nodes = new CallNode[0];
 
@@ -33,20 +34,6 @@ public class BytecodeNode extends Node {
     {
         this.method = method;
         this.bytecodeBuffer = new BytecodeBuffer(bytecode);
-        argsCount = method.getMethodDefSig().getParamTypes().length;
-        varsCount = method.getLocalVarSig().getVarTypes().length;
-        localsTypes = new Type[varsCount+argsCount];
-
-        for(int i = 0; i < varsCount; i++)
-        {
-            localsTypes[i] = method.getLocalVarSig().getVarTypes()[i];
-        }
-
-        for(int i = 0; i < argsCount; i++)
-        {
-            localsTypes[varsCount+i] = method.getMethodDefSig().getParamTypes()[i];
-        }
-
     }
 
 
@@ -63,7 +50,7 @@ public class BytecodeNode extends Node {
 
 
         Object[] args = frame.getArguments();
-        if(args.length != argsCount)
+        if(args.length != method.getArgsCount())
         {
             throw new BACILInternalError("Unexpected number of arguments!");
         }
@@ -74,6 +61,10 @@ public class BytecodeNode extends Node {
         //that allow tracking of int64/int32/native int/F
         long[] primitives = new long[stackCount];
         Object[] refs = new Object[stackCount];
+
+        final int argsCount = method.getArgsCount();
+        final int varsCount = method.getVarsCount();
+        final Type[] localsTypes = method.getLocalsTypes();
 
 
         CompilerAsserts.partialEvaluationConstant(argsCount);
@@ -134,6 +125,9 @@ public class BytecodeNode extends Node {
                 case LDLOC_S:
                     loadStack(primitives, refs, top, localsTypes, locals, bytecodeBuffer.getImmUByte(pc)); break;
 
+                case LDLOCA_S:
+                    refs[top] = getManagedReference(bytecodeBuffer.getImmUByte(pc), locals, localsTypes); break;
+
                 case LDARG_0:
                 case LDARG_1:
                 case LDARG_2:
@@ -141,6 +135,32 @@ public class BytecodeNode extends Node {
                     loadStack(primitives, refs, top, localsTypes, locals, varsCount + curOpcode - LDARG_0); break;
                 case LDARG_S:
                     loadStack(primitives, refs, top, localsTypes, locals, varsCount + bytecodeBuffer.getImmUByte(pc)); break;
+
+                case LDARGA_S:
+                    refs[top] = getManagedReference(varsCount + bytecodeBuffer.getImmUByte(pc), locals, localsTypes); break;
+
+                case LDIND_I1:
+                    loadIndirect(primitives, refs, top-1, Type.ELEMENT_TYPE_I1); break;
+                case LDIND_U1:
+                    loadIndirect(primitives, refs, top-1, Type.ELEMENT_TYPE_U1); break;
+                case LDIND_I2:
+                    loadIndirect(primitives, refs, top-1, Type.ELEMENT_TYPE_I2); break;
+                case LDIND_U2:
+                    loadIndirect(primitives, refs, top-1, Type.ELEMENT_TYPE_U2); break;
+                case LDIND_I4:
+                    loadIndirect(primitives, refs, top-1, Type.ELEMENT_TYPE_I4);  break;
+                case LDIND_U4:
+                    loadIndirect(primitives, refs, top-1, Type.ELEMENT_TYPE_U4); break;
+                case LDIND_I8:
+                    loadIndirect(primitives, refs, top-1, Type.ELEMENT_TYPE_I8); break;
+                case LDIND_I:
+                    loadIndirect(primitives, refs, top-1, Type.ELEMENT_TYPE_I); break;
+                case LDIND_R4:
+                    loadIndirect(primitives, refs, top-1, Type.ELEMENT_TYPE_R4); break;
+                case LDIND_R8:
+                    loadIndirect(primitives, refs, top-1, Type.ELEMENT_TYPE_R8); break;
+
+
 
                 case RET:
                     return getReturnValue(primitives, refs, top-1, method.getMethodDefSig().getRetType());
@@ -190,13 +210,18 @@ public class BytecodeNode extends Node {
 
                 default:
                     CompilerDirectives.transferToInterpreterAndInvalidate();
-                    throw new BACILInternalError(String.format("Unsuppored opcode %d (%s)", curOpcode, BytecodeInstructions.getName(curOpcode)));
+                    throw new BACILInternalError(String.format("Unsuppored opcode %02x (%s)", curOpcode, BytecodeInstructions.getName(curOpcode)));
             }
 
             top += BytecodeInstructions.getStackEffect(curOpcode);
             pc = bytecodeBuffer.nextInstruction(pc);
         }
 
+    }
+
+    public static ManagedReference getManagedReference(int offset, Object[] locals, Type[] localsTypes)
+    {
+        return new ManagedReference(locals[offset], localsTypes[offset]);
     }
 
     @ExplodeLoop
@@ -217,10 +242,10 @@ public class BytecodeNode extends Node {
     public static Object[] prepareArgs(long[] primitives, Object[] refs, int top, CILMethod method)
     {
 
-        final int argsCount = method.getMethodDefSig().getParamCount();
+        final int argsCount = method.getArgsCount();
         final Object[] args = new Object[argsCount];
         final int firstArg = top - argsCount;
-        final Type[] targetTypes = method.getMethodDefSig().getParamTypes();
+        final Type[] targetTypes = method.getLocalsTypes();
 
         CompilerAsserts.partialEvaluationConstant(argsCount);
 
@@ -256,7 +281,7 @@ public class BytecodeNode extends Node {
     {
 
         CompilerDirectives.transferToInterpreterAndInvalidate(); // because we are about to change something that is compilation final
-        final CILMethod toCall = method.getComponent().getLocalMethod(token);
+        final CILMethod toCall = method.getComponent().getMethod(token, lookupContextReference(BACILLanguage.class).get());
         CallNode node = new CallNode(toCall, top);
         int index = addNode(node);
         byte[] patch = preparePatch((byte)TRUFFLE_NODE, index, BytecodeInstructions.getLength(opcode));
@@ -282,7 +307,7 @@ public class BytecodeNode extends Node {
     public static boolean shouldBranch(int opcode, long[] primitives, Object[] refs, int slot)
     {
         boolean value;
-        if(ExecutionStackType.isExecutionStackType(refs[slot]))
+        if(ExecutionStackPrimitiveMarker.isExecutionStackPrimitiveMarker(refs[slot]))
         {
             value = primitives[slot] != 0;
         } else {
@@ -300,10 +325,10 @@ public class BytecodeNode extends Node {
     public static void doCompareBinary(int opcode, long[] primitives, Object[] refs, int slot1, int slot2)
     {
         //TODO floaty!
-        if(ExecutionStackType.isExecutionStackType(refs[slot1]) && ExecutionStackType.isExecutionStackType(refs[slot2]))
+        if(ExecutionStackPrimitiveMarker.isExecutionStackPrimitiveMarker(refs[slot1]) && ExecutionStackPrimitiveMarker.isExecutionStackPrimitiveMarker(refs[slot2]))
         {
             //using the numeric binary table here as it seems to be the same so far
-            ExecutionStackType resultType = binaryNumericResultTypes[((ExecutionStackType)refs[slot1]).getTag()][((ExecutionStackType)refs[slot2]).getTag()];
+            ExecutionStackPrimitiveMarker resultType = binaryNumericResultTypes[((ExecutionStackPrimitiveMarker)refs[slot1]).getTag()][((ExecutionStackPrimitiveMarker)refs[slot2]).getTag()];
             if(resultType == null)
             {
                 throw new BACILInternalError("Invalid types for comparison");
@@ -325,7 +350,7 @@ public class BytecodeNode extends Node {
             }
 
             primitives[slot1] = result ? 1 : 0;
-            refs[slot1] = ExecutionStackType.EXECUTION_STACK_INT32;
+            refs[slot1] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
 
         } else {
             CompilerDirectives.transferToInterpreterAndInvalidate();
@@ -336,9 +361,9 @@ public class BytecodeNode extends Node {
     public static void doNumericBinary(int opcode, long[] primitives, Object[] refs, int slot1, int slot2)
     {
         //TODO floaty!
-        if(ExecutionStackType.isExecutionStackType(refs[slot1]) && ExecutionStackType.isExecutionStackType(refs[slot2]))
+        if(ExecutionStackPrimitiveMarker.isExecutionStackPrimitiveMarker(refs[slot1]) && ExecutionStackPrimitiveMarker.isExecutionStackPrimitiveMarker(refs[slot2]))
         {
-            ExecutionStackType resultType = binaryNumericResultTypes[((ExecutionStackType)refs[slot1]).getTag()][((ExecutionStackType)refs[slot2]).getTag()];
+            ExecutionStackPrimitiveMarker resultType = binaryNumericResultTypes[((ExecutionStackPrimitiveMarker)refs[slot1]).getTag()][((ExecutionStackPrimitiveMarker)refs[slot2]).getTag()];
             if(resultType == null)
             {
                 throw new BACILInternalError("These types can't be args of numeric binary");
@@ -364,7 +389,7 @@ public class BytecodeNode extends Node {
 
             }
 
-            if(resultType == ExecutionStackType.EXECUTION_STACK_INT32)
+            if(resultType == ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
             {
                 result &= 0xFFFFFFFFL;
             }
@@ -390,6 +415,18 @@ public class BytecodeNode extends Node {
         return retType.fromStackVar(refs[slot], primitives[slot]);
     }
 
+    public static void loadIndirect(long[] primitives, Object[] refs, int slot, int expectedTypeCategory)
+    {
+        ManagedReference managed = (ManagedReference)refs[slot];
+        if(managed.getType().getTypeCategory() != expectedTypeCategory)
+        {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            throw new BACILInternalError(String.format("Wrong indirect load: trying to load %d, was referring to %d", expectedTypeCategory, managed.getType().getTypeCategory()));
+        }
+
+        managed.getType().toStackVar(refs, primitives, slot, managed.getReferee());
+    }
+
     public static void loadStack(long[] primitives, Object[] refs, int slot, Type[] localTypes, Object[] locals, int localSlot)
     {
         localTypes[localSlot].toStackVar(refs, primitives, slot, locals[localSlot]);
@@ -403,13 +440,13 @@ public class BytecodeNode extends Node {
     public static void putInt32(long[] primitives, Object[] refs, int slot, int value)
     {
         primitives[slot] = value;
-        refs[slot] = ExecutionStackType.EXECUTION_STACK_INT32;
+        refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
     }
 
     public static void putInt64(long[] primitives, Object[] refs, int slot, long value)
     {
         primitives[slot] = value;
-        refs[slot] = ExecutionStackType.EXECUTION_STACK_INT64;
+        refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT64;
     }
 
     public CILMethod getMethod() {

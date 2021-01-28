@@ -14,19 +14,25 @@ public class CLIMethodSemanticsTableRow extends CLITableRow<CLIMethodSemanticsTa
 
 	public final CLITablePtr getMethod() { 
 		int offset = 2;
-		return new CLITablePtr(CLITableConstants.CLI_TABLE_METHOD_DEF, getShort(offset));
+		final int rowNo;
+		if (areSmallEnough(CLITableConstants.CLI_TABLE_METHOD_DEF)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
+		return new CLITablePtr(CLITableConstants.CLI_TABLE_METHOD_DEF, rowNo);
 	}
 
 	private static final byte[] MAP_ASSOCIATION_TABLES = new byte[] { CLITableConstants.CLI_TABLE_EVENT, CLITableConstants.CLI_TABLE_PROPERTY} ;
 	public final CLITablePtr getAssociation() { 
 		int offset = 4;
-		short codedValue = getShort(offset);
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_METHOD_DEF)) offset += 2;
+		int codedValue;
+		if (areSmallEnough(CLITableConstants.CLI_TABLE_EVENT, CLITableConstants.CLI_TABLE_PROPERTY)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
 		return new CLITablePtr(MAP_ASSOCIATION_TABLES[codedValue & 1], codedValue >> 1);
 	}
 
 	@Override
 	public int getLength() {
 		int offset = 6;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_METHOD_DEF)) offset += 2;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_EVENT, CLITableConstants.CLI_TABLE_PROPERTY)) offset += 2;
 		return offset;
 	}
 

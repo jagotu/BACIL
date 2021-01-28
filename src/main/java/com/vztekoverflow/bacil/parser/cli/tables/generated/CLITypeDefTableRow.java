@@ -31,26 +31,37 @@ public class CLITypeDefTableRow extends CLITableRow<CLITypeDefTableRow> {
 	public final CLITablePtr getExtends() { 
 		int offset = 8;
 		if (tables.isStringHeapBig()) offset += 4;
-		short codedValue = getShort(offset);
+		int codedValue;
+		if (areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_TYPE_SPEC)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
 		return new CLITablePtr(MAP_EXTENDS_TABLES[codedValue & 3], codedValue >> 2);
 	}
 
 	public final CLITablePtr getFieldList() { 
 		int offset = 10;
 		if (tables.isStringHeapBig()) offset += 4;
-		return new CLITablePtr(CLITableConstants.CLI_TABLE_FIELD, getShort(offset));
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_TYPE_SPEC)) offset += 2;
+		final int rowNo;
+		if (areSmallEnough(CLITableConstants.CLI_TABLE_FIELD)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
+		return new CLITablePtr(CLITableConstants.CLI_TABLE_FIELD, rowNo);
 	}
 
 	public final CLITablePtr getMethodList() { 
 		int offset = 12;
 		if (tables.isStringHeapBig()) offset += 4;
-		return new CLITablePtr(CLITableConstants.CLI_TABLE_METHOD_DEF, getShort(offset));
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_TYPE_SPEC)) offset += 2;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_FIELD)) offset += 2;
+		final int rowNo;
+		if (areSmallEnough(CLITableConstants.CLI_TABLE_METHOD_DEF)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
+		return new CLITablePtr(CLITableConstants.CLI_TABLE_METHOD_DEF, rowNo);
 	}
 
 	@Override
 	public int getLength() {
 		int offset = 14;
 		if (tables.isStringHeapBig()) offset += 4;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_TYPE_SPEC)) offset += 2;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_FIELD)) offset += 2;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_METHOD_DEF)) offset += 2;
 		return offset;
 	}
 

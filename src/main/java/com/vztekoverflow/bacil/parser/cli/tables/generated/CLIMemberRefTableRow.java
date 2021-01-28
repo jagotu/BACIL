@@ -10,12 +10,14 @@ public class CLIMemberRefTableRow extends CLITableRow<CLIMemberRefTableRow> {
 	private static final byte[] MAP_KLASS_TABLES = new byte[] { CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_MODULE_REF, CLITableConstants.CLI_TABLE_METHOD_DEF, CLITableConstants.CLI_TABLE_TYPE_SPEC} ;
 	public final CLITablePtr getKlass() { 
 		int offset = 0;
-		short codedValue = getShort(offset);
+		int codedValue;
+		if (areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_MODULE_REF, CLITableConstants.CLI_TABLE_METHOD_DEF, CLITableConstants.CLI_TABLE_TYPE_SPEC)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
 		return new CLITablePtr(MAP_KLASS_TABLES[codedValue & 7], codedValue >> 3);
 	}
 
 	public final CLIStringHeapPtr getName() {
 		int offset = 2;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_MODULE_REF, CLITableConstants.CLI_TABLE_METHOD_DEF, CLITableConstants.CLI_TABLE_TYPE_SPEC)) offset += 2;
 		int heapOffset=0;
 		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
@@ -24,6 +26,7 @@ public class CLIMemberRefTableRow extends CLITableRow<CLIMemberRefTableRow> {
 	public final CLIBlobHeapPtr getSignature() {
 		int offset = 4;
 		if (tables.isStringHeapBig()) offset += 2;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_MODULE_REF, CLITableConstants.CLI_TABLE_METHOD_DEF, CLITableConstants.CLI_TABLE_TYPE_SPEC)) offset += 2;
 		int heapOffset=0;
 		if (tables.isBlobHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getShort(offset); }
 		return new CLIBlobHeapPtr(heapOffset);
@@ -34,6 +37,7 @@ public class CLIMemberRefTableRow extends CLITableRow<CLIMemberRefTableRow> {
 		int offset = 6;
 		if (tables.isStringHeapBig()) offset += 2;
 		if (tables.isBlobHeapBig()) offset += 2;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_MODULE_REF, CLITableConstants.CLI_TABLE_METHOD_DEF, CLITableConstants.CLI_TABLE_TYPE_SPEC)) offset += 2;
 		return offset;
 	}
 

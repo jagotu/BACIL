@@ -41,7 +41,9 @@ public class CLIMethodDefTableRow extends CLITableRow<CLIMethodDefTableRow> {
 		int offset = 12;
 		if (tables.isStringHeapBig()) offset += 2;
 		if (tables.isBlobHeapBig()) offset += 2;
-		return new CLITablePtr(CLITableConstants.CLI_TABLE_PARAM, getShort(offset));
+		final int rowNo;
+		if (areSmallEnough(CLITableConstants.CLI_TABLE_PARAM)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
+		return new CLITablePtr(CLITableConstants.CLI_TABLE_PARAM, rowNo);
 	}
 
 	@Override
@@ -49,6 +51,7 @@ public class CLIMethodDefTableRow extends CLITableRow<CLIMethodDefTableRow> {
 		int offset = 14;
 		if (tables.isStringHeapBig()) offset += 2;
 		if (tables.isBlobHeapBig()) offset += 2;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_PARAM)) offset += 2;
 		return offset;
 	}
 

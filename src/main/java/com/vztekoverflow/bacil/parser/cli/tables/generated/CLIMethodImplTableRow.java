@@ -9,26 +9,36 @@ public class CLIMethodImplTableRow extends CLITableRow<CLIMethodImplTableRow> {
 
 	public final CLITablePtr getKlass() { 
 		int offset = 0;
-		return new CLITablePtr(CLITableConstants.CLI_TABLE_TYPE_DEF, getShort(offset));
+		final int rowNo;
+		if (areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
+		return new CLITablePtr(CLITableConstants.CLI_TABLE_TYPE_DEF, rowNo);
 	}
 
 	private static final byte[] MAP_METHOD_BODY_TABLES = new byte[] { CLITableConstants.CLI_TABLE_METHOD_DEF, CLITableConstants.CLI_TABLE_MEMBER_REF} ;
 	public final CLITablePtr getMethodBody() { 
 		int offset = 2;
-		short codedValue = getShort(offset);
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF)) offset += 2;
+		int codedValue;
+		if (areSmallEnough(CLITableConstants.CLI_TABLE_METHOD_DEF, CLITableConstants.CLI_TABLE_MEMBER_REF)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
 		return new CLITablePtr(MAP_METHOD_BODY_TABLES[codedValue & 1], codedValue >> 1);
 	}
 
 	private static final byte[] MAP_METHOD_DECLARATION_TABLES = new byte[] { CLITableConstants.CLI_TABLE_METHOD_DEF, CLITableConstants.CLI_TABLE_MEMBER_REF} ;
 	public final CLITablePtr getMethodDeclaration() { 
 		int offset = 4;
-		short codedValue = getShort(offset);
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF)) offset += 2;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_METHOD_DEF, CLITableConstants.CLI_TABLE_MEMBER_REF)) offset += 2;
+		int codedValue;
+		if (areSmallEnough(CLITableConstants.CLI_TABLE_METHOD_DEF, CLITableConstants.CLI_TABLE_MEMBER_REF)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
 		return new CLITablePtr(MAP_METHOD_DECLARATION_TABLES[codedValue & 1], codedValue >> 1);
 	}
 
 	@Override
 	public int getLength() {
 		int offset = 6;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF)) offset += 2;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_METHOD_DEF, CLITableConstants.CLI_TABLE_MEMBER_REF)) offset += 2;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_METHOD_DEF, CLITableConstants.CLI_TABLE_MEMBER_REF)) offset += 2;
 		return offset;
 	}
 

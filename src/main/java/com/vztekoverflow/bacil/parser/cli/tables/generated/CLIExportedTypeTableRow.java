@@ -36,7 +36,8 @@ public class CLIExportedTypeTableRow extends CLITableRow<CLIExportedTypeTableRow
 	public final CLITablePtr getImplementation() { 
 		int offset = 12;
 		if (tables.isStringHeapBig()) offset += 4;
-		short codedValue = getShort(offset);
+		int codedValue;
+		if (areSmallEnough(CLITableConstants.CLI_TABLE_FILE, CLITableConstants.CLI_TABLE_ASSEMBLY_REF, CLITableConstants.CLI_TABLE_EXPORTED_TYPE)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
 		return new CLITablePtr(MAP_IMPLEMENTATION_TABLES[codedValue & 3], codedValue >> 2);
 	}
 
@@ -44,6 +45,7 @@ public class CLIExportedTypeTableRow extends CLITableRow<CLIExportedTypeTableRow
 	public int getLength() {
 		int offset = 14;
 		if (tables.isStringHeapBig()) offset += 4;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_FILE, CLITableConstants.CLI_TABLE_ASSEMBLY_REF, CLITableConstants.CLI_TABLE_EXPORTED_TYPE)) offset += 2;
 		return offset;
 	}
 

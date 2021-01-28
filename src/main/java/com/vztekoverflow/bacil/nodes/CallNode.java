@@ -26,7 +26,7 @@ public class CallNode extends Node {
         Object[] args = BytecodeNode.prepareArgs(primitives, refs, top, method);
         Object returnValue = directCallNode.call(args);
         Type returnType = method.getMethodDefSig().getRetType();
-        final int firstArg = top - method.getMethodDefSig().getParamCount();
+        final int firstArg = top - method.getArgsCount();
 
         if(returnType.getTypeCategory() != Type.ELEMENT_TYPE_VOID)
         {

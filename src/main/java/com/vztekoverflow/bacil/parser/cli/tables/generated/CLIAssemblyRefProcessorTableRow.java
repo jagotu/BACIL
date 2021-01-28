@@ -14,12 +14,15 @@ public class CLIAssemblyRefProcessorTableRow extends CLITableRow<CLIAssemblyRefP
 
 	public final CLITablePtr getAssemblyRef() { 
 		int offset = 4;
-		return new CLITablePtr(CLITableConstants.CLI_TABLE_ASSEMBLY_REF, getShort(offset));
+		final int rowNo;
+		if (areSmallEnough(CLITableConstants.CLI_TABLE_ASSEMBLY_REF)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
+		return new CLITablePtr(CLITableConstants.CLI_TABLE_ASSEMBLY_REF, rowNo);
 	}
 
 	@Override
 	public int getLength() {
 		int offset = 6;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_ASSEMBLY_REF)) offset += 2;
 		return offset;
 	}
 

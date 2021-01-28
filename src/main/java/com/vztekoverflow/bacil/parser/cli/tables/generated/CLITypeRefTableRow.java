@@ -10,12 +10,14 @@ public class CLITypeRefTableRow extends CLITableRow<CLITypeRefTableRow> {
 	private static final byte[] MAP_RESOLUTION_SCOPE_TABLES = new byte[] { CLITableConstants.CLI_TABLE_MODULE, CLITableConstants.CLI_TABLE_MODULE_REF, CLITableConstants.CLI_TABLE_ASSEMBLY_REF, CLITableConstants.CLI_TABLE_TYPE_REF} ;
 	public final CLITablePtr getResolutionScope() { 
 		int offset = 0;
-		short codedValue = getShort(offset);
+		int codedValue;
+		if (areSmallEnough(CLITableConstants.CLI_TABLE_MODULE, CLITableConstants.CLI_TABLE_MODULE_REF, CLITableConstants.CLI_TABLE_ASSEMBLY_REF, CLITableConstants.CLI_TABLE_TYPE_REF)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
 		return new CLITablePtr(MAP_RESOLUTION_SCOPE_TABLES[codedValue & 3], codedValue >> 2);
 	}
 
 	public final CLIStringHeapPtr getTypeName() {
 		int offset = 2;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_MODULE, CLITableConstants.CLI_TABLE_MODULE_REF, CLITableConstants.CLI_TABLE_ASSEMBLY_REF, CLITableConstants.CLI_TABLE_TYPE_REF)) offset += 2;
 		int heapOffset=0;
 		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
@@ -24,6 +26,7 @@ public class CLITypeRefTableRow extends CLITableRow<CLITypeRefTableRow> {
 	public final CLIStringHeapPtr getTypeNamespace() {
 		int offset = 4;
 		if (tables.isStringHeapBig()) offset += 2;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_MODULE, CLITableConstants.CLI_TABLE_MODULE_REF, CLITableConstants.CLI_TABLE_ASSEMBLY_REF, CLITableConstants.CLI_TABLE_TYPE_REF)) offset += 2;
 		int heapOffset=0;
 		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
@@ -33,6 +36,7 @@ public class CLITypeRefTableRow extends CLITableRow<CLITypeRefTableRow> {
 	public int getLength() {
 		int offset = 6;
 		if (tables.isStringHeapBig()) offset += 4;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_MODULE, CLITableConstants.CLI_TABLE_MODULE_REF, CLITableConstants.CLI_TABLE_ASSEMBLY_REF, CLITableConstants.CLI_TABLE_TYPE_REF)) offset += 2;
 		return offset;
 	}
 

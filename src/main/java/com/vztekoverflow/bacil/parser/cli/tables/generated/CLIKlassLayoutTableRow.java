@@ -19,12 +19,15 @@ public class CLIKlassLayoutTableRow extends CLITableRow<CLIKlassLayoutTableRow> 
 
 	public final CLITablePtr getParent() { 
 		int offset = 6;
-		return new CLITablePtr(CLITableConstants.CLI_TABLE_TYPE_DEF, getShort(offset));
+		final int rowNo;
+		if (areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
+		return new CLITablePtr(CLITableConstants.CLI_TABLE_TYPE_DEF, rowNo);
 	}
 
 	@Override
 	public int getLength() {
 		int offset = 8;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF)) offset += 2;
 		return offset;
 	}
 

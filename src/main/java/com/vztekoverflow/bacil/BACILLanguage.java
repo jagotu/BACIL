@@ -9,6 +9,7 @@ import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLIMethodDefTableRow;
 import com.vztekoverflow.bacil.runtime.BACILContext;
+import org.graalvm.options.OptionDescriptors;
 import org.graalvm.polyglot.io.ByteSequence;
 
 @TruffleLanguage.Registration(id = BACILLanguage.ID, name = BACILLanguage.NAME, interactive = false, defaultMimeType = BACILLanguage.CIL_PE_MIME_TYPE,
@@ -49,17 +50,9 @@ public class BACILLanguage extends TruffleLanguage<BACILContext> {
     @Override
     protected CallTarget parse(ParsingRequest request) throws Exception {
         Source source = request.getSource();
-        ByteSequence bytes;
 
-        if (source.hasBytes()) {
-            bytes = source.getBytes();
-        } else if (source.hasCharacters()) {
-            throw new BACILParserException("Unexpected character-based source with mime type: " + source.getMimeType());
-        } else {
-            throw new BACILParserException("Should not reach here: Source is neither char-based nor byte-based!");
-        }
+        CLIComponent c = getCurrentContext(BACILLanguage.class).loadAssembly(source, this);
 
-        CLIComponent c = CLIComponent.parseComponent(bytes, source, this);
         //DebugNode node = new DebugNode(this, new FrameDescriptor(), c);
         if(c.getCliHeader().getEntryPointToken() == 0)
         {
@@ -70,5 +63,10 @@ public class BACILLanguage extends TruffleLanguage<BACILContext> {
 
         CILMethod entryMethod = c.getLocalMethod(entryPtr);
         return new AddCLIArgsCallTarget(entryMethod.getCallTarget());
+    }
+
+    @Override
+    protected OptionDescriptors getOptionDescriptors() {
+        return new BACILEngineOptionOptionDescriptors();
     }
 }

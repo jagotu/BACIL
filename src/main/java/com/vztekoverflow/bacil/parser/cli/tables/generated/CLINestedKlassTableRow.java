@@ -9,17 +9,24 @@ public class CLINestedKlassTableRow extends CLITableRow<CLINestedKlassTableRow> 
 
 	public final CLITablePtr getNestedKlass() { 
 		int offset = 0;
-		return new CLITablePtr(CLITableConstants.CLI_TABLE_TYPE_DEF, getShort(offset));
+		final int rowNo;
+		if (areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
+		return new CLITablePtr(CLITableConstants.CLI_TABLE_TYPE_DEF, rowNo);
 	}
 
 	public final CLITablePtr getEnclosingKlass() { 
 		int offset = 2;
-		return new CLITablePtr(CLITableConstants.CLI_TABLE_TYPE_DEF, getShort(offset));
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF)) offset += 2;
+		final int rowNo;
+		if (areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
+		return new CLITablePtr(CLITableConstants.CLI_TABLE_TYPE_DEF, rowNo);
 	}
 
 	@Override
 	public int getLength() {
 		int offset = 4;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF)) offset += 2;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF)) offset += 2;
 		return offset;
 	}
 

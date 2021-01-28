@@ -20,13 +20,15 @@ public class CLIGenericParamTableRow extends CLITableRow<CLIGenericParamTableRow
 	private static final byte[] MAP_OWNER_TABLES = new byte[] { CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_TYPE_SPEC} ;
 	public final CLITablePtr getOwner() { 
 		int offset = 4;
-		short codedValue = getShort(offset);
+		int codedValue;
+		if (areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_TYPE_SPEC)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
 		return new CLITablePtr(MAP_OWNER_TABLES[codedValue & 3], codedValue >> 2);
 	}
 
 	@Override
 	public int getLength() {
 		int offset = 6;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_TYPE_SPEC)) offset += 2;
 		return offset;
 	}
 

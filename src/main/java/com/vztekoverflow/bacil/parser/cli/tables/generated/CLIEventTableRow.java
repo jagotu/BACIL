@@ -23,7 +23,8 @@ public class CLIEventTableRow extends CLITableRow<CLIEventTableRow> {
 	public final CLITablePtr getEventType() { 
 		int offset = 4;
 		if (tables.isStringHeapBig()) offset += 2;
-		short codedValue = getShort(offset);
+		int codedValue;
+		if (areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_TYPE_SPEC)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
 		return new CLITablePtr(MAP_EVENT_TYPE_TABLES[codedValue & 3], codedValue >> 2);
 	}
 
@@ -31,6 +32,7 @@ public class CLIEventTableRow extends CLITableRow<CLIEventTableRow> {
 	public int getLength() {
 		int offset = 6;
 		if (tables.isStringHeapBig()) offset += 2;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_TYPE_SPEC)) offset += 2;
 		return offset;
 	}
 

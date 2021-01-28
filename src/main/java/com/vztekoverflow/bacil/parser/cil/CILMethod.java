@@ -4,6 +4,7 @@ import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.vztekoverflow.bacil.BACILInternalError;
 import com.vztekoverflow.bacil.nodes.BytecodeNode;
 import com.vztekoverflow.bacil.nodes.CILRootNode;
 import com.vztekoverflow.bacil.parser.BACILParserException;
@@ -12,8 +13,11 @@ import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLIMethodDefTableRow;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableHeads;
+import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITypeDefTableRow;
 import com.vztekoverflow.bacil.parser.signatures.LocalVarSig;
 import com.vztekoverflow.bacil.parser.signatures.MethodDefSig;
+import com.vztekoverflow.bacil.runtime.types.ByRefWrapped;
+import com.vztekoverflow.bacil.runtime.types.Type;
 
 public class CILMethod {
 
@@ -35,7 +39,13 @@ public class CILMethod {
     private static final byte CORILMETHOD_INITLOCALS = 0x10;
     private static final byte CORILMETHOD_MORESECTS = 0x8;
 
-    public CILMethod(CLIComponent component, CLIMethodDefTableRow methodDef)
+    @CompilerDirectives.CompilationFinal(dimensions = 1)
+    private final Type[] localsTypes;
+
+    private final int varsCount;
+    private final int argsCount;
+
+    public CILMethod(CLIComponent component, CLIMethodDefTableRow methodDef, CLITypeDefTableRow definingType)
     {
         this.component = component;
         this.methodDef = methodDef;
@@ -93,6 +103,44 @@ public class CILMethod {
         FrameDescriptor frameDescriptor = new FrameDescriptor();
         CILRootNode rootNode = new CILRootNode(frameDescriptor, new BytecodeNode(this, body));
         this.callTarget = Truffle.getRuntime().createCallTarget(rootNode);
+
+
+        int explicitArgsStart = 0;
+        if (methodDefSig.isHasThis())
+        {
+            if(definingType == null)
+            {
+                throw new BACILInternalError("Instance method constructor called without definingType!");
+            }
+            explicitArgsStart = 1;
+        }
+
+        argsCount = methodDefSig.getParamTypes().length + explicitArgsStart;
+
+        if(localVarSig != null)
+        {
+            varsCount = localVarSig.getVarTypes().length;
+        } else {
+            varsCount = 0;
+        }
+
+        localsTypes = new Type[varsCount+argsCount];
+
+        if(methodDefSig.isHasThis())
+        {
+            localsTypes[0] = Type.thisWrap(Type.fromTypeDef(component, definingType));
+        }
+
+        for(int i = 0; i < varsCount; i++)
+        {
+            localsTypes[i] = localVarSig.getVarTypes()[i];
+        }
+
+
+        for(int i = explicitArgsStart; i < argsCount; i++)
+        {
+            localsTypes[varsCount+i] = methodDefSig.getParamTypes()[i-explicitArgsStart];
+        }
     }
 
     public CLIComponent getComponent() {
@@ -132,4 +180,15 @@ public class CILMethod {
     }
 
 
+    public Type[] getLocalsTypes() {
+        return localsTypes;
+    }
+
+    public int getVarsCount() {
+        return varsCount;
+    }
+
+    public int getArgsCount() {
+        return argsCount;
+    }
 }

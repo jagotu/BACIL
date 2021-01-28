@@ -25,6 +25,7 @@ public class CLITableClassesGenerator {
         private int stringHeapPenalty = 0;
         private int GUIDHeapPenalty = 0;
         private int blobHeapPenalty = 0;
+        private final ArrayList<String> tablePenalties = new ArrayList<>();
     }
 
     public static void main(String[] args) throws IOException {
@@ -89,6 +90,11 @@ public class CLITableClassesGenerator {
         if (penalties.blobHeapPenalty != 0) {
             writer.println("\t\tif (tables.isBlobHeapBig()) offset += " + penalties.blobHeapPenalty + ";");
         }
+
+        for (String penalty : penalties.tablePenalties)
+        {
+            writer.println("\t\t" + penalty);
+        }
     }
 
     public static void generateConstantsClass(ArrayList<TableDefinition> tables, String outputDir) throws FileNotFoundException, UnsupportedEncodingException {
@@ -104,6 +110,7 @@ public class CLITableClassesGenerator {
             }
 
             writer.println(String.format("\tpublic static final byte CLI_TABLE_MAX_ID = %d;", tables.get(tables.size() - 1).id));
+            writer.println("\tpublic static final byte CLI_TABLE_NONE_ID = (byte)0xFF;");
 
             writer.println("}");
         }
@@ -212,18 +219,25 @@ public class CLITableClassesGenerator {
                     writer.println(String.format("\tpublic final CLITablePtr get%s() { ", fieldName));
                     generatePenaltiesCode(penalties, writer);
                     //Non-conforming SIMPLIFICATION - expect all tables have 2byte indices
-                    writer.println(String.format("\t\treturn new CLITablePtr(CLITableConstants.CLI_TABLE%s, getShort(offset));", nameToConstName(fieldType.substring(1))));
+                    String tableConstant = "CLITableConstants.CLI_TABLE" + nameToConstName(fieldType.substring(1));
+                    writer.println("\t\tfinal int rowNo;");
+                    writer.println("\t\tif (areSmallEnough(" + tableConstant + ")) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}");
+                    writer.println("\t\treturn new CLITablePtr(" + tableConstant + ", rowNo);");
+                    penalties.tablePenalties.add("if (!areSmallEnough(" + tableConstant + ")) offset += 2;");
                 } else {
                     //coded index
                     String[] tables = fieldType.substring(1).split("\\|");
                     writer.print(String.format("\tprivate static final byte[] MAP%s_TABLES = new byte[] { ", nameToConstName(fieldName)));
 
-                    writer.print(Arrays.stream(tables).map(s -> s.equals("_") ? "-1" : "CLITableConstants.CLI_TABLE" + nameToConstName(s)).collect(Collectors.joining(", ")));
+                    String tableIndices = Arrays.stream(tables).map(s -> s.equals("_") ? "CLITableConstants.CLI_TABLE_NONE_ID" : "CLITableConstants.CLI_TABLE" + nameToConstName(s)).collect(Collectors.joining(", "));
+                    writer.print(tableIndices);
                     writer.println("} ;");
 
                     writer.println(String.format("\tpublic final CLITablePtr get%s() { ", fieldName));
                     generatePenaltiesCode(penalties, writer);
-                    writer.println("\t\tshort codedValue = getShort(offset);");
+                    writer.println("\t\tint codedValue;");
+                    writer.println("\t\tif (areSmallEnough(" + tableIndices + ")) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}");
+                    penalties.tablePenalties.add("if (!areSmallEnough(" + tableIndices + ")) offset += 2;");
 
                     //Non-conforming SIMPLIFICATION - expect all tables have 2byte indices
 

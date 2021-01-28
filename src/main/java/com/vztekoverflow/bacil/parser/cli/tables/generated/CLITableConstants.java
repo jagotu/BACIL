@@ -41,4 +41,5 @@ public class CLITableConstants {
 	public static final byte CLI_TABLE_METHOD_SPEC = 43;
 	public static final byte CLI_TABLE_GENERIC_PARAM_CONSTRAINT = 44;
 	public static final byte CLI_TABLE_MAX_ID = 44;
+	public static final byte CLI_TABLE_NONE_ID = (byte)0xFF;
 }

@@ -2,6 +2,9 @@ package com.vztekoverflow.bacil.runtime.types;
 
 import com.vztekoverflow.bacil.BACILInternalError;
 import com.vztekoverflow.bacil.parser.BACILParserException;
+import com.vztekoverflow.bacil.parser.cli.CLIComponent;
+import com.vztekoverflow.bacil.parser.cli.tables.generated.CLIMethodDefTableRow;
+import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITypeDefTableRow;
 import com.vztekoverflow.bacil.parser.signatures.SignatureReader;
 
 import java.text.ParseException;
@@ -81,6 +84,80 @@ public abstract class Type {
         }
     }
 
+    public static Type fromTypeDef(CLIComponent component, CLITypeDefTableRow row)
+    {
+        if(row == null)
+            return null;
+
+        if(row.getTypeNamespace().read(component.getStringHeap()).equals("System"))
+        {
+            //II.23.2.16
+            switch (row.getTypeName().read(component.getStringHeap())) {
+                case "String":
+                    return new SimpleType(Type.ELEMENT_TYPE_STRING);
+                case "Object":
+                    return new SimpleType(Type.ELEMENT_TYPE_OBJECT);
+                case "Void":
+                    return new SimpleType(Type.ELEMENT_TYPE_VOID);
+                case "Boolean":
+                    return new SimpleType(Type.ELEMENT_TYPE_BOOLEAN);
+                case "Char":
+                    return new SimpleType(Type.ELEMENT_TYPE_CHAR);
+                case "Byte":
+                    return new SimpleType(Type.ELEMENT_TYPE_U1);
+                case "Sbyte":
+                    return new SimpleType(Type.ELEMENT_TYPE_I1);
+                case "Int16":
+                    return new SimpleType(Type.ELEMENT_TYPE_I2);
+                case "UInt16":
+                    return new SimpleType(Type.ELEMENT_TYPE_U2);
+                case "Int32":
+                    return new SimpleType(Type.ELEMENT_TYPE_I4);
+                case "UInt32":
+                    return new SimpleType(Type.ELEMENT_TYPE_U4);
+                case "Int64":
+                    return new SimpleType(Type.ELEMENT_TYPE_I8);
+                case "UInt64":
+                    return new SimpleType(Type.ELEMENT_TYPE_U8);
+                case "IntPtr":
+                    return new SimpleType(Type.ELEMENT_TYPE_I);
+                case "UIntPtr":
+                    return new SimpleType(Type.ELEMENT_TYPE_U);
+                case "TypedReference":
+                    return new SimpleType(Type.ELEMENT_TYPE_TYPEDBYREF);
+
+
+            }
+        }
+
+
+        return new KlassType();
+    }
+
+    public static Type thisWrap(Type type)
+    {
+        switch(type.getTypeCategory())
+        {
+            case ELEMENT_TYPE_VOID:
+            case ELEMENT_TYPE_BOOLEAN:
+            case ELEMENT_TYPE_CHAR:
+            case ELEMENT_TYPE_U1:
+            case ELEMENT_TYPE_I1:
+            case ELEMENT_TYPE_U2:
+            case ELEMENT_TYPE_I2:
+            case ELEMENT_TYPE_U4:
+            case ELEMENT_TYPE_I4:
+            case ELEMENT_TYPE_U8:
+            case ELEMENT_TYPE_I8:
+            case ELEMENT_TYPE_R4:
+            case ELEMENT_TYPE_R8:
+            case ELEMENT_TYPE_I:
+            case ELEMENT_TYPE_U:
+                return new ByRefWrapped(type);
+        }
+        return type;
+    }
+
     public static Type readParam(SignatureReader reader, boolean allowVoid)
     {
         boolean byRef = false;
@@ -123,7 +200,7 @@ public abstract class Type {
 
     public Object fromStackVar(Object ref, long primitive)
     {
-        throw new BACILInternalError("Conversion from stack var to type " + getTypeCategory() + "not implemented!");
+        throw new BACILInternalError("Conversion from stack var to type " + getTypeCategory() + " not implemented!");
     }
 
     public void toStackVar(Object[] refs, long[] primitives, int slot, Object value)

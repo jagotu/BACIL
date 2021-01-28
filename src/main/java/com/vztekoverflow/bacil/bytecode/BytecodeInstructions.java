@@ -1,11 +1,9 @@
 package com.vztekoverflow.bacil.bytecode;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.vztekoverflow.bacil.runtime.ExecutionStackType;
-import com.vztekoverflow.bacil.runtime.types.Type;
+import com.vztekoverflow.bacil.runtime.ExecutionStackPrimitiveMarker;
 
-import static com.vztekoverflow.bacil.runtime.ExecutionStackType.*;
+import static com.vztekoverflow.bacil.runtime.ExecutionStackPrimitiveMarker.*;
 
 public class BytecodeInstructions {
 
@@ -293,6 +291,7 @@ public class BytecodeInstructions {
         def(LDLOC_2, "ldloc.2", "b", 1);
         def(LDLOC_3, "ldloc.3", "b", 1);
         def(LDLOC_S, "ldloc.s", "bi", 1);
+        def(LDLOCA_S, "ldloca.s", "bi", 1);
 
 
         def(STLOC_0, "stloc.0", "b", -1);
@@ -306,6 +305,20 @@ public class BytecodeInstructions {
         def(LDARG_2, "ldarg.2", "b", 1);
         def(LDARG_3, "ldarg.3", "b", 1);
         def(LDARG_S, "ldarg.s", "bi", 1);
+        def(LDARGA_S, "ldarga.s", "bi", 1);
+
+        def(LDIND_I1, "ldind.i1", "b", 0);
+        def(LDIND_U1, "ldind.u1", "b", 0);
+        def(LDIND_I2, "ldind.i2", "b", 0);
+        def(LDIND_U2, "ldind.u2", "b", 0);
+        def(LDIND_I4, "ldind.i4", "b", 0);
+        def(LDIND_U4, "ldind.u4", "b", 0);
+        def(LDIND_I8, "ldind.i8", "b", 0);
+        def(LDIND_I, "ldind.i", "b", 0);
+        def(LDIND_R4, "ldind.r4", "b", 0);
+        def(LDIND_R8, "ldind.r8", "b", 0);
+
+
 
         def(RET, "ret", "b", 0);
 
@@ -403,9 +416,9 @@ public class BytecodeInstructions {
     }
 
     @CompilationFinal(dimensions = 2)
-    public static final ExecutionStackType[][] binaryNumericResultTypes = new ExecutionStackType[EXECUTION_STACK_TAG_MAX+1][EXECUTION_STACK_TAG_MAX+1];
+    public static final ExecutionStackPrimitiveMarker[][] binaryNumericResultTypes = new ExecutionStackPrimitiveMarker[EXECUTION_STACK_TAG_MAX+1][EXECUTION_STACK_TAG_MAX+1];
 
-    public static void binaryNumericResult(byte arg1, byte arg2, ExecutionStackType result)
+    public static void binaryNumericResult(byte arg1, byte arg2, ExecutionStackPrimitiveMarker result)
     {
         binaryNumericResultTypes[arg1][arg2] = result;
         if(arg1 != arg2)

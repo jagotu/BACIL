@@ -24,12 +24,15 @@ public class CLIAssemblyRefOSTableRow extends CLITableRow<CLIAssemblyRefOSTableR
 
 	public final CLITablePtr getAssemblyRef() { 
 		int offset = 12;
-		return new CLITablePtr(CLITableConstants.CLI_TABLE_ASSEMBLY_REF, getShort(offset));
+		final int rowNo;
+		if (areSmallEnough(CLITableConstants.CLI_TABLE_ASSEMBLY_REF)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
+		return new CLITablePtr(CLITableConstants.CLI_TABLE_ASSEMBLY_REF, rowNo);
 	}
 
 	@Override
 	public int getLength() {
 		int offset = 14;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_ASSEMBLY_REF)) offset += 2;
 		return offset;
 	}
 

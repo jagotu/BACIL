@@ -14,12 +14,15 @@ public class CLIFieldLayoutTableRow extends CLITableRow<CLIFieldLayoutTableRow> 
 
 	public final CLITablePtr getField() { 
 		int offset = 4;
-		return new CLITablePtr(CLITableConstants.CLI_TABLE_FIELD, getShort(offset));
+		final int rowNo;
+		if (areSmallEnough(CLITableConstants.CLI_TABLE_FIELD)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
+		return new CLITablePtr(CLITableConstants.CLI_TABLE_FIELD, rowNo);
 	}
 
 	@Override
 	public int getLength() {
 		int offset = 6;
+		if (!areSmallEnough(CLITableConstants.CLI_TABLE_FIELD)) offset += 2;
 		return offset;
 	}
 

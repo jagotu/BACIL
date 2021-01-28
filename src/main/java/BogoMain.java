@@ -15,6 +15,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
+import static com.vztekoverflow.bacil.BACILEngineOption.LIBRARY_PATH_NAME;
+
 public class BogoMain {
 
     private static final String CIL = "cil";
@@ -22,7 +24,7 @@ public class BogoMain {
     public static void main(String[] args) {
         try {
             final Source source = Source.newBuilder(CIL, new File(args[0])).build();
-            final Context context = Context.newBuilder(CIL).allowNativeAccess(true).allowExperimentalOptions(true).build();
+            final Context context = Context.newBuilder(CIL).allowAllAccess(true).allowExperimentalOptions(true).option(LIBRARY_PATH_NAME, "c:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App\\5.0.2\\").build();
             final long start = System.currentTimeMillis();
             System.out.println("Returned: " + context.eval(source));
             final long done = System.currentTimeMillis();

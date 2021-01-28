@@ -32,22 +32,22 @@ public class MethodDefSig {
 
     public static MethodDefSig read(byte[] signature) {
         SignatureReader reader = new SignatureReader(signature);
+        int callingConvention = reader.getUnsigned();
 
         boolean hasThis = false;
-        if(reader.peekUnsigned() == HASTHIS)
+        if((callingConvention & HASTHIS) != 0)
         {
             hasThis = true;
-            reader.getUnsigned();
         }
 
         boolean explicitThis = false;
-        if(reader.peekUnsigned() == EXPLICITTHIS)
+        if((callingConvention & EXPLICITTHIS) != 0)
         {
             explicitThis = true;
-            reader.getUnsigned();
         }
 
-        int callingConvention = reader.getUnsigned();
+        callingConvention = callingConvention & (~0x60);
+
         int genParamCount = -1;
         if(callingConvention == GENERIC)
         {
