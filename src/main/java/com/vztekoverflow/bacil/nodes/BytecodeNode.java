@@ -258,6 +258,7 @@ public class BytecodeNode extends Node {
     {
 
         final int argsCount = method.getArgsCount();
+        final int varsCount = method.getVarsCount();
         final Object[] args = new Object[argsCount];
         final int firstArg = top - argsCount;
         final Type[] targetTypes = method.getLocalsTypes();
@@ -267,7 +268,7 @@ public class BytecodeNode extends Node {
 
         for(int i = 0; i < argsCount; i++)
         {
-            args[i] = targetTypes[i].fromStackVar(refs[firstArg+i], primitives[firstArg+i]);
+            args[i] = targetTypes[varsCount+i].fromStackVar(refs[firstArg+i], primitives[firstArg+i]);
         }
 
         return args;
@@ -416,6 +417,7 @@ public class BytecodeNode extends Node {
             throw new BACILInternalError("Unimplemented.");
         }
     }
+
 
     public static int doJmp(BytecodeBuffer bytecodeBuffer, int pc, int offset)
     {

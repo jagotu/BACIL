@@ -88,8 +88,10 @@ public class SignatureReader implements Positionable {
     public void assertUnsigned(int expected, String type)
     {
         int result = getUnsigned();
-        if (result != expected)
+        if (result != expected) {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILParserException(String.format("Unexpected value when parsing %s: expected %d, got %d", type, expected, result));
+        }
     }
 
 }
