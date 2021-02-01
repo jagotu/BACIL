@@ -22,12 +22,17 @@
         <dependency>
             <groupId>org.graalvm.truffle</groupId>
             <artifactId>truffle-dsl-processor</artifactId>
-            <version>20.3.0</version>
+            <version>21.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.graalvm.truffle</groupId>
             <artifactId>truffle-nfi</artifactId>
-            <version>20.3.0</version>
+            <version>21.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.sdk</groupId>
+            <artifactId>launcher-common</artifactId>
+            <version>21.0.0</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
