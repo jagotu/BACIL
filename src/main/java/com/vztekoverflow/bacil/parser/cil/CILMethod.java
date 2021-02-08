@@ -131,22 +131,22 @@ public class CILMethod implements BACILMethod {
 
         locationTypes = new Type[varsCount+argsCount];
 
+        for(int i = 0; i < varsCount; i++)
+        {
+            locationTypes[i] = localVarSig.getVarTypes()[i];
+        }
+
         if(methodDefSig.isHasThis() && !methodDefSig.isExplicitThis())
         {
             //I.8.6.1.5
             if(definingType instanceof SystemValueTypeType)
             {
                 //TODO if virtual then boxed
-                locationTypes[0] = new ByRefWrapped(definingType);
+                locationTypes[varsCount] = new ByRefWrapped(definingType);
             } else {
-                locationTypes[0] = definingType;
+                locationTypes[varsCount] = definingType;
             }
 
-        }
-
-        for(int i = 0; i < varsCount; i++)
-        {
-            locationTypes[i] = localVarSig.getVarTypes()[i];
         }
 
 

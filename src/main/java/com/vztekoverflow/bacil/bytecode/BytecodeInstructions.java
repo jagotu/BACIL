@@ -351,6 +351,7 @@ public class BytecodeInstructions {
 
         def(CALL, "call", "btttt", 0);
         def(NEWOBJ, "newobj", "btttt", 0);
+        def(CALLVIRT, "callvirt", "btttt",0);
 
         defPrefixed(CGT, "cgt", "b", -1);
         defPrefixed(CEQ, "ceq", "b", -1);

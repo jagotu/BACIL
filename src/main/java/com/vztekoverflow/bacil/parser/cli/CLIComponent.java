@@ -222,6 +222,11 @@ public class CLIComponent {
             next = next.next();
         }
 
+        if(!next.hasNext())
+        {
+            return getLocalType(next);
+        }
+
         return getLocalType(previous);
     }
 

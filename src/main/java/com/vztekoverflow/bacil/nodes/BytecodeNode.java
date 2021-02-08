@@ -223,6 +223,7 @@ public class BytecodeNode extends Node {
                     doCompareBinary(curOpcode, primitives, refs, top-2, top-1); break;
 
                 case CALL:
+                case CALLVIRT:
                 case NEWOBJ:
                     top = nodeizeCallToken(frame, primitives, refs, top, bytecodeBuffer.getImmToken(pc), pc, curOpcode); break;
 
@@ -314,6 +315,7 @@ public class BytecodeNode extends Node {
         switch (opcode)
         {
             case CALL:
+            case CALLVIRT: //TODO HACK should actually call virtually!!
                 node = new CallNode(toCall, top);
                 break;
             case NEWOBJ:
