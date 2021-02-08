@@ -15,9 +15,11 @@ import com.vztekoverflow.bacil.parser.cli.tables.CLITablesHeader;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.*;
 import com.vztekoverflow.bacil.parser.pe.PEFile;
 import com.vztekoverflow.bacil.runtime.BACILContext;
+import com.vztekoverflow.bacil.runtime.BACILMethod;
+import com.vztekoverflow.bacil.runtime.types.NamedType;
+import com.vztekoverflow.bacil.runtime.types.Type;
+import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
 import org.graalvm.polyglot.io.ByteSequence;
-
-import java.util.Arrays;
 
 public class CLIComponent {
 
@@ -38,7 +40,19 @@ public class CLIComponent {
     @CompilationFinal(dimensions = 1)
     private final byte[] guidHeap;
 
+    @CompilationFinal(dimensions = 1)
+    protected final Type[] localDefTypes;
+
+    @CompilationFinal(dimensions = 1)
+    private final Type[] localSpecTypes;
+
+    @CompilationFinal(dimensions = 1)
+    private final CILMethod[] localMethods;
+
     private final PEFile pe;
+
+    @CompilationFinal
+    private BuiltinTypes builtinTypes;
 
     public CLIHeader getCliHeader() {
         return cliHeader;
@@ -78,9 +92,6 @@ public class CLIComponent {
 
     }
 
-    @CompilationFinal(dimensions = 1)
-    public final CILMethod[] localMethods;
-
     public int getFileOffsetForRVA(int RVA) {
         return pe.getFileOffsetForRVA(RVA);
     }
@@ -102,6 +113,8 @@ public class CLIComponent {
         this.context = context;
 
         localMethods = new CILMethod[tables.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_METHOD_DEF)];
+        localDefTypes = new Type[tables.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_TYPE_DEF)];
+        localSpecTypes = new Type[tables.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_TYPE_SPEC)];
 
         final int assemblyDefCount = tables.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_ASSEMBLY);
         if(assemblyDefCount > 1)
@@ -116,7 +129,7 @@ public class CLIComponent {
 
     }
 
-    public static CLIComponent parseComponent(ByteSequence bytes, Source source, BACILContext context) {
+    public static CLIComponent parseComponent(ByteSequence bytes, Source source, BACILContext context, boolean isCoreLib) {
         CompilerAsserts.neverPartOfCompilation();
 
         PEFile peFile = PEFile.create(bytes);
@@ -149,10 +162,16 @@ public class CLIComponent {
         final byte[] stringHeap = cliMetadata.getStream("#Strings", bytes).toByteArray();
         final byte[] guidHeap = cliMetadata.getStream("#GUID", bytes).toByteArray();
 
+
         return new CLIComponent(cliHeader, cliMetadata, blobHeap, stringHeap, guidHeap, tables, peFile, context);
+
     }
 
-    public CILMethod getMethod(CLITablePtr token, BACILContext context)
+    public static CLIComponent parseComponent(ByteSequence bytes, Source source, BACILContext context) {
+        return parseComponent(bytes, source, context, false);
+    }
+
+    public BACILMethod getMethod(CLITablePtr token, BACILContext context)
     {
         switch(token.getTableId())
         {
@@ -168,77 +187,20 @@ public class CLIComponent {
         }
     }
 
-    public CLIMethodDefTableRow getMemberMethod(CLITypeDefTableRow type, String name, byte[] signature)
-    {
-        CompilerAsserts.neverPartOfCompilation();
-
-        CLIMethodDefTableRow curr = getTableHeads().getMethodDefTableHead().skip(type.getMethodList());
-        int end;
-        if(type.hasNext())
-        {
-            end = getTableHeads().getMethodDefTableHead().skip(type.next().getMethodList()).getCursor();
-        } else {
-            end = getTableHeads().getMethodDefTableHead().skip(tables.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_METHOD_DEF)).getCursor();
-        }
-
-        while(curr.getCursor() < end)
-        {
-            if(curr.getName().read(stringHeap).equals(name) && Arrays.equals(curr.getSignature().read(blobHeap), signature))
-                return curr;
-
-            curr = curr.next();
-        }
-
-        throw new BACILInternalError(String.format("Member method %s not found in %s.%s or has invalid signature.", name, type.getTypeNamespace().read(stringHeap),
-                type.getTypeName().read(stringHeap)));
-
-    }
-
-    public CILMethod getForeignMethod(CLITablePtr token)
+    public BACILMethod getForeignMethod(CLITablePtr token)
     {
         CompilerAsserts.neverPartOfCompilation();
 
         CLIMemberRefTableRow memberRef = getTableHeads().getMemberRefTableHead().skip(token);
         CLITypeRefTableRow typeRef = getTableHeads().getTypeRefTableHead().skip(memberRef.getKlass());
-        CLIAssemblyRefTableRow assemblyRef = getTableHeads().getAssemblyRefTableHead().skip(typeRef.getResolutionScope());
-        AssemblyIdentity assemblyRefIdentity = AssemblyIdentity.fromAssemblyRefRow(stringHeap, assemblyRef);
-        CLIComponent assembly = context.getAssembly(assemblyRefIdentity);
-
-        FindTypeResult typeResult = assembly.getType(typeRef.getTypeNamespace().read(stringHeap), typeRef.getTypeName().read(stringHeap));
-        assembly = typeResult.definingAssembly;
-
-        CLIMethodDefTableRow methodDef = assembly.getMemberMethod(typeResult.typeDef, memberRef.getName().read(stringHeap), memberRef.getSignature().read(blobHeap));
-        return assembly.getLocalMethod(methodDef, typeResult.typeDef);
+        Type type = getForeignType(typeRef);
+        return type.getMemberMethod(memberRef.getName().read(stringHeap), memberRef.getSignature().read(blobHeap));
     }
 
-    public FindTypeResult getType(String namespace, String name)
-    {
-        for(CLITypeDefTableRow row : getTableHeads().getTypeDefTableHead())
-        {
-            if(row.getTypeNamespace().read(stringHeap).equals(namespace) && row.getTypeName().read(stringHeap).equals(name))
-                return new FindTypeResult(this, row);
-        }
 
-        for(CLIExportedTypeTableRow row : getTableHeads().getExportedTypeTableHead())
-        {
-            if(row.getTypeNamespace().read(stringHeap).equals(namespace) && row.getTypeName().read(stringHeap).equals(name))
-            {
-                CLIAssemblyRefTableRow assemblyRef = getTableHeads().getAssemblyRefTableHead().skip(row.getImplementation());
-                CLIComponent c = context.getAssembly(AssemblyIdentity.fromAssemblyRefRow(stringHeap, assemblyRef));
-                return c.getType(namespace, name);
-            }
-        }
 
-        throw new BACILInternalError(String.format("Type %s.%s not found in %s.", namespace, name, assemblyIdentity.getName()));
-    }
 
-    public CLIAssemblyRefTableRow getExportedTypeAssembly(String namespace, String name)
-    {
-
-        return null;
-    }
-
-    public CLITypeDefTableRow findDefiningType(CLIMethodDefTableRow methodDef)
+    public Type findDefiningType(CLIMethodDefTableRow methodDef)
     {
         if(getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_TYPE_DEF) == 0) {
             return null;
@@ -250,7 +212,7 @@ public class CLIComponent {
             return null;
         } else if (!previous.hasNext())
         {
-            return previous;
+            return getLocalType(previous);
         }
 
         CLITypeDefTableRow next = previous.next();
@@ -260,41 +222,109 @@ public class CLIComponent {
             next = next.next();
         }
 
-        if(!next.hasNext())
-        {
-            return null;
-        } else {
-            return previous;
-        }
+        return getLocalType(previous);
     }
 
     public CILMethod getLocalMethod(CLITablePtr token)
     {
 
 
-        if(localMethods[token.getRowNo()] == null)
+        if(localMethods[token.getRowNo()-1] == null)
         {
             //it's the responsibility of method finder to not be in compilation when this can fail
             CompilerAsserts.neverPartOfCompilation();
             CLIMethodDefTableRow methodDef =  tables.getTableHeads().getMethodDefTableHead().skip(token);
-            localMethods[token.getRowNo()] = new CILMethod(this, methodDef, findDefiningType(methodDef));
+            localMethods[token.getRowNo()-1] = new CILMethod(this, methodDef, findDefiningType(methodDef));
         }
 
-        return localMethods[token.getRowNo()];
+        return localMethods[token.getRowNo()-1];
     }
 
-    public CILMethod getLocalMethod(CLIMethodDefTableRow method, CLITypeDefTableRow type)
+    public CILMethod getLocalMethod(CLIMethodDefTableRow method, Type type)
     {
 
 
-        if(localMethods[method.getRowNo()] == null)
+        if(localMethods[method.getRowNo()-1] == null)
         {
             //it's the responsibility of method finder to not be in compilation when this can fail
             CompilerAsserts.neverPartOfCompilation();
-            localMethods[method.getRowNo()] = new CILMethod(this, method, type);
+            localMethods[method.getRowNo()-1] = new CILMethod(this, method, type);
         }
 
-        return localMethods[method.getRowNo()];
+        return localMethods[method.getRowNo()-1];
+    }
+
+    public Type getForeignType(CLITypeRefTableRow typeRef)
+    {
+        CLIAssemblyRefTableRow assemblyRef = getTableHeads().getAssemblyRefTableHead().skip(typeRef.getResolutionScope());
+        AssemblyIdentity assemblyRefIdentity = AssemblyIdentity.fromAssemblyRefRow(stringHeap, assemblyRef);
+
+        String typeName = typeRef.getTypeName().read(stringHeap);
+        String typeNamespace = typeRef.getTypeNamespace().read(stringHeap);
+
+        CLIComponent assembly = context.getAssembly(assemblyRefIdentity);
+
+
+       return assembly.findLocalType(typeNamespace, typeName);
+    }
+
+    public Type getType(CLITablePtr ptr)
+    {
+        if(ptr.getTableId() == CLITableConstants.CLI_TABLE_TYPE_REF)
+        {
+            return getForeignType(getTableHeads().getTypeRefTableHead().skip(ptr));
+        } else {
+            return getLocalType(ptr);
+        }
+    }
+
+
+
+    public Type findLocalType(String namespace, String name)
+    {
+        for(CLITypeDefTableRow row : getTableHeads().getTypeDefTableHead())
+        {
+            if(row.getTypeNamespace().read(stringHeap).equals(namespace) && row.getTypeName().read(stringHeap).equals(name))
+                return getLocalType(row);
+        }
+
+        for(CLIExportedTypeTableRow row : getTableHeads().getExportedTypeTableHead())
+        {
+            if(row.getTypeNamespace().read(stringHeap).equals(namespace) && row.getTypeName().read(stringHeap).equals(name))
+            {
+                CLIAssemblyRefTableRow assemblyRef = getTableHeads().getAssemblyRefTableHead().skip(row.getImplementation());
+                CLIComponent c = context.getAssembly(AssemblyIdentity.fromAssemblyRefRow(stringHeap, assemblyRef));
+                return c.findLocalType(namespace, name);
+            }
+        }
+
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        throw new BACILInternalError(String.format("Type %s.%s not found.", namespace, name));
+    }
+
+    public Type getLocalType(CLITypeDefTableRow typeDef)
+    {
+        if(localDefTypes[typeDef.getRowNo()-1] == null)
+        {
+            CompilerAsserts.neverPartOfCompilation();
+            localDefTypes[typeDef.getRowNo()-1] = NamedType.fromTypeDef(typeDef, this);
+        }
+        return localDefTypes[typeDef.getRowNo()-1];
+    }
+
+    public Type getLocalType(CLITablePtr ptr)
+    {
+        if(ptr.getTableId() == CLITableConstants.CLI_TABLE_TYPE_DEF)
+        {
+            return getLocalType(tables.getTableHeads().getTypeDefTableHead().skip(ptr));
+        } else if (ptr.getTableId() == CLITableConstants.CLI_TABLE_TYPE_SPEC)
+        {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            throw new BACILInternalError("Not yet implemented!");
+        } else {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            throw new BACILInternalError("Unexpected ptr to table " + ptr.getTableId());
+        }
     }
 
     public CLITableHeads getTableHeads()
@@ -307,4 +337,17 @@ public class CLIComponent {
         return tables.getTablesHeader();
     }
 
+    public void setBuiltinTypes(BuiltinTypes builtinTypes) {
+        CompilerAsserts.neverPartOfCompilation();
+        this.builtinTypes = builtinTypes;
+    }
+
+    public BuiltinTypes getBuiltinTypes() {
+        return builtinTypes;
+    }
+
+    @Override
+    public String toString() {
+        return assemblyIdentity.getName();
+    }
 }

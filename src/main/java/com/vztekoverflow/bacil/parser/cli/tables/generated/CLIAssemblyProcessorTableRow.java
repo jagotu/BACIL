@@ -1,6 +1,7 @@
 package com.vztekoverflow.bacil.parser.cli.tables.generated;
 
-import com.vztekoverflow.bacil.parser.cli.tables.*;
+import com.vztekoverflow.bacil.parser.cli.tables.CLITableRow;
+import com.vztekoverflow.bacil.parser.cli.tables.CLITables;
 public class CLIAssemblyProcessorTableRow extends CLITableRow<CLIAssemblyProcessorTableRow> {
 
 	public CLIAssemblyProcessorTableRow(CLITables tables, int cursor, int rowIndex) {

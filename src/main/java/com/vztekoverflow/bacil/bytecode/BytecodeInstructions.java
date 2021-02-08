@@ -326,6 +326,9 @@ public class BytecodeInstructions {
         def(STIND_R4, "stind.r4", "b", -2);
         def(STIND_R8, "stind.r8", "b", -2);
 
+        def(STFLD, "stfld", "btttt", -2);
+        def(LDFLD, "ldfld", "btttt", 0);
+
 
 
 
@@ -347,6 +350,7 @@ public class BytecodeInstructions {
 
 
         def(CALL, "call", "btttt", 0);
+        def(NEWOBJ, "newobj", "btttt", 0);
 
         defPrefixed(CGT, "cgt", "b", -1);
         defPrefixed(CEQ, "ceq", "b", -1);

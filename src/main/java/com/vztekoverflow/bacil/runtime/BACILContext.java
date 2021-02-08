@@ -1,12 +1,9 @@
 package com.vztekoverflow.bacil.runtime;
 
-import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleFile;
 import com.oracle.truffle.api.TruffleLanguage;
-import com.oracle.truffle.api.interop.InteropException;
-import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.source.Source;
 import com.vztekoverflow.bacil.BACILEngineOption;
 import com.vztekoverflow.bacil.BACILInternalError;
@@ -14,15 +11,13 @@ import com.vztekoverflow.bacil.BACILLanguage;
 import com.vztekoverflow.bacil.parser.BACILParserException;
 import com.vztekoverflow.bacil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
-import org.graalvm.collections.EconomicMap;
+import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
 import org.graalvm.polyglot.io.ByteSequence;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 
 public class BACILContext {
@@ -30,6 +25,12 @@ public class BACILContext {
     private final TruffleLanguage.Env env;
     private final List<Path> libraryPaths = new ArrayList<>();
     private final ArrayList<CLIComponent> loadedAssemblies = new ArrayList<>();
+
+    @CompilerDirectives.CompilationFinal
+    private BuiltinTypes builtinTypes = null;
+
+    @CompilerDirectives.CompilationFinal
+    private boolean builtinInitalizing = false;
 
     public BACILLanguage getLanguage() {
         return language;
@@ -70,7 +71,7 @@ public class BACILContext {
             if (file.exists()) {
                 try {
                     CLIComponent c = loadAssembly(Source.newBuilder(BACILLanguage.ID, file).build(), language);
-                    if(c.getAssemblyIdentity().resolvesRef(reference))
+                    if(c.getAssemblyIdentity().resolvesRef(reference) || reference.getName().equals("netstandard"))
                     {
                         return c;
                     }
@@ -84,6 +85,8 @@ public class BACILContext {
 
     public CLIComponent loadAssembly(Source source, BACILLanguage language)
     {
+        CompilerAsserts.neverPartOfCompilation();
+
         ByteSequence bytes;
 
         if (source.hasBytes()) {
@@ -99,6 +102,22 @@ public class BACILContext {
         {
             loadedAssemblies.add(c);
         }
+
+        if(builtinTypes == null && !builtinInitalizing)
+        {
+            builtinInitalizing = true;
+            AssemblyIdentity corLibRef = AssemblyIdentity.fromAssemblyRefRow(c.getStringHeap(), c.getTableHeads().getAssemblyRefTableHead());
+            CLIComponent corLib = findAssembly(corLibRef);
+            builtinTypes = new BuiltinTypes(corLib);
+
+            for(CLIComponent comp : loadedAssemblies)
+            {
+                comp.setBuiltinTypes(builtinTypes);
+            }
+        }
+
+        c.setBuiltinTypes(builtinTypes);
+
         return c;
     }
 
@@ -117,4 +136,7 @@ public class BACILContext {
         return findAssembly(reference);
     }
 
+    public BuiltinTypes getBuiltinTypes() {
+        return builtinTypes;
+    }
 }

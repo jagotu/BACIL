@@ -4,7 +4,6 @@ package com.vztekoverflow.bacil.parser.cli.tables;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.vztekoverflow.bacil.BACILInternalError;
 import com.vztekoverflow.bacil.bytecode.Bytes;
-import com.vztekoverflow.bacil.parser.BACILParserException;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableConstants;
 
 import java.util.Iterator;
@@ -27,7 +26,7 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
     }
 
     public final boolean hasNext() {
-        return rowIndex < tables.getTablesHeader().getRowCount(getTableId());
+        return rowIndex < tables.getTablesHeader().getRowCount(getTableId())-1;
     }
 
     public final T next()
@@ -53,7 +52,7 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
     }
 
 
-    public final int getCursor() {
+    protected final int getCursor() {
         return cursor;
     }
 
@@ -73,6 +72,18 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
     {
         final byte[] tableData = tables.getTablesData();
         return Bytes.getInt(tableData, cursor+offset);
+    }
+
+    protected final int getUShort(int offset)
+    {
+        final byte[] tableData = tables.getTablesData();
+        return Bytes.getUShort(tableData, cursor+offset);
+    }
+
+    protected final long getUInt(int offset)
+    {
+        final byte[] tableData = tables.getTablesData();
+        return Bytes.getUInt(tableData, cursor+offset);
     }
 
     protected final long getLong(int offset)

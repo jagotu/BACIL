@@ -194,7 +194,7 @@ public class CLITableClassesGenerator {
                 writer.println(String.format("\tpublic final CLI%sHeapPtr get%s() {", streamName, fieldName));
                 generatePenaltiesCode(penalties, writer);
                 writer.println("\t\tint heapOffset=0;");
-                writer.println(String.format("\t\tif (tables.is%sHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getShort(offset); }", streamName));
+                writer.println(String.format("\t\tif (tables.is%sHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }", streamName));
                 writer.println(String.format("\t\treturn new CLI%sHeapPtr(heapOffset);", streamName));
                 writer.println("\t}\n");
 

@@ -1,6 +1,9 @@
 package com.vztekoverflow.bacil.parser.cli.tables.generated;
 
-import com.vztekoverflow.bacil.parser.cli.tables.*;
+import com.vztekoverflow.bacil.parser.cli.tables.CLIBlobHeapPtr;
+import com.vztekoverflow.bacil.parser.cli.tables.CLIStringHeapPtr;
+import com.vztekoverflow.bacil.parser.cli.tables.CLITableRow;
+import com.vztekoverflow.bacil.parser.cli.tables.CLITables;
 public class CLIFileTableRow extends CLITableRow<CLIFileTableRow> {
 
 	public CLIFileTableRow(CLITables tables, int cursor, int rowIndex) {
@@ -15,7 +18,7 @@ public class CLIFileTableRow extends CLITableRow<CLIFileTableRow> {
 	public final CLIStringHeapPtr getName() {
 		int offset = 4;
 		int heapOffset=0;
-		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getShort(offset); }
+		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
 	}
 
@@ -23,7 +26,7 @@ public class CLIFileTableRow extends CLITableRow<CLIFileTableRow> {
 		int offset = 6;
 		if (tables.isStringHeapBig()) offset += 2;
 		int heapOffset=0;
-		if (tables.isBlobHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getShort(offset); }
+		if (tables.isBlobHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIBlobHeapPtr(heapOffset);
 	}
 

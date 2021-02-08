@@ -1,8 +1,10 @@
 package com.vztekoverflow.bacil.parser.signatures;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.runtime.types.Type;
 
+//II.23.2.1
 public class MethodDefSig {
 
     private final boolean hasThis;
@@ -30,7 +32,7 @@ public class MethodDefSig {
     public static final int GENERIC = 0x10;
 
 
-    public static MethodDefSig read(byte[] signature) {
+    public static MethodDefSig read(byte[] signature, CLIComponent component) {
         SignatureReader reader = new SignatureReader(signature);
         int callingConvention = reader.getUnsigned();
 
@@ -55,11 +57,11 @@ public class MethodDefSig {
         }
 
         final int count = reader.getUnsigned();
-        final Type retType = Type.readParam(reader, true);
+        final Type retType = SignatureType.readParam(reader, true, component);
         final Type[] paramTypes = new Type[count];
         for(int i = 0; i < count; i++)
         {
-            paramTypes[i] = Type.readParam(reader, false);
+            paramTypes[i] = SignatureType.readParam(reader, false, component);
         }
 
         return new MethodDefSig(hasThis, explicitThis, (byte)callingConvention, genParamCount, retType, paramTypes);

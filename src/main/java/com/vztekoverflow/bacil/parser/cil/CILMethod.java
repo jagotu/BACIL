@@ -12,14 +12,14 @@ import com.vztekoverflow.bacil.parser.ByteSequenceBuffer;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLIMethodDefTableRow;
-import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableHeads;
-import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITypeDefTableRow;
 import com.vztekoverflow.bacil.parser.signatures.LocalVarSig;
 import com.vztekoverflow.bacil.parser.signatures.MethodDefSig;
+import com.vztekoverflow.bacil.runtime.BACILMethod;
 import com.vztekoverflow.bacil.runtime.types.ByRefWrapped;
 import com.vztekoverflow.bacil.runtime.types.Type;
+import com.vztekoverflow.bacil.runtime.types.builtin.SystemValueTypeType;
 
-public class CILMethod {
+public class CILMethod implements BACILMethod {
 
     private final CLIComponent component;
     private final CLIMethodDefTableRow methodDef;
@@ -39,17 +39,22 @@ public class CILMethod {
     private static final byte CORILMETHOD_INITLOCALS = 0x10;
     private static final byte CORILMETHOD_MORESECTS = 0x8;
 
+
+
     @CompilerDirectives.CompilationFinal(dimensions = 1)
-    private final Type[] localsTypes;
+    private final Type[] locationTypes;
 
     private final int varsCount;
     private final int argsCount;
 
-    public CILMethod(CLIComponent component, CLIMethodDefTableRow methodDef, CLITypeDefTableRow definingType)
+    private final Type definingType;
+
+    public CILMethod(CLIComponent component, CLIMethodDefTableRow methodDef, Type definingType)
     {
         this.component = component;
         this.methodDef = methodDef;
-        this.methodDefSig = MethodDefSig.read(methodDef.getSignature().read(component.getBlobHeap()));
+        this.methodDefSig = MethodDefSig.read(methodDef.getSignature().read(component.getBlobHeap()), component);
+        this.definingType = definingType;
 
         ByteSequenceBuffer buf = component.getBuffer(methodDef.getRVA());
         byte firstByte = buf.getByte();
@@ -83,7 +88,7 @@ public class CILMethod {
             } else {
                 CLITablePtr localVarSigPtr = CLITablePtr.fromToken(localVarSigTok);
                 byte[] localVarSig = component.getTableHeads().getStandAloneSigTableHead().skip(localVarSigPtr).getSignature().read(component.getBlobHeap());
-                this.localVarSig = LocalVarSig.read(localVarSig);
+                this.localVarSig = LocalVarSig.read(localVarSig, component);
             }
 
             initLocals = (flags & CORILMETHOD_INITLOCALS) != 0;
@@ -106,7 +111,7 @@ public class CILMethod {
 
 
         int explicitArgsStart = 0;
-        if (methodDefSig.isHasThis())
+        if (methodDefSig.isHasThis() && !methodDefSig.isExplicitThis())
         {
             if(definingType == null)
             {
@@ -124,22 +129,30 @@ public class CILMethod {
             varsCount = 0;
         }
 
-        localsTypes = new Type[varsCount+argsCount];
+        locationTypes = new Type[varsCount+argsCount];
 
-        if(methodDefSig.isHasThis())
+        if(methodDefSig.isHasThis() && !methodDefSig.isExplicitThis())
         {
-            localsTypes[0] = Type.thisWrap(Type.fromTypeDef(component, definingType));
+            //I.8.6.1.5
+            if(definingType instanceof SystemValueTypeType)
+            {
+                //TODO if virtual then boxed
+                locationTypes[0] = new ByRefWrapped(definingType);
+            } else {
+                locationTypes[0] = definingType;
+            }
+
         }
 
         for(int i = 0; i < varsCount; i++)
         {
-            localsTypes[i] = localVarSig.getVarTypes()[i];
+            locationTypes[i] = localVarSig.getVarTypes()[i];
         }
 
 
         for(int i = explicitArgsStart; i < argsCount; i++)
         {
-            localsTypes[varsCount+i] = methodDefSig.getParamTypes()[i-explicitArgsStart];
+            locationTypes[varsCount+i] = methodDefSig.getParamTypes()[i-explicitArgsStart];
         }
     }
 
@@ -147,8 +160,14 @@ public class CILMethod {
         return component;
     }
 
+    @Override
     public CallTarget getCallTarget() {
         return callTarget;
+    }
+
+    @Override
+    public Type getRetType() {
+        return getMethodDefSig().getRetType();
     }
 
     public short getMaxStack() {
@@ -180,15 +199,28 @@ public class CILMethod {
     }
 
 
-    public Type[] getLocalsTypes() {
-        return localsTypes;
+    @Override
+    public Type[] getLocationsTypes() {
+        return locationTypes;
     }
 
+    @Override
     public int getVarsCount() {
         return varsCount;
     }
 
+    @Override
     public int getArgsCount() {
         return argsCount;
+    }
+
+    @Override
+    public String toString() {
+        return definingType.toString() + "::" + getName();
+    }
+
+    @Override
+    public Type getDefiningType() {
+        return definingType;
     }
 }

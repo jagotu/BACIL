@@ -35,4 +35,20 @@ public final class Bytes {
         result |= ((long)data[offset+7] & 0xff) << 56;
         return result;
     }
+
+    public static int getUShort(byte[] data, int offset)
+    {
+        int result = (data[offset] & 0xff);
+        result |= (data[offset+1] & 0xff) << 8;
+        return result;
+    }
+
+    public static long getUInt(byte[] data, int offset)
+    {
+        long result = (data[offset] & 0xff);
+        result |= (data[offset+1] & 0xff) << 8;
+        result |= (data[offset+2] & 0xff) << 16;
+        result |= ((long)data[offset+3] & 0xff) << 24;
+        return result;
+    }
 }

@@ -29,7 +29,7 @@ public class CLITablePtr {
     private static final byte[] MAP_ENCODED =  new byte[] {CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_TYPE_SPEC };
     public static CLITablePtr fromTypeDefOrRefOrSpecEncoded(int typeDefOrRefOrSpecEncoded)
     {
-        byte table = MAP_ENCODED[typeDefOrRefOrSpecEncoded & 2];
+        byte table = MAP_ENCODED[typeDefOrRefOrSpecEncoded & 3];
         int rowNo = typeDefOrRefOrSpecEncoded >> 2;
         return new CLITablePtr(table, rowNo);
     }

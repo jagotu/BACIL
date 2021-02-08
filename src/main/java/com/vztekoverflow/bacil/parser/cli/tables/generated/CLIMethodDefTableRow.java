@@ -25,7 +25,7 @@ public class CLIMethodDefTableRow extends CLITableRow<CLIMethodDefTableRow> {
 	public final CLIStringHeapPtr getName() {
 		int offset = 8;
 		int heapOffset=0;
-		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getShort(offset); }
+		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
 	}
 
@@ -33,7 +33,7 @@ public class CLIMethodDefTableRow extends CLITableRow<CLIMethodDefTableRow> {
 		int offset = 10;
 		if (tables.isStringHeapBig()) offset += 2;
 		int heapOffset=0;
-		if (tables.isBlobHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getShort(offset); }
+		if (tables.isBlobHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIBlobHeapPtr(heapOffset);
 	}
 

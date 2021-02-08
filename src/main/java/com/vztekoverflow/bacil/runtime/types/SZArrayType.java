@@ -1,6 +1,9 @@
 package com.vztekoverflow.bacil.runtime.types;
 
+import com.vztekoverflow.bacil.parser.cil.CILMethod;
+import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.signatures.SignatureReader;
+import com.vztekoverflow.bacil.parser.signatures.SignatureType;
 
 import java.util.List;
 
@@ -8,28 +11,49 @@ public class SZArrayType extends Type {
 
     public static final String TYPE = "SZArrayType";
 
+    public Type getInner() {
+        return inner;
+    }
+
     private final Type inner;
 
     public SZArrayType(Type inner) {
         this.inner = inner;
     }
 
-    @Override
-    public byte getTypeCategory() {
-        return Type.ELEMENT_TYPE_SZARRAY;
-    }
-
-    public static SZArrayType read(SignatureReader reader)
+    public static SZArrayType read(SignatureReader reader, CLIComponent component)
     {
-        reader.assertUnsigned(Type.ELEMENT_TYPE_SZARRAY, TYPE);
         List<CustomMod> mods = CustomMod.readAll(reader);
 
-        Type inner = Type.create(reader);
+        Type inner = SignatureType.read(reader, component);
 
         return new SZArrayType(inner);
     }
 
 
+    @Override
+    public Type getDirectBaseClass() {
+        //TODO return system.array
+        return null;
+    }
 
+    @Override
+    public CILMethod getMemberMethod(String name, byte[] signature) {
+        return null;
+    }
 
+    @Override
+    public boolean isByRef() {
+        return false;
+    }
+
+    @Override
+    public boolean isPinned() {
+        return false;
+    }
+
+    @Override
+    public List<CustomMod> getMods() {
+        return null;
+    }
 }

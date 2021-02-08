@@ -19,7 +19,7 @@ public class CLIMemberRefTableRow extends CLITableRow<CLIMemberRefTableRow> {
 		int offset = 2;
 		if (!areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_MODULE_REF, CLITableConstants.CLI_TABLE_METHOD_DEF, CLITableConstants.CLI_TABLE_TYPE_SPEC)) offset += 2;
 		int heapOffset=0;
-		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getShort(offset); }
+		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
 	}
 
@@ -28,7 +28,7 @@ public class CLIMemberRefTableRow extends CLITableRow<CLIMemberRefTableRow> {
 		if (tables.isStringHeapBig()) offset += 2;
 		if (!areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_MODULE_REF, CLITableConstants.CLI_TABLE_METHOD_DEF, CLITableConstants.CLI_TABLE_TYPE_SPEC)) offset += 2;
 		int heapOffset=0;
-		if (tables.isBlobHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getShort(offset); }
+		if (tables.isBlobHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIBlobHeapPtr(heapOffset);
 	}
 

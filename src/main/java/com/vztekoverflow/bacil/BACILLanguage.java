@@ -3,14 +3,11 @@ package com.vztekoverflow.bacil;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.source.Source;
-import com.vztekoverflow.bacil.parser.BACILParserException;
 import com.vztekoverflow.bacil.parser.cil.CILMethod;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
-import com.vztekoverflow.bacil.parser.cli.tables.generated.CLIMethodDefTableRow;
 import com.vztekoverflow.bacil.runtime.BACILContext;
 import org.graalvm.options.OptionDescriptors;
-import org.graalvm.polyglot.io.ByteSequence;
 
 @TruffleLanguage.Registration(id = BACILLanguage.ID, name = BACILLanguage.NAME, interactive = false, defaultMimeType = BACILLanguage.CIL_PE_MIME_TYPE,
 byteMimeTypes = {BACILLanguage.CIL_PE_MIME_TYPE})

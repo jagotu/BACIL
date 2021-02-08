@@ -1,6 +1,9 @@
 package com.vztekoverflow.bacil.parser.cli.tables.generated;
 
-import com.vztekoverflow.bacil.parser.cli.tables.*;
+import com.vztekoverflow.bacil.parser.cli.tables.CLIBlobHeapPtr;
+import com.vztekoverflow.bacil.parser.cli.tables.CLIStringHeapPtr;
+import com.vztekoverflow.bacil.parser.cli.tables.CLITableRow;
+import com.vztekoverflow.bacil.parser.cli.tables.CLITables;
 public class CLIAssemblyTableRow extends CLITableRow<CLIAssemblyTableRow> {
 
 	public CLIAssemblyTableRow(CLITables tables, int cursor, int rowIndex) {
@@ -40,7 +43,7 @@ public class CLIAssemblyTableRow extends CLITableRow<CLIAssemblyTableRow> {
 	public final CLIBlobHeapPtr getPublicKey() {
 		int offset = 16;
 		int heapOffset=0;
-		if (tables.isBlobHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getShort(offset); }
+		if (tables.isBlobHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIBlobHeapPtr(heapOffset);
 	}
 
@@ -48,7 +51,7 @@ public class CLIAssemblyTableRow extends CLITableRow<CLIAssemblyTableRow> {
 		int offset = 18;
 		if (tables.isBlobHeapBig()) offset += 2;
 		int heapOffset=0;
-		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getShort(offset); }
+		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
 	}
 
@@ -57,7 +60,7 @@ public class CLIAssemblyTableRow extends CLITableRow<CLIAssemblyTableRow> {
 		if (tables.isStringHeapBig()) offset += 2;
 		if (tables.isBlobHeapBig()) offset += 2;
 		int heapOffset=0;
-		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getShort(offset); }
+		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
 	}
 

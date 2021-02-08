@@ -1,6 +1,9 @@
 package com.vztekoverflow.bacil.parser.cli.tables.generated;
 
-import com.vztekoverflow.bacil.parser.cli.tables.*;
+import com.vztekoverflow.bacil.parser.cli.tables.CLIStringHeapPtr;
+import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
+import com.vztekoverflow.bacil.parser.cli.tables.CLITableRow;
+import com.vztekoverflow.bacil.parser.cli.tables.CLITables;
 public class CLITypeRefTableRow extends CLITableRow<CLITypeRefTableRow> {
 
 	public CLITypeRefTableRow(CLITables tables, int cursor, int rowIndex) {
@@ -19,7 +22,7 @@ public class CLITypeRefTableRow extends CLITableRow<CLITypeRefTableRow> {
 		int offset = 2;
 		if (!areSmallEnough(CLITableConstants.CLI_TABLE_MODULE, CLITableConstants.CLI_TABLE_MODULE_REF, CLITableConstants.CLI_TABLE_ASSEMBLY_REF, CLITableConstants.CLI_TABLE_TYPE_REF)) offset += 2;
 		int heapOffset=0;
-		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getShort(offset); }
+		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
 	}
 
@@ -28,7 +31,7 @@ public class CLITypeRefTableRow extends CLITableRow<CLITypeRefTableRow> {
 		if (tables.isStringHeapBig()) offset += 2;
 		if (!areSmallEnough(CLITableConstants.CLI_TABLE_MODULE, CLITableConstants.CLI_TABLE_MODULE_REF, CLITableConstants.CLI_TABLE_ASSEMBLY_REF, CLITableConstants.CLI_TABLE_TYPE_REF)) offset += 2;
 		int heapOffset=0;
-		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getShort(offset); }
+		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
 	}
 

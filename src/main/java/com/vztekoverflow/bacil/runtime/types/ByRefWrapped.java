@@ -1,6 +1,8 @@
 package com.vztekoverflow.bacil.runtime.types;
 
-import com.vztekoverflow.bacil.runtime.ManagedReference;
+import com.vztekoverflow.bacil.runtime.BACILMethod;
+
+import java.util.List;
 
 public class ByRefWrapped extends Type {
 
@@ -10,22 +12,32 @@ public class ByRefWrapped extends Type {
         this.inner = inner;
     }
 
-    @Override
-    public byte getTypeCategory() {
-        return Type.ELEMENT_TYPE_BYREF;
-    }
-
     public Type getInner() {
         return inner;
     }
 
     @Override
-    public Object fromStackVar(Object ref, long primitive) {
-        return ref;
+    public Type getDirectBaseClass() {
+        return inner.getDirectBaseClass();
     }
 
     @Override
-    public void toStackVar(Object[] refs, long[] primitives, int slot, Object value) {
-        refs[slot] = value;
+    public BACILMethod getMemberMethod(String name, byte[] signature) {
+        return inner.getMemberMethod(name, signature);
+    }
+
+    @Override
+    public boolean isByRef() {
+        return true;
+    }
+
+    @Override
+    public boolean isPinned() {
+        return inner.isPinned();
+    }
+
+    @Override
+    public List<CustomMod> getMods() {
+        return inner.getMods();
     }
 }

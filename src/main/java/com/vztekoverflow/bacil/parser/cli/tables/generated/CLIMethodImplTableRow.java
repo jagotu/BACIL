@@ -1,6 +1,8 @@
 package com.vztekoverflow.bacil.parser.cli.tables.generated;
 
-import com.vztekoverflow.bacil.parser.cli.tables.*;
+import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
+import com.vztekoverflow.bacil.parser.cli.tables.CLITableRow;
+import com.vztekoverflow.bacil.parser.cli.tables.CLITables;
 public class CLIMethodImplTableRow extends CLITableRow<CLIMethodImplTableRow> {
 
 	public CLIMethodImplTableRow(CLITables tables, int cursor, int rowIndex) {

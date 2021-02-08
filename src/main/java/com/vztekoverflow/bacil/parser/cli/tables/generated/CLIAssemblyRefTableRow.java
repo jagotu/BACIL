@@ -1,6 +1,9 @@
 package com.vztekoverflow.bacil.parser.cli.tables.generated;
 
-import com.vztekoverflow.bacil.parser.cli.tables.*;
+import com.vztekoverflow.bacil.parser.cli.tables.CLIBlobHeapPtr;
+import com.vztekoverflow.bacil.parser.cli.tables.CLIStringHeapPtr;
+import com.vztekoverflow.bacil.parser.cli.tables.CLITableRow;
+import com.vztekoverflow.bacil.parser.cli.tables.CLITables;
 public class CLIAssemblyRefTableRow extends CLITableRow<CLIAssemblyRefTableRow> {
 
 	public CLIAssemblyRefTableRow(CLITables tables, int cursor, int rowIndex) {
@@ -35,7 +38,7 @@ public class CLIAssemblyRefTableRow extends CLITableRow<CLIAssemblyRefTableRow> 
 	public final CLIBlobHeapPtr getPublicKeyOrToken() {
 		int offset = 12;
 		int heapOffset=0;
-		if (tables.isBlobHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getShort(offset); }
+		if (tables.isBlobHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIBlobHeapPtr(heapOffset);
 	}
 
@@ -43,7 +46,7 @@ public class CLIAssemblyRefTableRow extends CLITableRow<CLIAssemblyRefTableRow> 
 		int offset = 14;
 		if (tables.isBlobHeapBig()) offset += 2;
 		int heapOffset=0;
-		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getShort(offset); }
+		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
 	}
 
@@ -52,7 +55,7 @@ public class CLIAssemblyRefTableRow extends CLITableRow<CLIAssemblyRefTableRow> 
 		if (tables.isStringHeapBig()) offset += 2;
 		if (tables.isBlobHeapBig()) offset += 2;
 		int heapOffset=0;
-		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getShort(offset); }
+		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
 	}
 
@@ -61,7 +64,7 @@ public class CLIAssemblyRefTableRow extends CLITableRow<CLIAssemblyRefTableRow> 
 		if (tables.isStringHeapBig()) offset += 4;
 		if (tables.isBlobHeapBig()) offset += 2;
 		int heapOffset=0;
-		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getShort(offset); }
+		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
 	}
 

@@ -11,14 +11,14 @@ import java.util.List;
 
 public final class BACILEngineOption {
 
-    public static final String OPTION_ARRAY_SEPARATOR = ":";
+    public static final String OPTION_ARRAY_SEPARATOR = ";";
 
     public static final String LIBRARY_PATH_NAME = "cil.libraryPath";
     @Option(name = LIBRARY_PATH_NAME,
             category = OptionCategory.USER,
             stability = OptionStability.STABLE,
             help = "A list of paths where BACIL will search for relative libraries. " +
-                    "Paths are delimited by a colon \'" + OPTION_ARRAY_SEPARATOR + "\'.")
+                    "Paths are delimited by a semicolon \'" + OPTION_ARRAY_SEPARATOR + "\'.")
     public static final OptionKey<String> LIBRARY_PATH = new OptionKey<>("");
 
     public static List<String> getPolyglotOptionSearchPaths(TruffleLanguage.Env env) {

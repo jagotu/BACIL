@@ -1,6 +1,8 @@
 package com.vztekoverflow.bacil.parser.cli.tables.generated;
 
-import com.vztekoverflow.bacil.parser.cli.tables.*;
+import com.vztekoverflow.bacil.parser.cli.tables.CLIBlobHeapPtr;
+import com.vztekoverflow.bacil.parser.cli.tables.CLITableRow;
+import com.vztekoverflow.bacil.parser.cli.tables.CLITables;
 public class CLITypeSpecTableRow extends CLITableRow<CLITypeSpecTableRow> {
 
 	public CLITypeSpecTableRow(CLITables tables, int cursor, int rowIndex) {
@@ -10,7 +12,7 @@ public class CLITypeSpecTableRow extends CLITableRow<CLITypeSpecTableRow> {
 	public final CLIBlobHeapPtr getSignature() {
 		int offset = 0;
 		int heapOffset=0;
-		if (tables.isBlobHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getShort(offset); }
+		if (tables.isBlobHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIBlobHeapPtr(heapOffset);
 	}
 

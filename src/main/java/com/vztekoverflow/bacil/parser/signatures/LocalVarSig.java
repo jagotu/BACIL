@@ -1,11 +1,12 @@
 package com.vztekoverflow.bacil.parser.signatures;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.runtime.types.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
+//II.23.2.6
 public class LocalVarSig {
 
     private static final String TYPE = "LocalVarSig";
@@ -17,7 +18,7 @@ public class LocalVarSig {
         this.varTypes = varTypes;
     }
 
-    public static LocalVarSig read(byte[] signature)
+    public static LocalVarSig read(byte[] signature, CLIComponent component)
     {
         SignatureReader reader = new SignatureReader(signature);
         reader.assertUnsigned(7, TYPE);
@@ -26,8 +27,8 @@ public class LocalVarSig {
         Type[] varTypes = new Type[count];
 
         for(int i = 0; i < count; i++) {
-            if (reader.peekUnsigned() == Type.ELEMENT_TYPE_TYPEDBYREF) {
-                varTypes[i] = SimpleType.TYPEDBYREF;
+            if (reader.peekUnsigned() == SignatureType.ELEMENT_TYPE_TYPEDBYREF) {
+                varTypes[i] = component.getBuiltinTypes().getTypedReferenceType();
                 continue;
             }
 
@@ -37,19 +38,19 @@ public class LocalVarSig {
 
             List<CustomMod> mods = CustomMod.readAll(reader);
 
-            if (reader.peekUnsigned() == Type.ELEMENT_TYPE_PINNED)
+            if (reader.peekUnsigned() == SignatureType.ELEMENT_TYPE_PINNED)
             {
                 pinned = true;
                 reader.getUnsigned();
             }
 
-            if (reader.peekUnsigned() == Type.ELEMENT_TYPE_BYREF)
+            if (reader.peekUnsigned() == SignatureType.ELEMENT_TYPE_BYREF)
             {
                 byRef = true;
                 reader.getUnsigned();
             }
 
-            Type type = Type.create(reader);
+            Type type = SignatureType.read(reader, component);
             if(byRef)
             {
                 type = new ByRefWrapped(type);

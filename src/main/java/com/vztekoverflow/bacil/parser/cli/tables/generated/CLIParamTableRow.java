@@ -1,6 +1,8 @@
 package com.vztekoverflow.bacil.parser.cli.tables.generated;
 
-import com.vztekoverflow.bacil.parser.cli.tables.*;
+import com.vztekoverflow.bacil.parser.cli.tables.CLIStringHeapPtr;
+import com.vztekoverflow.bacil.parser.cli.tables.CLITableRow;
+import com.vztekoverflow.bacil.parser.cli.tables.CLITables;
 public class CLIParamTableRow extends CLITableRow<CLIParamTableRow> {
 
 	public CLIParamTableRow(CLITables tables, int cursor, int rowIndex) {
@@ -20,7 +22,7 @@ public class CLIParamTableRow extends CLITableRow<CLIParamTableRow> {
 	public final CLIStringHeapPtr getName() {
 		int offset = 4;
 		int heapOffset=0;
-		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getShort(offset); }
+		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
 	}
 
