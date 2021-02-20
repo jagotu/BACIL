@@ -5,6 +5,8 @@ import com.vztekoverflow.bacil.BACILInternalError;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITypeDefTableRow;
 import com.vztekoverflow.bacil.runtime.ExecutionStackPrimitiveMarker;
+import com.vztekoverflow.bacil.runtime.UnsafeHolder;
+import com.vztekoverflow.bacil.runtime.types.locations.LocationsHolder;
 
 public class SystemInt32Type extends SystemValueTypeType {
     public SystemInt32Type(CLITypeDefTableRow type, CLIComponent component) {
@@ -12,18 +14,56 @@ public class SystemInt32Type extends SystemValueTypeType {
     }
 
     @Override
-    public void toStackVar(Object[] refs, long[] primitives, int slot, Object value) {
+    public void stackToLocation(LocationsHolder holder, int holderOffset, Object[] refs, long[] primitives, int slot) {
         refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
-        primitives[slot] = (Integer)value;
+        primitives[slot] = UnsafeHolder.getUNSAFE().getInt(holder.getPrimitives(), (long)holderOffset);
     }
 
     @Override
-    public Object fromStackVar(Object ref, long primitive) {
+    public void locationToStack(LocationsHolder holder, int holderOffset, Object ref, long primitive) {
         if(ref != ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
         {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILInternalError("Saving a non-Int32 value into System.Int32 location.");
         }
-        return (int)primitive;
+        UnsafeHolder.getUNSAFE().putInt(holder.getPrimitives(), (long)holderOffset, (int) primitive);
     }
+
+    @Override
+    public void objectToStack(Object[] refs, long[] primitives, int slot, Object value) {
+        refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
+        primitives[slot] = (Integer)value;
+    }
+
+    @Override
+    public Object stackToObject(Object ref, long primitive) {
+        if(ref != ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
+        {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            throw new BACILInternalError("Saving a non-Int32 value into System.Int32 location.");
+        }
+        return (int) primitive;
+    }
+
+    @Override
+    public void objectToLocation(LocationsHolder holder, int holderOffset, Object obj) {
+        UnsafeHolder.getUNSAFE().putInt(holder.getPrimitives(), (long)holderOffset, (Integer) obj);
+    }
+
+    @Override
+    public Object locationToObject(LocationsHolder holder, int holderOffset) {
+        return UnsafeHolder.getUNSAFE().getInt(holder.getPrimitives(), (long)holderOffset);
+    }
+
+    @Override
+    public Object initialValue() {
+        return 0;
+    }
+
+    @Override
+    public int getPrimitiveStorageSize() {
+        return 4;
+    }
+
+
 }

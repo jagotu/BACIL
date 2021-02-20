@@ -1,46 +1,38 @@
 package com.vztekoverflow.bacil.runtime;
 
-import com.vztekoverflow.bacil.parser.cli.CLIComponent;
-import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.runtime.types.NamedType;
 import com.vztekoverflow.bacil.runtime.types.TypedField;
+import com.vztekoverflow.bacil.runtime.types.locations.LocationsHolder;
 
 public class StaticObject {
 
     private final NamedType type;
-    private final Object[] fields;
+    //private final Object[] fields;
+    private final LocationsHolder fieldsHolder;
+
 
     public StaticObject(NamedType type) {
         type.initFields();
         this.type = type;
-        this.fields = new Object[type.getFieldsCount()];
-        for(int i = 0; i<type.getFieldsCount();i++)
-        {
-            fields[i] = type.getTypedField(i).getType().initialValue();
-        }
+        this.fieldsHolder = new LocationsHolder(type.getFieldsDescriptor());
     }
 
-    public Object getField(CLITablePtr token, CLIComponent callingComponent)
+
+
+    public void fieldToStackVar(TypedField field, Object[] refs, long[] primitives, int slot)
     {
-        return fields[type.getTypedField(token, callingComponent).getOffset()];
+        fieldsHolder.locationToStack(field.getOffset(), refs, primitives, slot);
     }
 
-    public void setField(CLITablePtr token, CLIComponent callingComponent, Object value)
+    public void fieldFromStackVar(TypedField field, Object ref, long primitive)
     {
-        fields[type.getTypedField(token, callingComponent).getOffset()] = value;
+        fieldsHolder.stackToLocation(field.getOffset(), ref, primitive);
     }
 
-    public void fieldToStackVar(CLITablePtr token, CLIComponent callingComponent, Object[] refs, long[] primitives, int slot)
-    {
-        TypedField field = type.getTypedField(token, callingComponent);
-        field.getType().toStackVar(refs, primitives, slot, fields[field.getOffset()]);
+    public NamedType getType() {
+        return type;
     }
-
-    public void fieldFromStackVar(CLITablePtr token, CLIComponent callingComponent, Object ref, long primitive)
-    {
-        TypedField field = type.getTypedField(token, callingComponent);
-        fields[field.getOffset()] = field.getType().fromStackVar(ref, primitive);
-    }
-
 
 }
+
+

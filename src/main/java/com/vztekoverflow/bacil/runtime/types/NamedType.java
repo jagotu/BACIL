@@ -9,6 +9,7 @@ import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.*;
 import com.vztekoverflow.bacil.parser.signatures.FieldSig;
 import com.vztekoverflow.bacil.runtime.types.builtin.*;
+import com.vztekoverflow.bacil.runtime.types.locations.LocationsDescriptor;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,6 +29,9 @@ public class NamedType extends Type {
 
     @CompilerDirectives.CompilationFinal(dimensions = 1)
     private TypedField[] fields = null;
+
+    @CompilerDirectives.CompilationFinal
+    private LocationsDescriptor fieldsDescriptor;
 
     private final CLIFieldTableRow fieldRows;
     private final int fieldsRowsStart;
@@ -62,6 +66,9 @@ public class NamedType extends Type {
         }
 
 
+
+
+
     }
 
     public void initFields()
@@ -82,6 +89,8 @@ public class NamedType extends Type {
                 fields[i] = new TypedField(curr.getFlags(), curr.getName().read(definingComponent.getStringHeap()), FieldSig.read(curr.getSignature().read(definingComponent.getBlobHeap()), definingComponent), i);
                 curr = curr.next();
             }
+
+            this.fieldsDescriptor = LocationsDescriptor.forFields(fields);
         }
     }
 
@@ -114,7 +123,7 @@ public class NamedType extends Type {
 
     public int getFieldsCount()
     {
-        return fields.length;
+        return fieldRowsEnd-fieldsRowsStart;
     }
 
     public TypedField getTypedField(String name)
@@ -223,5 +232,13 @@ public class NamedType extends Type {
     @Override
     public String toString() {
         return String.format("[%s]%s.%s", definingComponent, namespace, name);
+    }
+
+    public TypedField[] getFields() {
+        return fields;
+    }
+
+    public LocationsDescriptor getFieldsDescriptor() {
+        return fieldsDescriptor;
     }
 }

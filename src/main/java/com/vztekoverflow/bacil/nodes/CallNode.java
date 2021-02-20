@@ -24,13 +24,13 @@ public class CallNode extends CallableNode {
     @Override
     public int execute(VirtualFrame frame, long[] primitives, Object[] refs) {
         Object[] args = BytecodeNode.prepareArgs(primitives, refs, top, method, 0);
-        Object returnValue = directCallNode.call(args);
+        Object returnValue = directCallNode.call(new Object[] {args});
         Type returnType = method.getRetType();
         final int firstArg = top - method.getArgsCount();
 
         if(!(returnType instanceof SystemVoidType))
         {
-            returnType.toStackVar(refs, primitives, firstArg, returnValue);
+            returnType.objectToStack(refs, primitives, firstArg, returnValue);
             return firstArg+1;
         }
         return firstArg;

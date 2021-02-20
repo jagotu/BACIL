@@ -26,12 +26,12 @@ public class ConstructorNode extends CallableNode {
     @Override
     public int execute(VirtualFrame frame, long[] primitives, Object[] refs) {
         Object[] args = BytecodeNode.prepareArgs(primitives, refs, top, method, 1);
-        StaticObject obj = new StaticObject(objType);;
+        StaticObject obj = new StaticObject(objType);
         args[0] = obj;
 
         directCallNode.call(args);
         final int firstArg = top - method.getArgsCount() + 1;
-        objType.toStackVar(refs, primitives, firstArg, obj);
+        refs[firstArg] = obj;
         return firstArg+1;
     }
 

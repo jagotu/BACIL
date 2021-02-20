@@ -18,7 +18,8 @@ public class BACILLauncher extends AbstractLanguageLauncher {
     private static final String LANGUAGE_ID = "cil";
     private String inputFile = null;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+
         new BACILLauncher().launch(args);
     }
 

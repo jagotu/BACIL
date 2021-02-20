@@ -209,6 +209,8 @@ public class BytecodeInstructions {
     public static final int PREFIXED = 0xFE;
 
     public static final int TRUFFLE_NODE = 0xF0; //allowed by III.1.2.1
+    public static final int BACIL_LDFLD = 0xF1;
+    public static final int BACIL_STFLD = 0xF2;
 
 
     public static final int CEQ = 0xFE01;
@@ -326,8 +328,11 @@ public class BytecodeInstructions {
         def(STIND_R4, "stind.r4", "b", -2);
         def(STIND_R8, "stind.r8", "b", -2);
 
-        def(STFLD, "stfld", "btttt", -2);
+        def(STFLD, "stfld", "btttt", 0);
         def(LDFLD, "ldfld", "btttt", 0);
+
+        def(DUP, "dup", "b", 1);
+
 
 
 
@@ -358,6 +363,8 @@ public class BytecodeInstructions {
         defPrefixed(CLT, "clt", "b", -1);
 
         def(TRUFFLE_NODE, "truffle.node", "biiii", 0);
+        def(BACIL_STFLD, "bacil.stfld", "biiii", -2);
+        def(BACIL_LDFLD, "bacil.ldfld", "biiii", 0);
     }
 
     /**

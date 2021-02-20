@@ -8,4 +8,9 @@ public class SystemValueTypeType extends NamedType {
     public SystemValueTypeType(CLITypeDefTableRow type, CLIComponent component) {
         super(type, component);
     }
+
+    @Override
+    public boolean isPrimitiveStorage() {
+        return true;
+    }
 }

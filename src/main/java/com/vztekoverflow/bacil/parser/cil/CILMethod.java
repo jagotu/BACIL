@@ -18,6 +18,7 @@ import com.vztekoverflow.bacil.runtime.BACILMethod;
 import com.vztekoverflow.bacil.runtime.types.ByRefWrapped;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.builtin.SystemValueTypeType;
+import com.vztekoverflow.bacil.runtime.types.locations.LocationsDescriptor;
 
 public class CILMethod implements BACILMethod {
 
@@ -43,6 +44,8 @@ public class CILMethod implements BACILMethod {
 
     @CompilerDirectives.CompilationFinal(dimensions = 1)
     private final Type[] locationTypes;
+
+    private final LocationsDescriptor locationDescriptor;
 
     private final int varsCount;
     private final int argsCount;
@@ -154,6 +157,8 @@ public class CILMethod implements BACILMethod {
         {
             locationTypes[varsCount+i] = methodDefSig.getParamTypes()[i-explicitArgsStart];
         }
+
+        this.locationDescriptor = new LocationsDescriptor(locationTypes);
     }
 
     public CLIComponent getComponent() {
@@ -222,5 +227,9 @@ public class CILMethod implements BACILMethod {
     @Override
     public Type getDefiningType() {
         return definingType;
+    }
+
+    public LocationsDescriptor getLocationDescriptor() {
+        return locationDescriptor;
     }
 }

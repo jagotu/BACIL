@@ -65,6 +65,7 @@ public class BACILContext {
 
     private CLIComponent findAssembly(AssemblyIdentity reference)
     {
+        CompilerAsserts.neverPartOfCompilation();
         for (Path p : libraryPaths) {
             Path absPath = Paths.get(p.toString(), reference.getName() + ".dll");
             TruffleFile file = getEnv().getInternalTruffleFile(absPath.toUri());

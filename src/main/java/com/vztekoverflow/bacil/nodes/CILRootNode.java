@@ -1,6 +1,5 @@
 package com.vztekoverflow.bacil.nodes;
 
-import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
@@ -19,6 +18,8 @@ public class CILRootNode extends RootNode {
         return methodNode.execute(frame);
     }
 
-
-
+    @Override
+    public String toString() {
+        return methodNode.getMethod().toString();
+    }
 }
