@@ -333,6 +333,8 @@ public class BytecodeInstructions {
 
         def(DUP, "dup", "b", 1);
 
+        def(POP, "pop", "b", -1);
+
 
 
 

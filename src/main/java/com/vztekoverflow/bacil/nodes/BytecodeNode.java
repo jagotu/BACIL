@@ -108,7 +108,9 @@ public class BytecodeNode extends Node {
             //System.out.printf("%s:%04x %s\n", method.getName(), pc, BytecodeInstructions.getName(curOpcode));
 
             switch(curOpcode) {
-                case NOP: break;
+                case NOP:
+                case POP:
+                    break;
 
                 case LDC_I4_M1:
                 case LDC_I4_0:
@@ -245,6 +247,7 @@ public class BytecodeNode extends Node {
                 case CALLVIRT:
                 case NEWOBJ:
                     top = nodeizeOpToken(frame, primitives, refs, top, bytecodeBuffer.getImmToken(pc), pc, curOpcode); break;
+
 
 
 

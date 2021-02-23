@@ -24,7 +24,7 @@ public class CallNode extends CallableNode {
     @Override
     public int execute(VirtualFrame frame, long[] primitives, Object[] refs) {
         Object[] args = BytecodeNode.prepareArgs(primitives, refs, top, method, 0);
-        Object returnValue = directCallNode.call(new Object[] {args});
+        Object returnValue = directCallNode.call(args);
         Type returnType = method.getRetType();
         final int firstArg = top - method.getArgsCount();
 
