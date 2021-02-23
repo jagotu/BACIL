@@ -14,6 +14,7 @@ import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.runtime.*;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.builtin.SystemVoidType;
+import com.vztekoverflow.bacil.runtime.types.locations.LocationsDescriptor;
 import com.vztekoverflow.bacil.runtime.types.locations.LocationsHolder;
 
 import java.util.Arrays;
@@ -44,7 +45,6 @@ public class BytecodeNode extends Node {
         //int slotCount = getMethod().getMaxLocals() + getMethod().getMaxStackSize();
 
 
-
         int stackCount = method.getMaxStack();
 
 
@@ -69,12 +69,13 @@ public class BytecodeNode extends Node {
         CompilerAsserts.partialEvaluationConstant(argsCount);
         CompilerAsserts.partialEvaluationConstant(varsCount);
 
-        final LocationsHolder locations = new LocationsHolder(method.getLocationDescriptor()); //I.8.3
 
-        CompilerAsserts.partialEvaluationConstant(locations.getDescriptor());
+        final LocationsDescriptor descriptor = method.getLocationDescriptor();
+        final LocationsHolder locations = new LocationsHolder(descriptor); //I.8.3
 
+        CompilerAsserts.partialEvaluationConstant(descriptor);
 
-        loadArgs(locations, argsCount, varsCount, args);
+        loadArgs(descriptor, locations, argsCount, varsCount, args);
         //initLocations(argsCount, varsCount, locationsTypes, method, locations, args);
 
 
@@ -83,14 +84,24 @@ public class BytecodeNode extends Node {
         int pc = 0;
 
 
+
+
         loop: while (true) {
+            CompilerAsserts.partialEvaluationConstant(pc);
             int curOpcode = bytecodeBuffer.getOpcode(pc);
+            CompilerAsserts.partialEvaluationConstant(curOpcode);
             int nextpc = bytecodeBuffer.nextInstruction(pc);
 
             CompilerAsserts.partialEvaluationConstant(top);
-            CompilerAsserts.partialEvaluationConstant(pc);
-            CompilerAsserts.partialEvaluationConstant(curOpcode);
+
+
             CompilerAsserts.partialEvaluationConstant(nextpc);
+
+            CompilerDirectives.ensureVirtualized(locations.getPrimitives());
+            CompilerDirectives.ensureVirtualized(locations.getRefs());
+            CompilerDirectives.ensureVirtualized(refs);
+            CompilerDirectives.ensureVirtualized(primitives);
+
 
 
             //debug
@@ -119,17 +130,17 @@ public class BytecodeNode extends Node {
                 case STLOC_1:
                 case STLOC_2:
                 case STLOC_3:
-                    storeStack(primitives, refs, top-1, locations, curOpcode - STLOC_0); break;
+                    storeStack(primitives, refs, top-1, descriptor, locations, curOpcode - STLOC_0); break;
                 case STLOC_S:
-                    storeStack(primitives, refs, top-1, locations, bytecodeBuffer.getImmUByte(pc)); break;
+                    storeStack(primitives, refs, top-1, descriptor, locations, bytecodeBuffer.getImmUByte(pc)); break;
 
                 case LDLOC_0:
                 case LDLOC_1:
                 case LDLOC_2:
                 case LDLOC_3:
-                    loadStack(primitives, refs, top, locations, curOpcode - LDLOC_0); break;
+                    loadStack(primitives, refs, top, descriptor, locations, curOpcode - LDLOC_0); break;
                 case LDLOC_S:
-                    loadStack(primitives, refs, top, locations, bytecodeBuffer.getImmUByte(pc)); break;
+                    loadStack(primitives, refs, top, descriptor, locations, bytecodeBuffer.getImmUByte(pc)); break;
 
                 /*case LDLOCA_S:
                     refs[top] = getLocalReference(bytecodeBuffer.getImmUByte(pc), locations); break;*/
@@ -138,9 +149,9 @@ public class BytecodeNode extends Node {
                 case LDARG_1:
                 case LDARG_2:
                 case LDARG_3:
-                    loadStack(primitives, refs, top, locations, varsCount + curOpcode - LDARG_0); break;
+                    loadStack(primitives, refs, top, descriptor, locations, varsCount + curOpcode - LDARG_0); break;
                 case LDARG_S:
-                    loadStack(primitives, refs, top, locations, varsCount + bytecodeBuffer.getImmUByte(pc)); break;
+                    loadStack(primitives, refs, top, descriptor, locations, varsCount + bytecodeBuffer.getImmUByte(pc)); break;
 
                 /*case LDARGA_S:
                     refs[top] = getLocalReference(varsCount + bytecodeBuffer.getImmUByte(pc), locations, locationsTypes); break;*/
@@ -273,11 +284,11 @@ public class BytecodeNode extends Node {
     }
 
     @ExplodeLoop
-    public static void loadArgs(LocationsHolder holder, int argsCount, int varsCount, Object[] args)
+    public static void loadArgs(LocationsDescriptor descriptor, LocationsHolder holder, int argsCount, int varsCount, Object[] args)
     {
         for(int i = 0; i < argsCount; i++)
         {
-            holder.objectToLocation(varsCount+i, args[i]);
+            descriptor.objectToLocation(holder, varsCount+i, args[i]);
         }
     }
 
@@ -445,10 +456,10 @@ public class BytecodeNode extends Node {
 
             }
 
-            if(resultType == ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
+            /*if(resultType == ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
             {
                 result &= 0xFFFFFFFFL;
-            }
+            }*/
 
             primitives[slot1] = result;
             refs[slot1] = resultType;
@@ -500,14 +511,16 @@ public class BytecodeNode extends Node {
 
     }*/
 
-    public static void loadStack(long[] primitives, Object[] refs, int slot, LocationsHolder locals, int localSlot)
+    public static void loadStack(long[] primitives, Object[] refs, int slot, LocationsDescriptor descriptor, LocationsHolder locals, int localSlot)
     {
-        locals.locationToStack(localSlot, refs, primitives, slot);
+        CompilerAsserts.partialEvaluationConstant(descriptor);
+        descriptor.locationToStack(locals, localSlot, refs, primitives, slot);
     }
 
-    public static void storeStack(long[] primitives, Object[] refs, int slot, LocationsHolder locals, int localSlot)
+    public static void storeStack(long[] primitives, Object[] refs, int slot, LocationsDescriptor descriptor, LocationsHolder locals, int localSlot)
     {
-        locals.stackToLocation(localSlot, refs[slot], primitives[slot]);
+        CompilerAsserts.partialEvaluationConstant(descriptor);
+        descriptor.stackToLocation(locals, localSlot, refs[slot], primitives[slot]);
     }
 
     public static void putInt32(long[] primitives, Object[] refs, int slot, int value)

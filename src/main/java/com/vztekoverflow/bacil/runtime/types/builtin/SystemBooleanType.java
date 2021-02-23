@@ -5,7 +5,6 @@ import com.vztekoverflow.bacil.BACILInternalError;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITypeDefTableRow;
 import com.vztekoverflow.bacil.runtime.ExecutionStackPrimitiveMarker;
-import com.vztekoverflow.bacil.runtime.UnsafeHolder;
 import com.vztekoverflow.bacil.runtime.types.locations.LocationsHolder;
 
 public class SystemBooleanType extends SystemValueTypeType {
@@ -14,25 +13,25 @@ public class SystemBooleanType extends SystemValueTypeType {
     }
 
     @Override
-    public void stackToLocation(LocationsHolder holder, int holderOffset, Object[] refs, long[] primitives, int slot) {
+    public void locationToStack(LocationsHolder holder, int holderOffset, Object[] refs, long[] primitives, int slot) {
         refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
-        primitives[slot] = UnsafeHolder.getUNSAFE().getBoolean(holder.getPrimitives(), (long)holderOffset) ? 1 : 0;
+        primitives[slot] = holder.getPrimitives()[holderOffset];
     }
 
     @Override
-    public void locationToStack(LocationsHolder holder, int holderOffset, Object ref, long primitive) {
+    public void stackToLocation(LocationsHolder holder, int holderOffset, Object ref, long primitive) {
         if(ref != ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
         {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILInternalError("Saving a non-Int32 value into System.Boolean location.");
         }
-        UnsafeHolder.getUNSAFE().putBoolean(holder.getPrimitives(), (long)holderOffset, primitive != 0);
+        holder.getPrimitives()[holderOffset]= primitive;
     }
 
     @Override
     public void objectToStack(Object[] refs, long[] primitives, int slot, Object value) {
         refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
-        primitives[slot] = ((Boolean)value) ? 1 : 0;
+        primitives[slot] = ((Boolean)value ? 1 : 0);
     }
 
     @Override
@@ -47,12 +46,12 @@ public class SystemBooleanType extends SystemValueTypeType {
 
     @Override
     public void objectToLocation(LocationsHolder holder, int holderOffset, Object obj) {
-        UnsafeHolder.getUNSAFE().putBoolean(holder.getPrimitives(), (long)holderOffset, (Boolean) obj);
+        holder.getPrimitives()[holderOffset] = ((Boolean) obj) ? 1 : 0;
     }
 
     @Override
     public Object locationToObject(LocationsHolder holder, int holderOffset) {
-        return UnsafeHolder.getUNSAFE().getBoolean(holder.getPrimitives(), (long)holderOffset);
+        return holder.getPrimitives()[holderOffset] != 1;
     }
 
     @Override

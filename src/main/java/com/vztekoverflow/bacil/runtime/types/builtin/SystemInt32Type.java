@@ -5,7 +5,6 @@ import com.vztekoverflow.bacil.BACILInternalError;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITypeDefTableRow;
 import com.vztekoverflow.bacil.runtime.ExecutionStackPrimitiveMarker;
-import com.vztekoverflow.bacil.runtime.UnsafeHolder;
 import com.vztekoverflow.bacil.runtime.types.locations.LocationsHolder;
 
 public class SystemInt32Type extends SystemValueTypeType {
@@ -14,19 +13,19 @@ public class SystemInt32Type extends SystemValueTypeType {
     }
 
     @Override
-    public void stackToLocation(LocationsHolder holder, int holderOffset, Object[] refs, long[] primitives, int slot) {
+    public void locationToStack(LocationsHolder holder, int holderOffset, Object[] refs, long[] primitives, int slot) {
         refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
-        primitives[slot] = UnsafeHolder.getUNSAFE().getInt(holder.getPrimitives(), (long)holderOffset);
+        primitives[slot] = (holder.getPrimitives()[holderOffset]);
     }
 
     @Override
-    public void locationToStack(LocationsHolder holder, int holderOffset, Object ref, long primitive) {
+    public void stackToLocation(LocationsHolder holder, int holderOffset, Object ref, long primitive) {
         if(ref != ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
         {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILInternalError("Saving a non-Int32 value into System.Int32 location.");
         }
-        UnsafeHolder.getUNSAFE().putInt(holder.getPrimitives(), (long)holderOffset, (int) primitive);
+        holder.getPrimitives()[holderOffset]= primitive;
     }
 
     @Override
@@ -47,12 +46,12 @@ public class SystemInt32Type extends SystemValueTypeType {
 
     @Override
     public void objectToLocation(LocationsHolder holder, int holderOffset, Object obj) {
-        UnsafeHolder.getUNSAFE().putInt(holder.getPrimitives(), (long)holderOffset, (Integer) obj);
+        holder.getPrimitives()[holderOffset] = (Integer) obj;
     }
 
     @Override
     public Object locationToObject(LocationsHolder holder, int holderOffset) {
-        return UnsafeHolder.getUNSAFE().getInt(holder.getPrimitives(), (long)holderOffset);
+        return (int)holder.getPrimitives()[holderOffset];
     }
 
     @Override

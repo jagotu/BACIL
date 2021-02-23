@@ -11,6 +11,7 @@ public class StaticObject {
     private final LocationsHolder fieldsHolder;
 
 
+
     public StaticObject(NamedType type) {
         type.initFields();
         this.type = type;
@@ -21,12 +22,12 @@ public class StaticObject {
 
     public void fieldToStackVar(TypedField field, Object[] refs, long[] primitives, int slot)
     {
-        fieldsHolder.locationToStack(field.getOffset(), refs, primitives, slot);
+        type.getFieldsDescriptor().locationToStack(fieldsHolder, field.getOffset(), refs, primitives, slot);
     }
 
     public void fieldFromStackVar(TypedField field, Object ref, long primitive)
     {
-        fieldsHolder.stackToLocation(field.getOffset(), ref, primitive);
+        type.getFieldsDescriptor().stackToLocation(fieldsHolder, field.getOffset(), ref, primitive);
     }
 
     public NamedType getType() {

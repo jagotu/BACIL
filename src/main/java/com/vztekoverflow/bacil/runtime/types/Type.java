@@ -12,12 +12,12 @@ public abstract class Type {
         return null;
     }
 
-    public void locationToStack(LocationsHolder holder, int holderOffset, Object ref, long primitive)
+    public void stackToLocation(LocationsHolder holder, int holderOffset, Object ref, long primitive)
     {
         holder.getRefs()[holderOffset] = ref;
     }
 
-    public void stackToLocation(LocationsHolder holder, int holderOffset, Object[] refs, long[] primitives, int slot)
+    public void locationToStack(LocationsHolder holder, int holderOffset, Object[] refs, long[] primitives, int slot)
     {
         refs[slot] = holder.getRefs()[holderOffset];
     }

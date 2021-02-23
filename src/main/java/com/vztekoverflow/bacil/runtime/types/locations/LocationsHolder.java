@@ -1,19 +1,20 @@
 package com.vztekoverflow.bacil.runtime.types.locations;
 
-import com.oracle.truffle.api.CompilerAsserts;
-
 public final class LocationsHolder {
 
-    private final LocationsDescriptor descriptor;
+    /*@CompilerDirectives.CompilationFinal
+    private final LocationsDescriptor descriptor;*/
 
     private final Object[] refs;
-    private final byte[] primitives;
+    private final long[] primitives;
 
     public LocationsHolder(LocationsDescriptor descriptor) {
-        CompilerAsserts.partialEvaluationConstant(descriptor);
+        /*CompilerAsserts.partialEvaluationConstant(descriptor);
         this.descriptor = descriptor;
+        CompilerAsserts.partialEvaluationConstant(this.descriptor);*/
+        //CompilerAsserts.partialEvaluationConstant(this.descriptor);
         refs = new Object[descriptor.getRefCount()];
-        primitives = new byte[descriptor.getBytesSize()];
+        primitives = new long[descriptor.getPrimitiveCount()];
     }
 
 
@@ -21,11 +22,11 @@ public final class LocationsHolder {
         return refs;
     }
 
-    public byte[] getPrimitives() {
+    public long[] getPrimitives() {
         return primitives;
     }
 
-    public void locationToStack(int locationIndex, Object[] refs, long[] primitives, int slot)
+    /*public void locationToStack(int locationIndex, Object[] refs, long[] primitives, int slot)
     {
         descriptor.locationToStack(this, locationIndex, refs, primitives, slot);
     }
@@ -47,5 +48,5 @@ public final class LocationsHolder {
 
     public LocationsDescriptor getDescriptor() {
         return descriptor;
-    }
+    }*/
 }

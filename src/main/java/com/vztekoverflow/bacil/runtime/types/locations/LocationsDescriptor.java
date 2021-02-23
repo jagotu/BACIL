@@ -10,14 +10,14 @@ public class LocationsDescriptor {
     @CompilerDirectives.CompilationFinal(dimensions = 1)
     private final int[] offsets;
 
-    private final int bytesSize;
+    private final int primitiveCount;
     private final int refCount;
 
     public LocationsDescriptor(Type[] locationTypes) {
         this.locationTypes = locationTypes;
         offsets = new int[locationTypes.length];
 
-        int byteOffset = 0;
+        int primitiveOffset = 0;
         int refOffset = 0;
 
         for(int i = 0; i < locationTypes.length; i++)
@@ -25,14 +25,13 @@ public class LocationsDescriptor {
             Type t = locationTypes[i];
             if(t.isPrimitiveStorage())
             {
-                offsets[i] = byteOffset;
-                byteOffset += t.getPrimitiveStorageSize();
+                offsets[i] = primitiveOffset++;
             } else {
                 offsets[i] = refOffset++;
             }
         }
 
-        bytesSize = byteOffset;
+        primitiveCount = primitiveOffset;
         refCount = refOffset;
     }
 
@@ -56,8 +55,8 @@ public class LocationsDescriptor {
         return offsets[index];
     }
 
-    public int getBytesSize() {
-        return bytesSize;
+    public int getPrimitiveCount() {
+        return primitiveCount;
     }
 
     public int getRefCount() {
@@ -66,12 +65,12 @@ public class LocationsDescriptor {
 
     public void locationToStack(LocationsHolder holder, int locationIndex, Object[] refs, long[] primitives, int slot)
     {
-       locationTypes[locationIndex].stackToLocation(holder, offsets[locationIndex], refs, primitives, slot);
+       locationTypes[locationIndex].locationToStack(holder, offsets[locationIndex], refs, primitives, slot);
     }
 
     public void stackToLocation(LocationsHolder holder, int locationIndex, Object ref, long primitive)
     {
-        locationTypes[locationIndex].locationToStack(holder, offsets[locationIndex], ref, primitive);
+        locationTypes[locationIndex].stackToLocation(holder, offsets[locationIndex], ref, primitive);
     }
 
     public void objectToLocation(LocationsHolder holder, int locationIndex, Object object)
