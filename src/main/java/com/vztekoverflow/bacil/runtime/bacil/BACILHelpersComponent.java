@@ -12,11 +12,12 @@ public class BACILHelpersComponent extends BACILComponent {
     static AssemblyIdentity assemblyIdentity = new AssemblyIdentity((short)0, (short)0, (short)0, (short)0, "BACILHelpers");
 
     private final BACILConsoleType consoleType;
+    private final BACILEnvironmentType environmentType;
 
     public BACILHelpersComponent(BuiltinTypes builtinTypes, BACILLanguage language) {
         super(language);
         consoleType = new BACILConsoleType(builtinTypes, language);
-
+        environmentType = new BACILEnvironmentType(builtinTypes, language);
     }
 
     @Override
@@ -28,6 +29,8 @@ public class BACILHelpersComponent extends BACILComponent {
     public Type findLocalType(String namespace, String name) {
         if(name.equals("BACILConsole"))
             return consoleType;
+        else if(name.equals("BACILEnvironment"))
+            return environmentType;
 
         CompilerDirectives.transferToInterpreterAndInvalidate();
         throw new BACILInternalError("Type not found in BACILHelpers: " + name);

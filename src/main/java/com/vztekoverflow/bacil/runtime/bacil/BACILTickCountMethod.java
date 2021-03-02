@@ -1,31 +1,25 @@
 package com.vztekoverflow.bacil.runtime.bacil;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
 
-public class BACILConsoleWriteMethod extends JavaMethod {
+public class BACILTickCountMethod extends JavaMethod {
 
     private final Type retType;
 
-    @CompilerDirectives.CompilationFinal(dimensions = 1)
-    private final Type[] argTypes;
-
     private final Type definingType;
 
-    public BACILConsoleWriteMethod(BuiltinTypes builtinTypes, TruffleLanguage<?> language, Type definingType) {
+    public BACILTickCountMethod(BuiltinTypes builtinTypes, TruffleLanguage<?> language, Type definingType) {
         super(language);
-        retType = builtinTypes.getVoidType();
-        argTypes = new Type[] {builtinTypes.getObjectType()};
+        retType = builtinTypes.getInt64Type();
         this.definingType = definingType;
     }
 
     @Override
     public Object execute(VirtualFrame frame) {
-        System.out.print(frame.getArguments()[0]);
-        return null;
+        return System.currentTimeMillis();
     }
 
     @Override
@@ -35,7 +29,7 @@ public class BACILConsoleWriteMethod extends JavaMethod {
 
     @Override
     public int getArgsCount() {
-        return 1;
+        return 0;
     }
 
     @Override
@@ -45,7 +39,7 @@ public class BACILConsoleWriteMethod extends JavaMethod {
 
     @Override
     public Type[] getLocationsTypes() {
-        return argTypes;
+        return new Type[0];
     }
 
     @Override
@@ -55,7 +49,7 @@ public class BACILConsoleWriteMethod extends JavaMethod {
 
     @Override
     public String getName() {
-        return "Write";
+        return "TickCount";
     }
 
 }

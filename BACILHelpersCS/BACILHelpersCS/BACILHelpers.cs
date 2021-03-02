@@ -9,4 +9,12 @@ namespace BACILHelpers
             Console.Write(value);
         }
     }
+
+    public class BACILEnvironment
+    {
+        public static long TickCount()
+        {
+            return Environment.TickCount;
+        }
+    }
 }
