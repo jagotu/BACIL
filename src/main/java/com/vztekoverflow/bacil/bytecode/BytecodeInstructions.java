@@ -287,6 +287,8 @@ public class BytecodeInstructions {
         def(LDC_R8, "ldc.r8", "biiiiiiii", 1);
         def(LDC_I4_S, "ldc.i4.s", "bi", 1);
 
+        def(LDSTR, "ldstr", "btttt", 1);
+
         def(LDLOC_0, "ldloc.0", "b", 1);
         def(LDLOC_1, "ldloc.1", "b", 1);
         def(LDLOC_2, "ldloc.2", "b", 1);
@@ -340,6 +342,8 @@ public class BytecodeInstructions {
 
 
 
+
+
         def(RET, "ret", "b", 0);
 
         def(BR, "br", "biiii", 0);
@@ -364,6 +368,24 @@ public class BytecodeInstructions {
         defPrefixed(CGT, "cgt", "b", -1);
         defPrefixed(CEQ, "ceq", "b", -1);
         defPrefixed(CLT, "clt", "b", -1);
+
+        def(BEQ, "beq", "btttt", -2);
+        def(BGE, "bge", "btttt", -2);
+        def(BGT, "bgt", "btttt", -2);
+        def(BLE, "ble", "btttt", -2);
+        def(BLT, "blt", "btttt", -2);
+
+        def(BEQ_S, "beq.s", "bt", -2);
+        def(BGE_S, "bge.s", "bt", -2);
+        def(BGT_S, "bgt.s", "bt", -2);
+        def(BLE_S, "ble.s", "bt", -2);
+        def(BLT_S, "blt.s", "bt", -2);
+
+        def(BOX, "box", "btttt", 0);
+        def(UNBOX, "unbox", "btttt", 0);
+
+
+
 
         def(TRUFFLE_NODE, "truffle.node", "biiii", 0);
         def(BACIL_STFLD, "bacil.stfld", "biiii", -2);

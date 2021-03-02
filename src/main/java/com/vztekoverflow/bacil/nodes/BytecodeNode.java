@@ -11,11 +11,13 @@ import com.vztekoverflow.bacil.bytecode.BytecodeBuffer;
 import com.vztekoverflow.bacil.bytecode.BytecodeInstructions;
 import com.vztekoverflow.bacil.parser.cil.CILMethod;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
+import com.vztekoverflow.bacil.parser.cli.tables.CLIUSHeapPtr;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
 import com.vztekoverflow.bacil.runtime.ExecutionStackPrimitiveMarker;
 import com.vztekoverflow.bacil.runtime.LocationReference;
 import com.vztekoverflow.bacil.runtime.StaticObject;
 import com.vztekoverflow.bacil.runtime.types.Type;
+import com.vztekoverflow.bacil.runtime.types.TypeHelpers;
 import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
 import com.vztekoverflow.bacil.runtime.types.builtin.SystemVoidType;
 import com.vztekoverflow.bacil.runtime.types.locations.LocationsDescriptor;
@@ -135,6 +137,9 @@ public class BytecodeNode extends Node {
                 case LDC_I4_S: putInt32(primitives, refs, top, bytecodeBuffer.getImmByte(pc)); break;
                 case LDC_I8: putInt64(primitives, refs, top, bytecodeBuffer.getImmLong(pc)); break;
 
+
+                case LDSTR: putStr(primitives, refs, top, bytecodeBuffer.getImmToken(pc)); break;
+
                 case STLOC_0:
                 case STLOC_1:
                 case STLOC_2:
@@ -203,6 +208,31 @@ public class BytecodeNode extends Node {
                 case BR_S:
                     pc = nextpc + bytecodeBuffer.getImmByte(pc);  continue loop;
 
+
+                case BEQ:
+                case BGE:
+                case BGT:
+                case BLE:
+                case BLT:
+                    if(binaryCompareResult(curOpcode, primitives, refs, top-1, top-2))
+                    {
+                        pc = nextpc + bytecodeBuffer.getImmInt(pc);
+                        continue loop;
+                    }
+                    break;
+
+                case BEQ_S:
+                case BGE_S:
+                case BGT_S:
+                case BLE_S:
+                case BLT_S:
+                    if(binaryCompareResult(curOpcode, primitives, refs, top-1, top-2))
+                    {
+                        pc = nextpc + bytecodeBuffer.getImmByte(pc);
+                        continue loop;
+                    }
+                    break;
+
                 case BRTRUE:
                 case BRFALSE:
                     if(shouldBranch(curOpcode, primitives, refs, top-1))
@@ -242,6 +272,9 @@ public class BytecodeNode extends Node {
                 case NEWOBJ:
                     top = nodeizeOpToken(frame, primitives, refs, top, bytecodeBuffer.getImmToken(pc), pc, curOpcode); break;
 
+                case BOX:
+                    box(refs, primitives, top-1, method.getComponent().getType(bytecodeBuffer.getImmToken(pc))); break;
+
 
 
 
@@ -259,6 +292,15 @@ public class BytecodeNode extends Node {
 
     }
 
+    private void putStr(long[] primitives, Object[] refs, int top, CLITablePtr immToken) {
+        CLIUSHeapPtr ptr = new CLIUSHeapPtr(immToken.getRowNo());
+        refs[top] = ptr.readString(method.getComponent().getUSHeap());
+    }
+
+    public static void box(Object[] refs, long[] primitives, int slot, Type type)
+    {
+        refs[slot] = type.stackToObject(refs[slot], primitives[slot]);
+    }
 
 
     public static LocationReference getLocalReference(LocationsDescriptor descriptor, LocationsHolder holder, int index)
@@ -384,9 +426,8 @@ public class BytecodeNode extends Node {
         return value;
     }
 
-    public static void doCompareBinary(int opcode, long[] primitives, Object[] refs, int slot1, int slot2)
+    public static boolean binaryCompareResult(int opcode, long[] primitives, Object[] refs, int slot1, int slot2)
     {
-        //TODO floaty!
         if(ExecutionStackPrimitiveMarker.isExecutionStackPrimitiveMarker(refs[slot1]) && ExecutionStackPrimitiveMarker.isExecutionStackPrimitiveMarker(refs[slot2]))
         {
             //using the numeric binary table here as it seems to be the same so far
@@ -402,23 +443,49 @@ public class BytecodeNode extends Node {
             switch(opcode)
             {
                 case CGT:
+                case BGT:
+                case BGT_S:
                     result = primitives[slot1] > primitives[slot2];
                     break;
+                case BGE:
+                case BGE_S:
+                    result = primitives[slot1] >= primitives[slot2];
+                    break;
+
                 case CLT:
+                case BLT:
+                case BLT_S:
                     result = primitives[slot1] < primitives[slot2];
                     break;
+                case BLE:
+                case BLE_S:
+                    result = primitives[slot1] <= primitives[slot2];
+                    break;
+
                 case CEQ:
+                case BEQ:
+                case BEQ_S:
                     result = primitives[slot1] == primitives[slot2];
                     break;
+
+
             }
 
-            primitives[slot1] = result ? 1 : 0;
-            refs[slot1] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
+            return result;
 
         } else {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILInternalError("Unimplemented.");
         }
+    }
+
+    public static void doCompareBinary(int opcode, long[] primitives, Object[] refs, int slot1, int slot2)
+    {
+        //TODO floaty!
+        boolean result = binaryCompareResult(opcode, primitives, refs, slot1, slot2);
+        primitives[slot1] = result ? 1 : 0;
+        refs[slot1] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
+
     }
 
     public static void doNumericBinary(int opcode, long[] primitives, Object[] refs, int slot1, int slot2)
@@ -453,10 +520,10 @@ public class BytecodeNode extends Node {
 
             }
 
-            /*if(resultType == ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
+            if(resultType == ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
             {
-                result &= 0xFFFFFFFFL;
-            }*/
+                result = TypeHelpers.truncate32(result);
+            }
 
             primitives[slot1] = result;
             refs[slot1] = resultType;

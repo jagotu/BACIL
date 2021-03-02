@@ -18,7 +18,7 @@ public class CallNode extends CallableNode {
     public CallNode(BACILMethod method, int top) {
         this.method = method;
         this.top = top;
-        directCallNode = DirectCallNode.create(this.method.getCallTarget());
+        directCallNode = DirectCallNode.create(this.method.getMethodCallTarget());
     }
 
     @Override

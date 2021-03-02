@@ -4,7 +4,7 @@ import com.oracle.truffle.api.CallTarget;
 import com.vztekoverflow.bacil.runtime.types.Type;
 
 public interface BACILMethod {
-    public CallTarget getCallTarget();
+    public CallTarget getMethodCallTarget();
 
     public Type getRetType();
 
@@ -15,4 +15,6 @@ public interface BACILMethod {
     Type[] getLocationsTypes();
 
     public Type getDefiningType();
+
+    public String getName();
 }

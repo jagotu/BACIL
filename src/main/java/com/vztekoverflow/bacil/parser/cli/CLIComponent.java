@@ -16,12 +16,12 @@ import com.vztekoverflow.bacil.parser.cli.tables.generated.*;
 import com.vztekoverflow.bacil.parser.pe.PEFile;
 import com.vztekoverflow.bacil.runtime.BACILContext;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
+import com.vztekoverflow.bacil.runtime.bacil.BACILComponent;
 import com.vztekoverflow.bacil.runtime.types.NamedType;
 import com.vztekoverflow.bacil.runtime.types.Type;
-import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
 import org.graalvm.polyglot.io.ByteSequence;
 
-public class CLIComponent {
+public class CLIComponent extends BACILComponent {
 
     private final CLIHeader cliHeader;
     private final CLIMetadata cliMetadata;
@@ -39,6 +39,8 @@ public class CLIComponent {
     private final byte[] stringHeap;
     @CompilationFinal(dimensions = 1)
     private final byte[] guidHeap;
+    @CompilationFinal(dimensions = 1)
+    private final byte[] USHeap;
 
     @CompilationFinal(dimensions = 1)
     protected final Type[] localDefTypes;
@@ -51,8 +53,7 @@ public class CLIComponent {
 
     private final PEFile pe;
 
-    @CompilationFinal
-    private BuiltinTypes builtinTypes;
+
 
     public CLIHeader getCliHeader() {
         return cliHeader;
@@ -76,6 +77,11 @@ public class CLIComponent {
         return guidHeap;
     }
 
+    public byte[] getUSHeap() {
+        return USHeap;
+    }
+
+    @Override
     public AssemblyIdentity getAssemblyIdentity() {
         return assemblyIdentity;
     }
@@ -102,12 +108,14 @@ public class CLIComponent {
         return buf;
     }
 
-    public CLIComponent(CLIHeader cliHeader, CLIMetadata cliMetadata, byte[] blobHeap, byte[] stringHeap, byte[] guidHeap, CLITables tables, PEFile pe, BACILContext context) {
+    public CLIComponent(CLIHeader cliHeader, CLIMetadata cliMetadata, byte[] blobHeap, byte[] stringHeap, byte[] guidHeap, byte[] USHeap, CLITables tables, PEFile pe, BACILContext context) {
+        super(context.getLanguage());
         this.cliHeader = cliHeader;
         this.cliMetadata = cliMetadata;
         this.blobHeap = blobHeap;
         this.stringHeap = stringHeap;
         this.guidHeap = guidHeap;
+        this.USHeap = USHeap;
         this.tables = tables;
         this.pe = pe;
         this.context = context;
@@ -161,9 +169,10 @@ public class CLIComponent {
         final byte[] blobHeap = cliMetadata.getStream("#Blob", bytes).toByteArray();
         final byte[] stringHeap = cliMetadata.getStream("#Strings", bytes).toByteArray();
         final byte[] guidHeap = cliMetadata.getStream("#GUID", bytes).toByteArray();
+        final byte[] USHeap = cliMetadata.getStream("#US", bytes).toByteArray();
 
 
-        return new CLIComponent(cliHeader, cliMetadata, blobHeap, stringHeap, guidHeap, tables, peFile, context);
+        return new CLIComponent(cliHeader, cliMetadata, blobHeap, stringHeap, guidHeap, USHeap, tables, peFile, context);
 
     }
 
@@ -267,7 +276,7 @@ public class CLIComponent {
         String typeName = typeRef.getTypeName().read(stringHeap);
         String typeNamespace = typeRef.getTypeNamespace().read(stringHeap);
 
-        CLIComponent assembly = context.getAssembly(assemblyRefIdentity);
+        BACILComponent assembly = context.getAssembly(assemblyRefIdentity);
 
 
        return assembly.findLocalType(typeNamespace, typeName);
@@ -284,7 +293,7 @@ public class CLIComponent {
     }
 
 
-
+    @Override
     public Type findLocalType(String namespace, String name)
     {
         for(CLITypeDefTableRow row : getTableHeads().getTypeDefTableHead())
@@ -298,7 +307,7 @@ public class CLIComponent {
             if(row.getTypeNamespace().read(stringHeap).equals(namespace) && row.getTypeName().read(stringHeap).equals(name))
             {
                 CLIAssemblyRefTableRow assemblyRef = getTableHeads().getAssemblyRefTableHead().skip(row.getImplementation());
-                CLIComponent c = context.getAssembly(AssemblyIdentity.fromAssemblyRefRow(stringHeap, assemblyRef));
+                BACILComponent c = context.getAssembly(AssemblyIdentity.fromAssemblyRefRow(stringHeap, assemblyRef));
                 return c.findLocalType(namespace, name);
             }
         }
@@ -340,15 +349,6 @@ public class CLIComponent {
     public CLITablesHeader getTablesHeader()
     {
         return tables.getTablesHeader();
-    }
-
-    public void setBuiltinTypes(BuiltinTypes builtinTypes) {
-        CompilerAsserts.neverPartOfCompilation();
-        this.builtinTypes = builtinTypes;
-    }
-
-    public BuiltinTypes getBuiltinTypes() {
-        return builtinTypes;
     }
 
     @Override

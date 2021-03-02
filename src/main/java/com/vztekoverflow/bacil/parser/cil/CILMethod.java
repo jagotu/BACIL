@@ -166,7 +166,7 @@ public class CILMethod implements BACILMethod {
     }
 
     @Override
-    public CallTarget getCallTarget() {
+    public CallTarget getMethodCallTarget() {
         return callTarget;
     }
 
@@ -195,6 +195,7 @@ public class CILMethod implements BACILMethod {
         return methodDefSig;
     }
 
+    @Override
     public String getName() {
         return name;
     }

@@ -20,7 +20,7 @@ public class ConstructorNode extends CallableNode {
         this.method = method;
         this.top = top;
         this.objType = (NamedType)method.getDefiningType();
-        directCallNode = DirectCallNode.create(this.method.getCallTarget());
+        directCallNode = DirectCallNode.create(this.method.getMethodCallTarget());
     }
 
     @Override

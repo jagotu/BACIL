@@ -11,6 +11,8 @@ import com.vztekoverflow.bacil.BACILLanguage;
 import com.vztekoverflow.bacil.parser.BACILParserException;
 import com.vztekoverflow.bacil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
+import com.vztekoverflow.bacil.runtime.bacil.BACILComponent;
+import com.vztekoverflow.bacil.runtime.bacil.BACILHelpersComponent;
 import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
 import org.graalvm.polyglot.io.ByteSequence;
 
@@ -24,7 +26,7 @@ public class BACILContext {
     private final BACILLanguage language;
     private final TruffleLanguage.Env env;
     private final List<Path> libraryPaths = new ArrayList<>();
-    private final ArrayList<CLIComponent> loadedAssemblies = new ArrayList<>();
+    private final ArrayList<BACILComponent> loadedAssemblies = new ArrayList<>();
 
     @CompilerDirectives.CompilationFinal
     private BuiltinTypes builtinTypes = null;
@@ -63,9 +65,15 @@ public class BACILContext {
         }
     }
 
-    private CLIComponent findAssembly(AssemblyIdentity reference)
+    private BACILComponent findAssembly(AssemblyIdentity reference)
     {
         CompilerAsserts.neverPartOfCompilation();
+
+        if(reference.getName().equals("BACILHelpers"))
+        {
+            return new BACILHelpersComponent(builtinTypes, getLanguage());
+        }
+
         for (Path p : libraryPaths) {
             Path absPath = Paths.get(p.toString(), reference.getName() + ".dll");
             TruffleFile file = getEnv().getInternalTruffleFile(absPath.toUri());
@@ -108,10 +116,10 @@ public class BACILContext {
         {
             builtinInitalizing = true;
             AssemblyIdentity corLibRef = AssemblyIdentity.fromAssemblyRefRow(c.getStringHeap(), c.getTableHeads().getAssemblyRefTableHead());
-            CLIComponent corLib = findAssembly(corLibRef);
+            CLIComponent corLib = (CLIComponent) findAssembly(corLibRef);
             builtinTypes = new BuiltinTypes(corLib);
 
-            for(CLIComponent comp : loadedAssemblies)
+            for(BACILComponent comp : loadedAssemblies)
             {
                 comp.setBuiltinTypes(builtinTypes);
             }
@@ -123,10 +131,10 @@ public class BACILContext {
     }
 
 
-    public CLIComponent getAssembly(AssemblyIdentity reference)
+    public BACILComponent getAssembly(AssemblyIdentity reference)
     {
         CompilerAsserts.neverPartOfCompilation();
-        for (CLIComponent assemblyComponent: loadedAssemblies) {
+        for (BACILComponent assemblyComponent: loadedAssemblies) {
             assert assemblyComponent.getAssemblyIdentity() != null;
             if(assemblyComponent.getAssemblyIdentity().resolvesRef(reference))
             {

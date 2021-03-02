@@ -1,0 +1,35 @@
+package com.vztekoverflow.bacil.runtime.bacil;
+
+import com.oracle.truffle.api.CompilerDirectives;
+import com.vztekoverflow.bacil.BACILInternalError;
+import com.vztekoverflow.bacil.BACILLanguage;
+import com.vztekoverflow.bacil.parser.cli.AssemblyIdentity;
+import com.vztekoverflow.bacil.runtime.types.Type;
+import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
+
+public class BACILHelpersComponent extends BACILComponent {
+
+    static AssemblyIdentity assemblyIdentity = new AssemblyIdentity((short)0, (short)0, (short)0, (short)0, "BACILHelpers");
+
+    private final BACILConsoleType consoleType;
+
+    public BACILHelpersComponent(BuiltinTypes builtinTypes, BACILLanguage language) {
+        super(language);
+        consoleType = new BACILConsoleType(builtinTypes, language);
+
+    }
+
+    @Override
+    public AssemblyIdentity getAssemblyIdentity() {
+        return assemblyIdentity;
+    }
+
+    @Override
+    public Type findLocalType(String namespace, String name) {
+        if(name.equals("BACILConsole"))
+            return consoleType;
+
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        throw new BACILInternalError("Type not found in BACILHelpers: " + name);
+    }
+}

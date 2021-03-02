@@ -59,7 +59,7 @@ public class BACILLanguage extends TruffleLanguage<BACILContext> {
         CLITablePtr entryPtr = CLITablePtr.fromToken(c.getCliHeader().getEntryPointToken());
 
         CILMethod entryMethod = c.getLocalMethod(entryPtr);
-        return new AddCLIArgsCallTarget(entryMethod.getCallTarget());
+        return new AddCLIArgsCallTarget(entryMethod.getMethodCallTarget());
     }
 
     @Override
