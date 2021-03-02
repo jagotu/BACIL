@@ -1,7 +1,12 @@
 package com.vztekoverflow.bacil.runtime.types.builtin;
 
+import com.oracle.truffle.api.CompilerDirectives;
+import com.vztekoverflow.bacil.BACILInternalError;
+import com.vztekoverflow.bacil.bytecode.BytecodeInstructions;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.runtime.types.Type;
+
+import static com.vztekoverflow.bacil.bytecode.BytecodeInstructions.*;
 
 public class BuiltinTypes {
     private final Type stringType;
@@ -44,6 +49,58 @@ public class BuiltinTypes {
         typedReferenceType = corlib.findLocalType("System", "TypedReference");
         singleType = corlib.findLocalType("System", "Single");
         doubleType = corlib.findLocalType("System", "Double");
+    }
+
+
+    public Type getForIndirectOpcode(int opcode)
+    {
+        switch(opcode)
+        {
+            case STIND_I1:
+            case LDIND_I1:
+                return sbyteType;
+
+            case STIND_I2:
+            case LDIND_I2:
+                return int16Type;
+
+            case STIND_I4:
+            case LDIND_I4:
+                return int32Type;
+
+            case STIND_I8:
+            case LDIND_I8:
+                return int64Type;
+
+            case STIND_I:
+            case LDIND_I:
+                return intPtrType;
+
+            case STIND_R4:
+            case LDIND_R4:
+                return singleType;
+
+            case STIND_R8:
+            case LDIND_R8:
+                return doubleType;
+
+            case LDIND_U1:
+                return byteType;
+
+            case LDIND_U2:
+                return uInt16Type;
+
+            case LDIND_U4:
+                return uInt32Type;
+
+            case LDIND_REF:
+            case STIND_REF:
+                return objectType;
+
+            default:
+                CompilerDirectives.transferToInterpreterAndInvalidate();
+                throw new BACILInternalError(String.format("Can't get type for opcode %02x (%s)", opcode, BytecodeInstructions.getName(opcode)));
+        }
     }
 
     public Type getStringType() {

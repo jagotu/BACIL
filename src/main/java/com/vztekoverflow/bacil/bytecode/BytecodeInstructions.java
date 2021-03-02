@@ -86,7 +86,6 @@ public class BytecodeInstructions {
     public static final int LDIND_I4 = 0x4A;
     public static final int LDIND_U4 = 0x4B;
     public static final int LDIND_I8 = 0x4C;
-    public static final int LDIND_U8 = 0x4C;
     public static final int LDIND_I = 0x4D;
     public static final int LDIND_R4 = 0x4E;
     public static final int LDIND_R8 = 0x4F;
@@ -319,6 +318,7 @@ public class BytecodeInstructions {
         def(LDIND_I, "ldind.i", "b", 0);
         def(LDIND_R4, "ldind.r4", "b", 0);
         def(LDIND_R8, "ldind.r8", "b", 0);
+        def(LDIND_REF, "ldind.ref", "b", 0);
 
         def(STIND_I1, "stind.i1", "b", -2);
         def(STIND_I2, "stind.i2", "b", -2);
@@ -327,6 +327,7 @@ public class BytecodeInstructions {
         def(STIND_I, "stind.i", "b", -2);
         def(STIND_R4, "stind.r4", "b", -2);
         def(STIND_R8, "stind.r8", "b", -2);
+        def(STIND_REF, "stind.ref", "b", -2);
 
         def(STFLD, "stfld", "btttt", 0);
         def(LDFLD, "ldfld", "btttt", 0);

@@ -11,8 +11,12 @@ import com.vztekoverflow.bacil.bytecode.BytecodeBuffer;
 import com.vztekoverflow.bacil.bytecode.BytecodeInstructions;
 import com.vztekoverflow.bacil.parser.cil.CILMethod;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
-import com.vztekoverflow.bacil.runtime.*;
+import com.vztekoverflow.bacil.runtime.BACILMethod;
+import com.vztekoverflow.bacil.runtime.ExecutionStackPrimitiveMarker;
+import com.vztekoverflow.bacil.runtime.LocationReference;
+import com.vztekoverflow.bacil.runtime.StaticObject;
 import com.vztekoverflow.bacil.runtime.types.Type;
+import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
 import com.vztekoverflow.bacil.runtime.types.builtin.SystemVoidType;
 import com.vztekoverflow.bacil.runtime.types.locations.LocationsDescriptor;
 import com.vztekoverflow.bacil.runtime.types.locations.LocationsHolder;
@@ -25,6 +29,7 @@ public class BytecodeNode extends Node {
 
     private final CILMethod method;
     private final BytecodeBuffer bytecodeBuffer;
+    private final BuiltinTypes builtinTypes;
 
 
 
@@ -34,6 +39,7 @@ public class BytecodeNode extends Node {
     {
         this.method = method;
         this.bytecodeBuffer = new BytecodeBuffer(bytecode);
+        this.builtinTypes = method.getComponent().getBuiltinTypes();
     }
 
 
@@ -82,6 +88,7 @@ public class BytecodeNode extends Node {
 
         int top = 0;
         int pc = 0;
+
 
 
 
@@ -144,8 +151,8 @@ public class BytecodeNode extends Node {
                 case LDLOC_S:
                     loadStack(primitives, refs, top, descriptor, locations, bytecodeBuffer.getImmUByte(pc)); break;
 
-                /*case LDLOCA_S:
-                    refs[top] = getLocalReference(bytecodeBuffer.getImmUByte(pc), locations); break;*/
+                case LDLOCA_S:
+                    refs[top] = getLocalReference(descriptor, locations, bytecodeBuffer.getImmUByte(pc)); break;
 
                 case LDARG_0:
                 case LDARG_1:
@@ -155,45 +162,32 @@ public class BytecodeNode extends Node {
                 case LDARG_S:
                     loadStack(primitives, refs, top, descriptor, locations, varsCount + bytecodeBuffer.getImmUByte(pc)); break;
 
-                /*case LDARGA_S:
-                    refs[top] = getLocalReference(varsCount + bytecodeBuffer.getImmUByte(pc), locations, locationsTypes); break;*/
+                case LDARGA_S:
+                    refs[top] = getLocalReference(descriptor, locations,varsCount + bytecodeBuffer.getImmUByte(pc)); break;
 
 
-                /*case STIND_I1:
-                    storeIndirect(primitives, refs, top-2, top-1, Type.ELEMENT_TYPE_I1); break;
+                case STIND_I1:
                 case STIND_I2:
-                    storeIndirect(primitives, refs, top-2, top-1, Type.ELEMENT_TYPE_I2); break;
                 case STIND_I4:
-                    storeIndirect(primitives, refs, top-2, top-1, Type.ELEMENT_TYPE_I4); break;
                 case STIND_I8:
-                    storeIndirect(primitives, refs, top-2, top-1, Type.ELEMENT_TYPE_I8); break;
                 case STIND_I:
-                    storeIndirect(primitives, refs, top-2, top-1, Type.ELEMENT_TYPE_I); break;
                 case STIND_R4:
-                    storeIndirect(primitives, refs, top-2, top-1, Type.ELEMENT_TYPE_R4); break;
                 case STIND_R8:
-                    storeIndirect(primitives, refs, top-2, top-1, Type.ELEMENT_TYPE_R8); break;
+                case STIND_REF:
+                    storeIndirect(primitives[top-1], refs[top-1], (LocationReference) refs[top-2], builtinTypes.getForIndirectOpcode(curOpcode)); break;
 
                 case LDIND_I1:
-                    loadIndirect(primitives, refs, top-1, Type.ELEMENT_TYPE_I1); break;
                 case LDIND_U1:
-                    loadIndirect(primitives, refs, top-1, Type.ELEMENT_TYPE_U1); break;
                 case LDIND_I2:
-                    loadIndirect(primitives, refs, top-1, Type.ELEMENT_TYPE_I2); break;
                 case LDIND_U2:
-                    loadIndirect(primitives, refs, top-1, Type.ELEMENT_TYPE_U2); break;
                 case LDIND_I4:
-                    loadIndirect(primitives, refs, top-1, Type.ELEMENT_TYPE_I4);  break;
                 case LDIND_U4:
-                    loadIndirect(primitives, refs, top-1, Type.ELEMENT_TYPE_U4); break;
                 case LDIND_I8:
-                    loadIndirect(primitives, refs, top-1, Type.ELEMENT_TYPE_I8); break;
                 case LDIND_I:
-                    loadIndirect(primitives, refs, top-1, Type.ELEMENT_TYPE_I); break;
                 case LDIND_R4:
-                    loadIndirect(primitives, refs, top-1, Type.ELEMENT_TYPE_R4); break;
                 case LDIND_R8:
-                    loadIndirect(primitives, refs, top-1, Type.ELEMENT_TYPE_R8); break;*/
+                case LDIND_REF:
+                    loadIndirect(primitives, refs, top-1, (LocationReference) refs[top-1], builtinTypes.getForIndirectOpcode(curOpcode)); break;
 
                 case DUP:
                     refs[top]=refs[top-1];primitives[top]=primitives[top-1]; break;
@@ -267,9 +261,9 @@ public class BytecodeNode extends Node {
 
 
 
-    public static ManagedReference getLocalReference(int offset, Object[] locals, Type[] localsTypes)
+    public static LocationReference getLocalReference(LocationsDescriptor descriptor, LocationsHolder holder, int index)
     {
-        return new LocalReference(locals, offset, localsTypes[offset]);
+        return new LocationReference(holder, descriptor.getOffset(index));
     }
 
     @ExplodeLoop
@@ -490,29 +484,15 @@ public class BytecodeNode extends Node {
         return retType.stackToObject(refs[slot], primitives[slot]);
     }
 
-    /*public static void loadIndirect(long[] primitives, Object[] refs, int slot, int expectedTypeCategory)
+    public static void loadIndirect(long[] primitives, Object[] refs, int slot, LocationReference locationReference, Type type)
     {
-        ManagedReference managed = (ManagedReference)refs[slot];
-        if(managed.getType().getTypeCategory() != expectedTypeCategory)
-        {
-            CompilerDirectives.transferToInterpreterAndInvalidate();
-            throw new BACILInternalError(String.format("Wrong indirect load: trying to load %d, was referring to %d", expectedTypeCategory, managed.getType().getTypeCategory()));
-        }
-
-        managed.getType().toStackVar(refs, primitives, slot, managed.getValue());
+        type.locationToStack(locationReference.getHolder(), locationReference.getHolderOffset(), refs, primitives, slot);
     }
 
-    public static void storeIndirect(long[] primitives, Object[] refs, int ptrSlot, int valueSlot, byte storingTypeCategory)
+    public static void storeIndirect(long primitive, Object ref, LocationReference locationReference, Type type)
     {
-        ManagedReference managed = (ManagedReference)refs[ptrSlot];
-        if(Type.getVerificationType(managed.getType().getTypeCategory()) != Type.getVerificationType(storingTypeCategory))
-        {
-            CompilerDirectives.transferToInterpreterAndInvalidate();
-            throw new BACILInternalError(String.format("Wrong indirect save: trying to save %d, was referring to %d", storingTypeCategory, managed.getType().getTypeCategory()));
-        }
-        managed.setValue(managed.getType().fromStackVar(refs[valueSlot], primitives[valueSlot]));
-
-    }*/
+        type.stackToLocation(locationReference.getHolder(), locationReference.getHolderOffset(), ref, primitive);
+    }
 
     public static void loadStack(long[] primitives, Object[] refs, int slot, LocationsDescriptor descriptor, LocationsHolder locals, int localSlot)
     {

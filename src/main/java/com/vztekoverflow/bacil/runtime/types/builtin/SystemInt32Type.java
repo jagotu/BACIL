@@ -5,6 +5,7 @@ import com.vztekoverflow.bacil.BACILInternalError;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITypeDefTableRow;
 import com.vztekoverflow.bacil.runtime.ExecutionStackPrimitiveMarker;
+import com.vztekoverflow.bacil.runtime.types.TypeHelpers;
 import com.vztekoverflow.bacil.runtime.types.locations.LocationsHolder;
 
 public class SystemInt32Type extends SystemValueTypeType {
@@ -15,7 +16,7 @@ public class SystemInt32Type extends SystemValueTypeType {
     @Override
     public void locationToStack(LocationsHolder holder, int holderOffset, Object[] refs, long[] primitives, int slot) {
         refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
-        primitives[slot] = (holder.getPrimitives()[holderOffset]);
+        primitives[slot] = TypeHelpers.truncate32(holder.getPrimitives()[holderOffset]);
     }
 
     @Override
@@ -25,13 +26,13 @@ public class SystemInt32Type extends SystemValueTypeType {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILInternalError("Saving a non-Int32 value into System.Int32 location.");
         }
-        holder.getPrimitives()[holderOffset]= primitive;
+        holder.getPrimitives()[holderOffset]= TypeHelpers.truncate32(primitive);
     }
 
     @Override
     public void objectToStack(Object[] refs, long[] primitives, int slot, Object value) {
         refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
-        primitives[slot] = (Integer)value;
+        primitives[slot] = TypeHelpers.truncate32((Integer)value);
     }
 
     @Override
@@ -39,14 +40,14 @@ public class SystemInt32Type extends SystemValueTypeType {
         if(ref != ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
         {
             CompilerDirectives.transferToInterpreterAndInvalidate();
-            throw new BACILInternalError("Saving a non-Int32 value into System.Int32 location.");
+            throw new BACILInternalError("Accessing a non-Int32 value from a System.Int32 location.");
         }
         return (int) primitive;
     }
 
     @Override
     public void objectToLocation(LocationsHolder holder, int holderOffset, Object obj) {
-        holder.getPrimitives()[holderOffset] = (Integer) obj;
+        holder.getPrimitives()[holderOffset] = TypeHelpers.truncate32((Integer) obj);
     }
 
     @Override
@@ -57,11 +58,6 @@ public class SystemInt32Type extends SystemValueTypeType {
     @Override
     public Object initialValue() {
         return 0;
-    }
-
-    @Override
-    public int getPrimitiveStorageSize() {
-        return 4;
     }
 
 

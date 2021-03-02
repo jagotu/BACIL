@@ -59,8 +59,4 @@ public class SystemBooleanType extends SystemValueTypeType {
         return 0;
     }
 
-    @Override
-    public int getPrimitiveStorageSize() {
-        return 1;
-    }
 }

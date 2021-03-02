@@ -57,10 +57,4 @@ public abstract class Type {
         return false;
     }
 
-    public int getPrimitiveStorageSize()
-    {
-        return 0;
-    }
-
-
 }
