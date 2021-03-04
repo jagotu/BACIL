@@ -12,11 +12,6 @@ public class CLIStringHeapPtr extends CLIHeapPtr<String> {
     public String read(byte[] heapData) {
         int nullByteOffset;
 
-        if(offset < 0)
-        {
-            return "KOKOT";
-        }
-
         for(nullByteOffset = offset;nullByteOffset<heapData.length;nullByteOffset++) {
             if (heapData[nullByteOffset] == 0)
                 break;
