@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace BACILHelpers
 {
+
+    
+
     public class BACILConsole
     {
         public static void Write(Object value)
@@ -12,9 +16,19 @@ namespace BACILHelpers
 
     public class BACILEnvironment
     {
-        public static long TickCount()
+        static Stopwatch stopWatch = new Stopwatch();
+
+        public static void StartTimer()
         {
-            return Environment.TickCount;
+            stopWatch.Restart();
         }
+
+        public static long GetTicks()
+        {
+            stopWatch.Stop();
+            return stopWatch.ElapsedTicks;
+        }
+
+
     }
 }

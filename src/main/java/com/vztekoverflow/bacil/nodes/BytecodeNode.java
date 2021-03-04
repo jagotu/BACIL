@@ -421,6 +421,8 @@ public class BytecodeNode extends Node {
             throw new BACILInternalError("Invalid token type.");
         }
 
+        definingType.init();
+
 
         final CallableNode node;
         switch (opcode)
