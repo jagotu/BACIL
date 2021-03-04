@@ -11,6 +11,8 @@ public class TypedField {
     private final String name;
     private final int offset;
 
+    public static final short FIELD_ATTRIBUTE_STATIC = 0x0010;
+
     public TypedField(short flags, String name, FieldSig signature, int offset) {
         this.flags = flags;
         this.name = name;
@@ -42,5 +44,9 @@ public class TypedField {
 
     public int getOffset() {
         return offset;
+    }
+
+    public boolean isStatic() {
+        return (flags & TypedField.FIELD_ATTRIBUTE_STATIC) != 0;
     }
 }

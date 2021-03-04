@@ -8,24 +8,24 @@ import com.vztekoverflow.bacil.runtime.StaticObject;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.TypedField;
 
-public class StfldNode extends CallableNode {
+public class LdfldaNode extends CallableNode {
 
     private final TypedField field;
     private final int top;
 
-    public StfldNode(CLITablePtr token, CLIComponent callingComponent, int top, Type objType) {
+    public LdfldaNode(CLITablePtr token, CLIComponent callingComponent, int top, Type objType) {
         this.top = top;
         field = objType.getTypedField(token, callingComponent);
         if(field.isStatic())
         {
-            throw new BACILInternalError("STFLD for a static field!");
+            throw new BACILInternalError("LDFLDA for a static field!");
         }
     }
 
     @Override
     public int execute(VirtualFrame frame, long[] primitives, Object[] refs) {
-        StaticObject obj = (StaticObject)refs[top-2];
-        obj.fieldFromStackVar(field, refs[top-1], primitives[top-1]);
-        return top-2;
+        StaticObject obj = (StaticObject)refs[top-1];
+        refs[top-1] = obj.getFieldReference(field);
+        return top;
     }
 }

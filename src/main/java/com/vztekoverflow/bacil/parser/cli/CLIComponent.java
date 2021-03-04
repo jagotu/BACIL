@@ -231,12 +231,42 @@ public class CLIComponent extends BACILComponent {
             next = next.next();
         }
 
-        if(!next.hasNext())
+        if(methodDef.getRowNo() < next.getMethodList().getRowNo())
         {
-            return getLocalType(next);
+            return getLocalType(previous);
+        }
+        return getLocalType(next);
+
+
+    }
+
+    public Type findDefiningType(CLIFieldTableRow field)
+    {
+        if(getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_TYPE_DEF) == 0) {
+            return null;
         }
 
-        return getLocalType(previous);
+        CLITypeDefTableRow previous = getTableHeads().getTypeDefTableHead();
+        if(field.getRowNo() < previous.getFieldList().getRowNo() ) //can not belong to any type only when it's before the first type
+        {
+            return null;
+        } else if (!previous.hasNext())
+        {
+            return getLocalType(previous);
+        }
+
+        CLITypeDefTableRow next = previous.next();
+        while(next.hasNext() && field.getRowNo() >= next.getFieldList().getRowNo())
+        {
+            previous = next;
+            next = next.next();
+        }
+
+        if(field.getRowNo() < next.getFieldList().getRowNo())
+        {
+            return getLocalType(previous);
+        }
+        return getLocalType(next);
     }
 
     public CILMethod getLocalMethod(CLITablePtr token)

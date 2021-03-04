@@ -333,6 +333,10 @@ public class BytecodeInstructions {
 
         def(STFLD, "stfld", "btttt", 0);
         def(LDFLD, "ldfld", "btttt", 0);
+        def(LDSFLD, "ldsfld", "btttt", 0);
+        def(STSFLD, "stsfld", "btttt", 0);
+        def(LDFLDA, "ldflda", "btttt", 0);
+        def(LDSFLDA, "ldsfdla", "btttt", 0);
 
         def(DUP, "dup", "b", 1);
 

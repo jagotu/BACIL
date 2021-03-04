@@ -12,10 +12,11 @@ import com.vztekoverflow.bacil.bytecode.BytecodeInstructions;
 import com.vztekoverflow.bacil.parser.cil.CILMethod;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.parser.cli.tables.CLIUSHeapPtr;
+import com.vztekoverflow.bacil.parser.cli.tables.generated.CLIMemberRefTableRow;
+import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableConstants;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
 import com.vztekoverflow.bacil.runtime.ExecutionStackPrimitiveMarker;
 import com.vztekoverflow.bacil.runtime.LocationReference;
-import com.vztekoverflow.bacil.runtime.StaticObject;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.TypeHelpers;
 import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
@@ -267,6 +268,11 @@ public class BytecodeNode extends Node {
 
                 case LDFLD:
                 case STFLD:
+                case LDSFLD:
+                case STSFLD:
+                case LDFLDA:
+                case LDSFLDA:
+                    top = nodeizeOpFld(frame, primitives, refs, top, bytecodeBuffer.getImmToken(pc), pc, curOpcode); break;
                 case CALL:
                 case CALLVIRT:
                 case NEWOBJ:
@@ -388,11 +394,54 @@ public class BytecodeNode extends Node {
             case NEWOBJ:
                 node = new ConstructorNode(method.getComponent().getMethod(token, lookupContextReference(BACILLanguage.class).get()), top);
                 break;
+            default:
+                CompilerAsserts.neverPartOfCompilation();
+                throw new BACILInternalError(String.format("Can't nodeize opcode %02x (%s) yet.", opcode, BytecodeInstructions.getName(opcode)));
+        }
+        int index = addNode(node);
+        byte[] patch = preparePatch((byte)TRUFFLE_NODE, index, BytecodeInstructions.getLength(opcode));
+        bytecodeBuffer.patchBytecode(pc, patch);
+
+        return nodes[index].execute(frame, primitives, refs);
+
+    }
+
+    public int nodeizeOpFld(VirtualFrame frame, long[] primitives, Object[] refs, int top, CLITablePtr token, int pc, int opcode)
+    {
+        CompilerDirectives.transferToInterpreterAndInvalidate(); // because we are about to change something that is compilation final
+        Type definingType;
+        if(token.getTableId() == CLITableConstants.CLI_TABLE_MEMBER_REF)
+        {
+            CLIMemberRefTableRow row = method.getComponent().getTableHeads().getMemberRefTableHead().skip(token);
+            definingType = method.getComponent().getType(row.getKlass());
+        } else if (token.getTableId() == CLITableConstants.CLI_TABLE_FIELD)
+        {
+            definingType = method.getComponent().findDefiningType(method.getComponent().getTableHeads().getFieldTableHead().skip(token));
+        } else {
+            throw new BACILInternalError("Invalid token type.");
+        }
+
+
+        final CallableNode node;
+        switch (opcode)
+        {
             case STFLD:
-                node = new StfldNode(token, method.getComponent(), top, ((StaticObject)refs[top-2]).getType());
+                node = new StfldNode(token, method.getComponent(), top, definingType);
                 break;
             case LDFLD:
-                node = new LdfldNode(token, method.getComponent(), top, ((StaticObject)refs[top-1]).getType());
+                node = new LdfldNode(token, method.getComponent(), top, definingType);
+                break;
+            case LDSFLD:
+                node = new LdsfldNode(token, method.getComponent(), top, definingType);
+                break;
+            case STSFLD:
+                node = new StsfldNode(token, method.getComponent(), top, definingType);
+                break;
+            case LDFLDA:
+                node = new LdfldaNode(token, method.getComponent(), top, definingType);
+                break;
+            case LDSFLDA:
+                node = new LdsfldaNode(token, method.getComponent(), top, definingType);
                 break;
             default:
                 CompilerAsserts.neverPartOfCompilation();

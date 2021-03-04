@@ -9,6 +9,8 @@ import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.runtime.BACILContext;
 import org.graalvm.options.OptionDescriptors;
 
+import java.io.File;
+
 @TruffleLanguage.Registration(id = BACILLanguage.ID, name = BACILLanguage.NAME, interactive = false, defaultMimeType = BACILLanguage.CIL_PE_MIME_TYPE,
 byteMimeTypes = {BACILLanguage.CIL_PE_MIME_TYPE})
 public class BACILLanguage extends TruffleLanguage<BACILContext> {
@@ -50,6 +52,9 @@ public class BACILLanguage extends TruffleLanguage<BACILContext> {
 
         CLIComponent c = getCurrentContext(BACILLanguage.class).loadAssembly(source, this);
 
+        String sourcePath = request.getSource().getPath();
+        File file = new File(sourcePath);
+        getCurrentContext(BACILLanguage.class).addLibraryPath(file.getAbsoluteFile().getParent());
         //DebugNode node = new DebugNode(this, new FrameDescriptor(), c);
         if(c.getCliHeader().getEntryPointToken() == 0)
         {

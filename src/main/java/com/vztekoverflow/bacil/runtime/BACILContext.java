@@ -55,7 +55,7 @@ public class BACILContext {
         }
     }
 
-    private void addLibraryPath(String p) {
+    public void addLibraryPath(String p) {
         Path path = Paths.get(p);
         TruffleFile file = getEnv().getInternalTruffleFile(path.toString());
         if (file.isDirectory()) {

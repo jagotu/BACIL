@@ -2,14 +2,17 @@ package com.vztekoverflow.bacil.runtime.types;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
-import com.vztekoverflow.bacil.BACILInternalError;
 import com.vztekoverflow.bacil.parser.cil.CILMethod;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
-import com.vztekoverflow.bacil.parser.cli.tables.generated.*;
+import com.vztekoverflow.bacil.parser.cli.tables.generated.CLIFieldTableRow;
+import com.vztekoverflow.bacil.parser.cli.tables.generated.CLIMethodDefTableRow;
+import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableConstants;
+import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITypeDefTableRow;
 import com.vztekoverflow.bacil.parser.signatures.FieldSig;
 import com.vztekoverflow.bacil.runtime.types.builtin.*;
 import com.vztekoverflow.bacil.runtime.types.locations.LocationsDescriptor;
+import com.vztekoverflow.bacil.runtime.types.locations.LocationsHolder;
 
 import java.util.Arrays;
 import java.util.List;
@@ -24,14 +27,6 @@ public class NamedType extends Type {
     private final CLIMethodDefTableRow methods;
     private final int methodsEnd;
 
-    @CompilerDirectives.CompilationFinal
-    private boolean fieldsInited = false;
-
-    @CompilerDirectives.CompilationFinal(dimensions = 1)
-    private TypedField[] fields = null;
-
-    @CompilerDirectives.CompilationFinal
-    private LocationsDescriptor fieldsDescriptor;
 
     private final CLIFieldTableRow fieldRows;
     private final int fieldsRowsStart;
@@ -39,6 +34,8 @@ public class NamedType extends Type {
 
 
     private final CLIComponent definingComponent;
+
+    private final static byte[] CCTOR_SIGNATURE = new byte[] {0, 0, 1};
 
 
     protected NamedType(CLITypeDefTableRow type, CLIComponent component)
@@ -71,26 +68,60 @@ public class NamedType extends Type {
 
     }
 
-    public void initFields()
+    public void init()
     {
-        if(!fieldsInited)
+        if(!inited)
         {
             CompilerDirectives.transferToInterpreterAndInvalidate();
-            fieldsInited = true;
+            super.init();
+
+            //Init fields
+
+            final int totalFields = fieldRowsEnd-fieldsRowsStart;
+
+
+            int instanceFieldsCount = 0;
+            int staticFieldsCount = 0;
             CLIFieldTableRow curr = fieldRows;
-
-
-            final int fieldsCount = fieldRowsEnd-fieldsRowsStart;
-            fields = new TypedField[fieldsCount];
-
-
-            for(int i = 0; i < fieldsCount; i++)
+            for(int i = 0; i < totalFields; i++)
             {
-                fields[i] = new TypedField(curr.getFlags(), curr.getName().read(definingComponent.getStringHeap()), FieldSig.read(curr.getSignature().read(definingComponent.getBlobHeap()), definingComponent), i);
+                if((curr.getFlags() & TypedField.FIELD_ATTRIBUTE_STATIC) != 0)
+                {
+                    staticFieldsCount++;
+                } else {
+                    instanceFieldsCount++;
+                }
                 curr = curr.next();
             }
 
-            this.fieldsDescriptor = LocationsDescriptor.forFields(fields);
+            instanceFields = new TypedField[instanceFieldsCount];
+            staticFields = new TypedField[staticFieldsCount];
+            allFields = new TypedField[totalFields];
+            int staticFieldsIndex = 0;
+            int instanceFieldsIndex = 0;
+
+            curr = fieldRows;
+            for(int i = 0; i < totalFields; i++) {
+                TypedField field;
+                if ((curr.getFlags() & TypedField.FIELD_ATTRIBUTE_STATIC) != 0) {
+                    field = new TypedField(curr.getFlags(), curr.getName().read(definingComponent.getStringHeap()), FieldSig.read(curr.getSignature().read(definingComponent.getBlobHeap()), definingComponent), staticFieldsIndex);
+                    staticFields[staticFieldsIndex++] = field;
+                } else {
+                    field = new TypedField(curr.getFlags(), curr.getName().read(definingComponent.getStringHeap()), FieldSig.read(curr.getSignature().read(definingComponent.getBlobHeap()), definingComponent), instanceFieldsIndex);
+                    instanceFields[instanceFieldsIndex++] = field;
+                }
+                allFields[i] = field;
+                curr = curr.next();
+            }
+            this.instanceFieldsDescriptor = LocationsDescriptor.forFields(instanceFields);
+            this.staticFieldsDescriptor = LocationsDescriptor.forFields(staticFields);
+            this.staticFieldsHolder = new LocationsHolder(staticFieldsDescriptor);
+
+            CILMethod cctor = getMemberMethod(".cctor", CCTOR_SIGNATURE);
+            if(cctor != null)
+            {
+                cctor.getMethodCallTarget().call();
+            }
         }
     }
 
@@ -99,26 +130,15 @@ public class NamedType extends Type {
         return token.getRowNo() - fieldsRowsStart;
     }
 
-    public TypedField getTypedField(int index)
-    {
-        return fields[index];
-    }
-
     public TypedField getTypedField(CLITablePtr token, CLIComponent callingComponent)
     {
-        switch(token.getTableId())
+        if(token.getTableId() == CLITableConstants.CLI_TABLE_FIELD)
         {
-            case CLITableConstants.CLI_TABLE_FIELD:
-                return getTypedField(getFieldIndex(token));
-            case CLITableConstants.CLI_TABLE_MEMBER_REF:
-            {
-                CLIMemberRefTableRow row = callingComponent.getTableHeads().getMemberRefTableHead().skip(token);
-                return getTypedField(row.getName().read(callingComponent.getStringHeap()));
-            }
-            default:
-                CompilerDirectives.transferToInterpreterAndInvalidate();
-                throw new BACILInternalError("Failed to find typed field from token " + token);
+            return getTypedField(getFieldIndex(token));
+        } else {
+            return super.getTypedField(token, callingComponent);
         }
+
     }
 
     public int getFieldsCount()
@@ -126,17 +146,6 @@ public class NamedType extends Type {
         return fieldRowsEnd-fieldsRowsStart;
     }
 
-    public TypedField getTypedField(String name)
-    {
-        for(TypedField f : fields)
-        {
-            if(f.getName().equals(name))
-            {
-                return f;
-            }
-        }
-        return null;
-    }
 
     @Override
     public Type getDirectBaseClass() {
@@ -159,8 +168,7 @@ public class NamedType extends Type {
             curr = curr.next();
         }
 
-        throw new BACILInternalError(String.format("Member method %s not found in %s.%s or has invalid signature.", name, namespace,
-                this.name));
+        return null;
     }
 
     @Override
@@ -234,11 +242,13 @@ public class NamedType extends Type {
         return String.format("[%s]%s.%s", definingComponent, namespace, name);
     }
 
-    public TypedField[] getFields() {
-        return fields;
+    public TypedField[] getInstanceFields() {
+        return instanceFields;
     }
 
-    public LocationsDescriptor getFieldsDescriptor() {
-        return fieldsDescriptor;
+    public LocationsDescriptor getInstanceFieldsDescriptor() {
+        return instanceFieldsDescriptor;
     }
+
+
 }
