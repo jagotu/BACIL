@@ -7,6 +7,7 @@ import com.vztekoverflow.bacil.runtime.types.TypedField;
 public class LocationsDescriptor {
     @CompilerDirectives.CompilationFinal(dimensions = 1)
     private final Type[] locationTypes;
+
     @CompilerDirectives.CompilationFinal(dimensions = 1)
     private final int[] offsets;
 

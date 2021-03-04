@@ -122,6 +122,8 @@ public class BytecodeNode extends Node {
                 case POP:
                     break;
 
+                case LDNULL:
+                    refs[top] = null; break;
                 case LDC_I4_M1:
                 case LDC_I4_0:
                 case LDC_I4_1:
@@ -261,10 +263,20 @@ public class BytecodeNode extends Node {
                 case REM:
                     doNumericBinary(curOpcode, primitives, refs, top-2, top-1); break;
 
+                case AND:
+                case OR:
+                case XOR:
+                    doIntegerBinary(curOpcode, primitives, refs, top-2, top-1); break;
+
                 case CEQ:
                 case CGT:
                 case CLT:
                     doCompareBinary(curOpcode, primitives, refs, top-2, top-1); break;
+
+                case SHL:
+                case SHR:
+                case SHR_UN:
+                    doShiftBinary(curOpcode, primitives, refs, top-2, top-1); break;
 
                 case LDFLD:
                 case STFLD:
@@ -525,6 +537,14 @@ public class BytecodeNode extends Node {
             return result;
 
         } else {
+            switch(opcode)
+            {
+                case CEQ:
+                case BEQ:
+                case BEQ_S:
+                    return refs[slot1] == refs[slot2];
+            }
+
             CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILInternalError("Unimplemented.");
         }
@@ -537,6 +557,46 @@ public class BytecodeNode extends Node {
         primitives[slot1] = result ? 1 : 0;
         refs[slot1] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
 
+    }
+
+    public static void doIntegerBinary(int opcode, long[] primitives, Object[] refs, int slot1, int slot2)
+    {
+        //TODO floaty!
+        if(ExecutionStackPrimitiveMarker.isExecutionStackPrimitiveMarker(refs[slot1]) && ExecutionStackPrimitiveMarker.isExecutionStackPrimitiveMarker(refs[slot2]))
+        {
+            ExecutionStackPrimitiveMarker resultType = binaryIntegerResultTypes[((ExecutionStackPrimitiveMarker)refs[slot1]).getTag()][((ExecutionStackPrimitiveMarker)refs[slot2]).getTag()];
+            if(resultType == null)
+            {
+                CompilerDirectives.transferToInterpreterAndInvalidate();
+                throw new BACILInternalError("These types can't be args of integer binary");
+            }
+            long result = 0;
+            switch(opcode)
+            {
+                case AND:
+                    result = primitives[slot1] & primitives[slot2];
+                    break;
+                case OR:
+                    result = primitives[slot1] | primitives[slot2];
+                    break;
+                case XOR:
+                    result = primitives[slot1] ^ primitives[slot2];
+                    break;
+
+            }
+
+            if(resultType == ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
+            {
+                result = TypeHelpers.truncate32(result);
+            }
+
+            primitives[slot1] = result;
+            refs[slot1] = resultType;
+
+        }  else {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            throw new BACILInternalError("Unimplemented.");
+        }
     }
 
     public static void doNumericBinary(int opcode, long[] primitives, Object[] refs, int slot1, int slot2)
@@ -583,6 +643,30 @@ public class BytecodeNode extends Node {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILInternalError("Unimplemented.");
         }
+    }
+
+    public static void doShiftBinary(int opcode, long[] primitives, Object[] refs, int slot1, int slot2)
+    {
+        if(refs[slot2] != ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32 &&
+        refs[slot2] != ExecutionStackPrimitiveMarker.EXECUTION_STACK_NATIVE_INT)
+        {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            throw new BACILInternalError("Invalid shift value.");
+
+        }
+
+        switch(opcode)
+        {
+            case SHL:
+                primitives[slot1] = primitives[slot1] << primitives[slot2]; break;
+            case SHR_UN:
+                primitives[slot1] = primitives[slot1] >>> primitives[slot2]; break;
+            case SHR:
+                if(refs[slot1] == ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32) primitives[slot1] = TypeHelpers.signExtend32(primitives[slot1]);
+                primitives[slot1] = primitives[slot1] >> primitives[slot2];
+                break;
+        }
+
     }
 
 

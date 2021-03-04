@@ -11,10 +11,12 @@ import com.vztekoverflow.bacil.runtime.types.TypedField;
 public class StfldNode extends CallableNode {
 
     private final TypedField field;
+    private final Type objType;
     private final int top;
 
     public StfldNode(CLITablePtr token, CLIComponent callingComponent, int top, Type objType) {
         this.top = top;
+        this.objType = objType;
         field = objType.getTypedField(token, callingComponent);
         if(field.isStatic())
         {
@@ -25,7 +27,7 @@ public class StfldNode extends CallableNode {
     @Override
     public int execute(VirtualFrame frame, long[] primitives, Object[] refs) {
         StaticObject obj = (StaticObject)refs[top-2];
-        obj.fieldFromStackVar(field, refs[top-1], primitives[top-1]);
+        objType.instanceFieldFromStackVar(obj, field, refs[top-1], primitives[top-1]);
         return top-2;
     }
 }

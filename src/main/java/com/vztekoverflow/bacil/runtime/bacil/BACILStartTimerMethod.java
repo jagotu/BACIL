@@ -5,21 +5,22 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
 
-public class BACILTickCountMethod extends JavaMethod {
+public class BACILStartTimerMethod extends JavaMethod {
 
     private final Type retType;
 
-    private final Type definingType;
+    private final BACILEnvironmentType definingType;
 
-    public BACILTickCountMethod(BuiltinTypes builtinTypes, TruffleLanguage<?> language, Type definingType) {
+    public BACILStartTimerMethod(BuiltinTypes builtinTypes, TruffleLanguage<?> language, BACILEnvironmentType definingType) {
         super(language);
-        retType = builtinTypes.getInt64Type();
+        retType = builtinTypes.getVoidType();
         this.definingType = definingType;
     }
 
     @Override
     public Object execute(VirtualFrame frame) {
-        return System.currentTimeMillis();
+        definingType.timerStart = System.nanoTime();
+        return null;
     }
 
     @Override
@@ -49,7 +50,7 @@ public class BACILTickCountMethod extends JavaMethod {
 
     @Override
     public String getName() {
-        return "TickCount";
+        return "StartTimer";
     }
 
 }

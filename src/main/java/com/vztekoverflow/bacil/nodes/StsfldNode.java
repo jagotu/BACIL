@@ -25,7 +25,7 @@ public class StsfldNode extends CallableNode {
 
     @Override
     public int execute(VirtualFrame frame, long[] primitives, Object[] refs) {
-        objType.fieldFromStackVar(field, refs[top-1], primitives[top-1]);
+        objType.staticFieldFromStackVar(field, refs[top-1], primitives[top-1]);
         return top-1;
     }
 }

@@ -17,11 +17,14 @@ public class BACILEnvironmentType extends Type {
     @CompilerDirectives.CompilationFinal(dimensions = 1)
     private final JavaMethod[] methods;
 
+    public long timerStart = 0;
+
     public BACILEnvironmentType(BuiltinTypes builtinTypes, BACILLanguage language) {
         directBaseClass = builtinTypes.getObjectType();
 
         methods = new JavaMethod[] {
-                new BACILTickCountMethod(builtinTypes, language, this)
+                new BACILGetTicksMethod(builtinTypes, language, this),
+                new BACILStartTimerMethod(builtinTypes, language, this)
         };
     }
 

@@ -271,6 +271,7 @@ public class BytecodeInstructions {
     static {
         def(NOP, "nop", "b", 0);
 
+        def(LDNULL, "ldnull", "b", 1);
         def(LDC_I4_0, "ldc.i4.0", "b", 1);
         def(LDC_I4_1, "ldc.i4.1", "b", 1);
         def(LDC_I4_2, "ldc.i4.2", "b", 1);
@@ -295,6 +296,7 @@ public class BytecodeInstructions {
         def(LDLOC_3, "ldloc.3", "b", 1);
         def(LDLOC_S, "ldloc.s", "bi", 1);
         def(LDLOCA_S, "ldloca.s", "bi", 1);
+
 
 
         def(STLOC_0, "stloc.0", "b", -1);
@@ -363,6 +365,14 @@ public class BytecodeInstructions {
         def(MUL, "mul", "b", -1);
         def(DIV, "div", "b", -1);
         def(REM, "rem", "b", -1);
+
+        def(AND, "and", "b", -1);
+        def(OR, "or", "b", -1);
+        def(XOR, "xor", "b", -1);
+
+        def(SHL, "shl", "b", -1);
+        def(SHR, "shr", "b", -1);
+        def(SHR_UN, "shr.un", "b", -1);
 
 
         def(CALL, "call", "btttt", 0);
@@ -468,6 +478,9 @@ public class BytecodeInstructions {
     @CompilationFinal(dimensions = 2)
     public static final ExecutionStackPrimitiveMarker[][] binaryNumericResultTypes = new ExecutionStackPrimitiveMarker[EXECUTION_STACK_TAG_MAX+1][EXECUTION_STACK_TAG_MAX+1];
 
+    @CompilationFinal(dimensions = 2)
+    public static final ExecutionStackPrimitiveMarker[][] binaryIntegerResultTypes = new ExecutionStackPrimitiveMarker[EXECUTION_STACK_TAG_MAX+1][EXECUTION_STACK_TAG_MAX+1];
+
     public static void binaryNumericResult(byte arg1, byte arg2, ExecutionStackPrimitiveMarker result)
     {
         binaryNumericResultTypes[arg1][arg2] = result;
@@ -477,11 +490,29 @@ public class BytecodeInstructions {
         }
     }
 
+    public static void binaryIntegerResult(byte arg1, byte arg2, ExecutionStackPrimitiveMarker result)
+    {
+        binaryIntegerResultTypes[arg1][arg2] = result;
+        if(arg1 != arg2)
+        {
+            binaryIntegerResultTypes[arg2][arg1] = result;
+        }
+    }
+
+
     //Table III.2: Binary Numeric Operations
     static {
         binaryNumericResult(EXECUTION_STACK_TAG_INT32, EXECUTION_STACK_TAG_INT32, EXECUTION_STACK_INT32);
         binaryNumericResult(EXECUTION_STACK_TAG_INT32, EXECUTION_STACK_TAG_NATIVE_INT, EXECUTION_STACK_NATIVE_INT);
         binaryNumericResult(EXECUTION_STACK_TAG_INT64, EXECUTION_STACK_TAG_INT64, EXECUTION_STACK_INT64);
         binaryNumericResult(EXECUTION_STACK_TAG_F, EXECUTION_STACK_TAG_F, EXECUTION_STACK_F);
+    }
+
+
+    //Table III.5: Integer Operations
+    static {
+        binaryIntegerResult(EXECUTION_STACK_TAG_INT32, EXECUTION_STACK_TAG_INT32, EXECUTION_STACK_INT32);
+        binaryIntegerResult(EXECUTION_STACK_TAG_INT32, EXECUTION_STACK_TAG_NATIVE_INT, EXECUTION_STACK_NATIVE_INT);
+        binaryIntegerResult(EXECUTION_STACK_TAG_INT64, EXECUTION_STACK_TAG_INT64, EXECUTION_STACK_INT64);
     }
 }

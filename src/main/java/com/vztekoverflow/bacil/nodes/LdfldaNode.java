@@ -12,9 +12,11 @@ public class LdfldaNode extends CallableNode {
 
     private final TypedField field;
     private final int top;
+    private final Type objType;
 
     public LdfldaNode(CLITablePtr token, CLIComponent callingComponent, int top, Type objType) {
         this.top = top;
+        this.objType = objType;
         field = objType.getTypedField(token, callingComponent);
         if(field.isStatic())
         {
@@ -25,7 +27,7 @@ public class LdfldaNode extends CallableNode {
     @Override
     public int execute(VirtualFrame frame, long[] primitives, Object[] refs) {
         StaticObject obj = (StaticObject)refs[top-1];
-        refs[top-1] = obj.getFieldReference(field);
+        refs[top-1] = objType.getInstanceFieldReference(field, obj);
         return top;
     }
 }

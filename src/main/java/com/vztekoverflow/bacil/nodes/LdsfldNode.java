@@ -26,7 +26,7 @@ public class LdsfldNode extends CallableNode {
 
     @Override
     public int execute(VirtualFrame frame, long[] primitives, Object[] refs) {
-        objType.fieldToStackVar(field, refs, primitives, top);
+        objType.staticFieldToStackVar(field, refs, primitives, top);
         return top+1;
     }
 }

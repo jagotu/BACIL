@@ -3,8 +3,6 @@ package com.vztekoverflow.bacil.parser.cli;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLIAssemblyRefTableRow;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLIAssemblyTableRow;
 
-import java.util.Objects;
-
 public final class AssemblyIdentity {
     private final short majorVersion;
     private final short minorVersion;
@@ -35,7 +33,10 @@ public final class AssemblyIdentity {
         if(!name.equals(reference.name))
             return false;
 
-        if(reference.majorVersion != -1)
+        return true; // Ignore version numbers for now
+
+
+        /*if(reference.majorVersion != -1)
         {
             if(reference.majorVersion != majorVersion)
                 return false;
@@ -59,7 +60,7 @@ public final class AssemblyIdentity {
             }
         }
 
-        return true;
+        return true;*/
     }
 
     public short getMajorVersion() {

@@ -47,6 +47,7 @@ public class BACILContext {
         this.env = env;
 
         addLibraryPaths(BACILEngineOption.getPolyglotOptionSearchPaths(env));
+
     }
 
     public void addLibraryPaths(List<String> paths) {
@@ -71,8 +72,11 @@ public class BACILContext {
 
         if(reference.getName().equals("BACILHelpers"))
         {
-            return new BACILHelpersComponent(builtinTypes, getLanguage());
+            BACILComponent helpers = new BACILHelpersComponent(builtinTypes, getLanguage());
+            loadedAssemblies.add(helpers);
+            return helpers;
         }
+
 
         for (Path p : libraryPaths) {
             Path absPath = Paths.get(p.toString(), reference.getName() + ".dll");
@@ -80,7 +84,7 @@ public class BACILContext {
             if (file.exists()) {
                 try {
                     CLIComponent c = loadAssembly(Source.newBuilder(BACILLanguage.ID, file).build(), language);
-                    if(c.getAssemblyIdentity().resolvesRef(reference) || reference.getName().equals("netstandard"))
+                    if(c.getAssemblyIdentity().resolvesRef(reference))
                     {
                         return c;
                     }
@@ -134,6 +138,7 @@ public class BACILContext {
     public BACILComponent getAssembly(AssemblyIdentity reference)
     {
         CompilerAsserts.neverPartOfCompilation();
+
         for (BACILComponent assemblyComponent: loadedAssemblies) {
             assert assemblyComponent.getAssemblyIdentity() != null;
             if(assemblyComponent.getAssemblyIdentity().resolvesRef(reference))

@@ -8,6 +8,7 @@ import com.vztekoverflow.bacil.parser.cli.tables.generated.CLIMemberRefTableRow;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableConstants;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
 import com.vztekoverflow.bacil.runtime.LocationReference;
+import com.vztekoverflow.bacil.runtime.StaticObject;
 import com.vztekoverflow.bacil.runtime.types.locations.LocationsDescriptor;
 import com.vztekoverflow.bacil.runtime.types.locations.LocationsHolder;
 
@@ -99,15 +100,27 @@ public abstract class Type {
         return allFields[index];
     }
 
-    public void fieldToStackVar(TypedField field, Object[] refs, long[] primitives, int slot)
+    public void staticFieldToStackVar(TypedField field, Object[] refs, long[] primitives, int slot)
     {
         staticFieldsDescriptor.locationToStack(staticFieldsHolder, field.getOffset(), refs, primitives, slot);
     }
 
-    public void fieldFromStackVar(TypedField field, Object ref, long primitive)
+    public void staticFieldFromStackVar(TypedField field, Object ref, long primitive)
     {
         staticFieldsDescriptor.stackToLocation(staticFieldsHolder, field.getOffset(), ref, primitive);
     }
+
+    public void instanceFieldToStackVar(StaticObject object, TypedField field, Object[] refs, long[] primitives, int slot)
+    {
+        instanceFieldsDescriptor.locationToStack(object.getFieldsHolder(), field.getOffset(), refs, primitives, slot);
+    }
+
+    public void instanceFieldFromStackVar(StaticObject object, TypedField field, Object ref, long primitive)
+    {
+        instanceFieldsDescriptor.stackToLocation(object.getFieldsHolder(), field.getOffset(), ref, primitive);
+    }
+
+
 
     public TypedField getTypedField(CLITablePtr token, CLIComponent callingComponent)
     {
@@ -122,6 +135,11 @@ public abstract class Type {
     public LocationReference getStaticFieldReference(TypedField field)
     {
         return new LocationReference(staticFieldsHolder, field.getOffset());
+    }
+
+    public LocationReference getInstanceFieldReference(TypedField field, StaticObject object)
+    {
+        return new LocationReference(object.getFieldsHolder(), field.getOffset());
     }
 
 
