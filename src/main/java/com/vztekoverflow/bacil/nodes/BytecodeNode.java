@@ -217,7 +217,7 @@ public class BytecodeNode extends Node {
                 case BGT:
                 case BLE:
                 case BLT:
-                    if(binaryCompareResult(curOpcode, primitives, refs, top-1, top-2))
+                    if(binaryCompareResult(curOpcode, primitives, refs, top-2, top-1))
                     {
                         pc = nextpc + bytecodeBuffer.getImmInt(pc);
                         top += BytecodeInstructions.getStackEffect(curOpcode);
