@@ -6,7 +6,8 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="BACIL" />
+        <module name="language" />
+        <module name="launcher" />
       </profile>
     </annotationProcessing>
   </component>
