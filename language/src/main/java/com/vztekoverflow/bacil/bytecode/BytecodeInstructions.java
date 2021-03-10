@@ -340,6 +340,32 @@ public class BytecodeInstructions {
         def(LDFLDA, "ldflda", "btttt", 0);
         def(LDSFLDA, "ldsfdla", "btttt", 0);
 
+        def(LDELEM, "ldelem", "btttt", 0);
+        def(LDELEM_I1,  "ldelem.i1", "b", -1);
+        def(LDELEM_U1,  "ldelem.u1", "b", -1);
+        def(LDELEM_I2,  "ldelem.i2", "b", -1);
+        def(LDELEM_U2,  "ldelem.u2", "b", -1);
+        def(LDELEM_I4,  "ldelem.i4", "b", -1);
+        def(LDELEM_U4,  "ldelem.u4", "b", -1);
+        def(LDELEM_I8,  "ldelem.i8", "b", -1);
+        def(LDELEM_I,   "ldelem.i", "b", -1);
+        def(LDELEM_R4,  "ldelem.r4", "b", -1);
+        def(LDELEM_R8,  "ldelem.r8", "b", -1);
+        def(LDELEM_REF, "ldelem.ref", "b", -1);
+
+        def(STELEM,     "stelem", "btttt", 0);
+        def(STELEM_I1,  "stelem.i1", "b", -3);
+        def(STELEM_I2,  "stelem.i2", "b", -3);
+        def(STELEM_I4,  "stelem.i4", "b", -3);
+        def(STELEM_I8,  "stelem.i8", "b", -3);
+        def(STELEM_I,   "stelem.i", "b", -3);
+        def(STELEM_R4,  "stelem.r4", "b", -3);
+        def(STELEM_R8,  "stelem.r8", "b", -3);
+        def(STELEM_REF, "stelem.ref", "b", -3);
+
+        def(LDELEMA, "ldelema", "btttt", 0);
+
+
         def(DUP, "dup", "b", 1);
 
         def(POP, "pop", "b", -1);
@@ -378,6 +404,8 @@ public class BytecodeInstructions {
         def(CALL, "call", "btttt", 0);
         def(NEWOBJ, "newobj", "btttt", 0);
         def(CALLVIRT, "callvirt", "btttt",0);
+
+        def(NEWARR, "newarr", "btttt", 0);
 
         defPrefixed(CGT, "cgt", "b", -1);
         defPrefixed(CEQ, "ceq", "b", -1);

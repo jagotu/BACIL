@@ -14,7 +14,7 @@ public final class StaticObject {
     public StaticObject(NamedType type) {
         type.init();
         this.type = type;
-        this.fieldsHolder = new LocationsHolder(type.getInstanceFieldsDescriptor());
+        this.fieldsHolder = LocationsHolder.forDescriptor(type.getInstanceFieldsDescriptor());
     }
 
     public LocationsHolder getFieldsHolder() {

@@ -1,5 +1,7 @@
 package com.vztekoverflow.bacil.runtime.types.locations;
 
+import com.vztekoverflow.bacil.runtime.types.Type;
+
 public final class LocationsHolder {
 
     /*@CompilerDirectives.CompilationFinal
@@ -8,13 +10,37 @@ public final class LocationsHolder {
     private final Object[] refs;
     private final long[] primitives;
 
-    public LocationsHolder(LocationsDescriptor descriptor) {
+    public LocationsHolder(int refCount, int primitiveCount) {
         /*CompilerAsserts.partialEvaluationConstant(descriptor);
         this.descriptor = descriptor;
         CompilerAsserts.partialEvaluationConstant(this.descriptor);*/
         //CompilerAsserts.partialEvaluationConstant(this.descriptor);
-        refs = new Object[descriptor.getRefCount()];
-        primitives = new long[descriptor.getPrimitiveCount()];
+        if(refCount != 0) {
+            refs = new Object[refCount];
+        } else {
+            refs = null;
+        }
+        if(primitiveCount != 0)
+        {
+            primitives = new long[primitiveCount];
+        } else {
+            primitives = null;
+        }
+
+    }
+
+    public static LocationsHolder forDescriptor(LocationsDescriptor descriptor) {
+        return new LocationsHolder(descriptor.getRefCount(), descriptor.getPrimitiveCount());
+    }
+
+    public static LocationsHolder forArray(Type type, int count)
+    {
+        if(type.isPrimitiveStorage())
+        {
+            return new LocationsHolder(0, count);
+        } else {
+            return new LocationsHolder(count, 0);
+        }
     }
 
 

@@ -115,7 +115,7 @@ public class NamedType extends Type {
             }
             this.instanceFieldsDescriptor = LocationsDescriptor.forFields(instanceFields);
             this.staticFieldsDescriptor = LocationsDescriptor.forFields(staticFields);
-            this.staticFieldsHolder = new LocationsHolder(staticFieldsDescriptor);
+            this.staticFieldsHolder = LocationsHolder.forDescriptor(staticFieldsDescriptor);
 
             CILMethod cctor = getMemberMethod(".cctor", CCTOR_SIGNATURE);
             if(cctor != null)

@@ -17,6 +17,7 @@ import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableConstants;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
 import com.vztekoverflow.bacil.runtime.ExecutionStackPrimitiveMarker;
 import com.vztekoverflow.bacil.runtime.LocationReference;
+import com.vztekoverflow.bacil.runtime.SZArray;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.TypeHelpers;
 import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
@@ -80,7 +81,7 @@ public class BytecodeNode extends Node {
 
 
         final LocationsDescriptor descriptor = method.getLocationDescriptor();
-        final LocationsHolder locations = new LocationsHolder(descriptor); //I.8.3
+        final LocationsHolder locations = LocationsHolder.forDescriptor(descriptor); //I.8.3
 
         CompilerAsserts.partialEvaluationConstant(descriptor);
 
@@ -197,6 +198,35 @@ public class BytecodeNode extends Node {
                 case LDIND_REF:
                     loadIndirect(primitives, refs, top-1, (LocationReference) refs[top-1], builtinTypes.getForIndirectOpcode(curOpcode)); break;
 
+
+                case LDELEM_I1:
+                case LDELEM_U1:
+                case LDELEM_I2:
+                case LDELEM_U2:
+                case LDELEM_I4:
+                case LDELEM_U4:
+                case LDELEM_I8:
+                case LDELEM_I:
+                case LDELEM_R4:
+                case LDELEM_R8:
+                case LDELEM_REF:
+                    loadArrayElem(builtinTypes.getForIndirectOpcode(curOpcode), primitives, refs, top); break;
+
+                case STELEM_I1:
+                case STELEM_I2:
+                case STELEM_I4:
+                case STELEM_I8:
+                case STELEM_I:
+                case STELEM_R4:
+                case STELEM_R8:
+                case STELEM_REF:
+                    storeArrayElem(builtinTypes.getForIndirectOpcode(curOpcode), primitives, refs, top); break;
+
+                case LDELEM:
+                case STELEM:
+                case LDELEMA:
+                    top = nodeizeOpArr(frame, primitives, refs, top, method.getComponent().getType(bytecodeBuffer.getImmToken(pc)), pc, curOpcode); break;
+
                 case DUP:
                     refs[top]=refs[top-1];primitives[top]=primitives[top-1]; break;
 
@@ -290,6 +320,7 @@ public class BytecodeNode extends Node {
                 case CALL:
                 case CALLVIRT:
                 case NEWOBJ:
+                case NEWARR:
                     top = nodeizeOpToken(frame, primitives, refs, top, bytecodeBuffer.getImmToken(pc), pc, curOpcode); break;
 
                 case BOX:
@@ -303,7 +334,7 @@ public class BytecodeNode extends Node {
 
                 default:
                     CompilerDirectives.transferToInterpreterAndInvalidate();
-                    throw new BACILInternalError(String.format("Unsuppored opcode %02x (%s) in %s", curOpcode, BytecodeInstructions.getName(curOpcode), method));
+                    throw new BACILInternalError(String.format("Unsupported opcode %02x (%s) in %s (offset %x)", curOpcode, BytecodeInstructions.getName(curOpcode), method, pc));
             }
 
             top += BytecodeInstructions.getStackEffect(curOpcode);
@@ -311,6 +342,8 @@ public class BytecodeNode extends Node {
         }
 
     }
+
+
 
     private void putStr(long[] primitives, Object[] refs, int top, CLITablePtr immToken) {
         CLIUSHeapPtr ptr = new CLIUSHeapPtr(immToken.getRowNo());
@@ -392,6 +425,35 @@ public class BytecodeNode extends Node {
         return patch;
     }
 
+    public static void loadArrayElem(Type elementType, long[] primitives, Object[] refs, int top)
+    {
+        if(refs[top-1] != ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
+        {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            throw new BACILInternalError("Only INT32 supported as SZArray index");
+        }
+
+        int index = (int)primitives[top-1];
+
+        SZArray array = (SZArray) refs[top-2];
+        elementType.locationToStack(array.getFieldsHolder(), index, refs, primitives, top-2);
+    }
+
+    public static void storeArrayElem(Type elementType, long[] primitives, Object[] refs, int top)
+    {
+        if(refs[top-2] != ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
+        {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            throw new BACILInternalError("Only INT32 supported as SZArray index");
+        }
+
+        int index = (int)primitives[top-2];
+
+        SZArray array = (SZArray) refs[top-3];
+        elementType.stackToLocation(array.getFieldsHolder(), index, refs[top-1], primitives[top-1]);
+
+
+    }
 
     public int nodeizeOpToken(VirtualFrame frame, long[] primitives, Object[] refs, int top, CLITablePtr token, int pc, int opcode)
     {
@@ -408,6 +470,9 @@ public class BytecodeNode extends Node {
             case NEWOBJ:
                 node = new ConstructorNode(method.getComponent().getMethod(token, lookupContextReference(BACILLanguage.class).get()), top);
                 break;
+            case NEWARR:
+                node = new NewarrNode(method.getComponent().getType(token), top);
+                break;
             default:
                 CompilerAsserts.neverPartOfCompilation();
                 throw new BACILInternalError(String.format("Can't nodeize opcode %02x (%s) yet.", opcode, BytecodeInstructions.getName(opcode)));
@@ -418,6 +483,33 @@ public class BytecodeNode extends Node {
 
         return nodes[index].execute(frame, primitives, refs);
 
+    }
+
+    public int nodeizeOpArr(VirtualFrame frame, long[] primitives, Object[] refs, int top, Type type, int pc, int opcode)
+    {
+        CompilerDirectives.transferToInterpreterAndInvalidate(); // because we are about to change something that is compi
+
+        final CallableNode node;
+        switch (opcode)
+        {
+            case LDELEM:
+                node = new LdelemNode(type, top);
+                break;
+            case STELEM:
+                node = new StelemNode(type, top);
+                break;
+            case LDELEMA:
+                node = new LdelemaNode(type, top);
+                break;
+            default:
+                CompilerAsserts.neverPartOfCompilation();
+                throw new BACILInternalError(String.format("Can't nodeize opcode %02x (%s) yet.", opcode, BytecodeInstructions.getName(opcode)));
+        }
+        int index = addNode(node);
+        byte[] patch = preparePatch((byte)TRUFFLE_NODE, index, BytecodeInstructions.getLength(opcode));
+        bytecodeBuffer.patchBytecode(pc, patch);
+
+        return nodes[index].execute(frame, primitives, refs);
     }
 
     public int nodeizeOpFld(VirtualFrame frame, long[] primitives, Object[] refs, int top, CLITablePtr token, int pc, int opcode)

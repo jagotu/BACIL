@@ -58,43 +58,63 @@ public class BuiltinTypes {
         {
             case STIND_I1:
             case LDIND_I1:
+            case STELEM_I1:
+            case LDELEM_I1:
                 return sbyteType;
 
             case STIND_I2:
             case LDIND_I2:
+            case STELEM_I2:
+            case LDELEM_I2:
+
                 return int16Type;
 
             case STIND_I4:
             case LDIND_I4:
+            case STELEM_I4:
+            case LDELEM_I4:
                 return int32Type;
 
             case STIND_I8:
             case LDIND_I8:
+            case STELEM_I8:
+            case LDELEM_I8:
                 return int64Type;
 
             case STIND_I:
             case LDIND_I:
+            case STELEM_I:
+            case LDELEM_I:
                 return intPtrType;
 
             case STIND_R4:
             case LDIND_R4:
+            case STELEM_R4:
+            case LDELEM_R4:
                 return singleType;
 
             case STIND_R8:
             case LDIND_R8:
+            case STELEM_R8:
+            case LDELEM_R8:
                 return doubleType;
 
             case LDIND_U1:
+            case LDELEM_U1:
                 return byteType;
 
             case LDIND_U2:
+            case LDELEM_U2:
                 return uInt16Type;
 
             case LDIND_U4:
+            case LDELEM_U4:
                 return uInt32Type;
 
             case LDIND_REF:
             case STIND_REF:
+            case LDELEM_REF:
+            case STELEM_REF:
                 return objectType;
 
             default:
