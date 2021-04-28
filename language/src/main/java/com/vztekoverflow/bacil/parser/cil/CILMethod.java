@@ -70,7 +70,7 @@ public class CILMethod implements BACILMethod {
             this.maxStack = 8;
             this.localVarSig = null;
             this.initLocals = false;
-            size = firstByte >> 2;
+            size = (firstByte >> 2)&0xFF;
         } else if((firstByte & 3) == CORILMETHOD_FATFORMAT) {
             short firstWord = (short)(firstByte | (buf.getByte() << 8));
             this.flags = firstWord & 0xFFF;

@@ -142,7 +142,6 @@ public class BytecodeNode extends Node {
                 case LDC_I8: putInt64(primitives, refs, top, bytecodeBuffer.getImmLong(pc)); break;
 
 
-                case LDSTR: putStr(primitives, refs, top, bytecodeBuffer.getImmToken(pc)); break;
 
                 case STLOC_0:
                 case STLOC_1:
@@ -321,10 +320,9 @@ public class BytecodeNode extends Node {
                 case CALLVIRT:
                 case NEWOBJ:
                 case NEWARR:
-                    top = nodeizeOpToken(frame, primitives, refs, top, bytecodeBuffer.getImmToken(pc), pc, curOpcode); break;
-
                 case BOX:
-                    box(refs, primitives, top-1, method.getComponent().getType(bytecodeBuffer.getImmToken(pc))); break;
+                case LDSTR:
+                    top = nodeizeOpToken(frame, primitives, refs, top, bytecodeBuffer.getImmToken(pc), pc, curOpcode); break;
 
 
 
@@ -345,15 +343,6 @@ public class BytecodeNode extends Node {
 
 
 
-    private void putStr(long[] primitives, Object[] refs, int top, CLITablePtr immToken) {
-        CLIUSHeapPtr ptr = new CLIUSHeapPtr(immToken.getRowNo());
-        refs[top] = ptr.readString(method.getComponent().getUSHeap());
-    }
-
-    public static void box(Object[] refs, long[] primitives, int slot, Type type)
-    {
-        refs[slot] = type.stackToObject(refs[slot], primitives[slot]);
-    }
 
 
     public static LocationReference getLocalReference(LocationsDescriptor descriptor, LocationsHolder holder, int index)
@@ -472,6 +461,13 @@ public class BytecodeNode extends Node {
                 break;
             case NEWARR:
                 node = new NewarrNode(method.getComponent().getType(token), top);
+                break;
+            case BOX:
+                node = new BoxNode(method.getComponent().getType(token), top);
+                break;
+            case LDSTR:
+                CLIUSHeapPtr ptr = new CLIUSHeapPtr(token.getRowNo());
+                node = new LdStrNode(ptr.readString(method.getComponent().getUSHeap()), top);
                 break;
             default:
                 CompilerAsserts.neverPartOfCompilation();

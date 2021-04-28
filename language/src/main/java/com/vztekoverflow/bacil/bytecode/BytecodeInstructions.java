@@ -288,7 +288,7 @@ public class BytecodeInstructions {
         def(LDC_R8, "ldc.r8", "biiiiiiii", 1);
         def(LDC_I4_S, "ldc.i4.s", "bi", 1);
 
-        def(LDSTR, "ldstr", "btttt", 1);
+        def(LDSTR, "ldstr", "btttt", 0);
 
         def(LDLOC_0, "ldloc.0", "b", 1);
         def(LDLOC_1, "ldloc.1", "b", 1);
