@@ -15,18 +15,8 @@ public final class LocationsHolder {
         this.descriptor = descriptor;
         CompilerAsserts.partialEvaluationConstant(this.descriptor);*/
         //CompilerAsserts.partialEvaluationConstant(this.descriptor);
-        if(refCount != 0) {
-            refs = new Object[refCount];
-        } else {
-            refs = null;
-        }
-        if(primitiveCount != 0)
-        {
-            primitives = new long[primitiveCount];
-        } else {
-            primitives = null;
-        }
-
+        refs = new Object[refCount];
+        primitives = new long[primitiveCount];
     }
 
     public static LocationsHolder forDescriptor(LocationsDescriptor descriptor) {

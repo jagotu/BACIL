@@ -1,7 +1,7 @@
 package com.vztekoverflow.bacil.parser.cli.tables;
 
 
-import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.bacil.BACILInternalError;
 import com.vztekoverflow.bacil.bytecode.Bytes;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableConstants;
@@ -42,7 +42,7 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
     public final T skip(CLITablePtr ptr) {
         if (getTableId() != ptr.getTableId())
         {
-            CompilerAsserts.neverPartOfCompilation();
+            CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILInternalError(String.format("Wrongly typed ptr used to index into table: used %d, expected %d",
                     ptr.getTableId(), getTableId()));
         }

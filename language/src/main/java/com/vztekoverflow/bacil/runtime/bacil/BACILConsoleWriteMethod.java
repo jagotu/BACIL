@@ -24,6 +24,7 @@ public class BACILConsoleWriteMethod extends JavaMethod {
 
     @Override
     public Object execute(VirtualFrame frame) {
+        CompilerDirectives.transferToInterpreter();
         System.out.print(frame.getArguments()[0]);
         return null;
     }
