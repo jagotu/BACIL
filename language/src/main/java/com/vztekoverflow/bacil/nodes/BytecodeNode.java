@@ -290,6 +290,9 @@ public class BytecodeNode extends Node {
                     }
                     break;
 
+                case NEG:
+                    doNegate(primitives, refs, top-1); break;
+
                 case ADD:
                 case SUB:
                 case MUL:
@@ -343,7 +346,10 @@ public class BytecodeNode extends Node {
                 case LDSTR:
                     top = nodeizeOpToken(frame, primitives, refs, top, bytecodeBuffer.getImmToken(pc), pc, curOpcode); break;
 
-
+                case LDLEN:
+                    primitives[top-1] = TypeHelpers.truncate32(((SZArray)refs[top-1]).getLength());
+                    refs[top-1] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
+                    break;
 
 
                 case TRUFFLE_NODE:
@@ -600,9 +606,9 @@ public class BytecodeNode extends Node {
 
     public static boolean binaryCompareResult(int opcode, long[] primitives, Object[] refs, int slot1, int slot2)
     {
+        //TODO floats
         if(ExecutionStackPrimitiveMarker.isExecutionStackPrimitiveMarker(refs[slot1]) && ExecutionStackPrimitiveMarker.isExecutionStackPrimitiveMarker(refs[slot2]))
         {
-            //using the numeric binary table here as it seems to be the same so far
             ExecutionStackPrimitiveMarker resultType = binaryNumericResultTypes[((ExecutionStackPrimitiveMarker)refs[slot1]).getTag()][((ExecutionStackPrimitiveMarker)refs[slot2]).getTag()];
             if(resultType == null)
             {
@@ -612,33 +618,69 @@ public class BytecodeNode extends Node {
 
             boolean result = false;
 
-            switch(opcode)
+            if(resultType == ExecutionStackPrimitiveMarker.EXECUTION_STACK_F)
             {
-                case CGT:
-                case BGT:
-                case BGT_S:
-                    result = primitives[slot1] > primitives[slot2];
-                    break;
-                case BGE:
-                case BGE_S:
-                    result = primitives[slot1] >= primitives[slot2];
-                    break;
+                double arg1 = Double.longBitsToDouble(primitives[slot1]);
+                double arg2 = Double.longBitsToDouble(primitives[slot2]);
 
-                case CLT:
-                case BLT:
-                case BLT_S:
-                    result = primitives[slot1] < primitives[slot2];
-                    break;
-                case BLE:
-                case BLE_S:
-                    result = primitives[slot1] <= primitives[slot2];
-                    break;
+                switch(opcode)
+                {
+                    case CGT:
+                    case BGT:
+                    case BGT_S:
+                        result = arg1 >  arg2;
+                        break;
+                    case BGE:
+                    case BGE_S:
+                        result = arg1 >= arg2;
+                        break;
 
-                case CEQ:
-                case BEQ:
-                case BEQ_S:
-                    result = primitives[slot1] == primitives[slot2];
-                    break;
+                    case CLT:
+                    case BLT:
+                    case BLT_S:
+                        result = arg1 <  arg2;
+                        break;
+                    case BLE:
+                    case BLE_S:
+                        result = arg1 <= arg2;
+                        break;
+
+                    case CEQ:
+                    case BEQ:
+                    case BEQ_S:
+                        result = arg1 == arg2;
+                        break;
+                }
+            } else {
+                switch(opcode)
+                {
+                    case CGT:
+                    case BGT:
+                    case BGT_S:
+                        result = primitives[slot1] > primitives[slot2];
+                        break;
+                    case BGE:
+                    case BGE_S:
+                        result = primitives[slot1] >= primitives[slot2];
+                        break;
+
+                    case CLT:
+                    case BLT:
+                    case BLT_S:
+                        result = primitives[slot1] < primitives[slot2];
+                        break;
+                    case BLE:
+                    case BLE_S:
+                        result = primitives[slot1] <= primitives[slot2];
+                        break;
+
+                    case CEQ:
+                    case BEQ:
+                    case BEQ_S:
+                        result = primitives[slot1] == primitives[slot2];
+                        break;
+                }
+
 
 
             }
@@ -661,7 +703,6 @@ public class BytecodeNode extends Node {
 
     public static void doCompareBinary(int opcode, long[] primitives, Object[] refs, int slot1, int slot2)
     {
-        //TODO floaty!
         boolean result = binaryCompareResult(opcode, primitives, refs, slot1, slot2);
         primitives[slot1] = result ? 1 : 0;
         refs[slot1] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
@@ -704,6 +745,19 @@ public class BytecodeNode extends Node {
         }  else {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILInternalError("Unimplemented.");
+        }
+    }
+
+    public static void doNegate(long[] primitives, Object[] refs, int slot)
+    {
+        if(refs[slot] == ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
+        {
+            primitives[slot] = TypeHelpers.truncate32(-(int)primitives[slot]);
+        } else if (refs[slot] == ExecutionStackPrimitiveMarker.EXECUTION_STACK_F)
+        {
+            primitives[slot] = Double.doubleToLongBits(-Double.longBitsToDouble(primitives[slot]));
+        } else { //INT64, NATIVE INT
+            primitives[slot] = -primitives[slot];
         }
     }
 

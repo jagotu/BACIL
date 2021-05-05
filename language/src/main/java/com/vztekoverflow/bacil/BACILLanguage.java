@@ -3,10 +3,10 @@ package com.vztekoverflow.bacil;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.source.Source;
-import com.vztekoverflow.bacil.parser.cil.CILMethod;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.runtime.BACILContext;
+import com.vztekoverflow.bacil.runtime.BACILMethod;
 import org.graalvm.options.OptionDescriptors;
 
 import java.io.File;
@@ -63,7 +63,7 @@ public class BACILLanguage extends TruffleLanguage<BACILContext> {
 
         CLITablePtr entryPtr = CLITablePtr.fromToken(c.getCliHeader().getEntryPointToken());
 
-        CILMethod entryMethod = c.getLocalMethod(entryPtr);
+        BACILMethod entryMethod = c.getLocalMethod(entryPtr);
         return new AddCLIArgsCallTarget(entryMethod.getMethodCallTarget());
     }
 

@@ -40,6 +40,8 @@ public class CILMethod implements BACILMethod {
     private static final byte CORILMETHOD_INITLOCALS = 0x10;
     private static final byte CORILMETHOD_MORESECTS = 0x8;
 
+    private static final short METHODIMPL_INTERNALCALL = 0x1000;
+
 
 
     @CompilerDirectives.CompilationFinal(dimensions = 1)
@@ -198,6 +200,11 @@ public class CILMethod implements BACILMethod {
     @Override
     public String getName() {
         return name;
+    }
+
+    public static boolean isInternalCall(CLIMethodDefTableRow method)
+    {
+        return (method.getImplFlags() & METHODIMPL_INTERNALCALL) == METHODIMPL_INTERNALCALL;
     }
 
     public boolean isInitLocals() {

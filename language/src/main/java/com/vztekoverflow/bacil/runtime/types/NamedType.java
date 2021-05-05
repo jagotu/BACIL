@@ -2,7 +2,6 @@ package com.vztekoverflow.bacil.runtime.types;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
-import com.vztekoverflow.bacil.parser.cil.CILMethod;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLIFieldTableRow;
@@ -10,6 +9,7 @@ import com.vztekoverflow.bacil.parser.cli.tables.generated.CLIMethodDefTableRow;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableConstants;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITypeDefTableRow;
 import com.vztekoverflow.bacil.parser.signatures.FieldSig;
+import com.vztekoverflow.bacil.runtime.BACILMethod;
 import com.vztekoverflow.bacil.runtime.types.builtin.*;
 import com.vztekoverflow.bacil.runtime.types.locations.LocationsDescriptor;
 import com.vztekoverflow.bacil.runtime.types.locations.LocationsHolder;
@@ -117,7 +117,7 @@ public class NamedType extends Type {
             this.staticFieldsDescriptor = LocationsDescriptor.forFields(staticFields);
             this.staticFieldsHolder = LocationsHolder.forDescriptor(staticFieldsDescriptor);
 
-            CILMethod cctor = getMemberMethod(".cctor", CCTOR_SIGNATURE);
+            BACILMethod cctor = getMemberMethod(".cctor", CCTOR_SIGNATURE);
             if(cctor != null)
             {
                 cctor.getMethodCallTarget().call();
@@ -153,7 +153,7 @@ public class NamedType extends Type {
     }
 
     @Override
-    public CILMethod getMemberMethod(String name, byte[] signature) {
+    public BACILMethod getMemberMethod(String name, byte[] signature) {
         CompilerAsserts.neverPartOfCompilation();
 
         CLIMethodDefTableRow curr = methods;
@@ -250,5 +250,11 @@ public class NamedType extends Type {
         return instanceFieldsDescriptor;
     }
 
+    public String getName() {
+        return name;
+    }
 
+    public String getNamespace() {
+        return namespace;
+    }
 }

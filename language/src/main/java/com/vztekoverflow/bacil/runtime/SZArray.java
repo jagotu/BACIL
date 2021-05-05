@@ -8,11 +8,17 @@ public class SZArray {
     private final Type elementType;
     //private final Object[] fields;
     private final LocationsHolder fieldsHolder;
+    private final int length;
 
 
-    public SZArray(Type elementType, int count) {
+    public SZArray(Type elementType, int length) {
         this.elementType = elementType;
-        this.fieldsHolder = LocationsHolder.forArray(elementType, count);
+        this.fieldsHolder = LocationsHolder.forArray(elementType, length);
+        this.length = length;
+    }
+
+    public int getLength() {
+        return length;
     }
 
     public Type getElementType() {

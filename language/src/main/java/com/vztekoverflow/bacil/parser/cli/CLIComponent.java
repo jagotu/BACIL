@@ -17,6 +17,7 @@ import com.vztekoverflow.bacil.parser.pe.PEFile;
 import com.vztekoverflow.bacil.runtime.BACILContext;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
 import com.vztekoverflow.bacil.runtime.bacil.BACILComponent;
+import com.vztekoverflow.bacil.runtime.bacil.internalcall.InternalCallFinder;
 import com.vztekoverflow.bacil.runtime.types.NamedType;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import org.graalvm.polyglot.io.ByteSequence;
@@ -49,7 +50,7 @@ public class CLIComponent extends BACILComponent {
     private final Type[] localSpecTypes;
 
     @CompilationFinal(dimensions = 1)
-    private final CILMethod[] localMethods;
+    private final BACILMethod[] localMethods;
 
     private final PEFile pe;
 
@@ -120,7 +121,7 @@ public class CLIComponent extends BACILComponent {
         this.pe = pe;
         this.context = context;
 
-        localMethods = new CILMethod[tables.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_METHOD_DEF)];
+        localMethods = new BACILMethod[tables.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_METHOD_DEF)];
         localDefTypes = new Type[tables.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_TYPE_DEF)];
         localSpecTypes = new Type[tables.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_TYPE_SPEC)];
 
@@ -269,7 +270,7 @@ public class CLIComponent extends BACILComponent {
         return getLocalType(next);
     }
 
-    public CILMethod getLocalMethod(CLITablePtr token)
+    public BACILMethod getLocalMethod(CLITablePtr token)
     {
 
 
@@ -277,14 +278,14 @@ public class CLIComponent extends BACILComponent {
         {
             //it's the responsibility of method finder to not be in compilation when this can fail
             CompilerAsserts.neverPartOfCompilation();
-            CLIMethodDefTableRow methodDef =  tables.getTableHeads().getMethodDefTableHead().skip(token);
-            localMethods[token.getRowNo()-1] = new CILMethod(this, methodDef, findDefiningType(methodDef));
+            CLIMethodDefTableRow methodDef = tables.getTableHeads().getMethodDefTableHead().skip(token);
+            return getLocalMethod(methodDef, findDefiningType(methodDef));
         }
 
         return localMethods[token.getRowNo()-1];
     }
 
-    public CILMethod getLocalMethod(CLIMethodDefTableRow method, Type type)
+    public BACILMethod getLocalMethod(CLIMethodDefTableRow method, Type type)
     {
 
 
@@ -292,7 +293,20 @@ public class CLIComponent extends BACILComponent {
         {
             //it's the responsibility of method finder to not be in compilation when this can fail
             CompilerAsserts.neverPartOfCompilation();
-            localMethods[method.getRowNo()-1] = new CILMethod(this, method, type);
+            if(CILMethod.isInternalCall(method))
+            {
+                BACILMethod internalMethod = InternalCallFinder.FindInternalCallMethod(this, method, type);
+                if(internalMethod == null)
+                {
+                    throw new BACILInternalError("Attempted to resolve InternalCall method for which no implementation is available: " + type.toString() + "." + method.getName().read(getStringHeap()));
+                } else {
+                    localMethods[method.getRowNo()-1] = internalMethod;
+                }
+
+            } else {
+                localMethods[method.getRowNo()-1] = new CILMethod(this, method, type);
+            }
+
         }
 
         return localMethods[method.getRowNo()-1];

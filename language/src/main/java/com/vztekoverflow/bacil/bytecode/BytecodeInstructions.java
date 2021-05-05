@@ -386,6 +386,8 @@ public class BytecodeInstructions {
         def(BRTRUE, "brtrue", "biiii", -1);
         def(BRTRUE_S, "brtrue.s", "bi", -1);
 
+        def(NEG, "neg", "b", 0);
+
         def(ADD, "add", "b", -1);
         def(SUB, "sub", "b", -1);
         def(MUL, "mul", "b", -1);
@@ -406,6 +408,7 @@ public class BytecodeInstructions {
         def(CALLVIRT, "callvirt", "btttt",0);
 
         def(NEWARR, "newarr", "btttt", 0);
+        def(LDLEN, "ldlen", "b", 0);
 
         defPrefixed(CGT, "cgt", "b", -1);
         defPrefixed(CEQ, "ceq", "b", -1);
