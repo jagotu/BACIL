@@ -249,6 +249,10 @@ public class BytecodeNode extends Node {
                 case BGT:
                 case BLE:
                 case BLT:
+                case BGE_UN:
+                case BGT_UN:
+                case BLE_UN:
+                case BLT_UN:
                     if(binaryCompareResult(curOpcode, primitives, refs, top-2, top-1))
                     {
                         pc = nextpc + bytecodeBuffer.getImmInt(pc);
@@ -262,6 +266,10 @@ public class BytecodeNode extends Node {
                 case BGT_S:
                 case BLE_S:
                 case BLT_S:
+                case BGE_UN_S:
+                case BGT_UN_S:
+                case BLE_UN_S:
+                case BLT_UN_S:
                     if(binaryCompareResult(curOpcode, primitives, refs, top-2, top-1))
                     {
                         pc = nextpc + bytecodeBuffer.getImmByte(pc);
@@ -308,6 +316,8 @@ public class BytecodeNode extends Node {
                 case CEQ:
                 case CGT:
                 case CLT:
+                case CGT_UN:
+                case CLT_UN:
                     doCompareBinary(curOpcode, primitives, refs, top-2, top-1); break;
 
                 case SHL:
@@ -625,11 +635,91 @@ public class BytecodeNode extends Node {
 
                 switch(opcode)
                 {
+                    //Non-conforming: implementing unordered and ordered double compares identically
+                    case CGT:
+                    case BGT:
+                    case BGT_S:
+                    case CGT_UN:
+                    case BGT_UN:
+                    case BGT_UN_S:
+                        result = arg1 >  arg2;
+                        break;
+                    case BGE:
+                    case BGE_S:
+                    case BGE_UN:
+                    case BGE_UN_S:
+                        result = arg1 >= arg2;
+                        break;
+
+                    case CLT:
+                    case BLT:
+                    case BLT_S:
+                    case CLT_UN:
+                    case BLT_UN:
+                    case BLT_UN_S:
+                        result = arg1 <  arg2;
+                        break;
+                    case BLE:
+                    case BLE_S:
+                    case BLE_UN:
+                    case BLE_UN_S:
+                        result = arg1 <= arg2;
+                        break;
+
+                    case CEQ:
+                    case BEQ:
+                    case BEQ_S:
+                        result = arg1 == arg2;
+                        break;
+
+                }
+            } else {
+                long arg1 = primitives[slot1];
+                long arg2 = primitives[slot2];
+                if(resultType == ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
+                {
+                    switch(opcode)
+                    {
+                        case CGT:
+                        case BGT:
+                        case BGT_S:
+                        case BGE:
+                        case BGE_S:
+                        case CLT:
+                        case BLT:
+                        case BLT_S:
+                        case BLE:
+                        case BLE_S:
+                        case CEQ:
+                        case BEQ:
+                        case BEQ_S:
+                            arg1 = TypeHelpers.signExtend32(arg1);
+                            arg2 = TypeHelpers.signExtend32(arg2);
+                            break;
+                        case CGT_UN:
+                        case BGT_UN:
+                        case BGT_UN_S:
+                        case BGE_UN:
+                        case BGE_UN_S:
+                        case CLT_UN:
+                        case BLT_UN:
+                        case BLT_UN_S:
+                        case BLE_UN:
+                        case BLE_UN_S:
+                            arg1 = TypeHelpers.zeroExtend32(arg1);
+                            arg2 = TypeHelpers.zeroExtend32(arg2);
+                            break;
+                    }
+
+                }
+                switch(opcode)
+                {
                     case CGT:
                     case BGT:
                     case BGT_S:
                         result = arg1 >  arg2;
                         break;
+
                     case BGE:
                     case BGE_S:
                         result = arg1 >= arg2;
@@ -650,35 +740,30 @@ public class BytecodeNode extends Node {
                     case BEQ_S:
                         result = arg1 == arg2;
                         break;
-                }
-            } else {
-                switch(opcode)
-                {
-                    case CGT:
-                    case BGT:
-                    case BGT_S:
-                        result = primitives[slot1] > primitives[slot2];
-                        break;
-                    case BGE:
-                    case BGE_S:
-                        result = primitives[slot1] >= primitives[slot2];
+
+                    case CGT_UN:
+                    case BGT_UN:
+                    case BGT_UN_S:
+                        result = Long.compareUnsigned(arg1, arg2) > 0;
                         break;
 
-                    case CLT:
-                    case BLT:
-                    case BLT_S:
-                        result = primitives[slot1] < primitives[slot2];
-                        break;
-                    case BLE:
-                    case BLE_S:
-                        result = primitives[slot1] <= primitives[slot2];
+                    case BGE_UN:
+                    case BGE_UN_S:
+                        result = Long.compareUnsigned(arg1, arg2) >= 0;
                         break;
 
-                    case CEQ:
-                    case BEQ:
-                    case BEQ_S:
-                        result = primitives[slot1] == primitives[slot2];
+                    case CLT_UN:
+                    case BLT_UN:
+                    case BLT_UN_S:
+                        result = Long.compareUnsigned(arg1, arg2) < 0;
                         break;
+                    case BLE_UN:
+                    case BLE_UN_S:
+                        result = Long.compareUnsigned(arg1, arg2) <= 0;
+                        break;
+
+
+
                 }
 
 
