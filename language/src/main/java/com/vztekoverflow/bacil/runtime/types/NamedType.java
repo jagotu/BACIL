@@ -74,6 +74,11 @@ public class NamedType extends Type {
         {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             super.init();
+            if(extendz != null)
+            {
+                extendz.init();
+            }
+
 
             //Init fields
 
@@ -99,6 +104,11 @@ public class NamedType extends Type {
             allFields = new TypedField[totalFields];
             int staticFieldsIndex = 0;
             int instanceFieldsIndex = 0;
+            int parentInstanceFields = 0;
+            if(extendz != null)
+            {
+                parentInstanceFields = extendz.instanceFieldsDescriptor.getSize();
+            }
 
             curr = fieldRows;
             for(int i = 0; i < totalFields; i++) {
@@ -107,13 +117,13 @@ public class NamedType extends Type {
                     field = new TypedField(curr.getFlags(), curr.getName().read(definingComponent.getStringHeap()), FieldSig.read(curr.getSignature().read(definingComponent.getBlobHeap()), definingComponent), staticFieldsIndex);
                     staticFields[staticFieldsIndex++] = field;
                 } else {
-                    field = new TypedField(curr.getFlags(), curr.getName().read(definingComponent.getStringHeap()), FieldSig.read(curr.getSignature().read(definingComponent.getBlobHeap()), definingComponent), instanceFieldsIndex);
+                    field = new TypedField(curr.getFlags(), curr.getName().read(definingComponent.getStringHeap()), FieldSig.read(curr.getSignature().read(definingComponent.getBlobHeap()), definingComponent), instanceFieldsIndex+parentInstanceFields);
                     instanceFields[instanceFieldsIndex++] = field;
                 }
                 allFields[i] = field;
                 curr = curr.next();
             }
-            this.instanceFieldsDescriptor = LocationsDescriptor.forFields(instanceFields);
+            this.instanceFieldsDescriptor = LocationsDescriptor.forFields(extendz == null ? null : extendz.instanceFieldsDescriptor, instanceFields);
             this.staticFieldsDescriptor = LocationsDescriptor.forFields(staticFields);
             this.staticFieldsHolder = LocationsHolder.forDescriptor(staticFieldsDescriptor);
 

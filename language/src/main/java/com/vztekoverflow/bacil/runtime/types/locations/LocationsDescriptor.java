@@ -15,20 +15,44 @@ public class LocationsDescriptor {
     private final int refCount;
 
     public LocationsDescriptor(Type[] locationTypes) {
-        this.locationTypes = locationTypes;
-        offsets = new int[locationTypes.length];
+        this(null, locationTypes);
+    }
 
+    private LocationsDescriptor(LocationsDescriptor parent, Type[] locationTypes) {
+        if(parent != null)
+        {
+            this.locationTypes = new Type[parent.locationTypes.length + locationTypes.length];
+            System.arraycopy(parent.locationTypes, 0, this.locationTypes, 0, parent.locationTypes.length);
+            System.arraycopy(locationTypes, 0, this.locationTypes, parent.locationTypes.length, locationTypes.length);
+        } else {
+            this.locationTypes = locationTypes;
+        }
+
+        offsets = new int[this.locationTypes.length];
         int primitiveOffset = 0;
         int refOffset = 0;
+        int start = 0;
+
+        if(parent != null)
+        {
+            System.arraycopy(parent.offsets, 0, this.offsets, 0, parent.offsets.length);
+            primitiveOffset = parent.primitiveCount;
+            refOffset = parent.refCount;
+            start = parent.locationTypes.length;
+        }
+
+
+
+
 
         for(int i = 0; i < locationTypes.length; i++)
         {
             Type t = locationTypes[i];
             if(t.isPrimitiveStorage())
             {
-                offsets[i] = primitiveOffset++;
+                offsets[start+i] = primitiveOffset++;
             } else {
-                offsets[i] = refOffset++;
+                offsets[start+i] = refOffset++;
             }
         }
 
@@ -36,8 +60,26 @@ public class LocationsDescriptor {
         refCount = refOffset;
     }
 
-    public static LocationsDescriptor forFields(TypedField[] typedFields)
+
+
+    public static LocationsDescriptor forFields(LocationsDescriptor parent, TypedField[] typedFields)
     {
+        Type[] types = new Type[typedFields.length];
+        for(int i = 0; i < typedFields.length;i++)
+        {
+            types[i] = typedFields[i].getType();
+        }
+        return new LocationsDescriptor(parent, types);
+    }
+
+    public static LocationsDescriptor forFields(TypedField[] typedFields) {
+        return forFields(null, typedFields);
+    }
+
+    public LocationsDescriptor getExtended(TypedField[] typedFields)
+    {
+
+
         Type[] types = new Type[typedFields.length];
         for(int i = 0; i < typedFields.length;i++)
         {
@@ -82,5 +124,10 @@ public class LocationsDescriptor {
     public Object locationToObject(LocationsHolder holder, int locationIndex)
     {
         return locationTypes[locationIndex].locationToObject(holder, offsets[locationIndex]);
+    }
+
+    public int getSize()
+    {
+        return locationTypes.length;
     }
 }
