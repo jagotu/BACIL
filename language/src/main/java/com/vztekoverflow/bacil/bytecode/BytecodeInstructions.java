@@ -427,11 +427,22 @@ public class BytecodeInstructions {
         def(UNBOX, "unbox", "btttt", 0);
 
 
+        def(CONV_I1, "conv.i1", "b", 0);
+        def(CONV_I2, "conv.i2", "b", 0);
+        def(CONV_I4, "conv.i4", "b", 0);
+        def(CONV_I8, "conv.i8", "b", 0);
+        def(CONV_R4, "conv.r4", "b", 0);
+        def(CONV_R8, "conv.r8", "b", 0);
+        def(CONV_U1, "conv.u1", "b", 0);
+        def(CONV_U2, "conv.u2", "b", 0);
+        def(CONV_U4, "conv.u4", "b", 0);
+        def(CONV_U8, "conv.u8", "b", 0);
+        def(CONV_I, "conv.i", "b", 0);
+        def(CONV_U, "conv.u", "b", 0);
+
 
 
         def(TRUFFLE_NODE, "truffle.node", "biiii", 0);
-        def(BACIL_STFLD, "com.vztekoverflow.bacil.stfld", "biiii", -2);
-        def(BACIL_LDFLD, "com.vztekoverflow.bacil.ldfld", "biiii", 0);
     }
 
     /**

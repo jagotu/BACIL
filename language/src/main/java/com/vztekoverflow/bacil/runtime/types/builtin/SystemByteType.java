@@ -32,7 +32,7 @@ public class SystemByteType extends SystemValueTypeType {
     @Override
     public void objectToStack(Object[] refs, long[] primitives, int slot, Object value) {
         refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
-        primitives[slot] = TypeHelpers.zeroExtend8((Short)value);
+        primitives[slot] = TypeHelpers.zeroExtend8((Byte)value);
     }
 
     @Override
@@ -47,7 +47,7 @@ public class SystemByteType extends SystemValueTypeType {
 
     @Override
     public void objectToLocation(LocationsHolder holder, int holderOffset, Object obj) {
-        holder.getPrimitives()[holderOffset] = TypeHelpers.zeroExtend8((Short) obj);
+        holder.getPrimitives()[holderOffset] = TypeHelpers.zeroExtend8((Byte) obj);
     }
 
     @Override

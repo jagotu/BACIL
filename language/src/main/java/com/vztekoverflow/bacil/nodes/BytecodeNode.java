@@ -140,6 +140,9 @@ public class BytecodeNode extends Node {
                 case LDC_I4: putInt32(primitives, refs, top, bytecodeBuffer.getImmInt(pc)); break;
                 case LDC_I4_S: putInt32(primitives, refs, top, bytecodeBuffer.getImmByte(pc)); break;
                 case LDC_I8: putInt64(primitives, refs, top, bytecodeBuffer.getImmLong(pc)); break;
+                case LDC_R4: putFloat(primitives, refs, top, Float.intBitsToFloat(bytecodeBuffer.getImmInt(pc))); break;
+                case LDC_R8: putFloat(primitives, refs, top, Double.longBitsToDouble(bytecodeBuffer.getImmLong(pc))); break;
+
 
 
 
@@ -308,6 +311,22 @@ public class BytecodeNode extends Node {
                 case SHR:
                 case SHR_UN:
                     doShiftBinary(curOpcode, primitives, refs, top-2, top-1); break;
+
+                case CONV_I:
+                case CONV_I1:
+                case CONV_I2:
+                case CONV_I4:
+                case CONV_I8:
+                case CONV_U:
+                case CONV_U1:
+                case CONV_U2:
+                case CONV_U4:
+                case CONV_U8:
+                    doConvertToInt(curOpcode, primitives, refs, top-1); break;
+
+                case CONV_R4:
+                case CONV_R8:
+                    doConvertToFloat(curOpcode, primitives, refs, top-1); break;
 
                 case LDFLD:
                 case STFLD:
@@ -651,7 +670,6 @@ public class BytecodeNode extends Node {
 
     public static void doIntegerBinary(int opcode, long[] primitives, Object[] refs, int slot1, int slot2)
     {
-        //TODO floaty!
         if(ExecutionStackPrimitiveMarker.isExecutionStackPrimitiveMarker(refs[slot1]) && ExecutionStackPrimitiveMarker.isExecutionStackPrimitiveMarker(refs[slot2]))
         {
             ExecutionStackPrimitiveMarker resultType = binaryIntegerResultTypes[((ExecutionStackPrimitiveMarker)refs[slot1]).getTag()][((ExecutionStackPrimitiveMarker)refs[slot2]).getTag()];
@@ -691,35 +709,68 @@ public class BytecodeNode extends Node {
 
     public static void doNumericBinary(int opcode, long[] primitives, Object[] refs, int slot1, int slot2)
     {
-        //TODO floaty!
+
         if(ExecutionStackPrimitiveMarker.isExecutionStackPrimitiveMarker(refs[slot1]) && ExecutionStackPrimitiveMarker.isExecutionStackPrimitiveMarker(refs[slot2]))
         {
+
             ExecutionStackPrimitiveMarker resultType = binaryNumericResultTypes[((ExecutionStackPrimitiveMarker)refs[slot1]).getTag()][((ExecutionStackPrimitiveMarker)refs[slot2]).getTag()];
             if(resultType == null)
             {
                 CompilerDirectives.transferToInterpreterAndInvalidate();
                 throw new BACILInternalError("These types can't be args of numeric binary");
             }
-            long result = 0;
-            switch(opcode)
-            {
-                case ADD:
-                    result = primitives[slot1] + primitives[slot2];
-                    break;
-                case SUB:
-                    result = primitives[slot1] - primitives[slot2];
-                    break;
-                case MUL:
-                    result = primitives[slot1] * primitives[slot2];
-                    break;
-                case DIV:
-                    result = primitives[slot1] / primitives[slot2];
-                    break;
-                case REM:
-                    result = primitives[slot1] % primitives[slot2];
-                    break;
 
+            long result = 0;
+
+            if(resultType == ExecutionStackPrimitiveMarker.EXECUTION_STACK_F)
+            {
+                double arg1 = Double.longBitsToDouble(primitives[slot1]);
+                double arg2 = Double.longBitsToDouble(primitives[slot2]);
+                double dblresult = 0;
+                switch(opcode)
+                {
+                    case ADD:
+                        dblresult = arg1 + arg2;
+                        break;
+                    case SUB:
+                        dblresult = arg1 - arg2;
+                        break;
+                    case MUL:
+                        dblresult = arg1 * arg2;
+                        break;
+                    case DIV:
+                        dblresult = arg1 / arg2;
+                        break;
+                    case REM:
+                        dblresult = arg1 % arg2;
+                        break;
+
+                }
+                result = Double.doubleToLongBits(dblresult);
+            } else {
+                switch(opcode)
+                {
+                    case ADD:
+                        result = primitives[slot1] + primitives[slot2];
+                        break;
+                    case SUB:
+                        result = primitives[slot1] - primitives[slot2];
+                        break;
+                    case MUL:
+                        result = primitives[slot1] * primitives[slot2];
+                        break;
+                    case DIV:
+                        result = primitives[slot1] / primitives[slot2];
+                        break;
+                    case REM:
+                        result = primitives[slot1] % primitives[slot2];
+                        break;
+
+                }
             }
+
+
+
 
             if(resultType == ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
             {
@@ -732,6 +783,85 @@ public class BytecodeNode extends Node {
         }  else {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILInternalError("Unimplemented.");
+        }
+    }
+
+    public static void doConvertToFloat(int opcode, long[] primitives, Object[] refs, int slot)
+    {
+        if(refs[slot] == ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
+        {
+            primitives[slot] = Double.doubleToLongBits((int)(primitives[slot]));
+        } else if (refs[slot] == ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT64) {
+            primitives[slot] = Double.doubleToLongBits(primitives[slot]);
+        }
+
+        if(opcode == CONV_R4)
+        {
+            primitives[slot] = Double.doubleToLongBits((float)Double.longBitsToDouble(primitives[slot]));
+        }
+        refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_F;
+    }
+
+    public static void doConvertToInt(int opcode, long[] primitives, Object[] refs, int slot)
+    {
+        long value = primitives[slot];
+        if(refs[slot] == ExecutionStackPrimitiveMarker.EXECUTION_STACK_F)
+        {
+            value = (long)Double.longBitsToDouble(primitives[slot]);
+        }
+        switch(opcode)
+        {
+            case CONV_I1:
+                primitives[slot] = TypeHelpers.signExtend8to32(value);
+                refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
+                break;
+
+            case CONV_I2:
+                primitives[slot] = TypeHelpers.signExtend16to32(value);
+                refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
+                break;
+
+            case CONV_I4:
+                primitives[slot] = TypeHelpers.truncate32(value);
+                refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
+                break;
+
+            case CONV_I8:
+                primitives[slot] = TypeHelpers.signExtend32(value);
+                refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT64;
+                break;
+
+            case CONV_I:
+                primitives[slot] = TypeHelpers.signExtend32(value);
+                refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_NATIVE_INT;
+                break;
+
+
+            case CONV_U1:
+                primitives[slot] = TypeHelpers.zeroExtend8(value);
+                refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
+                break;
+
+            case CONV_U2:
+                primitives[slot] = TypeHelpers.zeroExtend16(value);
+                refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
+                break;
+
+            case CONV_U4:
+                primitives[slot] = TypeHelpers.zeroExtend32(value);
+                refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
+                break;
+
+            case CONV_U8:
+                refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT64;
+                break;
+
+            case CONV_U:
+                refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_NATIVE_INT;
+
+            default:
+                CompilerDirectives.transferToInterpreterAndInvalidate();
+                throw new BACILInternalError("Invalid opcode for doConvertToInt.");
         }
     }
 
@@ -808,6 +938,12 @@ public class BytecodeNode extends Node {
     {
         primitives[slot] = value;
         refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT64;
+    }
+
+    public static void putFloat(long[] primitives, Object[] refs, int slot, double value)
+    {
+        primitives[slot] = Double.doubleToLongBits(value);
+        refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_F;
     }
 
     public CILMethod getMethod() {
