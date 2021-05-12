@@ -312,6 +312,8 @@ public class BytecodeInstructions {
         def(LDARG_S, "ldarg.s", "bi", 1);
         def(LDARGA_S, "ldarga.s", "bi", 1);
 
+        def(STARG_S, "starg.s", "bi", -1);
+
         def(LDIND_I1, "ldind.i1", "b", 0);
         def(LDIND_U1, "ldind.u1", "b", 0);
         def(LDIND_I2, "ldind.i2", "b", 0);
@@ -416,7 +418,6 @@ public class BytecodeInstructions {
         defPrefixed(CGT_UN, "cgt.un", "b", -1);
         defPrefixed(CLT_UN, "clt.un", "b", -1);
 
-
         def(BEQ, "beq", "btttt", -2);
         def(BGE, "bge", "btttt", -2);
         def(BGT, "bgt", "btttt", -2);
@@ -433,11 +434,13 @@ public class BytecodeInstructions {
         def(BGT_UN, "bgt.un", "btttt", -2);
         def(BLE_UN, "ble.un", "btttt", -2);
         def(BLT_UN, "blt.un", "btttt", -2);
+        def(BNE_UN, "bne.un", "btttt", -2);
 
         def(BGE_UN_S, "bge.un.s", "bt", -2);
         def(BGT_UN_S, "bgt.un.s", "bt", -2);
         def(BLE_UN_S, "ble.un.s", "bt", -2);
         def(BLT_UN_S, "blt.un.s", "bt", -2);
+        def(BNE_UN_S, "bne.un.s", "bt", -2);
 
         def(BOX, "box", "btttt", 0);
         def(UNBOX, "unbox", "btttt", 0);

@@ -172,9 +172,11 @@ public class BytecodeNode extends Node {
                     loadStack(primitives, refs, top, descriptor, locations, varsCount + curOpcode - LDARG_0); break;
                 case LDARG_S:
                     loadStack(primitives, refs, top, descriptor, locations, varsCount + bytecodeBuffer.getImmUByte(pc)); break;
-
                 case LDARGA_S:
                     refs[top] = getLocalReference(descriptor, locations,varsCount + bytecodeBuffer.getImmUByte(pc)); break;
+
+                case STARG_S:
+                    storeStack(primitives, refs, top-1, descriptor, locations, varsCount + bytecodeBuffer.getImmUByte(pc)); break;
 
 
                 case STIND_I1:
@@ -253,6 +255,7 @@ public class BytecodeNode extends Node {
                 case BGT_UN:
                 case BLE_UN:
                 case BLT_UN:
+                case BNE_UN:
                     if(binaryCompareResult(curOpcode, primitives, refs, top-2, top-1))
                     {
                         pc = nextpc + bytecodeBuffer.getImmInt(pc);
@@ -270,6 +273,7 @@ public class BytecodeNode extends Node {
                 case BGT_UN_S:
                 case BLE_UN_S:
                 case BLT_UN_S:
+                case BNE_UN_S:
                     if(binaryCompareResult(curOpcode, primitives, refs, top-2, top-1))
                     {
                         pc = nextpc + bytecodeBuffer.getImmByte(pc);
@@ -488,8 +492,16 @@ public class BytecodeNode extends Node {
         switch (opcode)
         {
             case CALL:
-            case CALLVIRT: //TODO HACK should actually call virtually!!
-                node = new CallNode(method.getComponent().getMethod(token, lookupContextReference(BACILLanguage.class).get()), top);
+                node = new NonvirtualCallNode(method.getComponent().getMethod(token, lookupContextReference(BACILLanguage.class).get()), top);
+                break;
+            case CALLVIRT:
+                BACILMethod targetMethod = method.getComponent().getMethod(token, lookupContextReference(BACILLanguage.class).get());
+                if(targetMethod.isVirtual())
+                {
+                    throw new BACILInternalError("Calling virtual methods not supported.");
+                } else {
+                    node = new NonvirtualCallNode(targetMethod, top);
+                }
                 break;
             case NEWOBJ:
                 node = new ConstructorNode(method.getComponent().getMethod(token, lookupContextReference(BACILLanguage.class).get()), top);
@@ -672,6 +684,11 @@ public class BytecodeNode extends Node {
                         result = arg1 == arg2;
                         break;
 
+                    case BNE_UN:
+                    case BNE_UN_S:
+                        result = arg1 != arg2;
+                        break;
+
                 }
             } else {
                 long arg1 = primitives[slot1];
@@ -762,6 +779,11 @@ public class BytecodeNode extends Node {
                         result = Long.compareUnsigned(arg1, arg2) <= 0;
                         break;
 
+                    case BNE_UN:
+                    case BNE_UN_S:
+                        result = arg1 != arg2;
+                        break;
+
 
 
                 }
@@ -779,6 +801,10 @@ public class BytecodeNode extends Node {
                 case BEQ:
                 case BEQ_S:
                     return refs[slot1] == refs[slot2];
+
+                case BNE_UN:
+                case BNE_UN_S:
+                    return refs[slot1] != refs[slot2];
             }
 
             CompilerDirectives.transferToInterpreterAndInvalidate();
@@ -948,6 +974,23 @@ public class BytecodeNode extends Node {
         {
             value = (long)Double.longBitsToDouble(primitives[slot]);
         }
+        if(refs[slot] == ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
+        {
+            switch(opcode) {
+                case CONV_I1:
+                case CONV_I2:
+                case CONV_I4:
+                case CONV_I8:
+                case CONV_I:
+                    value = TypeHelpers.signExtend32(value);
+                case CONV_U1:
+                case CONV_U2:
+                case CONV_U4:
+                case CONV_U8:
+                case CONV_U:
+                    value = TypeHelpers.zeroExtend32(value);
+            }
+        }
         switch(opcode)
         {
             case CONV_I1:
@@ -965,15 +1008,6 @@ public class BytecodeNode extends Node {
                 refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
                 break;
 
-            case CONV_I8:
-                primitives[slot] = TypeHelpers.signExtend32(value);
-                refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT64;
-                break;
-
-            case CONV_I:
-                primitives[slot] = TypeHelpers.signExtend32(value);
-                refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_NATIVE_INT;
-                break;
 
 
             case CONV_U1:
@@ -992,11 +1026,15 @@ public class BytecodeNode extends Node {
                 break;
 
             case CONV_U8:
+            case CONV_I8:
                 refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT64;
+                primitives[slot] = value;
                 break;
 
             case CONV_U:
+            case CONV_I:
                 refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_NATIVE_INT;
+                primitives[slot] = value;
 
             default:
                 CompilerDirectives.transferToInterpreterAndInvalidate();
@@ -1069,7 +1107,7 @@ public class BytecodeNode extends Node {
 
     public static void putInt32(long[] primitives, Object[] refs, int slot, int value)
     {
-        primitives[slot] = value;
+        primitives[slot] = TypeHelpers.truncate32(value);
         refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
     }
 

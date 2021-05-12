@@ -43,7 +43,7 @@ public class BuiltinTypes {
         int32Type = corlib.findLocalType("System", "Int32");
         uInt32Type = corlib.findLocalType("System", "UInt32");
         int64Type = corlib.findLocalType("System", "Int64");
-        uInt64Type = corlib.findLocalType("System", "UInt16");
+        uInt64Type = corlib.findLocalType("System", "UInt64");
         intPtrType = corlib.findLocalType("System", "IntPtr");
         uIntPtrType = corlib.findLocalType("System", "UIntPtr");
         typedReferenceType = corlib.findLocalType("System", "TypedReference");

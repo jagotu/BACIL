@@ -30,19 +30,33 @@ public class BACILLanguage extends TruffleLanguage<BACILContext> {
         return new BACILContext(this, env);
     }
 
-    private static class AddCLIArgsCallTarget implements CallTarget
+    private static class CallEntryPointCallTarget implements CallTarget
     {
 
         private final CallTarget inner;
+        private final boolean shouldAddArgs;
 
-        private AddCLIArgsCallTarget(CallTarget inner) {
+        private CallEntryPointCallTarget(CallTarget inner, boolean shouldAddArgs) {
             this.inner = inner;
+            this.shouldAddArgs = shouldAddArgs;
         }
 
         @Override
         public Object call(Object... arguments) {
             assert arguments.length == 0;
-            return inner.call((Object) null);
+            Object result;
+            if(shouldAddArgs)
+            {
+                result = inner.call((Object) null);
+            } else {
+                result = inner.call();
+            }
+
+
+            if(result == null)
+                return 0;
+
+            return result;
         }
     }
 
@@ -64,7 +78,7 @@ public class BACILLanguage extends TruffleLanguage<BACILContext> {
         CLITablePtr entryPtr = CLITablePtr.fromToken(c.getCliHeader().getEntryPointToken());
 
         BACILMethod entryMethod = c.getLocalMethod(entryPtr);
-        return new AddCLIArgsCallTarget(entryMethod.getMethodCallTarget());
+        return new CallEntryPointCallTarget(entryMethod.getMethodCallTarget(), entryMethod.getArgsCount() == 1);
     }
 
     @Override

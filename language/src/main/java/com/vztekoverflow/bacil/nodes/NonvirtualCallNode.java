@@ -1,24 +1,23 @@
 package com.vztekoverflow.bacil.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.builtin.SystemVoidType;
 
-public class CallNode extends CallableNode {
+public class NonvirtualCallNode extends CallableNode {
 
     protected final BACILMethod method;
 
     protected final int top;
 
-    @Child private DirectCallNode directCallNode;
+    @Child private com.oracle.truffle.api.nodes.DirectCallNode directCallNode;
 
 
-    public CallNode(BACILMethod method, int top) {
+    public NonvirtualCallNode(BACILMethod method, int top) {
         this.method = method;
         this.top = top;
-        directCallNode = DirectCallNode.create(this.method.getMethodCallTarget());
+        directCallNode = com.oracle.truffle.api.nodes.DirectCallNode.create(this.method.getMethodCallTarget());
     }
 
     @Override

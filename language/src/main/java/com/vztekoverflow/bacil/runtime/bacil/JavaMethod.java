@@ -24,4 +24,9 @@ public abstract class JavaMethod extends RootNode implements BACILMethod {
     public CallTarget getMethodCallTarget() {
         return callTarget;
     }
+
+    @Override
+    public boolean isVirtual() {
+        return false;
+    }
 }

@@ -17,10 +17,18 @@ public class BACILLauncher extends AbstractLanguageLauncher {
 
     private static final String LANGUAGE_ID = "cil";
     private String inputFile = null;
+    private int returnValue = 0;
 
     public static void main(String[] args) throws IOException {
 
-        new BACILLauncher().launch(args);
+        BACILLauncher launcher = new BACILLauncher();
+        launcher.launch(args);
+        System.exit(launcher.getReturnValue());
+
+    }
+
+    public int getReturnValue() {
+        return returnValue;
     }
 
     @Override
@@ -47,9 +55,10 @@ public class BACILLauncher extends AbstractLanguageLauncher {
         try (Context context = contextBuilder.build()) {
             final Source source = Source.newBuilder(LANGUAGE_ID, new File(inputFile)).build();
             final long start = System.currentTimeMillis();
-            System.out.println("Returned: " + context.eval(source));
+            returnValue = context.eval(source).asInt();
+            System.err.println("Returned: " + returnValue);
             final long done = System.currentTimeMillis();
-            System.out.println("Runtime: " + (done-start) + "ms");
+            System.err.println("Runtime: " + (done-start) + "ms");
         } catch (IOException e) {
             e.printStackTrace();
         }

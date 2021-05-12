@@ -24,7 +24,7 @@ public class CILMethod implements BACILMethod {
 
     private final CLIComponent component;
     private final CLIMethodDefTableRow methodDef;
-    private final int flags;
+    private final int ILflags;
     private final short maxStack;
 
     private final CallTarget callTarget;
@@ -41,6 +41,8 @@ public class CILMethod implements BACILMethod {
     private static final byte CORILMETHOD_MORESECTS = 0x8;
 
     private static final short METHODIMPL_INTERNALCALL = 0x1000;
+
+    private static final int METHODATTRIBUTE_VIRTUAL = 0x0040;
 
 
 
@@ -60,6 +62,7 @@ public class CILMethod implements BACILMethod {
         this.methodDef = methodDef;
         this.methodDefSig = MethodDefSig.read(methodDef.getSignature().read(component.getBlobHeap()), component);
         this.definingType = definingType;
+        this.name = methodDef.getName().read(component.getStringHeap());
 
         ByteSequenceBuffer buf = component.getBuffer(methodDef.getRVA());
         byte firstByte = buf.getByte();
@@ -68,14 +71,14 @@ public class CILMethod implements BACILMethod {
 
         if((firstByte & 3) == CORILMETHOD_TINYFORMAT)
         {
-            this.flags = CORILMETHOD_TINYFORMAT;
+            this.ILflags = CORILMETHOD_TINYFORMAT;
             this.maxStack = 8;
             this.localVarSig = null;
             this.initLocals = false;
             size = (firstByte >> 2)&0xFF;
         } else if((firstByte & 3) == CORILMETHOD_FATFORMAT) {
             short firstWord = (short)(firstByte | (buf.getByte() << 8));
-            this.flags = firstWord & 0xFFF;
+            this.ILflags = firstWord & 0xFFF;
             byte headerSize = (byte)(firstWord >> 12);
 
             if(headerSize != 3)
@@ -96,8 +99,8 @@ public class CILMethod implements BACILMethod {
                 this.localVarSig = LocalVarSig.read(localVarSig, component);
             }
 
-            initLocals = (flags & CORILMETHOD_INITLOCALS) != 0;
-            if((flags & CORILMETHOD_MORESECTS) != 0)
+            initLocals = (ILflags & CORILMETHOD_INITLOCALS) != 0;
+            if((ILflags & CORILMETHOD_MORESECTS) != 0)
             {
                 throw new BACILParserException("Multiple sections in CIL method header not supported.");
             }
@@ -106,7 +109,7 @@ public class CILMethod implements BACILMethod {
             throw new BACILParserException("Invalid CorILMethod flags");
         }
 
-        this.name = methodDef.getName().read(component.getStringHeap());
+
 
         final byte[] body = buf.subSequence(size).toByteArray();
         //TODO other method types
@@ -185,8 +188,8 @@ public class CILMethod implements BACILMethod {
         return methodDef;
     }
 
-    public int getFlags() {
-        return flags;
+    public int getILflags() {
+        return ILflags;
     }
 
     public LocalVarSig getLocalVarSig() {
@@ -200,6 +203,11 @@ public class CILMethod implements BACILMethod {
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public boolean isVirtual() {
+        return (methodDef.getFlags() & METHODATTRIBUTE_VIRTUAL) == METHODATTRIBUTE_VIRTUAL;
     }
 
     public static boolean isInternalCall(CLIMethodDefTableRow method)

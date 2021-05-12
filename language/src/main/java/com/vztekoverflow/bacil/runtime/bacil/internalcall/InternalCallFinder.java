@@ -19,6 +19,9 @@ public class InternalCallFinder {
                 if(methodName.equals("Sqrt"))
                 {
                     return new MathSqrtMethod(definingComponent.getBuiltinTypes(), definingComponent.getLanguage(), type);
+                } else if (methodName.equals("Abs"))
+                {
+                    return new MathAbsMethod(definingComponent.getBuiltinTypes(), definingComponent.getLanguage(), type);
                 }
             }
         }

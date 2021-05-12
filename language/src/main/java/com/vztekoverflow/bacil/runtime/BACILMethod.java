@@ -17,4 +17,6 @@ public interface BACILMethod {
     public Type getDefiningType();
 
     public String getName();
+
+    public boolean isVirtual();
 }
