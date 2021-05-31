@@ -42,7 +42,7 @@ public class CILMethod implements BACILMethod {
 
     private static final short METHODIMPL_INTERNALCALL = 0x1000;
 
-    private static final int METHODATTRIBUTE_VIRTUAL = 0x0040;
+    public static final int METHODATTRIBUTE_VIRTUAL = 0x0040;
 
 
 
@@ -201,6 +201,11 @@ public class CILMethod implements BACILMethod {
     }
 
     @Override
+    public byte[] getSignature() {
+        return methodDef.getSignature().read(component.getBlobHeap());
+    }
+
+    @Override
     public String getName() {
         return name;
     }
@@ -248,4 +253,6 @@ public class CILMethod implements BACILMethod {
     public LocationsDescriptor getLocationDescriptor() {
         return locationDescriptor;
     }
+
+
 }

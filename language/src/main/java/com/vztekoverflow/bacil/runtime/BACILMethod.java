@@ -19,4 +19,6 @@ public interface BACILMethod {
     public String getName();
 
     public boolean isVirtual();
+
+    public byte[] getSignature();
 }

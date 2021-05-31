@@ -2,6 +2,7 @@ package com.vztekoverflow.bacil.runtime.types;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.vztekoverflow.bacil.parser.cil.CILMethod;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLIFieldTableRow;
@@ -13,7 +14,9 @@ import com.vztekoverflow.bacil.runtime.BACILMethod;
 import com.vztekoverflow.bacil.runtime.types.builtin.*;
 import com.vztekoverflow.bacil.runtime.types.locations.LocationsDescriptor;
 import com.vztekoverflow.bacil.runtime.types.locations.LocationsHolder;
+import com.vztekoverflow.bacil.runtime.types.locations.VtableSlotIdentity;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -36,6 +39,11 @@ public class NamedType extends Type {
     private final CLIComponent definingComponent;
 
     private final static byte[] CCTOR_SIGNATURE = new byte[] {0, 0, 1};
+
+    @CompilerDirectives.CompilationFinal(dimensions = 1)
+    private VtableSlotIdentity[] vtableSlots;
+    @CompilerDirectives.CompilationFinal(dimensions = 1)
+    private BACILMethod[] vtable;
 
 
     protected NamedType(CLITypeDefTableRow type, CLIComponent component)
@@ -68,6 +76,8 @@ public class NamedType extends Type {
 
     }
 
+
+
     public void init()
     {
         if(!inited)
@@ -87,16 +97,16 @@ public class NamedType extends Type {
 
             int instanceFieldsCount = 0;
             int staticFieldsCount = 0;
-            CLIFieldTableRow curr = fieldRows;
+            CLIFieldTableRow currField = fieldRows;
             for(int i = 0; i < totalFields; i++)
             {
-                if((curr.getFlags() & TypedField.FIELD_ATTRIBUTE_STATIC) != 0)
+                if((currField.getFlags() & TypedField.FIELD_ATTRIBUTE_STATIC) != 0)
                 {
                     staticFieldsCount++;
                 } else {
                     instanceFieldsCount++;
                 }
-                curr = curr.next();
+                currField = currField.next();
             }
 
             instanceFields = new TypedField[instanceFieldsCount];
@@ -110,22 +120,66 @@ public class NamedType extends Type {
                 parentInstanceFields = extendz.instanceFieldsDescriptor.getSize();
             }
 
-            curr = fieldRows;
+            currField = fieldRows;
             for(int i = 0; i < totalFields; i++) {
                 TypedField field;
-                if ((curr.getFlags() & TypedField.FIELD_ATTRIBUTE_STATIC) != 0) {
-                    field = new TypedField(curr.getFlags(), curr.getName().read(definingComponent.getStringHeap()), FieldSig.read(curr.getSignature().read(definingComponent.getBlobHeap()), definingComponent), staticFieldsIndex);
+                if ((currField.getFlags() & TypedField.FIELD_ATTRIBUTE_STATIC) != 0) {
+                    field = new TypedField(currField.getFlags(), currField.getName().read(definingComponent.getStringHeap()), FieldSig.read(currField.getSignature().read(definingComponent.getBlobHeap()), definingComponent), staticFieldsIndex);
                     staticFields[staticFieldsIndex++] = field;
                 } else {
-                    field = new TypedField(curr.getFlags(), curr.getName().read(definingComponent.getStringHeap()), FieldSig.read(curr.getSignature().read(definingComponent.getBlobHeap()), definingComponent), instanceFieldsIndex+parentInstanceFields);
+                    field = new TypedField(currField.getFlags(), currField.getName().read(definingComponent.getStringHeap()), FieldSig.read(currField.getSignature().read(definingComponent.getBlobHeap()), definingComponent), instanceFieldsIndex+parentInstanceFields);
                     instanceFields[instanceFieldsIndex++] = field;
                 }
                 allFields[i] = field;
-                curr = curr.next();
+                currField = currField.next();
             }
             this.instanceFieldsDescriptor = LocationsDescriptor.forFields(extendz == null ? null : extendz.instanceFieldsDescriptor, instanceFields);
             this.staticFieldsDescriptor = LocationsDescriptor.forFields(staticFields);
             this.staticFieldsHolder = LocationsHolder.forDescriptor(staticFieldsDescriptor);
+
+            //Create vtable slots
+            //TODO respect NewSlot/ReuseSlot flags
+
+            ArrayList<VtableSlotIdentity> identities = new ArrayList<VtableSlotIdentity>();
+            ArrayList<BACILMethod> vtableList = new ArrayList<BACILMethod>();
+            if(extendz != null && extendz.getVtableSlots() != null)
+            {
+                identities.addAll(Arrays.asList(extendz.getVtableSlots()));
+                vtableList.addAll(Arrays.asList(extendz.getVtable()));
+            }
+
+
+            CLIMethodDefTableRow currMethod = methods;
+
+            while(currMethod.getRowNo() < methodsEnd)
+            {
+                if((currMethod.getFlags() & CILMethod.METHODATTRIBUTE_VIRTUAL) == CILMethod.METHODATTRIBUTE_VIRTUAL)
+                {
+                    BACILMethod virtualMethod = definingComponent.getLocalMethod(currMethod, this);
+                    boolean found = false;
+                    for(int i = 0; i<identities.size(); i++)
+                    {
+                        if(identities.get(i).resolves(virtualMethod))
+                        {
+                            vtableList.set(i, virtualMethod);
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if(!found)
+                    {
+                        //New vtable slot
+                        identities.add(new VtableSlotIdentity(virtualMethod.getName(), virtualMethod.getSignature()));
+                        vtableList.add(virtualMethod);
+                    }
+                }
+
+                currMethod = currMethod.next();
+            }
+
+            vtableSlots = identities.toArray(new VtableSlotIdentity[0]);
+            vtable = vtableList.toArray(new BACILMethod[0]);
 
             BACILMethod cctor = getMemberMethod(".cctor", CCTOR_SIGNATURE);
             if(cctor != null)
@@ -267,4 +321,15 @@ public class NamedType extends Type {
     public String getNamespace() {
         return namespace;
     }
+
+    @Override
+    public VtableSlotIdentity[] getVtableSlots() {
+        return vtableSlots;
+    }
+
+    @Override
+    public BACILMethod[] getVtable() {
+        return vtable;
+    }
 }
+

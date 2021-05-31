@@ -29,4 +29,9 @@ public abstract class JavaMethod extends RootNode implements BACILMethod {
     public boolean isVirtual() {
         return false;
     }
+
+    @Override
+    public byte[] getSignature() {
+        return new byte[0];
+    }
 }

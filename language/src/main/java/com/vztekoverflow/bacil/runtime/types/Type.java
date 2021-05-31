@@ -11,6 +11,7 @@ import com.vztekoverflow.bacil.runtime.LocationReference;
 import com.vztekoverflow.bacil.runtime.StaticObject;
 import com.vztekoverflow.bacil.runtime.types.locations.LocationsDescriptor;
 import com.vztekoverflow.bacil.runtime.types.locations.LocationsHolder;
+import com.vztekoverflow.bacil.runtime.types.locations.VtableSlotIdentity;
 
 import java.util.List;
 
@@ -152,6 +153,14 @@ public abstract class Type {
                 return f;
             }
         }
+        return null;
+    }
+
+    public VtableSlotIdentity[] getVtableSlots() {
+        return null;
+    }
+
+    public BACILMethod[] getVtable() {
         return null;
     }
 

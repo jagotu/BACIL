@@ -498,7 +498,7 @@ public class BytecodeNode extends Node {
                 BACILMethod targetMethod = method.getComponent().getMethod(token, lookupContextReference(BACILLanguage.class).get());
                 if(targetMethod.isVirtual())
                 {
-                    throw new BACILInternalError("Calling virtual methods not supported.");
+                    node = new VirtualCallNode(targetMethod, top);
                 } else {
                     node = new NonvirtualCallNode(targetMethod, top);
                 }
