@@ -297,6 +297,8 @@ public class BytecodeInstructions {
         def(LDLOC_S, "ldloc.s", "bi", 1);
         def(LDLOCA_S, "ldloca.s", "bi", 1);
 
+        def(LDTOKEN, "ldtoken", "btttt", 1);
+
 
 
         def(STLOC_0, "stloc.0", "b", -1);

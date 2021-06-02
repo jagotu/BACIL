@@ -213,7 +213,7 @@ public class CLIComponent extends BACILComponent {
                     MethodDefSig.read(memberRef.getSignature().read(blobHeap), this),
                     type);
         }
-        return type.getMemberMethod(memberRef.getName().read(stringHeap), memberRef.getSignature().read(blobHeap));
+        return type.getMemberMethod(memberRef.getName().read(stringHeap), MethodDefSig.read(memberRef.getSignature().read(blobHeap), this));
     }
 
 

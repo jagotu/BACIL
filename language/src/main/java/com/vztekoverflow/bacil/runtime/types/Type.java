@@ -6,6 +6,7 @@ import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLIMemberRefTableRow;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableConstants;
+import com.vztekoverflow.bacil.parser.signatures.MethodDefSig;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
 import com.vztekoverflow.bacil.runtime.LocationReference;
 import com.vztekoverflow.bacil.runtime.StaticObject;
@@ -83,7 +84,7 @@ public abstract class Type {
 
     public abstract Type getDirectBaseClass();
 
-    public abstract BACILMethod getMemberMethod(String name, byte[] signature);
+    public abstract BACILMethod getMemberMethod(String name, MethodDefSig signature);
 
     public abstract boolean isByRef();
 

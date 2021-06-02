@@ -201,8 +201,8 @@ public class CILMethod implements BACILMethod {
     }
 
     @Override
-    public byte[] getSignature() {
-        return methodDef.getSignature().read(component.getBlobHeap());
+    public MethodDefSig getSignature() {
+        return MethodDefSig.read(methodDef.getSignature().read(component.getBlobHeap()), component);
     }
 
     @Override

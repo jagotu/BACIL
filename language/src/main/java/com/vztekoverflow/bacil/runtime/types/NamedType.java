@@ -10,6 +10,7 @@ import com.vztekoverflow.bacil.parser.cli.tables.generated.CLIMethodDefTableRow;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableConstants;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITypeDefTableRow;
 import com.vztekoverflow.bacil.parser.signatures.FieldSig;
+import com.vztekoverflow.bacil.parser.signatures.MethodDefSig;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
 import com.vztekoverflow.bacil.runtime.types.builtin.*;
 import com.vztekoverflow.bacil.runtime.types.locations.LocationsDescriptor;
@@ -37,8 +38,6 @@ public class NamedType extends Type {
 
 
     private final CLIComponent definingComponent;
-
-    private final static byte[] CCTOR_SIGNATURE = new byte[] {0, 0, 1};
 
     @CompilerDirectives.CompilationFinal(dimensions = 1)
     private VtableSlotIdentity[] vtableSlots;
@@ -181,6 +180,8 @@ public class NamedType extends Type {
             vtableSlots = identities.toArray(new VtableSlotIdentity[0]);
             vtable = vtableList.toArray(new BACILMethod[0]);
 
+            MethodDefSig CCTOR_SIGNATURE = new MethodDefSig(false, false, (byte)0, 0, definingComponent.getBuiltinTypes().getVoidType(), new Type[0]);
+
             BACILMethod cctor = getMemberMethod(".cctor", CCTOR_SIGNATURE);
             if(cctor != null)
             {
@@ -217,7 +218,7 @@ public class NamedType extends Type {
     }
 
     @Override
-    public BACILMethod getMemberMethod(String name, byte[] signature) {
+    public BACILMethod getMemberMethod(String name, MethodDefSig signature) {
         CompilerAsserts.neverPartOfCompilation();
 
         CLIMethodDefTableRow curr = methods;
@@ -226,7 +227,8 @@ public class NamedType extends Type {
 
         while(curr.getRowNo() < methodsEnd)
         {
-            if(curr.getName().read(definingComponent.getStringHeap()).equals(name) && Arrays.equals(curr.getSignature().read(definingComponent.getBlobHeap()), signature))
+            if(curr.getName().read(definingComponent.getStringHeap()).equals(name)
+                    && MethodDefSig.read(curr.getSignature().read(definingComponent.getBlobHeap()), definingComponent).compatibleWith(signature))
                 return definingComponent.getLocalMethod(curr, this);
 
             curr = curr.next();

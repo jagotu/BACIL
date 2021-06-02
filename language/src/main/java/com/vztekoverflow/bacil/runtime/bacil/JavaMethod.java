@@ -5,6 +5,7 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.RootNode;
+import com.vztekoverflow.bacil.parser.signatures.MethodDefSig;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
 
 public abstract class JavaMethod extends RootNode implements BACILMethod {
@@ -31,7 +32,7 @@ public abstract class JavaMethod extends RootNode implements BACILMethod {
     }
 
     @Override
-    public byte[] getSignature() {
-        return new byte[0];
+    public MethodDefSig getSignature() {
+        return null;
     }
 }

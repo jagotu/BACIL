@@ -3,6 +3,7 @@ package com.vztekoverflow.bacil.runtime.bacil;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.bacil.BACILInternalError;
 import com.vztekoverflow.bacil.BACILLanguage;
+import com.vztekoverflow.bacil.parser.signatures.MethodDefSig;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
 import com.vztekoverflow.bacil.runtime.types.CustomMod;
 import com.vztekoverflow.bacil.runtime.types.Type;
@@ -31,7 +32,7 @@ public class BACILConsoleType extends Type {
     }
 
     @Override
-    public BACILMethod getMemberMethod(String name, byte[] signature) {
+    public BACILMethod getMemberMethod(String name, MethodDefSig signature) {
         for (JavaMethod method : methods)
         {
             if(name.equals(method.getName()))

@@ -2,6 +2,7 @@ package com.vztekoverflow.bacil.runtime.types;
 
 import com.vztekoverflow.bacil.parser.cil.CILMethod;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
+import com.vztekoverflow.bacil.parser.signatures.MethodDefSig;
 import com.vztekoverflow.bacil.parser.signatures.SignatureReader;
 import com.vztekoverflow.bacil.parser.signatures.SignatureType;
 
@@ -38,7 +39,7 @@ public class SZArrayType extends Type {
     }
 
     @Override
-    public CILMethod getMemberMethod(String name, byte[] signature) {
+    public CILMethod getMemberMethod(String name, MethodDefSig signature) {
         return null;
     }
 

@@ -96,4 +96,26 @@ public class MethodDefSig {
     public Type[] getParamTypes() {
         return paramTypes;
     }
+
+    public boolean compatibleWith(MethodDefSig other)
+    {
+        //TODO for types it should check assignable-to, not equality
+        if(this.hasThis != other.hasThis ||
+                this.explicitThis != other.explicitThis ||
+                this.retType != other.retType ||
+                this.genParamCount != other.genParamCount ||
+                this.callingConvention != other.callingConvention ||
+                this.paramTypes.length != other.paramTypes.length)
+        {
+            return false;
+        }
+
+        for (int i = 0; i<paramTypes.length; i++) {
+            if(this.paramTypes[i] != other.paramTypes[i])
+            {
+                return false;
+            }
+        }
+        return true;
+    }
 }

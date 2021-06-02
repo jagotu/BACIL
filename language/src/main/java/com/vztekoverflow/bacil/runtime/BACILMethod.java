@@ -1,6 +1,7 @@
 package com.vztekoverflow.bacil.runtime;
 
 import com.oracle.truffle.api.CallTarget;
+import com.vztekoverflow.bacil.parser.signatures.MethodDefSig;
 import com.vztekoverflow.bacil.runtime.types.Type;
 
 public interface BACILMethod {
@@ -20,5 +21,5 @@ public interface BACILMethod {
 
     public boolean isVirtual();
 
-    public byte[] getSignature();
+    public MethodDefSig getSignature();
 }

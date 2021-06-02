@@ -1,5 +1,6 @@
 package com.vztekoverflow.bacil.runtime.types;
 
+import com.vztekoverflow.bacil.parser.signatures.MethodDefSig;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
 
 import java.util.List;
@@ -22,7 +23,8 @@ public class ByRefWrapped extends Type {
     }
 
     @Override
-    public BACILMethod getMemberMethod(String name, byte[] signature) {
+    public BACILMethod getMemberMethod(String name, MethodDefSig
+            signature) {
         return inner.getMemberMethod(name, signature);
     }
 

@@ -175,6 +175,9 @@ public class BytecodeNode extends Node {
                 case LDARGA_S:
                     refs[top] = getLocalReference(descriptor, locations,varsCount + bytecodeBuffer.getImmUByte(pc)); break;
 
+                case LDTOKEN:
+                    refs[top] = bytecodeBuffer.getImmToken(pc); break;
+
                 case STARG_S:
                     storeStack(primitives, refs, top-1, descriptor, locations, varsCount + bytecodeBuffer.getImmUByte(pc)); break;
 

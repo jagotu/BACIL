@@ -1,14 +1,13 @@
 package com.vztekoverflow.bacil.runtime.types.locations;
 
+import com.vztekoverflow.bacil.parser.signatures.MethodDefSig;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
-
-import java.util.Arrays;
 
 public class VtableSlotIdentity {
     private final String name;
-    private final byte[] signature;
+    private final MethodDefSig signature;
 
-    public VtableSlotIdentity(String name, byte[] signature) {
+    public VtableSlotIdentity(String name, MethodDefSig signature) {
         this.name = name;
         this.signature = signature;
     }
@@ -17,13 +16,13 @@ public class VtableSlotIdentity {
         return name;
     }
 
-    public byte[] getSignature() {
+    public MethodDefSig getSignature() {
         return signature;
     }
 
     public boolean resolves(BACILMethod method)
     {
         return name.equals(method.getName()) &&
-                Arrays.equals(method.getSignature(), signature);
+                signature.compatibleWith(method.getSignature());
     }
 }
