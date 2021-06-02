@@ -12,6 +12,7 @@ public class VirtualCallNode extends CallableNode {
 
     protected final int slot;
     protected final int top;
+    protected final BACILMethod rootMethod;
 
     public VirtualCallNode(BACILMethod method, int top) {
         Type t = method.getDefiningType();
@@ -32,6 +33,7 @@ public class VirtualCallNode extends CallableNode {
 
         this.slot = foundSlot;
         this.top = top;
+        this.rootMethod = method;
     }
 
     @Override
@@ -39,10 +41,10 @@ public class VirtualCallNode extends CallableNode {
         StaticObject obj = (StaticObject)refs[top-1];
         BACILMethod method = obj.getType().getVtable()[slot];
 
-        Object[] args = BytecodeNode.prepareArgs(primitives, refs, top, method, 0);
+        Object[] args = BytecodeNode.prepareArgs(primitives, refs, top, rootMethod, 0);
         Object returnValue = method.getMethodCallTarget().call(args);
-        Type returnType = method.getRetType();
-        final int firstArg = top - method.getArgsCount();
+        Type returnType = rootMethod.getRetType();
+        final int firstArg = top - rootMethod.getArgsCount();
 
         if(!(returnType instanceof SystemVoidType))
         {
