@@ -14,10 +14,11 @@ import com.vztekoverflow.bacil.parser.cli.tables.CLITables;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablesHeader;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.*;
 import com.vztekoverflow.bacil.parser.pe.PEFile;
+import com.vztekoverflow.bacil.parser.signatures.MethodDefSig;
 import com.vztekoverflow.bacil.runtime.BACILContext;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
 import com.vztekoverflow.bacil.runtime.bacil.BACILComponent;
-import com.vztekoverflow.bacil.runtime.bacil.BACILConsoleWriteMethod;
+import com.vztekoverflow.bacil.runtime.bacil.MethodStub;
 import com.vztekoverflow.bacil.runtime.bacil.internalcall.InternalCallFinder;
 import com.vztekoverflow.bacil.runtime.types.NamedType;
 import com.vztekoverflow.bacil.runtime.types.Type;
@@ -206,11 +207,11 @@ public class CLIComponent extends BACILComponent {
         CLITypeRefTableRow typeRef = getTableHeads().getTypeRefTableHead().skip(memberRef.getKlass());
         Type type = getForeignType(typeRef);
 
-        //HACK for writeline support
-        //Does not actually work as it will not recieve boxed objects
-        if(memberRef.getName().read(stringHeap).equals("WriteLine"))
+        if(context.isStubbed(memberRef.getName().read(stringHeap)))
         {
-            return new BACILConsoleWriteMethod(getBuiltinTypes(), getLanguage(), type);
+            return new MethodStub(getBuiltinTypes(), getLanguage(),
+                    MethodDefSig.read(memberRef.getSignature().read(blobHeap), this),
+                    type);
         }
         return type.getMemberMethod(memberRef.getName().read(stringHeap), memberRef.getSignature().read(blobHeap));
     }

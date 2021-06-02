@@ -42,11 +42,15 @@ public class BACILContext {
         return env;
     }
 
+    @CompilerDirectives.CompilationFinal(dimensions = 1)
+    private final String[] stubbedMethods;
+
     public BACILContext(BACILLanguage language, TruffleLanguage.Env env) {
         this.language = language;
         this.env = env;
 
         addLibraryPaths(BACILEngineOption.getPolyglotOptionSearchPaths(env));
+        this.stubbedMethods = BACILEngineOption.getPolyglotOptionStubbedMethods(env);
 
     }
 
@@ -152,5 +156,17 @@ public class BACILContext {
 
     public BuiltinTypes getBuiltinTypes() {
         return builtinTypes;
+    }
+
+    public boolean isStubbed(String methodName)
+    {
+        for (String possibility : stubbedMethods)
+        {
+            if(possibility.equals(methodName))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }
