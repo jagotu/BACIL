@@ -15,6 +15,8 @@ import com.vztekoverflow.bacil.parser.cli.tables.CLITablesHeader;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.*;
 import com.vztekoverflow.bacil.parser.pe.PEFile;
 import com.vztekoverflow.bacil.parser.signatures.MethodDefSig;
+import com.vztekoverflow.bacil.parser.signatures.SignatureReader;
+import com.vztekoverflow.bacil.parser.signatures.SignatureType;
 import com.vztekoverflow.bacil.runtime.BACILContext;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
 import com.vztekoverflow.bacil.runtime.bacil.BACILComponent;
@@ -379,6 +381,18 @@ public class CLIComponent extends BACILComponent {
         return localDefTypes[typeDef.getRowNo()-1];
     }
 
+    public Type getLocalType(CLITypeSpecTableRow typeSpec)
+    {
+        if(localSpecTypes[typeSpec.getRowNo()-1] == null)
+        {
+            CompilerAsserts.neverPartOfCompilation();
+            SignatureReader reader = new SignatureReader(typeSpec.getSignature().read(blobHeap));
+            localSpecTypes[typeSpec.getRowNo()-1] = SignatureType.read(reader, this);
+        }
+        return localSpecTypes[typeSpec.getRowNo()-1];
+    }
+
+
     public Type getLocalType(CLITablePtr ptr)
     {
         if(ptr.getTableId() == CLITableConstants.CLI_TABLE_TYPE_DEF)
@@ -386,8 +400,7 @@ public class CLIComponent extends BACILComponent {
             return getLocalType(tables.getTableHeads().getTypeDefTableHead().skip(ptr));
         } else if (ptr.getTableId() == CLITableConstants.CLI_TABLE_TYPE_SPEC)
         {
-            CompilerDirectives.transferToInterpreterAndInvalidate();
-            throw new BACILInternalError("Not yet implemented!");
+            return getLocalType(tables.getTableHeads().getTypeSpecTableHead().skip(ptr));
         } else {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILInternalError("Unexpected ptr to table " + ptr.getTableId());
