@@ -10,6 +10,7 @@ import com.vztekoverflow.bacil.BACILLanguage;
 import com.vztekoverflow.bacil.bytecode.BytecodeBuffer;
 import com.vztekoverflow.bacil.bytecode.BytecodeInstructions;
 import com.vztekoverflow.bacil.parser.cil.CILMethod;
+import com.vztekoverflow.bacil.parser.cli.tables.CLIComponentTablePtr;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.parser.cli.tables.CLIUSHeapPtr;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLIMemberRefTableRow;
@@ -176,7 +177,7 @@ public class BytecodeNode extends Node {
                     refs[top] = getLocalReference(descriptor, locations,varsCount + bytecodeBuffer.getImmUByte(pc)); break;
 
                 case LDTOKEN:
-                    refs[top] = bytecodeBuffer.getImmToken(pc); break;
+                    refs[top] = new CLIComponentTablePtr(bytecodeBuffer.getImmToken(pc), method.getComponent()); break;
 
                 case STARG_S:
                     storeStack(primitives, refs, top-1, descriptor, locations, varsCount + bytecodeBuffer.getImmUByte(pc)); break;
