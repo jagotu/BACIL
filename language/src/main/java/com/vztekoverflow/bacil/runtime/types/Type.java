@@ -136,12 +136,12 @@ public abstract class Type {
 
     public LocationReference getStaticFieldReference(TypedField field)
     {
-        return new LocationReference(staticFieldsHolder, field.getOffset());
+        return new LocationReference(staticFieldsHolder, field.getOffset(), field.getType());
     }
 
     public LocationReference getInstanceFieldReference(TypedField field, StaticObject object)
     {
-        return new LocationReference(object.getFieldsHolder(), field.getOffset());
+        return new LocationReference(object.getFieldsHolder(), field.getOffset(), field.getType());
     }
 
 

@@ -38,7 +38,7 @@ public class BytecodeNode extends Node {
 
 
 
-    @Children private CallableNode[] nodes = new CallableNode[0];
+    @Children private ExecutionStackAwareNode[] nodes = new ExecutionStackAwareNode[0];
 
     public BytecodeNode(CILMethod method, byte[] bytecode)
     {
@@ -390,7 +390,7 @@ public class BytecodeNode extends Node {
 
     public static LocationReference getLocalReference(LocationsDescriptor descriptor, LocationsHolder holder, int index)
     {
-        return new LocationReference(holder, descriptor.getOffset(index));
+        return new LocationReference(holder, descriptor.getOffset(index), descriptor.getType(index));
     }
 
     @ExplodeLoop
@@ -437,7 +437,7 @@ public class BytecodeNode extends Node {
         return args;
     }
 
-    private int addNode(CallableNode node)
+    private int addNode(ExecutionStackAwareNode node)
     {
         CompilerAsserts.neverPartOfCompilation();
         nodes = Arrays.copyOf(nodes, nodes.length + 1);
@@ -459,6 +459,8 @@ public class BytecodeNode extends Node {
 
     public static void loadArrayElem(Type elementType, long[] primitives, Object[] refs, int top)
     {
+        //Breaks standard: We should also support native int here, but for us
+        //native int is 64-bit, and Java arrays only use 32-bit indexers.
         if(refs[top-1] != ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
         {
             CompilerDirectives.transferToInterpreterAndInvalidate();
@@ -492,7 +494,7 @@ public class BytecodeNode extends Node {
 
         CompilerDirectives.transferToInterpreterAndInvalidate(); // because we are about to change something that is compilation final
 
-        final CallableNode node;
+        final ExecutionStackAwareNode node;
         switch (opcode)
         {
             case CALL:
@@ -536,7 +538,7 @@ public class BytecodeNode extends Node {
     {
         CompilerDirectives.transferToInterpreterAndInvalidate(); // because we are about to change something that is compi
 
-        final CallableNode node;
+        final ExecutionStackAwareNode node;
         switch (opcode)
         {
             case LDELEM:
@@ -577,7 +579,7 @@ public class BytecodeNode extends Node {
         definingType.init();
 
 
-        final CallableNode node;
+        final ExecutionStackAwareNode node;
         switch (opcode)
         {
             case STFLD:
@@ -1089,11 +1091,13 @@ public class BytecodeNode extends Node {
 
     public static void loadIndirect(long[] primitives, Object[] refs, int slot, LocationReference locationReference, Type type)
     {
+        //type safety check should be here, comparing compatibility of the reference type and the type from the instruction
         type.locationToStack(locationReference.getHolder(), locationReference.getHolderOffset(), refs, primitives, slot);
     }
 
     public static void storeIndirect(long primitive, Object ref, LocationReference locationReference, Type type)
     {
+        //type safety check should be here, comparing compatibility of the reference type and the type from the instruction
         type.stackToLocation(locationReference.getHolder(), locationReference.getHolderOffset(), ref, primitive);
     }
 

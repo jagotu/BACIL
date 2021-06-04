@@ -8,12 +8,24 @@ import com.vztekoverflow.bacil.runtime.StaticObject;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.TypedField;
 
-public class StfldNode extends CallableNode {
+/**
+ * A Truffle node representing the stfld instruction.
+ * (III.4.28 stfld – store into a field of an object)
+ * Stores the resolved object type and the field from the instruction.
+ */
+public class StfldNode extends ExecutionStackAwareNode {
 
     private final TypedField field;
     private final Type objType;
     private final int top;
 
+    /**
+     * Create a new node representing the stfld instruction.
+     * @param token token representing the field, pointing to either member_ref or field tables
+     * @param callingComponent the {@link CLIComponent} where the instruction is
+     * @param top stack top when running this instruction
+     * @param objType resolved type where the field is defined
+     */
     public StfldNode(CLITablePtr token, CLIComponent callingComponent, int top, Type objType) {
         this.top = top;
         this.objType = objType;

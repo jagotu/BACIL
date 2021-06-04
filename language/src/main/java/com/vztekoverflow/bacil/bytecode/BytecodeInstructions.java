@@ -7,6 +7,7 @@ import static com.vztekoverflow.bacil.runtime.ExecutionStackPrimitiveMarker.*;
 
 public class BytecodeInstructions {
 
+    //Instruction constants
     public static final int NOP = 0x00;
     public static final int BREAK = 0x01;
     public static final int LDARG_0 = 0x02;
@@ -207,11 +208,6 @@ public class BytecodeInstructions {
     public static final int MAX = 0xE0;
     public static final int PREFIXED = 0xFE;
 
-    public static final int TRUFFLE_NODE = 0xF0; //allowed by III.1.2.1
-    public static final int BACIL_LDFLD = 0xF1;
-    public static final int BACIL_STFLD = 0xF2;
-
-
     public static final int CEQ = 0xFE01;
     public static final int CGT = 0xFE02;
     public static final int CGT_UN = 0xFE03;
@@ -219,296 +215,292 @@ public class BytecodeInstructions {
     public static final int CLT_UN = 0xFE05;
 
 
+    //Custom truffle instructions start here
+    //Allowed by III.1.2.1:
+    //> Opcodes whose first byte lies in the range 0xF0 through 0xFB
+    //> inclusive, are available for experimental purposes.
+    public static final int TRUFFLE_NODE = 0xF0; //Used to replace nodeized instructions
 
 
 
     /**
-     * An array that maps from a bytecode value to a {@link String} for the corresponding
+     * An array that maps from an opcode value to a {@link String} for the corresponding
      * instruction mnemonic.
      */
     @CompilationFinal(dimensions = 1) private static final String[] nameArray = new String[256];
 
     /**
-     * An array that maps from a bytecode value to the set of {@link Flags} for the corresponding
-     * instruction.
-     */
-    @CompilationFinal(dimensions = 1) private static final int[] flagsArray = new int[256];
-
-    /**
-     * An array that maps from a bytecode value to the length in bytes for the corresponding
+     * An array that maps from an opcode value to the length in bytes for the corresponding
      * instruction.
      */
     @CompilationFinal(dimensions = 1) private static final int[] lengthArray = new int[256];
 
     /**
-     * An array that maps from a bytecode value to the number of slots pushed on the stack by the
+     * An array that maps from an opcode value to the number of slots pushed on the stack by the
      * corresponding instruction.
+     *
+     * For dynamic instructions (like function calls), 0 should be used.
      */
     @CompilationFinal(dimensions = 1) private static final int[] stackEffectArray = new int[256];
 
 
+    /**
+     * An array that maps from a prefixed opcode value to a {@link String} for the corresponding
+     * instruction mnemonic.
+     */
     @CompilationFinal(dimensions = 1) private static final String[] prefixedNameArray = new String[256];
 
     /**
-     * An array that maps from a bytecode value to the set of {@link Flags} for the corresponding
-     * instruction.
-     */
-    @CompilationFinal(dimensions = 1) private static final int[] prefixedFlagsArray = new int[256];
-
-    /**
-     * An array that maps from a bytecode value to the length in bytes for the corresponding
+     * An array that maps from a prefixed opcode value to the length in bytes for the corresponding
      * instruction.
      */
     @CompilationFinal(dimensions = 1) private static final int[] prefixedLengthArray = new int[256];
 
     /**
-     * An array that maps from a bytecode value to the number of slots pushed on the stack by the
+     * An array that maps from a prefixed opcode value to the number of slots pushed on the stack by the
      * corresponding instruction.
+     *
+     * For dynamic instructions (like function calls), 0 should be used.
      */
     @CompilationFinal(dimensions = 1) private static final int[] prefixedStackEffectArray = new int[256];
 
 
     static {
-        def(NOP, "nop", "b", 0);
+        //Defining instructions with names, formats and stackEffects.
+        //The format string is currently only used to calculate the length,
+        //each letter representing one byte.
+        //
+        //o = opcode
+        //i = immediate
+        //t = token
+        def(NOP, "nop", "o", 0);
 
-        def(LDNULL, "ldnull", "b", 1);
-        def(LDC_I4_0, "ldc.i4.0", "b", 1);
-        def(LDC_I4_1, "ldc.i4.1", "b", 1);
-        def(LDC_I4_2, "ldc.i4.2", "b", 1);
-        def(LDC_I4_3, "ldc.i4.3", "b", 1);
-        def(LDC_I4_4, "ldc.i4.4", "b", 1);
-        def(LDC_I4_5, "ldc.i4.5", "b", 1);
-        def(LDC_I4_6, "ldc.i4.6", "b", 1);
-        def(LDC_I4_7, "ldc.i4.7", "b", 1);
-        def(LDC_I4_8, "ldc.i4.8", "b", 1);
-        def(LDC_I4_M1, "ldc.i4.m1", "b", 1);
-        def(LDC_I4, "ldc.i4", "biiii", 1);
-        def(LDC_I8, "ldc.i8", "biiiiiiii", 1);
-        def(LDC_R4, "ldc.r4", "biiii", 1);
-        def(LDC_R8, "ldc.r8", "biiiiiiii", 1);
-        def(LDC_I4_S, "ldc.i4.s", "bi", 1);
+        def(LDNULL, "ldnull", "o", 1);
+        def(LDC_I4_0, "ldc.i4.0", "o", 1);
+        def(LDC_I4_1, "ldc.i4.1", "o", 1);
+        def(LDC_I4_2, "ldc.i4.2", "o", 1);
+        def(LDC_I4_3, "ldc.i4.3", "o", 1);
+        def(LDC_I4_4, "ldc.i4.4", "o", 1);
+        def(LDC_I4_5, "ldc.i4.5", "o", 1);
+        def(LDC_I4_6, "ldc.i4.6", "o", 1);
+        def(LDC_I4_7, "ldc.i4.7", "o", 1);
+        def(LDC_I4_8, "ldc.i4.8", "o", 1);
+        def(LDC_I4_M1, "ldc.i4.m1", "o", 1);
+        def(LDC_I4, "ldc.i4", "oiiii", 1);
+        def(LDC_I8, "ldc.i8", "oiiiiiiii", 1);
+        def(LDC_R4, "ldc.r4", "oiiii", 1);
+        def(LDC_R8, "ldc.r8", "oiiiiiiii", 1);
+        def(LDC_I4_S, "ldc.i4.s", "oi", 1);
 
-        def(LDSTR, "ldstr", "btttt", 0);
+        def(LDSTR, "ldstr", "otttt", 0);
 
-        def(LDLOC_0, "ldloc.0", "b", 1);
-        def(LDLOC_1, "ldloc.1", "b", 1);
-        def(LDLOC_2, "ldloc.2", "b", 1);
-        def(LDLOC_3, "ldloc.3", "b", 1);
-        def(LDLOC_S, "ldloc.s", "bi", 1);
-        def(LDLOCA_S, "ldloca.s", "bi", 1);
+        def(LDLOC_0, "ldloc.0", "o", 1);
+        def(LDLOC_1, "ldloc.1", "o", 1);
+        def(LDLOC_2, "ldloc.2", "o", 1);
+        def(LDLOC_3, "ldloc.3", "o", 1);
+        def(LDLOC_S, "ldloc.s", "oi", 1);
+        def(LDLOCA_S, "ldloca.s", "oi", 1);
 
-        def(LDTOKEN, "ldtoken", "btttt", 1);
-
-
-
-        def(STLOC_0, "stloc.0", "b", -1);
-        def(STLOC_1, "stloc.1", "b", -1);
-        def(STLOC_2, "stloc.2", "b", -1);
-        def(STLOC_3, "stloc.3", "b", -1);
-        def(STLOC_S, "stloc.s", "bi", -1);
-
-        def(LDARG_0, "ldarg.0", "b", 1);
-        def(LDARG_1, "ldarg.1", "b", 1);
-        def(LDARG_2, "ldarg.2", "b", 1);
-        def(LDARG_3, "ldarg.3", "b", 1);
-        def(LDARG_S, "ldarg.s", "bi", 1);
-        def(LDARGA_S, "ldarga.s", "bi", 1);
-
-        def(STARG_S, "starg.s", "bi", -1);
-
-        def(LDIND_I1, "ldind.i1", "b", 0);
-        def(LDIND_U1, "ldind.u1", "b", 0);
-        def(LDIND_I2, "ldind.i2", "b", 0);
-        def(LDIND_U2, "ldind.u2", "b", 0);
-        def(LDIND_I4, "ldind.i4", "b", 0);
-        def(LDIND_U4, "ldind.u4", "b", 0);
-        def(LDIND_I8, "ldind.i8", "b", 0);
-        def(LDIND_I, "ldind.i", "b", 0);
-        def(LDIND_R4, "ldind.r4", "b", 0);
-        def(LDIND_R8, "ldind.r8", "b", 0);
-        def(LDIND_REF, "ldind.ref", "b", 0);
-
-        def(STIND_I1, "stind.i1", "b", -2);
-        def(STIND_I2, "stind.i2", "b", -2);
-        def(STIND_I4, "stind.i4", "b", -2);
-        def(STIND_I8, "stind.i8", "b", -2);
-        def(STIND_I, "stind.i", "b", -2);
-        def(STIND_R4, "stind.r4", "b", -2);
-        def(STIND_R8, "stind.r8", "b", -2);
-        def(STIND_REF, "stind.ref", "b", -2);
-
-        def(STFLD, "stfld", "btttt", 0);
-        def(LDFLD, "ldfld", "btttt", 0);
-        def(LDSFLD, "ldsfld", "btttt", 0);
-        def(STSFLD, "stsfld", "btttt", 0);
-        def(LDFLDA, "ldflda", "btttt", 0);
-        def(LDSFLDA, "ldsfdla", "btttt", 0);
-
-        def(LDELEM, "ldelem", "btttt", 0);
-        def(LDELEM_I1,  "ldelem.i1", "b", -1);
-        def(LDELEM_U1,  "ldelem.u1", "b", -1);
-        def(LDELEM_I2,  "ldelem.i2", "b", -1);
-        def(LDELEM_U2,  "ldelem.u2", "b", -1);
-        def(LDELEM_I4,  "ldelem.i4", "b", -1);
-        def(LDELEM_U4,  "ldelem.u4", "b", -1);
-        def(LDELEM_I8,  "ldelem.i8", "b", -1);
-        def(LDELEM_I,   "ldelem.i", "b", -1);
-        def(LDELEM_R4,  "ldelem.r4", "b", -1);
-        def(LDELEM_R8,  "ldelem.r8", "b", -1);
-        def(LDELEM_REF, "ldelem.ref", "b", -1);
-
-        def(STELEM,     "stelem", "btttt", 0);
-        def(STELEM_I1,  "stelem.i1", "b", -3);
-        def(STELEM_I2,  "stelem.i2", "b", -3);
-        def(STELEM_I4,  "stelem.i4", "b", -3);
-        def(STELEM_I8,  "stelem.i8", "b", -3);
-        def(STELEM_I,   "stelem.i", "b", -3);
-        def(STELEM_R4,  "stelem.r4", "b", -3);
-        def(STELEM_R8,  "stelem.r8", "b", -3);
-        def(STELEM_REF, "stelem.ref", "b", -3);
-
-        def(LDELEMA, "ldelema", "btttt", 0);
-
-
-        def(DUP, "dup", "b", 1);
-
-        def(POP, "pop", "b", -1);
+        def(LDTOKEN, "ldtoken", "otttt", 1);
 
 
 
+        def(STLOC_0, "stloc.0", "o", -1);
+        def(STLOC_1, "stloc.1", "o", -1);
+        def(STLOC_2, "stloc.2", "o", -1);
+        def(STLOC_3, "stloc.3", "o", -1);
+        def(STLOC_S, "stloc.s", "oi", -1);
+
+        def(LDARG_0, "ldarg.0", "o", 1);
+        def(LDARG_1, "ldarg.1", "o", 1);
+        def(LDARG_2, "ldarg.2", "o", 1);
+        def(LDARG_3, "ldarg.3", "o", 1);
+        def(LDARG_S, "ldarg.s", "oi", 1);
+        def(LDARGA_S, "ldarga.s", "oi", 1);
+
+        def(STARG_S, "starg.s", "oi", -1);
+
+        def(LDIND_I1, "ldind.i1", "o", 0);
+        def(LDIND_U1, "ldind.u1", "o", 0);
+        def(LDIND_I2, "ldind.i2", "o", 0);
+        def(LDIND_U2, "ldind.u2", "o", 0);
+        def(LDIND_I4, "ldind.i4", "o", 0);
+        def(LDIND_U4, "ldind.u4", "o", 0);
+        def(LDIND_I8, "ldind.i8", "o", 0);
+        def(LDIND_I, "ldind.i", "o", 0);
+        def(LDIND_R4, "ldind.r4", "o", 0);
+        def(LDIND_R8, "ldind.r8", "o", 0);
+        def(LDIND_REF, "ldind.ref", "o", 0);
+
+        def(STIND_I1, "stind.i1", "o", -2);
+        def(STIND_I2, "stind.i2", "o", -2);
+        def(STIND_I4, "stind.i4", "o", -2);
+        def(STIND_I8, "stind.i8", "o", -2);
+        def(STIND_I, "stind.i", "o", -2);
+        def(STIND_R4, "stind.r4", "o", -2);
+        def(STIND_R8, "stind.r8", "o", -2);
+        def(STIND_REF, "stind.ref", "o", -2);
+
+        def(STFLD, "stfld", "otttt", 0);
+        def(LDFLD, "ldfld", "otttt", 0);
+        def(LDSFLD, "ldsfld", "otttt", 0);
+        def(STSFLD, "stsfld", "otttt", 0);
+        def(LDFLDA, "ldflda", "otttt", 0);
+        def(LDSFLDA, "ldsfdla", "otttt", 0);
+
+        def(LDELEM, "ldelem", "otttt", 0);
+        def(LDELEM_I1,  "ldelem.i1", "o", -1);
+        def(LDELEM_U1,  "ldelem.u1", "o", -1);
+        def(LDELEM_I2,  "ldelem.i2", "o", -1);
+        def(LDELEM_U2,  "ldelem.u2", "o", -1);
+        def(LDELEM_I4,  "ldelem.i4", "o", -1);
+        def(LDELEM_U4,  "ldelem.u4", "o", -1);
+        def(LDELEM_I8,  "ldelem.i8", "o", -1);
+        def(LDELEM_I,   "ldelem.i", "o", -1);
+        def(LDELEM_R4,  "ldelem.r4", "o", -1);
+        def(LDELEM_R8,  "ldelem.r8", "o", -1);
+        def(LDELEM_REF, "ldelem.ref", "o", -1);
+
+        def(STELEM,     "stelem", "otttt", 0);
+        def(STELEM_I1,  "stelem.i1", "o", -3);
+        def(STELEM_I2,  "stelem.i2", "o", -3);
+        def(STELEM_I4,  "stelem.i4", "o", -3);
+        def(STELEM_I8,  "stelem.i8", "o", -3);
+        def(STELEM_I,   "stelem.i", "o", -3);
+        def(STELEM_R4,  "stelem.r4", "o", -3);
+        def(STELEM_R8,  "stelem.r8", "o", -3);
+        def(STELEM_REF, "stelem.ref", "o", -3);
+
+        def(LDELEMA, "ldelema", "otttt", 0);
+
+        def(DUP, "dup", "o", 1);
+
+        def(POP, "pop", "o", -1);
+
+        def(RET, "ret", "o", 0);
+
+        def(BR, "br", "oiiii", 0);
+        def(BR_S, "br.s", "oi", 0);
+
+        def(BRFALSE, "brfalse", "oiiii", -1);
+        def(BRFALSE_S, "brfalse.s", "oi", -1);
+        def(BRTRUE, "brtrue", "oiiii", -1);
+        def(BRTRUE_S, "brtrue.s", "oi", -1);
+
+        def(NEG, "neg", "o", 0);
+
+        def(ADD, "add", "o", -1);
+        def(SUB, "sub", "o", -1);
+        def(MUL, "mul", "o", -1);
+        def(DIV, "div", "o", -1);
+        def(REM, "rem", "o", -1);
+
+        def(AND, "and", "o", -1);
+        def(OR, "or", "o", -1);
+        def(XOR, "xor", "o", -1);
+
+        def(SHL, "shl", "o", -1);
+        def(SHR, "shr", "o", -1);
+        def(SHR_UN, "shr.un", "o", -1);
 
 
+        def(CALL, "call", "otttt", 0);
+        def(NEWOBJ, "newobj", "otttt", 0);
+        def(CALLVIRT, "callvirt", "otttt",0);
+
+        def(NEWARR, "newarr", "otttt", 0);
+        def(LDLEN, "ldlen", "o", 0);
+
+        defPrefixed(CGT, "cgt", "o", -1);
+        defPrefixed(CEQ, "ceq", "o", -1);
+        defPrefixed(CLT, "clt", "o", -1);
+        defPrefixed(CGT_UN, "cgt.un", "o", -1);
+        defPrefixed(CLT_UN, "clt.un", "o", -1);
+
+        def(BEQ, "beq", "otttt", -2);
+        def(BGE, "bge", "otttt", -2);
+        def(BGT, "bgt", "otttt", -2);
+        def(BLE, "ble", "otttt", -2);
+        def(BLT, "blt", "otttt", -2);
+
+        def(BEQ_S, "beq.s", "ot", -2);
+        def(BGE_S, "bge.s", "ot", -2);
+        def(BGT_S, "bgt.s", "ot", -2);
+        def(BLE_S, "ble.s", "ot", -2);
+        def(BLT_S, "blt.s", "ot", -2);
+
+        def(BGE_UN, "bge.un", "otttt", -2);
+        def(BGT_UN, "bgt.un", "otttt", -2);
+        def(BLE_UN, "ble.un", "otttt", -2);
+        def(BLT_UN, "blt.un", "otttt", -2);
+        def(BNE_UN, "bne.un", "otttt", -2);
+
+        def(BGE_UN_S, "bge.un.s", "ot", -2);
+        def(BGT_UN_S, "bgt.un.s", "ot", -2);
+        def(BLE_UN_S, "ble.un.s", "ot", -2);
+        def(BLT_UN_S, "blt.un.s", "ot", -2);
+        def(BNE_UN_S, "bne.un.s", "ot", -2);
+
+        def(BOX, "box", "otttt", 0);
+        def(UNBOX, "unbox", "otttt", 0);
 
 
-        def(RET, "ret", "b", 0);
+        def(CONV_I1, "conv.i1", "o", 0);
+        def(CONV_I2, "conv.i2", "o", 0);
+        def(CONV_I4, "conv.i4", "o", 0);
+        def(CONV_I8, "conv.i8", "o", 0);
+        def(CONV_R4, "conv.r4", "o", 0);
+        def(CONV_R8, "conv.r8", "o", 0);
+        def(CONV_U1, "conv.u1", "o", 0);
+        def(CONV_U2, "conv.u2", "o", 0);
+        def(CONV_U4, "conv.u4", "o", 0);
+        def(CONV_U8, "conv.u8", "o", 0);
+        def(CONV_I, "conv.i", "o", 0);
+        def(CONV_U, "conv.u", "o", 0);
 
-        def(BR, "br", "biiii", 0);
-        def(BR_S, "br.s", "bi", 0);
-
-        def(BRFALSE, "brfalse", "biiii", -1);
-        def(BRFALSE_S, "brfalse.s", "bi", -1);
-        def(BRTRUE, "brtrue", "biiii", -1);
-        def(BRTRUE_S, "brtrue.s", "bi", -1);
-
-        def(NEG, "neg", "b", 0);
-
-        def(ADD, "add", "b", -1);
-        def(SUB, "sub", "b", -1);
-        def(MUL, "mul", "b", -1);
-        def(DIV, "div", "b", -1);
-        def(REM, "rem", "b", -1);
-
-        def(AND, "and", "b", -1);
-        def(OR, "or", "b", -1);
-        def(XOR, "xor", "b", -1);
-
-        def(SHL, "shl", "b", -1);
-        def(SHR, "shr", "b", -1);
-        def(SHR_UN, "shr.un", "b", -1);
-
-
-        def(CALL, "call", "btttt", 0);
-        def(NEWOBJ, "newobj", "btttt", 0);
-        def(CALLVIRT, "callvirt", "btttt",0);
-
-        def(NEWARR, "newarr", "btttt", 0);
-        def(LDLEN, "ldlen", "b", 0);
-
-        defPrefixed(CGT, "cgt", "b", -1);
-        defPrefixed(CEQ, "ceq", "b", -1);
-        defPrefixed(CLT, "clt", "b", -1);
-        defPrefixed(CGT_UN, "cgt.un", "b", -1);
-        defPrefixed(CLT_UN, "clt.un", "b", -1);
-
-        def(BEQ, "beq", "btttt", -2);
-        def(BGE, "bge", "btttt", -2);
-        def(BGT, "bgt", "btttt", -2);
-        def(BLE, "ble", "btttt", -2);
-        def(BLT, "blt", "btttt", -2);
-
-        def(BEQ_S, "beq.s", "bt", -2);
-        def(BGE_S, "bge.s", "bt", -2);
-        def(BGT_S, "bgt.s", "bt", -2);
-        def(BLE_S, "ble.s", "bt", -2);
-        def(BLT_S, "blt.s", "bt", -2);
-
-        def(BGE_UN, "bge.un", "btttt", -2);
-        def(BGT_UN, "bgt.un", "btttt", -2);
-        def(BLE_UN, "ble.un", "btttt", -2);
-        def(BLT_UN, "blt.un", "btttt", -2);
-        def(BNE_UN, "bne.un", "btttt", -2);
-
-        def(BGE_UN_S, "bge.un.s", "bt", -2);
-        def(BGT_UN_S, "bgt.un.s", "bt", -2);
-        def(BLE_UN_S, "ble.un.s", "bt", -2);
-        def(BLT_UN_S, "blt.un.s", "bt", -2);
-        def(BNE_UN_S, "bne.un.s", "bt", -2);
-
-        def(BOX, "box", "btttt", 0);
-        def(UNBOX, "unbox", "btttt", 0);
-
-
-        def(CONV_I1, "conv.i1", "b", 0);
-        def(CONV_I2, "conv.i2", "b", 0);
-        def(CONV_I4, "conv.i4", "b", 0);
-        def(CONV_I8, "conv.i8", "b", 0);
-        def(CONV_R4, "conv.r4", "b", 0);
-        def(CONV_R8, "conv.r8", "b", 0);
-        def(CONV_U1, "conv.u1", "b", 0);
-        def(CONV_U2, "conv.u2", "b", 0);
-        def(CONV_U4, "conv.u4", "b", 0);
-        def(CONV_U8, "conv.u8", "b", 0);
-        def(CONV_I, "conv.i", "b", 0);
-        def(CONV_U, "conv.u", "b", 0);
-
-
-
-        def(TRUFFLE_NODE, "truffle.node", "biiii", 0);
+        def(TRUFFLE_NODE, "truffle.node", "oiiii", 0);
     }
 
     /**
-     * Defines a bytecode by entering it into the arrays that record its name, length and flags.
+     * Defines an instruction for an opcode by entering recording its name, length and stackEffect.
      *
-     * @param name instruction name (should be lower case)
-     * @param format encodes the length of the instruction
+     * @param opcode the opcode to define
+     * @param name mnemonic of the instruction
+     * @param format format of the instruction bytes
+     * @param stackEffect number of slots pushed on the stack by the instruction
      */
     private static void def(int opcode, String name, String format, int stackEffect) {
-        def(opcode, name, format, stackEffect, 0);
-    }
-
-    /**
-     * Defines a bytecode by entering it into the arrays that record its name, length and flags.
-     *
-     * @param name instruction name (lower case)
-     * @param format encodes the length of the instruction
-     * @param flags the set of {@link Flags} associated with the instruction
-     */
-    private static void def(int opcode, String name, String format, int stackEffect, int flags) {
         assert nameArray[opcode] == null : "opcode " + opcode + " is already bound to name " + nameArray[opcode];
         nameArray[opcode] = name;
         int instructionLength = format.length();
         lengthArray[opcode] = instructionLength;
         stackEffectArray[opcode] = stackEffect;
-        flagsArray[opcode] = flags;
-
     }
 
+    /**
+     * Defines an instruction for a prefixed opcode by entering recording its name, length and stackEffect.
+     *
+     * @param opcode the opcode to define
+     * @param name mnemonic of the instruction
+     * @param format format of the instruction bytes
+     * @param stackEffect number of slots pushed on the stack by the instruction
+     */
     private static void defPrefixed(int opcode, String name, String format, int stackEffect) {
-        defPrefixed(opcode, name, format, stackEffect, 0);
-    }
-
-
-    private static void defPrefixed(int opcode, String name, String format, int stackEffect, int flags) {
         opcode = opcode & 0xFF;
         assert prefixedNameArray[opcode] == null : "opcode " + opcode + " is already bound to name " + prefixedNameArray[opcode];
         prefixedNameArray[opcode] = name;
         int instructionLength = format.length();
         prefixedLengthArray[opcode] = instructionLength;
         prefixedStackEffectArray[opcode] = stackEffect;
-        prefixedFlagsArray[opcode] = flags;
-
     }
 
+    /**
+     * Get length of the instruction for the specified opcode.
+     * Supports prefixed opcodes.
+     *
+     * @param opcode the instruction opcode
+     * @return length of the instruction for {@code opcode}
+     */
     public static int getLength(int opcode) {
         if(opcode > 0xFF)
         {
@@ -517,6 +509,13 @@ public class BytecodeInstructions {
         return lengthArray[opcode];
     }
 
+    /**
+     * Get the mnemonic name of the instruction for the specified opcode.
+     * Supports prefixed opcodes.
+     *
+     * @param opcode the instruction opcode
+     * @return mnemonic name of the instruction for {@code opcode}
+     */
     public static String getName(int opcode)
     {
         if(opcode > 0xFF)
@@ -526,6 +525,13 @@ public class BytecodeInstructions {
         return nameArray[opcode];
     }
 
+    /**
+     * Get the stack effect of the instruction for the specified opcode.
+     * Supports prefixed opcodes.
+     *
+     * @param opcode the instruction opcode
+     * @return stack effect of the instruction for {@code opcode}
+     */
     public static int getStackEffect(int opcode)
     {
         if(opcode > 0xFF)
@@ -535,12 +541,36 @@ public class BytecodeInstructions {
         return stackEffectArray[opcode];
     }
 
+    /**
+     * An implementation of Table III.2: Binary Numeric Operations
+     * Stores the result type for A op B, where op is add, div, mul, rem, or sub, for each
+     * possible combination of operand types.
+     *
+     * Maps two {@code EXECUTION_STACK_TAG}s to an {@link ExecutionStackPrimitiveMarker}.
+     * Invalid combinations result in a null.
+     */
     @CompilationFinal(dimensions = 2)
     public static final ExecutionStackPrimitiveMarker[][] binaryNumericResultTypes = new ExecutionStackPrimitiveMarker[EXECUTION_STACK_TAG_MAX+1][EXECUTION_STACK_TAG_MAX+1];
 
+    /**
+     * An implementation of Table III.5: Integer Operations
+     * Stores the result type for A op B, where op is and, div.un, not, or, rem.un, xor, for each
+     * possible combination of operand types.
+     *
+     * Maps two {@code EXECUTION_STACK_TAG}s to an {@link ExecutionStackPrimitiveMarker}.
+     * Invalid combinations result in a null.
+     */
     @CompilationFinal(dimensions = 2)
     public static final ExecutionStackPrimitiveMarker[][] binaryIntegerResultTypes = new ExecutionStackPrimitiveMarker[EXECUTION_STACK_TAG_MAX+1][EXECUTION_STACK_TAG_MAX+1];
 
+
+    /**
+     * Defines a valid combination in the Binary Numeric Operations table.
+     * Makes sure all combinations are commutative.
+     * @param arg1 an {@code EXECUTION_STACK_TAG} representing the first operand
+     * @param arg2 an {@code EXECUTION_STACK_TAG} representing the second operand
+     * @param result an {@link ExecutionStackPrimitiveMarker} for the resulting execution stack type
+     */
     public static void binaryNumericResult(byte arg1, byte arg2, ExecutionStackPrimitiveMarker result)
     {
         binaryNumericResultTypes[arg1][arg2] = result;
@@ -550,6 +580,13 @@ public class BytecodeInstructions {
         }
     }
 
+    /**
+     * Defines a valid combination in the Integer Operations table.
+     * Makes sure all combinations are commutative.
+     * @param arg1 an {@code EXECUTION_STACK_TAG} representing the first operand
+     * @param arg2 an {@code EXECUTION_STACK_TAG} representing the second operand
+     * @param result an {@link ExecutionStackPrimitiveMarker} for the resulting execution stack type
+     */
     public static void binaryIntegerResult(byte arg1, byte arg2, ExecutionStackPrimitiveMarker result)
     {
         binaryIntegerResultTypes[arg1][arg2] = result;
@@ -560,7 +597,7 @@ public class BytecodeInstructions {
     }
 
 
-    //Table III.2: Binary Numeric Operations
+    //Define binary numeric operations based on Table III.2: Binary Numeric Operations
     static {
         binaryNumericResult(EXECUTION_STACK_TAG_INT32, EXECUTION_STACK_TAG_INT32, EXECUTION_STACK_INT32);
         binaryNumericResult(EXECUTION_STACK_TAG_INT32, EXECUTION_STACK_TAG_NATIVE_INT, EXECUTION_STACK_NATIVE_INT);
@@ -569,7 +606,7 @@ public class BytecodeInstructions {
     }
 
 
-    //Table III.5: Integer Operations
+    //Define binary integer operations based on Table III.5: Integer Operations
     static {
         binaryIntegerResult(EXECUTION_STACK_TAG_INT32, EXECUTION_STACK_TAG_INT32, EXECUTION_STACK_INT32);
         binaryIntegerResult(EXECUTION_STACK_TAG_INT32, EXECUTION_STACK_TAG_NATIVE_INT, EXECUTION_STACK_NATIVE_INT);

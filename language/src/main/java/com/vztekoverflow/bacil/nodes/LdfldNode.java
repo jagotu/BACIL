@@ -8,12 +8,24 @@ import com.vztekoverflow.bacil.runtime.StaticObject;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.TypedField;
 
-public class LdfldNode extends CallableNode {
+/**
+ * A Truffle node representing the ldfld instruction.
+ * (III.4.10 ldfld – load field of an object)
+ * Stores the resolved object type and the field from the instruction.
+ */
+public class LdfldNode extends ExecutionStackAwareNode {
 
     private final TypedField field;
     private final Type objType;
     private final int top;
 
+    /**
+     * Create a new node representing the ldfld instruction.
+     * @param token token representing the field, pointing to either member_ref or field tables
+     * @param callingComponent the {@link CLIComponent} where the instruction is
+     * @param top stack top when running this instruction
+     * @param objType resolved type where the field is defined
+     */
     public LdfldNode(CLITablePtr token, CLIComponent callingComponent, int top, Type objType) {
         this.top = top;
         this.objType = objType;

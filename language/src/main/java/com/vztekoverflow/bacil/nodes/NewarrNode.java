@@ -7,7 +7,7 @@ import com.vztekoverflow.bacil.runtime.ExecutionStackPrimitiveMarker;
 import com.vztekoverflow.bacil.runtime.SZArray;
 import com.vztekoverflow.bacil.runtime.types.Type;
 
-public class NewarrNode extends CallableNode {
+public class NewarrNode extends ExecutionStackAwareNode {
 
     protected final Type elementType;
     private final int top;

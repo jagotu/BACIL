@@ -2,11 +2,21 @@ package com.vztekoverflow.bacil.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-public class LdStrNode extends CallableNode {
+/**
+ * A Truffle node representing the ldstr instruction.
+ * (III.4.16 ldstr – load a literal string)
+ * Stores the resolved string from the instruction.
+ */
+public class LdStrNode extends ExecutionStackAwareNode {
 
     protected final String value;
     private final int top;
 
+    /**
+     * Create a new node representing the ldstr instruction.
+     * @param value the string literal resolved from the instruction
+     * @param top stack top when running this instruction
+     */
     public LdStrNode(String value, int top) {
         this.value = value;
         this.top = top;
