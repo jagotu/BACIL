@@ -13,7 +13,7 @@ import com.vztekoverflow.bacil.runtime.types.TypedField;
  * (III.4.11 ldflda – load field address)
  * Stores the resolved object type and the field from the instruction.
  */
-public class LdfldaNode extends ExecutionStackAwareNode {
+public class LdfldaNode extends EvaluationStackAwareNode {
 
     private final TypedField field;
     private final int top;

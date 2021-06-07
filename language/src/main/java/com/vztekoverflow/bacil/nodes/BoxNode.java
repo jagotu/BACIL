@@ -8,7 +8,7 @@ import com.vztekoverflow.bacil.runtime.types.Type;
  * (III.4.1 box – convert a boxable value to its boxed form)
  * Stores the resolved type from the instruction.
  */
-public class BoxNode extends ExecutionStackAwareNode {
+public class BoxNode extends EvaluationStackAwareNode {
 
     private final Type type;
     private final int top;

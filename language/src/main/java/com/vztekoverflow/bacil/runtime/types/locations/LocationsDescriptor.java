@@ -126,6 +126,7 @@ public class LocationsDescriptor {
         return locationTypes[locationIndex].locationToObject(holder, offsets[locationIndex]);
     }
 
+
     public int getSize()
     {
         return locationTypes.length;

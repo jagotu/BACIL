@@ -13,7 +13,7 @@ import com.vztekoverflow.bacil.runtime.types.TypedField;
  * (III.4.28 stfld – store into a field of an object)
  * Stores the resolved object type and the field from the instruction.
  */
-public class StfldNode extends ExecutionStackAwareNode {
+public class StfldNode extends EvaluationStackAwareNode {
 
     private final TypedField field;
     private final Type objType;

@@ -22,6 +22,9 @@ public class InternalCallFinder {
                 } else if (methodName.equals("Abs"))
                 {
                     return new MathAbsMethod(definingComponent.getBuiltinTypes(), definingComponent.getLanguage(), type);
+                } else if (methodName.equals("Cos"))
+                {
+                    return new MathCosMethod(definingComponent.getBuiltinTypes(), definingComponent.getLanguage(), type);
                 }
             } else if (namedType.getNamespace().equals("System.Runtime.CompilerServices") && namedType.getName().equals("RuntimeHelpers"))
             {

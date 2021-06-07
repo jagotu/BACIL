@@ -7,7 +7,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
  * (III.4.16 ldstr – load a literal string)
  * Stores the resolved string from the instruction.
  */
-public class LdStrNode extends ExecutionStackAwareNode {
+public class LdStrNode extends EvaluationStackAwareNode {
 
     protected final String value;
     private final int top;

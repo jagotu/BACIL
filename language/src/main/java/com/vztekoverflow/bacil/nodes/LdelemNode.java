@@ -8,7 +8,7 @@ import com.vztekoverflow.bacil.runtime.types.Type;
  * (III.4.7 ldelem – load element from array)
  * Stores the resolved element type from the instruction.
  */
-public class LdelemNode extends ExecutionStackAwareNode {
+public class LdelemNode extends EvaluationStackAwareNode {
 
     private final Type elementType;
     private final int top;

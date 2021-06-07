@@ -11,7 +11,7 @@ import com.vztekoverflow.bacil.runtime.types.builtin.SystemVoidType;
  * (III.4.2 callvirt – call a method associated, at runtime, with an object)
  * Stores the resolved string from the instruction.
  */
-public class NonvirtualCallNode extends ExecutionStackAwareNode {
+public class NonvirtualCallNode extends EvaluationStackAwareNode {
 
     protected final BACILMethod method;
     protected final int top;
@@ -35,7 +35,7 @@ public class NonvirtualCallNode extends ExecutionStackAwareNode {
         Object[] args = BytecodeNode.prepareArgs(primitives, refs, top, method, 0);
         Object returnValue = directCallNode.call(args);
 
-        //Put returned value on the execution stack
+        //Put returned value on the evaluation stack
         Type returnType = method.getRetType();
         final int firstArg = top - method.getArgsCount();
 

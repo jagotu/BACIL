@@ -9,7 +9,7 @@ import com.vztekoverflow.bacil.runtime.types.Type;
  * (III.4.26 stelem – store element to array)
  * Stores the resolved element type from the instruction.
  */
-public class StelemNode extends ExecutionStackAwareNode {
+public class StelemNode extends EvaluationStackAwareNode {
 
     private final Type elementType;
     private final int top;

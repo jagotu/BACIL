@@ -11,7 +11,7 @@ import com.vztekoverflow.bacil.runtime.types.NamedType;
  * (III.4.21 newobj – create a new object)
  * Stores the resolved type and constructor method from the instruction.
  */
-public class ConstructorNode extends ExecutionStackAwareNode {
+public class ConstructorNode extends EvaluationStackAwareNode {
 
 
     protected final BACILMethod method;
@@ -41,7 +41,7 @@ public class ConstructorNode extends ExecutionStackAwareNode {
         args[0] = obj;
         directCallNode.call(args);
 
-        //Put the new object on the execution stack as a result
+        //Put the new object on the evaluation stack as a result
         final int firstArg = top - method.getArgsCount() + 1;
         refs[firstArg] = obj;
         return firstArg+1;

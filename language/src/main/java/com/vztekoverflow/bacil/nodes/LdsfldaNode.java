@@ -12,7 +12,7 @@ import com.vztekoverflow.bacil.runtime.types.TypedField;
  * (III.4.15 ldsflda – load static field address)
  * Stores the resolved object type and the field from the instruction.
  */
-public class LdsfldaNode extends ExecutionStackAwareNode {
+public class LdsfldaNode extends EvaluationStackAwareNode {
 
     private final TypedField field;
     private final Type objType;

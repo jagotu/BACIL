@@ -1,6 +1,6 @@
 package com.vztekoverflow.bacil.runtime.types.locations;
 
-import com.vztekoverflow.bacil.runtime.ExecutionStackPrimitiveMarker;
+import com.vztekoverflow.bacil.runtime.EvaluationStackPrimitiveMarker;
 import com.vztekoverflow.bacil.runtime.types.Type;
 
 public final class Int32Location extends Location {
@@ -22,7 +22,7 @@ public final class Int32Location extends Location {
 
     @Override
     public void toStackVar(Object[] refs, long[] primitives, int slot) {
-        refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
+        refs[slot] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32;
         primitives[slot] = value;
     }
 

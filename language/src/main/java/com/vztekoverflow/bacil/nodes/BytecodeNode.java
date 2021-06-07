@@ -16,7 +16,7 @@ import com.vztekoverflow.bacil.parser.cli.tables.CLIUSHeapPtr;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLIMemberRefTableRow;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableConstants;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
-import com.vztekoverflow.bacil.runtime.ExecutionStackPrimitiveMarker;
+import com.vztekoverflow.bacil.runtime.EvaluationStackPrimitiveMarker;
 import com.vztekoverflow.bacil.runtime.LocationReference;
 import com.vztekoverflow.bacil.runtime.SZArray;
 import com.vztekoverflow.bacil.runtime.types.Type;
@@ -30,16 +30,29 @@ import java.util.Arrays;
 
 import static com.vztekoverflow.bacil.bytecode.BytecodeInstructions.*;
 
+/**
+ * A Truffle node representing a {@link CILMethod} body.
+ * Directly interprets simple instructions and nodeizes complex ones.
+ *
+ * The special TRUFFLE_NODE instruction is used to replace nodeized instructions.
+ */
 public class BytecodeNode extends Node {
 
     private final CILMethod method;
     private final BytecodeBuffer bytecodeBuffer;
     private final BuiltinTypes builtinTypes;
 
+    //Nodeized instruction nodes are stored here
+    @Children private EvaluationStackAwareNode[] nodes = new EvaluationStackAwareNode[0];
 
-
-    @Children private ExecutionStackAwareNode[] nodes = new ExecutionStackAwareNode[0];
-
+    /**
+     * Create a new {@code BytecodeNode} for the specified {@link CILMethod}.
+     * The method body is provided as a byte[].
+     *
+     * Stores arguments and variables in a single {@link LocationsHolder}, variables first and arguments last.
+     * @param method the method this node represents
+     * @param bytecode method's body bytes
+     */
     public BytecodeNode(CILMethod method, byte[] bytecode)
     {
         this.method = method;
@@ -48,17 +61,21 @@ public class BytecodeNode extends Node {
     }
 
 
-
-
+    /**
+     * Run the bytecode for this method.
+     * @param frame the frame of the currently executing guest language method
+     * @return return value of the method
+     */
     @ExplodeLoop(kind = ExplodeLoop.LoopExplosionKind.MERGE_EXPLODE)
     public Object execute(VirtualFrame frame)
     {
-        //int slotCount = getMethod().getMaxLocals() + getMethod().getMaxStackSize();
+        //As this is the most critical method for the performance of BACIL,
+        //we use a lot of CompilerAsserts.partialEvaluationConstant to make sure
+        //that this method is properly partially evaluated.
+        //The MERGE_EXPLODE annotation is also vital for the performance,
+        //so make sure that for a given pc, the state is always constant.
 
-
-        int stackCount = method.getMaxStack();
-
-
+        //1. Make sure the method is called with the correct number of arguments
         Object[] args = frame.getArguments();
         if(args.length != method.getArgsCount())
         {
@@ -66,59 +83,59 @@ public class BytecodeNode extends Node {
             throw new BACILInternalError("Unexpected number of arguments!");
         }
 
-        CompilerAsserts.partialEvaluationConstant(stackCount);
+        //2. Prepare the evaluation stack
+        int evaluationStackCount = method.getMaxStack();
+        CompilerAsserts.partialEvaluationConstant(evaluationStackCount);
 
-        //for primitives the refs stack is filled with ExecutionStackType objects
-        //that allow tracking of int64/int32/native int/F
-        long[] primitives = new long[stackCount];
-        Object[] refs = new Object[stackCount];
+        //Reference types are stored directly in refs[] and the slot in primitives[] is undefined.
+        //For primitives, the refs slot is filled with EvaluationStackPrimitiveMarker objects
+        //that allow tracking of the type int64/int32/native int/F
+        long[] primitives = new long[evaluationStackCount];
+        Object[] refs = new Object[evaluationStackCount];
 
+        //3. Prepare locations for arguments and local variables
         final int argsCount = method.getArgsCount();
         final int varsCount = method.getVarsCount();
-
 
         CompilerAsserts.partialEvaluationConstant(argsCount);
         CompilerAsserts.partialEvaluationConstant(varsCount);
 
-
         final LocationsDescriptor descriptor = method.getLocationDescriptor();
-        final LocationsHolder locations = LocationsHolder.forDescriptor(descriptor); //I.8.3
+        final LocationsHolder locations = LocationsHolder.forDescriptor(descriptor);
 
         CompilerAsserts.partialEvaluationConstant(descriptor);
 
+
+        //4. Fill the argument locations with values
         loadArgs(descriptor, locations, argsCount, varsCount, args);
-        //initLocations(argsCount, varsCount, locationsTypes, method, locations, args);
 
-
-
-        int top = 0;
-        int pc = 0;
-
-
+        int top = 0; //stores the current stack top
+        int pc = 0;  //stores the offset of current instruction (program counter)
 
 
 
         loop: while (true) {
-            CompilerAsserts.partialEvaluationConstant(pc);
+            //5. Read opcode and nextpc
             int curOpcode = bytecodeBuffer.getOpcode(pc);
-            CompilerAsserts.partialEvaluationConstant(curOpcode);
             int nextpc = bytecodeBuffer.nextInstruction(pc);
 
+            //important asserts for merge_explode
+            //
+            //Partially evaluating the stack top is possible thanks to the following remark in
+            //I.12.3.2.1 The evaluation stack:
+            //The type state of the stack (the stack depth and types of each element on
+            //the stack) at any given point in a program shall be identical for all possible control flow paths.
+            //For example, a program that loops an unknown number of times and pushes a new element on
+            //the stack at each iteration would be prohibited.
+            CompilerAsserts.partialEvaluationConstant(pc);
+            CompilerAsserts.partialEvaluationConstant(curOpcode);
             CompilerAsserts.partialEvaluationConstant(top);
-
-
             CompilerAsserts.partialEvaluationConstant(nextpc);
 
-            CompilerDirectives.ensureVirtualized(locations.getPrimitives());
-            CompilerDirectives.ensureVirtualized(locations.getRefs());
-            CompilerDirectives.ensureVirtualized(refs);
-            CompilerDirectives.ensureVirtualized(primitives);
-
-
-
-            //debug
+            //Print all executed instructions for debugging
             //System.out.printf("%s:%04x %s\n", method.getName(), pc, BytecodeInstructions.getName(curOpcode));
 
+            //6. Execute the instruction based on the opcode
             switch(curOpcode) {
                 case NOP:
                 case POP:
@@ -366,7 +383,7 @@ public class BytecodeNode extends Node {
 
                 case LDLEN:
                     primitives[top-1] = TypeHelpers.truncate32(((SZArray)refs[top-1]).getLength());
-                    refs[top-1] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
+                    refs[top-1] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32;
                     break;
 
 
@@ -378,37 +395,36 @@ public class BytecodeNode extends Node {
                     throw new BACILInternalError(String.format("Unsupported opcode %02x (%s) in %s (offset %x)", curOpcode, BytecodeInstructions.getName(curOpcode), method, pc));
             }
 
+            //7. Set the next stack top and pc
             top += BytecodeInstructions.getStackEffect(curOpcode);
             pc = nextpc;
         }
 
     }
 
-
-
-
-
-    public static LocationReference getLocalReference(LocationsDescriptor descriptor, LocationsHolder holder, int index)
+    /**
+     * Get a managed reference (type {@code &}) to the specified location as a {@link LocationReference}
+     * @param descriptor the {@link LocationsDescriptor} describing the location types
+     * @param holder the {@link LocationsHolder} holding the location values
+     * @param index index of the location to return a reference to
+     * @return a managed reference (type {@code &}) to the specified location
+     */
+    private static LocationReference getLocalReference(LocationsDescriptor descriptor, LocationsHolder holder, int index)
     {
         return new LocationReference(holder, descriptor.getOffset(index), descriptor.getType(index));
     }
 
-    @ExplodeLoop
-    public static void initLocations(int argsCount, int varsCount, Type[] localTypes, CILMethod method, Object[] locals, Object[] args)
-    {
-        if(method.isInitLocals())
-        {
-            for(int i = 0; i < varsCount; i++)
-            {
-                locals[i] = localTypes[i].initialValue();
-            }
-        }
 
-        if (argsCount >= 0) System.arraycopy(args, 0, locals, varsCount, argsCount);
-    }
-
+    /**
+     * Store the provided argument values into the argument locations.
+     * @param descriptor the {@link LocationsDescriptor} describing the location types
+     * @param holder the {@link LocationsHolder} holding the location values
+     * @param argsCount count of argument locations
+     * @param varsCount count of variable locations
+     * @param args the argument values
+     */
     @ExplodeLoop
-    public static void loadArgs(LocationsDescriptor descriptor, LocationsHolder holder, int argsCount, int varsCount, Object[] args)
+    private static void loadArgs(LocationsDescriptor descriptor, LocationsHolder holder, int argsCount, int varsCount, Object[] args)
     {
         for(int i = 0; i < argsCount; i++)
         {
@@ -416,6 +432,16 @@ public class BytecodeNode extends Node {
         }
     }
 
+    /**
+     * Prepare arguments for calling a method, taking them from the evaluation stack and putting them in an
+     * Object[].
+     * @param primitives primitives on the evaluation stack
+     * @param refs references on the evaluation stack
+     * @param top the current evaluation stack top
+     * @param method the method to prepare the args for
+     * @param skip number of locations (from the beginning) to ignore
+     * @return an array of objects representing the arguments that can be used to call the target method
+     */
     @ExplodeLoop
     public static Object[] prepareArgs(long[] primitives, Object[] refs, int top, BACILMethod method, int skip)
     {
@@ -428,7 +454,6 @@ public class BytecodeNode extends Node {
 
         CompilerAsserts.partialEvaluationConstant(argsCount);
 
-
         for(int i = skip; i < argsCount; i++)
         {
             args[i] = targetTypes[varsCount+i].stackToObject(refs[firstArg+i], primitives[firstArg+i]);
@@ -437,7 +462,12 @@ public class BytecodeNode extends Node {
         return args;
     }
 
-    private int addNode(ExecutionStackAwareNode node)
+    /**
+     * Add an {@link EvaluationStackAwareNode} to the children of this node.
+     * @param node the node to add
+     * @return index of the added node
+     */
+    private int addNode(EvaluationStackAwareNode node)
     {
         CompilerAsserts.neverPartOfCompilation();
         nodes = Arrays.copyOf(nodes, nodes.length + 1);
@@ -446,8 +476,16 @@ public class BytecodeNode extends Node {
         return nodeIndex;
     }
 
+    /**
+     * Get a byte[] representing an instruction with the specified opcode and a 32-bit immediate value.
+     * @param opcode opcode of the new instruction
+     * @param imm 32-bit immediate value of the new instruction
+     * @param targetLength the length of the resulting patch, instruction will be padded with NOPs
+     * @return The new instruction bytes.
+     */
     private static byte[] preparePatch(byte opcode, int imm, int targetLength)
     {
+        assert(targetLength >= 5); //Smaller instructions won't fit the 32-bit immediate
         byte[] patch = new byte[targetLength];
         patch[0] = opcode;
         patch[1] = (byte)(imm & 0xFF);
@@ -457,44 +495,74 @@ public class BytecodeNode extends Node {
         return patch;
     }
 
-    public static void loadArrayElem(Type elementType, long[] primitives, Object[] refs, int top)
+    /**
+     * Loads an array element to the evaluation stack.
+     *
+     * Stack transition: ..., array, index -> ..., value
+     * @param elementType the type of the element
+     * @param primitives primitives on the evaluation stack
+     * @param refs references on the evaluation stack
+     * @param top current evaluation stack
+     */
+    private static void loadArrayElem(Type elementType, long[] primitives, Object[] refs, int top)
     {
-        //Breaks standard: We should also support native int here, but for us
+        //Breaks standard: We should also support native int as the index here, but for us
         //native int is 64-bit, and Java arrays only use 32-bit indexers.
-        if(refs[top-1] != ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
+        if(refs[top-1] != EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32)
         {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILInternalError("Only INT32 supported as SZArray index");
         }
 
         int index = (int)primitives[top-1];
-
         SZArray array = (SZArray) refs[top-2];
         elementType.locationToStack(array.getFieldsHolder(), index, refs, primitives, top-2);
     }
 
-    public static void storeArrayElem(Type elementType, long[] primitives, Object[] refs, int top)
+
+    /**
+     * Stores a value from the evaluation stack to an array element.
+     *
+     * Stack transition: ..., array, index, value -> ...
+     * @param elementType the type of the element
+     * @param primitives primitives on the evaluation stack
+     * @param refs references on the evaluation stack
+     * @param top current evaluation stack
+     */
+    private static void storeArrayElem(Type elementType, long[] primitives, Object[] refs, int top)
     {
-        if(refs[top-2] != ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
+        //Breaks standard: We should also support native int as the index here, but for us
+        //native int is 64-bit, and Java arrays only use 32-bit indexers.
+        if(refs[top-2] != EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32)
         {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILInternalError("Only INT32 supported as SZArray index");
         }
 
         int index = (int)primitives[top-2];
-
         SZArray array = (SZArray) refs[top-3];
         elementType.stackToLocation(array.getFieldsHolder(), index, refs[top-1], primitives[top-1]);
-
-
     }
 
-    public int nodeizeOpToken(VirtualFrame frame, long[] primitives, Object[] refs, int top, CLITablePtr token, int pc, int opcode)
+    /**
+     * Nodeize an instruction with a generic token as an immediate parameter and execute it.
+     * @param frame the frame of the currently executing guest language method
+     * @param primitives primitives on the evaluation stack
+     * @param refs references on the evaluation stack
+     * @param top current evaluation stack
+     * @param token the immediate token from the instruction
+     * @param pc the offset of the instruction (program counter)
+     * @param opcode the opcode of the instruction
+     * @return stack top after executing the instruction
+     */
+    private int nodeizeOpToken(VirtualFrame frame, long[] primitives, Object[] refs, int top, CLITablePtr token, int pc, int opcode)
     {
+        //because we are about to change the children[], which is compilation final,
+        //we have to invalidate the previous state.
+        CompilerDirectives.transferToInterpreterAndInvalidate();
 
-        CompilerDirectives.transferToInterpreterAndInvalidate(); // because we are about to change something that is compilation final
-
-        final ExecutionStackAwareNode node;
+        final EvaluationStackAwareNode node;
+        //create a node for the instruction
         switch (opcode)
         {
             case CALL:
@@ -526,19 +594,36 @@ public class BytecodeNode extends Node {
                 CompilerAsserts.neverPartOfCompilation();
                 throw new BACILInternalError(String.format("Can't nodeize opcode %02x (%s) yet.", opcode, BytecodeInstructions.getName(opcode)));
         }
+
+        //add the node to children, and patch the bytecode with a TRUFFLE_NODE instruction and the node offset
         int index = addNode(node);
         byte[] patch = preparePatch((byte)TRUFFLE_NODE, index, BytecodeInstructions.getLength(opcode));
         bytecodeBuffer.patchBytecode(pc, patch);
 
+        //execute the new node
         return nodes[index].execute(frame, primitives, refs);
 
     }
 
-    public int nodeizeOpArr(VirtualFrame frame, long[] primitives, Object[] refs, int top, Type type, int pc, int opcode)
+    /**
+     * Nodeize an instruction with an array element type as an immediate parameter and execute it.
+     * @param frame the frame of the currently executing guest language method
+     * @param primitives primitives on the evaluation stack
+     * @param refs references on the evaluation stack
+     * @param top current evaluation stack
+     * @param type the element type resolved from the instruction
+     * @param pc the offset of the instruction (program counter)
+     * @param opcode the opcode of the instruction
+     * @return stack top after executing the instruction
+     */
+    private int nodeizeOpArr(VirtualFrame frame, long[] primitives, Object[] refs, int top, Type type, int pc, int opcode)
     {
-        CompilerDirectives.transferToInterpreterAndInvalidate(); // because we are about to change something that is compi
+        //because we are about to change the children[], which is compilation final,
+        //we have to invalidate the previous state.
+        CompilerDirectives.transferToInterpreterAndInvalidate();
 
-        final ExecutionStackAwareNode node;
+        final EvaluationStackAwareNode node;
+        //create a node for the instruction
         switch (opcode)
         {
             case LDELEM:
@@ -554,16 +639,34 @@ public class BytecodeNode extends Node {
                 CompilerAsserts.neverPartOfCompilation();
                 throw new BACILInternalError(String.format("Can't nodeize opcode %02x (%s) yet.", opcode, BytecodeInstructions.getName(opcode)));
         }
+
+        //add the node to children, and patch the bytecode with a TRUFFLE_NODE instruction and the node offset
         int index = addNode(node);
         byte[] patch = preparePatch((byte)TRUFFLE_NODE, index, BytecodeInstructions.getLength(opcode));
         bytecodeBuffer.patchBytecode(pc, patch);
 
+        //execute the new node
         return nodes[index].execute(frame, primitives, refs);
     }
 
-    public int nodeizeOpFld(VirtualFrame frame, long[] primitives, Object[] refs, int top, CLITablePtr token, int pc, int opcode)
+    /**
+     * Nodeize an instruction with a field token as an immediate parameter and execute it.
+     * @param frame the frame of the currently executing guest language method
+     * @param primitives primitives on the evaluation stack
+     * @param refs references on the evaluation stack
+     * @param top current evaluation stack
+     * @param token the immediate field token from the instruction
+     * @param pc the offset of the instruction (program counter)
+     * @param opcode the opcode of the instruction
+     * @return stack top after executing the instruction
+     */
+    private int nodeizeOpFld(VirtualFrame frame, long[] primitives, Object[] refs, int top, CLITablePtr token, int pc, int opcode)
     {
-        CompilerDirectives.transferToInterpreterAndInvalidate(); // because we are about to change something that is compilation final
+        //because we are about to change the children[], which is compilation final,
+        //we have to invalidate the previous state.
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+
+        //find the definingType
         Type definingType;
         if(token.getTableId() == CLITableConstants.CLI_TABLE_MEMBER_REF)
         {
@@ -576,10 +679,11 @@ public class BytecodeNode extends Node {
             throw new BACILInternalError("Invalid token type.");
         }
 
+        //make sure the definingType is initialized
         definingType.init();
 
-
-        final ExecutionStackAwareNode node;
+        final EvaluationStackAwareNode node;
+        //create a node for the instruction
         switch (opcode)
         {
             case STFLD:
@@ -604,20 +708,31 @@ public class BytecodeNode extends Node {
                 CompilerAsserts.neverPartOfCompilation();
                 throw new BACILInternalError(String.format("Can't nodeize opcode %02x (%s) yet.", opcode, BytecodeInstructions.getName(opcode)));
         }
+
+        //add the node to children, and patch the bytecode with a TRUFFLE_NODE instruction and the node offset
         int index = addNode(node);
         byte[] patch = preparePatch((byte)TRUFFLE_NODE, index, BytecodeInstructions.getLength(opcode));
         bytecodeBuffer.patchBytecode(pc, patch);
 
+        //execute the new node
         return nodes[index].execute(frame, primitives, refs);
 
     }
 
 
-
-    public static boolean shouldBranch(int opcode, long[] primitives, Object[] refs, int slot)
+    /**
+     * Evaluate whether the branch should be taken for simple (true/false) conditional branch instructions
+     * based on a value on the evaluation stack.
+     * @param opcode the opcode of the instruction
+     * @param primitives primitives on the evaluation stack
+     * @param refs references on the evaluation stack
+     * @param slot the slot the condition value is in
+     * @return whether to take the branch or not
+     */
+    private static boolean shouldBranch(int opcode, long[] primitives, Object[] refs, int slot)
     {
         boolean value;
-        if(ExecutionStackPrimitiveMarker.isExecutionStackPrimitiveMarker(refs[slot]))
+        if(EvaluationStackPrimitiveMarker.isEvaluationStackPrimitiveMarker(refs[slot]))
         {
             value = primitives[slot] != 0;
         } else {
@@ -632,12 +747,22 @@ public class BytecodeNode extends Node {
         return value;
     }
 
-    public static boolean binaryCompareResult(int opcode, long[] primitives, Object[] refs, int slot1, int slot2)
+    /**
+     * Do a binary comparison of values on the evaluation stack and return the result as a boolean.
+     * @param opcode the opcode of the instruction
+     * @param primitives primitives on the evaluation stack
+     * @param refs references on the evaluation stack
+     * @param slot1 the slot the first value is in
+     * @param slot2 the slot the second value is in
+     * @return the comparison result as a boolean
+     */
+    private static boolean binaryCompareResult(int opcode, long[] primitives, Object[] refs, int slot1, int slot2)
     {
-        //TODO floats
-        if(ExecutionStackPrimitiveMarker.isExecutionStackPrimitiveMarker(refs[slot1]) && ExecutionStackPrimitiveMarker.isExecutionStackPrimitiveMarker(refs[slot2]))
+
+        if(EvaluationStackPrimitiveMarker.isEvaluationStackPrimitiveMarker(refs[slot1]) && EvaluationStackPrimitiveMarker.isEvaluationStackPrimitiveMarker(refs[slot2]))
         {
-            ExecutionStackPrimitiveMarker resultType = binaryNumericResultTypes[((ExecutionStackPrimitiveMarker)refs[slot1]).getTag()][((ExecutionStackPrimitiveMarker)refs[slot2]).getTag()];
+            //comparing primitives
+            EvaluationStackPrimitiveMarker resultType = binaryNumericResultTypes[((EvaluationStackPrimitiveMarker)refs[slot1]).getTag()][((EvaluationStackPrimitiveMarker)refs[slot2]).getTag()];
             if(resultType == null)
             {
                 CompilerDirectives.transferToInterpreterAndInvalidate();
@@ -646,14 +771,15 @@ public class BytecodeNode extends Node {
 
             boolean result = false;
 
-            if(resultType == ExecutionStackPrimitiveMarker.EXECUTION_STACK_F)
+            if(resultType == EvaluationStackPrimitiveMarker.EVALUATION_STACK_F)
             {
+                //comparing floats
                 double arg1 = Double.longBitsToDouble(primitives[slot1]);
                 double arg2 = Double.longBitsToDouble(primitives[slot2]);
 
                 switch(opcode)
                 {
-                    //Non-conforming: implementing unordered and ordered double compares identically
+                    //Breaks standard: we implement unordered and ordered double compares identically
                     case CGT:
                     case BGT:
                     case BGT_S:
@@ -697,10 +823,12 @@ public class BytecodeNode extends Node {
 
                 }
             } else {
+                //comparing integers
                 long arg1 = primitives[slot1];
                 long arg2 = primitives[slot2];
-                if(resultType == ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
+                if(resultType == EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32)
                 {
+                    //comparing 32-bit integers
                     switch(opcode)
                     {
                         case CGT:
@@ -737,6 +865,7 @@ public class BytecodeNode extends Node {
                 }
                 switch(opcode)
                 {
+                    //comparing 64-bit integers
                     case CGT:
                     case BGT:
                     case BGT_S:
@@ -801,6 +930,7 @@ public class BytecodeNode extends Node {
             return result;
 
         } else {
+            //comparing references
             switch(opcode)
             {
                 case CEQ:
@@ -818,19 +948,36 @@ public class BytecodeNode extends Node {
         }
     }
 
-    public static void doCompareBinary(int opcode, long[] primitives, Object[] refs, int slot1, int slot2)
+    /**
+     * Do a binary comparison of values on the evaluation stack and put the result on the evaluation stack.
+     * @param opcode the opcode of the instruction
+     * @param primitives primitives on the evaluation stack
+     * @param refs references on the evaluation stack
+     * @param slot1 the slot the first value is in
+     * @param slot2 the slot the second value is in
+     */
+    private static void doCompareBinary(int opcode, long[] primitives, Object[] refs, int slot1, int slot2)
     {
         boolean result = binaryCompareResult(opcode, primitives, refs, slot1, slot2);
         primitives[slot1] = result ? 1 : 0;
-        refs[slot1] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
+        refs[slot1] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32;
 
     }
 
-    public static void doIntegerBinary(int opcode, long[] primitives, Object[] refs, int slot1, int slot2)
+    /**
+     * Do a binary integer operation (and, or, xor) on values on the evaluation stack and put the result on the evaluation stack.
+     * @param opcode the opcode of the instruction
+     * @param primitives primitives on the evaluation stack
+     * @param refs references on the evaluation stack
+     * @param slot1 the slot the first value is in
+     * @param slot2 the slot the second value is in
+     */
+    private static void doIntegerBinary(int opcode, long[] primitives, Object[] refs, int slot1, int slot2)
     {
-        if(ExecutionStackPrimitiveMarker.isExecutionStackPrimitiveMarker(refs[slot1]) && ExecutionStackPrimitiveMarker.isExecutionStackPrimitiveMarker(refs[slot2]))
+        if(EvaluationStackPrimitiveMarker.isEvaluationStackPrimitiveMarker(refs[slot1]) && EvaluationStackPrimitiveMarker.isEvaluationStackPrimitiveMarker(refs[slot2]))
         {
-            ExecutionStackPrimitiveMarker resultType = binaryIntegerResultTypes[((ExecutionStackPrimitiveMarker)refs[slot1]).getTag()][((ExecutionStackPrimitiveMarker)refs[slot2]).getTag()];
+            //calculating with primitives
+            EvaluationStackPrimitiveMarker resultType = binaryIntegerResultTypes[((EvaluationStackPrimitiveMarker)refs[slot1]).getTag()][((EvaluationStackPrimitiveMarker)refs[slot2]).getTag()];
             if(resultType == null)
             {
                 CompilerDirectives.transferToInterpreterAndInvalidate();
@@ -851,7 +998,7 @@ public class BytecodeNode extends Node {
 
             }
 
-            if(resultType == ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
+            if(resultType == EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32)
             {
                 result = TypeHelpers.truncate32(result);
             }
@@ -860,17 +1007,24 @@ public class BytecodeNode extends Node {
             refs[slot1] = resultType;
 
         }  else {
+            //calculating with references
             CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILInternalError("Unimplemented.");
         }
     }
 
-    public static void doNegate(long[] primitives, Object[] refs, int slot)
+    /**
+     * Negate a value on the evaluation stack.
+     * @param primitives primitives on the evaluation stack
+     * @param refs references on the evaluation stack
+     * @param slot the slot the value is in
+     */
+    private static void doNegate(long[] primitives, Object[] refs, int slot)
     {
-        if(refs[slot] == ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
+        if(refs[slot] == EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32)
         {
             primitives[slot] = TypeHelpers.truncate32(-(int)primitives[slot]);
-        } else if (refs[slot] == ExecutionStackPrimitiveMarker.EXECUTION_STACK_F)
+        } else if (refs[slot] == EvaluationStackPrimitiveMarker.EVALUATION_STACK_F)
         {
             primitives[slot] = Double.doubleToLongBits(-Double.longBitsToDouble(primitives[slot]));
         } else { //INT64, NATIVE INT
@@ -878,13 +1032,20 @@ public class BytecodeNode extends Node {
         }
     }
 
-    public static void doNumericBinary(int opcode, long[] primitives, Object[] refs, int slot1, int slot2)
+    /**
+     * Do a binary numeric operation (add, sub, mul, div, rem) on values on the evaluation stack and put the result on the evaluation stack.
+     * @param opcode the opcode of the instruction
+     * @param primitives primitives on the evaluation stack
+     * @param refs references on the evaluation stack
+     * @param slot1 the slot the first value is in
+     * @param slot2 the slot the second value is in
+     */
+    private static void doNumericBinary(int opcode, long[] primitives, Object[] refs, int slot1, int slot2)
     {
-
-        if(ExecutionStackPrimitiveMarker.isExecutionStackPrimitiveMarker(refs[slot1]) && ExecutionStackPrimitiveMarker.isExecutionStackPrimitiveMarker(refs[slot2]))
+        if(EvaluationStackPrimitiveMarker.isEvaluationStackPrimitiveMarker(refs[slot1]) && EvaluationStackPrimitiveMarker.isEvaluationStackPrimitiveMarker(refs[slot2]))
         {
-
-            ExecutionStackPrimitiveMarker resultType = binaryNumericResultTypes[((ExecutionStackPrimitiveMarker)refs[slot1]).getTag()][((ExecutionStackPrimitiveMarker)refs[slot2]).getTag()];
+            //calculate with primitives
+            EvaluationStackPrimitiveMarker resultType = binaryNumericResultTypes[((EvaluationStackPrimitiveMarker)refs[slot1]).getTag()][((EvaluationStackPrimitiveMarker)refs[slot2]).getTag()];
             if(resultType == null)
             {
                 CompilerDirectives.transferToInterpreterAndInvalidate();
@@ -893,8 +1054,9 @@ public class BytecodeNode extends Node {
 
             long result = 0;
 
-            if(resultType == ExecutionStackPrimitiveMarker.EXECUTION_STACK_F)
+            if(resultType == EvaluationStackPrimitiveMarker.EVALUATION_STACK_F)
             {
+                //calculate with floats
                 double arg1 = Double.longBitsToDouble(primitives[slot1]);
                 double arg2 = Double.longBitsToDouble(primitives[slot2]);
                 double dblresult = 0;
@@ -919,6 +1081,7 @@ public class BytecodeNode extends Node {
                 }
                 result = Double.doubleToLongBits(dblresult);
             } else {
+                //calculate with integers
                 switch(opcode)
                 {
                     case ADD:
@@ -941,9 +1104,7 @@ public class BytecodeNode extends Node {
             }
 
 
-
-
-            if(resultType == ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
+            if(resultType == EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32)
             {
                 result = TypeHelpers.truncate32(result);
             }
@@ -952,17 +1113,25 @@ public class BytecodeNode extends Node {
             refs[slot1] = resultType;
 
         }  else {
+            //calculate with references
             CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILInternalError("Unimplemented.");
         }
     }
 
-    public static void doConvertToFloat(int opcode, long[] primitives, Object[] refs, int slot)
+    /**
+     * Convert a value on evaluation stack to a floating point value.
+     * @param opcode the opcode of the instruction
+     * @param primitives primitives on the evaluation stack
+     * @param refs references on the evaluation stack
+     * @param slot the slot the value is in
+     */
+    private static void doConvertToFloat(int opcode, long[] primitives, Object[] refs, int slot)
     {
-        if(refs[slot] == ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
+        if(refs[slot] == EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32)
         {
             primitives[slot] = Double.doubleToLongBits((int)(primitives[slot]));
-        } else if (refs[slot] == ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT64) {
+        } else if (refs[slot] == EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT64) {
             primitives[slot] = Double.doubleToLongBits(primitives[slot]);
         }
 
@@ -970,18 +1139,28 @@ public class BytecodeNode extends Node {
         {
             primitives[slot] = Double.doubleToLongBits((float)Double.longBitsToDouble(primitives[slot]));
         }
-        refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_F;
+        refs[slot] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_F;
     }
 
-    public static void doConvertToInt(int opcode, long[] primitives, Object[] refs, int slot)
+    /**
+     * Convert a value on evaluation stack to an integer value.
+     * @param opcode the opcode of the instruction
+     * @param primitives primitives on the evaluation stack
+     * @param refs references on the evaluation stack
+     * @param slot the slot the value is in
+     */
+    private static void doConvertToInt(int opcode, long[] primitives, Object[] refs, int slot)
     {
         long value = primitives[slot];
-        if(refs[slot] == ExecutionStackPrimitiveMarker.EXECUTION_STACK_F)
+        if(refs[slot] == EvaluationStackPrimitiveMarker.EVALUATION_STACK_F)
         {
+            //if source value is float, first convert to integer
             value = (long)Double.longBitsToDouble(primitives[slot]);
         }
-        if(refs[slot] == ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32)
+
+        if(refs[slot] == EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32)
         {
+            //if source value is 32-bit, sign extend to 64-bit
             switch(opcode) {
                 case CONV_I1:
                 case CONV_I2:
@@ -1001,45 +1180,43 @@ public class BytecodeNode extends Node {
         {
             case CONV_I1:
                 primitives[slot] = TypeHelpers.signExtend8to32(value);
-                refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
+                refs[slot] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32;
                 break;
 
             case CONV_I2:
                 primitives[slot] = TypeHelpers.signExtend16to32(value);
-                refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
+                refs[slot] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32;
                 break;
 
             case CONV_I4:
                 primitives[slot] = TypeHelpers.truncate32(value);
-                refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
+                refs[slot] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32;
                 break;
-
-
 
             case CONV_U1:
                 primitives[slot] = TypeHelpers.zeroExtend8(value);
-                refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
+                refs[slot] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32;
                 break;
 
             case CONV_U2:
                 primitives[slot] = TypeHelpers.zeroExtend16(value);
-                refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
+                refs[slot] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32;
                 break;
 
             case CONV_U4:
                 primitives[slot] = TypeHelpers.zeroExtend32(value);
-                refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
+                refs[slot] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32;
                 break;
 
             case CONV_U8:
             case CONV_I8:
-                refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT64;
+                refs[slot] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT64;
                 primitives[slot] = value;
                 break;
 
             case CONV_U:
             case CONV_I:
-                refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_NATIVE_INT;
+                refs[slot] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_NATIVE_INT;
                 primitives[slot] = value;
 
             default:
@@ -1048,10 +1225,18 @@ public class BytecodeNode extends Node {
         }
     }
 
-    public static void doShiftBinary(int opcode, long[] primitives, Object[] refs, int slot1, int slot2)
+    /**
+     * Do a numeric shift operation using values on the evaluation stack and put the result on the evaluation stack.
+     * @param opcode the opcode of the instruction
+     * @param primitives primitives on the evaluation stack
+     * @param refs references on the evaluation stack
+     * @param slot1 the slot the first value is in
+     * @param slot2 the slot the second value is in
+     */
+    private static void doShiftBinary(int opcode, long[] primitives, Object[] refs, int slot1, int slot2)
     {
-        if(refs[slot2] != ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32 &&
-        refs[slot2] != ExecutionStackPrimitiveMarker.EXECUTION_STACK_NATIVE_INT)
+        if(refs[slot2] != EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32 &&
+        refs[slot2] != EvaluationStackPrimitiveMarker.EVALUATION_STACK_NATIVE_INT)
         {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILInternalError("Invalid shift value.");
@@ -1065,72 +1250,134 @@ public class BytecodeNode extends Node {
             case SHR_UN:
                 primitives[slot1] = primitives[slot1] >>> primitives[slot2]; break;
             case SHR:
-                if(refs[slot1] == ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32) primitives[slot1] = TypeHelpers.signExtend32(primitives[slot1]);
+                if(refs[slot1] == EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32) primitives[slot1] = TypeHelpers.signExtend32(primitives[slot1]);
                 primitives[slot1] = primitives[slot1] >> primitives[slot2];
                 break;
         }
 
     }
 
-
-    public static int doJmp(BytecodeBuffer bytecodeBuffer, int pc, int offset)
-    {
-        return bytecodeBuffer.nextInstruction(pc) + offset;
-    }
-
-    public static Object getReturnValue(long[] primitives, Object[] refs, int slot, Type retType)
+    /**
+     * Get the return value from the evaluation stack as an object.
+     * @param primitives primitives on the evaluation stack
+     * @param refs references on the evaluation stack
+     * @param slot the slot the return value is in
+     * @param retType the type of the return value
+     * @return the object representing the return value
+     */
+    private static Object getReturnValue(long[] primitives, Object[] refs, int slot, Type retType)
     {
         if((retType instanceof SystemVoidType))
         {
-            return null; //TODO polyglot API vyzaduje vraceni neceho chytreho
+            //TODO polyglot API wants us to return something better, like a language-specific null value
+            return null;
         }
-
 
         return retType.stackToObject(refs[slot], primitives[slot]);
     }
 
-    public static void loadIndirect(long[] primitives, Object[] refs, int slot, LocationReference locationReference, Type type)
+
+    /**
+     * Implements an indirect load from a managed pointer represented by a {@link LocationReference}.
+     * @param primitives primitives on the evaluation stack
+     * @param refs references on the evaluation stack
+     * @param slot the slot to put the result in
+     * @param locationReference the managed pointer to load form
+     * @param type expected type of the value
+     */
+    private static void loadIndirect(long[] primitives, Object[] refs, int slot, LocationReference locationReference, Type type)
     {
         //type safety check should be here, comparing compatibility of the reference type and the type from the instruction
         type.locationToStack(locationReference.getHolder(), locationReference.getHolderOffset(), refs, primitives, slot);
     }
 
-    public static void storeIndirect(long primitive, Object ref, LocationReference locationReference, Type type)
+    /**
+     * Implements an indirect store to a managed pointer represented by a {@link LocationReference}.
+     * @param primitive the primitive to store
+     * @param ref the reference to store
+     * @param locationReference the managed pointer to store to
+     * @param type expected type of the value
+     */
+    private static void storeIndirect(long primitive, Object ref, LocationReference locationReference, Type type)
     {
         //type safety check should be here, comparing compatibility of the reference type and the type from the instruction
         type.stackToLocation(locationReference.getHolder(), locationReference.getHolderOffset(), ref, primitive);
     }
 
-    public static void loadStack(long[] primitives, Object[] refs, int slot, LocationsDescriptor descriptor, LocationsHolder locals, int localSlot)
+    /**
+     * Load a value from a location to the evaluation stack.
+     * @param primitives primitives on the evaluation stack
+     * @param refs references on the evaluation stack
+     * @param slot evaluation stack slot to load the value to
+     * @param descriptor the {@link LocationsDescriptor} describing the location types
+     * @param holder the {@link LocationsHolder} holding the location values
+     * @param locationIndex the index of the location to load from
+     */
+    private static void loadStack(long[] primitives, Object[] refs, int slot, LocationsDescriptor descriptor, LocationsHolder holder, int locationIndex)
     {
         CompilerAsserts.partialEvaluationConstant(descriptor);
-        descriptor.locationToStack(locals, localSlot, refs, primitives, slot);
+        descriptor.locationToStack(holder, locationIndex, refs, primitives, slot);
     }
 
-    public static void storeStack(long[] primitives, Object[] refs, int slot, LocationsDescriptor descriptor, LocationsHolder locals, int localSlot)
+    /**
+     * Stores a value to a location from the evaluation stack.
+     * @param primitives primitives on the evaluation stack
+     * @param refs references on the evaluation stack
+     * @param slot evaluation stack slot to store the value from
+     * @param descriptor the {@link LocationsDescriptor} describing the location types
+     * @param holder the {@link LocationsHolder} holding the location values
+     * @param locationIndex the index of the location to store to
+     */
+    private static void storeStack(long[] primitives, Object[] refs, int slot, LocationsDescriptor descriptor, LocationsHolder holder, int locationIndex)
     {
         CompilerAsserts.partialEvaluationConstant(descriptor);
-        descriptor.stackToLocation(locals, localSlot, refs[slot], primitives[slot]);
+        descriptor.stackToLocation(holder, locationIndex, refs[slot], primitives[slot]);
     }
 
-    public static void putInt32(long[] primitives, Object[] refs, int slot, int value)
+
+    /**
+     * Load an int-32 constant on the evaluation stock
+     * @param primitives primitives on the evaluation stack
+     * @param refs references on the evaluation stack
+     * @param slot evaluation stack slot to load the value to
+     * @param value the constant value
+     */
+    private static void putInt32(long[] primitives, Object[] refs, int slot, int value)
     {
         primitives[slot] = TypeHelpers.truncate32(value);
-        refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT32;
+        refs[slot] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32;
     }
 
-    public static void putInt64(long[] primitives, Object[] refs, int slot, long value)
+    /**
+     * Load an int-64 constant on the evaluation stock
+     * @param primitives primitives on the evaluation stack
+     * @param refs references on the evaluation stack
+     * @param slot evaluation stack slot to load the value to
+     * @param value the constant value
+     */
+    private static void putInt64(long[] primitives, Object[] refs, int slot, long value)
     {
         primitives[slot] = value;
-        refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_INT64;
+        refs[slot] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT64;
     }
 
-    public static void putFloat(long[] primitives, Object[] refs, int slot, double value)
+    /**
+     * Load a float constant on the evaluation stock
+     * @param primitives primitives on the evaluation stack
+     * @param refs references on the evaluation stack
+     * @param slot evaluation stack slot to load the value to
+     * @param value the constant value
+     */
+    private static void putFloat(long[] primitives, Object[] refs, int slot, double value)
     {
         primitives[slot] = Double.doubleToLongBits(value);
-        refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_F;
+        refs[slot] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_F;
     }
 
+    /**
+     * Get the method whose body this BytecodeNode implements.
+     * @return the method this BytecodeNode implements
+     */
     public CILMethod getMethod() {
         return method;
     }

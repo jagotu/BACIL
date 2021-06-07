@@ -13,7 +13,7 @@ import com.vztekoverflow.bacil.runtime.types.locations.VtableSlotIdentity;
  * (III.4.2 callvirt – call a method associated, at runtime, with an object)
  * Stores the resolved vtable slot and the root method from the instruction.
  */
-public class VirtualCallNode extends ExecutionStackAwareNode {
+public class VirtualCallNode extends EvaluationStackAwareNode {
 
     protected final int slot;
     protected final int top;
@@ -58,7 +58,7 @@ public class VirtualCallNode extends ExecutionStackAwareNode {
         Object[] args = BytecodeNode.prepareArgs(primitives, refs, top, rootMethod, 0);
         Object returnValue = method.getMethodCallTarget().call(args);
 
-        //Put returned value on the execution stack
+        //Put returned value on the evaluation stack
         Type returnType = rootMethod.getRetType();
         final int firstArg = top - rootMethod.getArgsCount();
 

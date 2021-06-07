@@ -1,9 +1,9 @@
 package com.vztekoverflow.bacil.bytecode;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.vztekoverflow.bacil.runtime.ExecutionStackPrimitiveMarker;
+import com.vztekoverflow.bacil.runtime.EvaluationStackPrimitiveMarker;
 
-import static com.vztekoverflow.bacil.runtime.ExecutionStackPrimitiveMarker.*;
+import static com.vztekoverflow.bacil.runtime.EvaluationStackPrimitiveMarker.*;
 
 public class BytecodeInstructions {
 
@@ -217,8 +217,8 @@ public class BytecodeInstructions {
 
     //Custom truffle instructions start here
     //Allowed by III.1.2.1:
-    //> Opcodes whose first byte lies in the range 0xF0 through 0xFB
-    //> inclusive, are available for experimental purposes.
+    //Opcodes whose first byte lies in the range 0xF0 through 0xFB
+    //inclusive, are available for experimental purposes.
     public static final int TRUFFLE_NODE = 0xF0; //Used to replace nodeized instructions
 
 
@@ -546,32 +546,32 @@ public class BytecodeInstructions {
      * Stores the result type for A op B, where op is add, div, mul, rem, or sub, for each
      * possible combination of operand types.
      *
-     * Maps two {@code EXECUTION_STACK_TAG}s to an {@link ExecutionStackPrimitiveMarker}.
+     * Maps two {@code EVALUATION_STACK_TAG}s to an {@link EvaluationStackPrimitiveMarker}.
      * Invalid combinations result in a null.
      */
     @CompilationFinal(dimensions = 2)
-    public static final ExecutionStackPrimitiveMarker[][] binaryNumericResultTypes = new ExecutionStackPrimitiveMarker[EXECUTION_STACK_TAG_MAX+1][EXECUTION_STACK_TAG_MAX+1];
+    public static final EvaluationStackPrimitiveMarker[][] binaryNumericResultTypes = new EvaluationStackPrimitiveMarker[EVALUATION_STACK_TAG_MAX +1][EVALUATION_STACK_TAG_MAX +1];
 
     /**
      * An implementation of Table III.5: Integer Operations
      * Stores the result type for A op B, where op is and, div.un, not, or, rem.un, xor, for each
      * possible combination of operand types.
      *
-     * Maps two {@code EXECUTION_STACK_TAG}s to an {@link ExecutionStackPrimitiveMarker}.
+     * Maps two {@code EVALUATION_STACK_TAG}s to an {@link EvaluationStackPrimitiveMarker}.
      * Invalid combinations result in a null.
      */
     @CompilationFinal(dimensions = 2)
-    public static final ExecutionStackPrimitiveMarker[][] binaryIntegerResultTypes = new ExecutionStackPrimitiveMarker[EXECUTION_STACK_TAG_MAX+1][EXECUTION_STACK_TAG_MAX+1];
+    public static final EvaluationStackPrimitiveMarker[][] binaryIntegerResultTypes = new EvaluationStackPrimitiveMarker[EVALUATION_STACK_TAG_MAX +1][EVALUATION_STACK_TAG_MAX +1];
 
 
     /**
      * Defines a valid combination in the Binary Numeric Operations table.
      * Makes sure all combinations are commutative.
-     * @param arg1 an {@code EXECUTION_STACK_TAG} representing the first operand
-     * @param arg2 an {@code EXECUTION_STACK_TAG} representing the second operand
-     * @param result an {@link ExecutionStackPrimitiveMarker} for the resulting execution stack type
+     * @param arg1 an {@code EVALUATION_STACK_TAG} representing the first operand
+     * @param arg2 an {@code EVALUATION_STACK_TAG} representing the second operand
+     * @param result an {@link EvaluationStackPrimitiveMarker} for the resulting evaluation stack type
      */
-    public static void binaryNumericResult(byte arg1, byte arg2, ExecutionStackPrimitiveMarker result)
+    public static void binaryNumericResult(byte arg1, byte arg2, EvaluationStackPrimitiveMarker result)
     {
         binaryNumericResultTypes[arg1][arg2] = result;
         if(arg1 != arg2)
@@ -583,11 +583,11 @@ public class BytecodeInstructions {
     /**
      * Defines a valid combination in the Integer Operations table.
      * Makes sure all combinations are commutative.
-     * @param arg1 an {@code EXECUTION_STACK_TAG} representing the first operand
-     * @param arg2 an {@code EXECUTION_STACK_TAG} representing the second operand
-     * @param result an {@link ExecutionStackPrimitiveMarker} for the resulting execution stack type
+     * @param arg1 an {@code EVALUATION_STACK_TAG} representing the first operand
+     * @param arg2 an {@code EVALUATION_STACK_TAG} representing the second operand
+     * @param result an {@link EvaluationStackPrimitiveMarker} for the resulting evaluation stack type
      */
-    public static void binaryIntegerResult(byte arg1, byte arg2, ExecutionStackPrimitiveMarker result)
+    public static void binaryIntegerResult(byte arg1, byte arg2, EvaluationStackPrimitiveMarker result)
     {
         binaryIntegerResultTypes[arg1][arg2] = result;
         if(arg1 != arg2)
@@ -599,17 +599,17 @@ public class BytecodeInstructions {
 
     //Define binary numeric operations based on Table III.2: Binary Numeric Operations
     static {
-        binaryNumericResult(EXECUTION_STACK_TAG_INT32, EXECUTION_STACK_TAG_INT32, EXECUTION_STACK_INT32);
-        binaryNumericResult(EXECUTION_STACK_TAG_INT32, EXECUTION_STACK_TAG_NATIVE_INT, EXECUTION_STACK_NATIVE_INT);
-        binaryNumericResult(EXECUTION_STACK_TAG_INT64, EXECUTION_STACK_TAG_INT64, EXECUTION_STACK_INT64);
-        binaryNumericResult(EXECUTION_STACK_TAG_F, EXECUTION_STACK_TAG_F, EXECUTION_STACK_F);
+        binaryNumericResult(EVALUATION_STACK_TAG_INT32, EVALUATION_STACK_TAG_INT32, EVALUATION_STACK_INT32);
+        binaryNumericResult(EVALUATION_STACK_TAG_INT32, EVALUATION_STACK_TAG_NATIVE_INT, EVALUATION_STACK_NATIVE_INT);
+        binaryNumericResult(EVALUATION_STACK_TAG_INT64, EVALUATION_STACK_TAG_INT64, EVALUATION_STACK_INT64);
+        binaryNumericResult(EVALUATION_STACK_TAG_F, EVALUATION_STACK_TAG_F, EVALUATION_STACK_F);
     }
 
 
     //Define binary integer operations based on Table III.5: Integer Operations
     static {
-        binaryIntegerResult(EXECUTION_STACK_TAG_INT32, EXECUTION_STACK_TAG_INT32, EXECUTION_STACK_INT32);
-        binaryIntegerResult(EXECUTION_STACK_TAG_INT32, EXECUTION_STACK_TAG_NATIVE_INT, EXECUTION_STACK_NATIVE_INT);
-        binaryIntegerResult(EXECUTION_STACK_TAG_INT64, EXECUTION_STACK_TAG_INT64, EXECUTION_STACK_INT64);
+        binaryIntegerResult(EVALUATION_STACK_TAG_INT32, EVALUATION_STACK_TAG_INT32, EVALUATION_STACK_INT32);
+        binaryIntegerResult(EVALUATION_STACK_TAG_INT32, EVALUATION_STACK_TAG_NATIVE_INT, EVALUATION_STACK_NATIVE_INT);
+        binaryIntegerResult(EVALUATION_STACK_TAG_INT64, EVALUATION_STACK_TAG_INT64, EVALUATION_STACK_INT64);
     }
 }

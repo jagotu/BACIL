@@ -4,7 +4,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.bacil.BACILInternalError;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITypeDefTableRow;
-import com.vztekoverflow.bacil.runtime.ExecutionStackPrimitiveMarker;
+import com.vztekoverflow.bacil.runtime.EvaluationStackPrimitiveMarker;
 import com.vztekoverflow.bacil.runtime.types.locations.LocationsHolder;
 
 public class SystemDoubleType extends SystemValueTypeType {
@@ -19,7 +19,7 @@ public class SystemDoubleType extends SystemValueTypeType {
 
     @Override
     public void stackToLocation(LocationsHolder holder, int holderOffset, Object ref, long primitive) {
-        if(ref != ExecutionStackPrimitiveMarker.EXECUTION_STACK_F)
+        if(ref != EvaluationStackPrimitiveMarker.EVALUATION_STACK_F)
         {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILInternalError("Saving a non-Float value into System.Double location.");
@@ -29,13 +29,13 @@ public class SystemDoubleType extends SystemValueTypeType {
 
     @Override
     public void locationToStack(LocationsHolder holder, int holderOffset, Object[] refs, long[] primitives, int slot) {
-        refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_F;
+        refs[slot] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_F;
         primitives[slot] = holder.getPrimitives()[holderOffset];
     }
 
     @Override
     public Object stackToObject(Object ref, long primitive) {
-        if(ref != ExecutionStackPrimitiveMarker.EXECUTION_STACK_F)
+        if(ref != EvaluationStackPrimitiveMarker.EVALUATION_STACK_F)
         {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILInternalError("Accessing a non-Float value from a System.Double location.");
@@ -45,7 +45,7 @@ public class SystemDoubleType extends SystemValueTypeType {
 
     @Override
     public void objectToStack(Object[] refs, long[] primitives, int slot, Object value) {
-        refs[slot] = ExecutionStackPrimitiveMarker.EXECUTION_STACK_F;
+        refs[slot] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_F;
         primitives[slot] = Double.doubleToLongBits((Double)value);
     }
 

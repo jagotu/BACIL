@@ -13,7 +13,7 @@ import com.vztekoverflow.bacil.runtime.types.TypedField;
  * (III.4.10 ldfld – load field of an object)
  * Stores the resolved object type and the field from the instruction.
  */
-public class LdfldNode extends ExecutionStackAwareNode {
+public class LdfldNode extends EvaluationStackAwareNode {
 
     private final TypedField field;
     private final Type objType;
