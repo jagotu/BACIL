@@ -2,7 +2,7 @@ package com.vztekoverflow.bacil.runtime.types;
 
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.parser.signatures.SignatureReader;
-import com.vztekoverflow.bacil.parser.signatures.SignatureType;
+import com.vztekoverflow.bacil.parser.signatures.TypeSig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +27,7 @@ public class CustomMod {
 
     public static boolean canStart(SignatureReader reader)
     {
-        return reader.peekUnsigned() == SignatureType.ELEMENT_TYPE_CMOD_OPT || reader.peekUnsigned() == SignatureType.ELEMENT_TYPE_CMOD_REQD;
+        return reader.peekUnsigned() == TypeSig.ELEMENT_TYPE_CMOD_OPT || reader.peekUnsigned() == TypeSig.ELEMENT_TYPE_CMOD_REQD;
     }
 
     public static List<CustomMod> readAll(SignatureReader reader)
@@ -46,7 +46,7 @@ public class CustomMod {
     {
         int cmod = reader.getUnsigned();
         final boolean optional;
-        optional = cmod == SignatureType.ELEMENT_TYPE_CMOD_OPT;
+        optional = cmod == TypeSig.ELEMENT_TYPE_CMOD_OPT;
 
         CLITablePtr typeToken = CLITablePtr.fromTypeDefOrRefOrSpecEncoded(reader.getUnsigned());
 

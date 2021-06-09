@@ -5,6 +5,9 @@ import com.vztekoverflow.bacil.parser.BACILParserException;
 import com.vztekoverflow.bacil.parser.ByteSequenceBuffer;
 import org.graalvm.polyglot.io.ByteSequence;
 
+/**
+ * Representation of the CLI metadata as specified in II.24 Metadata physical layout, mainly II.24.2.1 Metadata root.
+ */
 public class CLIMetadata {
     private final short majorVersion;
     private final short minorVersion;
@@ -49,6 +52,11 @@ public class CLIMetadata {
         return metadataStartPosition;
     }
 
+    /**
+     * Read the CLI metadata from the provided {@link ByteSequenceBuffer}.
+     * @param buf the byte sequence to read the CLI metadata from
+     * @return the CLI metadata represented as a {@link CLIMetadata} instance
+     */
     public static CLIMetadata read(ByteSequenceBuffer buf)
     {
         final int metadataStart = buf.getPosition();
@@ -82,6 +90,9 @@ public class CLIMetadata {
         return new CLIMetadata(majorVersion, minorVersion, reserved, version, streamHeaders, metadataStart);
     }
 
+    /**
+     * Get a stream header for a stream by name.
+     */
     public CLIStreamHeader getStreamHeader(String streamName)
     {
         for(CLIStreamHeader header : streamHeaders)
@@ -92,6 +103,12 @@ public class CLIMetadata {
         return null;
     }
 
+    /**
+     * Get the stream content for a stream by name as a {@link ByteSequence}.
+     * @param streamName the name of the stream to find
+     * @param fileBytes a {@link ByteSequence} representing the source file
+     * @return a {@link ByteSequence} representing the stream content
+     */
     public ByteSequence getStream(String streamName, ByteSequence fileBytes)
     {
         CLIStreamHeader header = getStreamHeader(streamName);

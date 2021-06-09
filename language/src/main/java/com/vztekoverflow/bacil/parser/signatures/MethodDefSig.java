@@ -4,7 +4,9 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.runtime.types.Type;
 
-//II.23.2.1
+/**
+ * Class implementing parsing for MethodDefSig, as specified in II.23.2.1 MethodDefSig.
+ */
 public class MethodDefSig {
 
     private final boolean hasThis;
@@ -57,11 +59,11 @@ public class MethodDefSig {
         }
 
         final int count = reader.getUnsigned();
-        final Type retType = SignatureType.readParam(reader, true, component);
+        final Type retType = ParamSig.read(reader, true, component);
         final Type[] paramTypes = new Type[count];
         for(int i = 0; i < count; i++)
         {
-            paramTypes[i] = SignatureType.readParam(reader, false, component);
+            paramTypes[i] = ParamSig.read(reader, false, component);
         }
 
         return new MethodDefSig(hasThis, explicitThis, (byte)callingConvention, genParamCount, retType, paramTypes);

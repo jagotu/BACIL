@@ -6,7 +6,6 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.vztekoverflow.bacil.BACILInternalError;
-import com.vztekoverflow.bacil.BACILLanguage;
 import com.vztekoverflow.bacil.bytecode.BytecodeBuffer;
 import com.vztekoverflow.bacil.bytecode.BytecodeInstructions;
 import com.vztekoverflow.bacil.parser.cil.CILMethod;
@@ -35,6 +34,9 @@ import static com.vztekoverflow.bacil.bytecode.BytecodeInstructions.*;
  * Directly interprets simple instructions and nodeizes complex ones.
  *
  * The special TRUFFLE_NODE instruction is used to replace nodeized instructions.
+ *
+ * The evaluation stack is represented as two arrays, one for primitives ({@code long[]})
+ * and one for references ({@code Object[]}.
  */
 public class BytecodeNode extends Node {
 
@@ -87,9 +89,10 @@ public class BytecodeNode extends Node {
         int evaluationStackCount = method.getMaxStack();
         CompilerAsserts.partialEvaluationConstant(evaluationStackCount);
 
-        //Reference types are stored directly in refs[] and the slot in primitives[] is undefined.
-        //For primitives, the refs slot is filled with EvaluationStackPrimitiveMarker objects
-        //that allow tracking of the type int64/int32/native int/F
+        //We use two arrays to represent the evaluation stack, one for primitives and one for references.
+        //For references, the ref is stored directly in refs[] and the slot in primitives[] is undefined.
+        //For primitives, the refs[] slot is filled with EvaluationStackPrimitiveMarker objects
+        //that allow tracking of the type (int64/int32/native int/F)
         long[] primitives = new long[evaluationStackCount];
         Object[] refs = new Object[evaluationStackCount];
 
@@ -259,7 +262,7 @@ public class BytecodeNode extends Node {
 
 
                 case RET:
-                    return getReturnValue(primitives, refs, top-1, method.getMethodDefSig().getRetType());
+                    return getReturnValue(primitives, refs, top-1, method.getRetType());
 
                 case BR:
                     pc = nextpc + bytecodeBuffer.getImmInt(pc); continue loop;
@@ -504,7 +507,7 @@ public class BytecodeNode extends Node {
      * @param refs references on the evaluation stack
      * @param top current evaluation stack
      */
-    private static void loadArrayElem(Type elementType, long[] primitives, Object[] refs, int top)
+    public static void loadArrayElem(Type elementType, long[] primitives, Object[] refs, int top)
     {
         //Breaks standard: We should also support native int as the index here, but for us
         //native int is 64-bit, and Java arrays only use 32-bit indexers.
@@ -529,7 +532,7 @@ public class BytecodeNode extends Node {
      * @param refs references on the evaluation stack
      * @param top current evaluation stack
      */
-    private static void storeArrayElem(Type elementType, long[] primitives, Object[] refs, int top)
+    public static void storeArrayElem(Type elementType, long[] primitives, Object[] refs, int top)
     {
         //Breaks standard: We should also support native int as the index here, but for us
         //native int is 64-bit, and Java arrays only use 32-bit indexers.
@@ -566,10 +569,10 @@ public class BytecodeNode extends Node {
         switch (opcode)
         {
             case CALL:
-                node = new NonvirtualCallNode(method.getComponent().getMethod(token, lookupContextReference(BACILLanguage.class).get()), top);
+                node = new NonvirtualCallNode(method.getComponent().getMethod(token), top);
                 break;
             case CALLVIRT:
-                BACILMethod targetMethod = method.getComponent().getMethod(token, lookupContextReference(BACILLanguage.class).get());
+                BACILMethod targetMethod = method.getComponent().getMethod(token);
                 if(targetMethod.isVirtual())
                 {
                     node = new VirtualCallNode(targetMethod, top);
@@ -578,7 +581,7 @@ public class BytecodeNode extends Node {
                 }
                 break;
             case NEWOBJ:
-                node = new ConstructorNode(method.getComponent().getMethod(token, lookupContextReference(BACILLanguage.class).get()), top);
+                node = new ConstructorNode(method.getComponent().getMethod(token), top);
                 break;
             case NEWARR:
                 node = new NewarrNode(method.getComponent().getType(token), top);

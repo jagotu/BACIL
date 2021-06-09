@@ -4,10 +4,17 @@ import org.graalvm.polyglot.io.ByteSequence;
 
 import java.nio.charset.StandardCharsets;
 
-public class ByteSequenceBuffer {
+/**
+ * Class wrapping a ByteSequence and providing higher-level sequential read operations.
+ */
+public class ByteSequenceBuffer implements Positionable {
 
     private int position;
 
+    /**
+     * Create a new {@link ByteSequenceBuffer} wrapping the specified {@link ByteSequence}.
+     * @param byteSequence the byte sequence to wrap
+     */
     public ByteSequenceBuffer(ByteSequence byteSequence) {
         this.byteSequence = byteSequence;
         this.position = 0;
@@ -15,11 +22,17 @@ public class ByteSequenceBuffer {
 
     ByteSequence byteSequence;
 
+    /**
+     * Read a byte from the sequence.
+     */
     public byte getByte()
     {
         return byteSequence.byteAt(position++);
     }
 
+    /**
+     * Read a short from the sequence.
+     */
     public short getShort()
     {
         short result = (short)(getByte() & 0xff);
@@ -27,6 +40,9 @@ public class ByteSequenceBuffer {
         return result;
     }
 
+    /**
+     * Read an int from the sequence.
+     */
     public int getInt()
     {
         int result = (getByte() & 0xff);
@@ -36,6 +52,9 @@ public class ByteSequenceBuffer {
         return result;
     }
 
+    /**
+     * Read a long from the sequence.
+     */
     public long getLong()
     {
         long result = (getByte() & 0xff);
@@ -49,14 +68,19 @@ public class ByteSequenceBuffer {
         return result;
     }
 
+    @Override
     public int getPosition() {
         return position;
     }
 
+    @Override
     public void setPosition(int position) {
         this.position = position;
     }
 
+    /**
+     * Read a null-terminated ASCII string.
+     */
     public String getCString()
     {
         StringBuilder sb = new StringBuilder();
@@ -70,6 +94,10 @@ public class ByteSequenceBuffer {
         return sb.toString();
     }
 
+
+    /**
+     * Read an UTF-8 string of the specified lengths.
+     */
     public String getUTF8String(int length)
     {
         byte[] buf = new byte[length];
@@ -81,6 +109,9 @@ public class ByteSequenceBuffer {
         return new String(buf, StandardCharsets.UTF_8);
     }
 
+    /**
+     * Skip bytes so the position is aligned at the specified byte boundary.
+     */
     public void align(int bytes)
     {
         int modulo = position % bytes;
@@ -91,6 +122,9 @@ public class ByteSequenceBuffer {
 
     }
 
+    /**
+     * Get a ByteSequence starting at current position with the specified length.
+     */
     public ByteSequence subSequence(int length)
     {
         return byteSequence.subSequence(position, position+length);

@@ -5,6 +5,10 @@ import com.vztekoverflow.bacil.parser.ByteSequenceBuffer;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableHeads;
 import org.graalvm.polyglot.io.ByteSequence;
 
+/**
+ * Class storing the raw CLI Metadata tables data and its metadata, as described in
+ * II.24.2.6 #~ stream.
+ */
 public class CLITables {
 
     private final CLITablesHeader tablesHeader;
@@ -17,6 +21,10 @@ public class CLITables {
     private final boolean BlobHeapBig;
     private final CLITableHeads tableHeads;
 
+    /**
+     * Parse CLI Metadata tables information from the #~ stream.
+     * @param tableStream a {@link ByteSequence} representing the #~ stream.
+     */
     public CLITables(ByteSequence tableStream) {
         ByteSequenceBuffer buffer = new ByteSequenceBuffer(tableStream);
         tablesHeader = CLITablesHeader.read(buffer);

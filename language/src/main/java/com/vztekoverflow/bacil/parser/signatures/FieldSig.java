@@ -6,7 +6,9 @@ import com.vztekoverflow.bacil.runtime.types.Type;
 
 import java.util.List;
 
-//II.23.2.4
+/**
+ * Class implementing parsing for FieldSig, as specified in II.23.2.4 FieldSig.
+ */
 public class FieldSig {
 
     private static final String TYPE = "FieldSig";
@@ -23,7 +25,7 @@ public class FieldSig {
         reader.assertUnsigned(6, TYPE);
 
         List<CustomMod> mods = CustomMod.readAll(reader);
-        Type type = SignatureType.read(reader, component);
+        Type type = TypeSig.read(reader, component);
 
         return new FieldSig(type, mods);
 

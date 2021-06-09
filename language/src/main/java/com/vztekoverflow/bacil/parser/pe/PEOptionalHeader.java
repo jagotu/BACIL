@@ -2,6 +2,9 @@ package com.vztekoverflow.bacil.parser.pe;
 
 import com.vztekoverflow.bacil.parser.ByteSequenceBuffer;
 
+/**
+ * Class representing a PE optional header, as specified in II.25.2.3 PE optional header.
+ */
 public class PEOptionalHeader {
 
     public static final int PE32_MAGIC = 0x10B;

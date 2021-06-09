@@ -2,6 +2,9 @@ package com.vztekoverflow.bacil.parser.cli;
 
 import com.vztekoverflow.bacil.parser.ByteSequenceBuffer;
 
+/**
+ * Representation of a CLI stream header as specified in II.24.2.2 Stream header.
+ */
 public class CLIStreamHeader {
     private final int offset;
     private final int size;
@@ -25,6 +28,11 @@ public class CLIStreamHeader {
         return name;
     }
 
+    /**
+     * Read a CLI stream header from the provided {@link ByteSequenceBuffer}.
+     * @param buf the byte sequence to read the CLI stream header from
+     * @return the CLI stream header represented as a {@link CLIStreamHeader} instance
+     */
     public static CLIStreamHeader read(ByteSequenceBuffer buf)
     {
         final int offset = buf.getInt();

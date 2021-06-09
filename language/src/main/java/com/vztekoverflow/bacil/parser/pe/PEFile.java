@@ -4,6 +4,9 @@ import com.vztekoverflow.bacil.parser.BACILParserException;
 import com.vztekoverflow.bacil.parser.ByteSequenceBuffer;
 import org.graalvm.polyglot.io.ByteSequence;
 
+/**
+ * Class representing a PE file containing a .NET assembly, as specified in II.25 File format extensions to PE.
+ */
 public class PEFile {
 
     private final PEFileHeader fileHeader;
@@ -66,6 +69,9 @@ public class PEFile {
         return new PEFile(fileHeader, optionalHeader, dataDirs, sectionHeaders, data);
     }
 
+    /**
+     * Get the PE file offset for the specified RVA.
+     */
     public int getFileOffsetForRVA(int RVA) {
         PESectionHeader section = sectionHeaders.getSectionForRVA(RVA);
         if (section == null)
@@ -76,6 +82,9 @@ public class PEFile {
         return section.getPointerToRawData() + RVA - section.getVirtualAddress();
     }
 
+    /**
+     * Get the PE file offset for the CLI Header.
+     */
     public int getFileOffsetForCLIHeader()
     {
         return getFileOffsetForRVA(dataDirs.getRva(14));

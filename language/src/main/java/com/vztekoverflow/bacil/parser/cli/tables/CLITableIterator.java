@@ -2,6 +2,10 @@ package com.vztekoverflow.bacil.parser.cli.tables;
 
 import java.util.Iterator;
 
+/**
+ * An iterator of all {@link CLITableRow} rows in a table.
+ * @param <T> the {@link CLITableRow} descendant for this specific table
+ */
 public class CLITableIterator<T extends CLITableRow<T>> implements Iterator<T> {
 
     private boolean first = true;

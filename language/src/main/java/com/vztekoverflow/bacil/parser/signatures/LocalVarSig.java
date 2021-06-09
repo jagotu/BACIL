@@ -6,7 +6,9 @@ import com.vztekoverflow.bacil.runtime.types.*;
 
 import java.util.List;
 
-//II.23.2.6
+/**
+ * Class implementing parsing for LocalVarSig, as specified in II.23.2.6 LocalVarSig.
+ */
 public class LocalVarSig {
 
     private static final String TYPE = "LocalVarSig";
@@ -27,7 +29,7 @@ public class LocalVarSig {
         Type[] varTypes = new Type[count];
 
         for(int i = 0; i < count; i++) {
-            if (reader.peekUnsigned() == SignatureType.ELEMENT_TYPE_TYPEDBYREF) {
+            if (reader.peekUnsigned() == TypeSig.ELEMENT_TYPE_TYPEDBYREF) {
                 varTypes[i] = component.getBuiltinTypes().getTypedReferenceType();
                 continue;
             }
@@ -38,19 +40,19 @@ public class LocalVarSig {
 
             List<CustomMod> mods = CustomMod.readAll(reader);
 
-            if (reader.peekUnsigned() == SignatureType.ELEMENT_TYPE_PINNED)
+            if (reader.peekUnsigned() == TypeSig.ELEMENT_TYPE_PINNED)
             {
                 pinned = true;
                 reader.getUnsigned();
             }
 
-            if (reader.peekUnsigned() == SignatureType.ELEMENT_TYPE_BYREF)
+            if (reader.peekUnsigned() == TypeSig.ELEMENT_TYPE_BYREF)
             {
                 byRef = true;
                 reader.getUnsigned();
             }
 
-            Type type = SignatureType.read(reader, component);
+            Type type = TypeSig.read(reader, component);
             if(byRef)
             {
                 type = new ByRefWrapped(type);

@@ -2,6 +2,9 @@ package com.vztekoverflow.bacil.parser.pe;
 
 import com.vztekoverflow.bacil.parser.ByteSequenceBuffer;
 
+/**
+ * Class representing a PE file header, as specified in II.25.2.2 PE file header.
+ */
 public class PEFileHeader {
 
     private final short machine;

@@ -3,6 +3,9 @@ package com.vztekoverflow.bacil.parser.pe;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.vztekoverflow.bacil.parser.ByteSequenceBuffer;
 
+/**
+ * Class representing PE Section headers, as specified by II.25.3 Section headers.
+ */
 public class PESectionHeaders {
 
     @CompilationFinal(dimensions = 1)
@@ -26,6 +29,11 @@ public class PESectionHeaders {
         return new PESectionHeaders(sectionHeaders);
     }
 
+    /**
+     * Find a section that contains the specified RVA.
+     * @param RVA the RVA to find
+     * @return header of the found section or null
+     */
     public PESectionHeader getSectionForRVA(int RVA)
     {
         for (PESectionHeader sectionHeader : sectionHeaders)

@@ -1,5 +1,8 @@
 package com.vztekoverflow.bacil.parser;
 
+/**
+ * Class representing a pair of an RVA and a size, used in PE and CLI headers.
+ */
 public class RvaSizePair {
     private final int rva;
     private final int size;

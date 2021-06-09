@@ -1,6 +1,16 @@
 package com.vztekoverflow.bacil.parser;
 
+/**
+ * Class implementing the integer decompression algorithm described in II.23.2 Blobs and signatures
+ */
 public class CompressedInteger {
+
+    /**
+     * Read a compressed integer from the specified byte array, setting the positionable at the end of it.
+     * @param data the raw bytes
+     * @param positionable positionable that's set before the compressed integer
+     * @return the value of the compressed integer
+     */
     public static int read(byte[] data, Positionable positionable)
     {
         int offset = positionable.getPosition();

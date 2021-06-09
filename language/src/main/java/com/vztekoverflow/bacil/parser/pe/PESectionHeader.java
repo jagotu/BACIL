@@ -2,6 +2,9 @@ package com.vztekoverflow.bacil.parser.pe;
 
 import com.vztekoverflow.bacil.parser.ByteSequenceBuffer;
 
+/**
+ * Class representing a single PE Section header, as specified in II.25.3 Section headers.
+ */
 public class PESectionHeader {
     private final long name;
     private final int virtualSize;

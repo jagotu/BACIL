@@ -4,6 +4,9 @@ import com.vztekoverflow.bacil.parser.BACILParserException;
 import com.vztekoverflow.bacil.parser.ByteSequenceBuffer;
 import com.vztekoverflow.bacil.parser.RvaSizePair;
 
+/**
+ * Representation of the CLI header's information as specified in II.25.3.3 CLI header.
+ */
 public class CLIHeader {
     private final short majorRuntimeVersion;
     private final short minorRuntimeVersion;
@@ -75,6 +78,11 @@ public class CLIHeader {
         return managedNativeHeader;
     }
 
+    /**
+     * Read the CLI header from the provided {@link ByteSequenceBuffer}
+     * @param buf the byte sequence to read the CLI Header from
+     * @return the CLI header represented as a {@link CLIHeader} instance
+     */
     public static CLIHeader read(ByteSequenceBuffer buf)
     {
         int cb = buf.getInt();

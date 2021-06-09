@@ -20,6 +20,10 @@ import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.builtin.SystemValueTypeType;
 import com.vztekoverflow.bacil.runtime.types.locations.LocationsDescriptor;
 
+/**
+ * Class representing a CIL method in an assembly. Holds resolved metadata like signature, location definitions,
+ * the type it belongs to, etc.
+ */
 public class CILMethod implements BACILMethod {
 
     private final CLIComponent component;
@@ -56,8 +60,15 @@ public class CILMethod implements BACILMethod {
 
     private final Type definingType;
 
-    public CILMethod(CLIComponent component, CLIMethodDefTableRow methodDef, Type definingType)
+    /**
+     * Create a CILMethod object representing the metadata of the specified method.
+     * @param methodDef the method token to read the information from
+     * @param component the component containing this method
+     * @param definingType the type defining this method
+     */
+    public CILMethod(CLIMethodDefTableRow methodDef, CLIComponent component, Type definingType)
     {
+        //read metadata from the methodDef
         this.component = component;
         this.methodDef = methodDef;
         this.methodDefSig = MethodDefSig.read(methodDef.getSignature().read(component.getBlobHeap()), component);
@@ -71,12 +82,15 @@ public class CILMethod implements BACILMethod {
 
         if((firstByte & 3) == CORILMETHOD_TINYFORMAT)
         {
+            //II.25.4.2 Tiny format
             this.ILflags = CORILMETHOD_TINYFORMAT;
             this.maxStack = 8;
             this.localVarSig = null;
             this.initLocals = false;
-            size = (firstByte >> 2)&0xFF;
+            size = (firstByte >> 2) & 0xFF;
+
         } else if((firstByte & 3) == CORILMETHOD_FATFORMAT) {
+            //II.25.4.3 Fat format
             short firstWord = (short)(firstByte | (buf.getByte() << 8));
             this.ILflags = firstWord & 0xFFF;
             byte headerSize = (byte)(firstWord >> 12);
@@ -102,17 +116,16 @@ public class CILMethod implements BACILMethod {
             initLocals = (ILflags & CORILMETHOD_INITLOCALS) != 0;
             if((ILflags & CORILMETHOD_MORESECTS) != 0)
             {
-                throw new BACILParserException("Multiple sections in CIL method header not supported.");
+                throw new BACILParserException("Multiple sections in CIL method header not supported. Does the method contain a try block?");
             }
 
         } else {
             throw new BACILParserException("Invalid CorILMethod flags");
         }
 
-
-
         final byte[] body = buf.subSequence(size).toByteArray();
-        //TODO other method types
+
+        //Create a BytecodeNode to represent the body
         FrameDescriptor frameDescriptor = new FrameDescriptor();
         CILRootNode rootNode = new CILRootNode(frameDescriptor, new BytecodeNode(this, body));
         this.callTarget = Truffle.getRuntime().createCallTarget(rootNode);
@@ -147,10 +160,26 @@ public class CILMethod implements BACILMethod {
         if(methodDefSig.isHasThis() && !methodDefSig.isExplicitThis())
         {
             //I.8.6.1.5
+            //if the calling convention specifies this is an instance method and the owning method
+            //definition belongs to a type T then the type of the this pointer is
+            //given by the first parameter signature, if the calling convention is instance
+            //explicit (§II.15.3),
+            //o inferred as &T, if T is a value type and the method definition is non-virtual
+            //  (§I.8.9.7),
+            //o inferred as “boxed” T, if T is a value type and the method definition is virtual
+            //  (this includes method definitions from an interface implemented by T)
+            //  (§I.8.9.7),
+            //o inferred as T, otherwise
+
             if(definingType instanceof SystemValueTypeType)
             {
-                //TODO if virtual then boxed
-                locationTypes[varsCount] = new ByRefWrapped(definingType);
+                if(isVirtual())
+                {
+                    locationTypes[varsCount] = definingType;
+                } else {
+                    locationTypes[varsCount] = new ByRefWrapped(definingType);
+                }
+
             } else {
                 locationTypes[varsCount] = definingType;
             }
@@ -166,90 +195,126 @@ public class CILMethod implements BACILMethod {
         this.locationDescriptor = new LocationsDescriptor(locationTypes);
     }
 
+
+    /**
+     * Get the component where the method is defined in.
+     */
     public CLIComponent getComponent() {
         return component;
     }
 
+    /**
+     * Get the call target which executes this method.
+     */
     @Override
     public CallTarget getMethodCallTarget() {
         return callTarget;
     }
 
+    /**
+     * Get the type of the return value of the method.
+     */
     @Override
     public Type getRetType() {
-        return getMethodDefSig().getRetType();
+        return methodDefSig.getRetType();
     }
 
+    /**
+     * Get the evaluation stack size required by this method.
+     */
     public short getMaxStack() {
         return maxStack;
     }
 
-    public CLIMethodDefTableRow getMethodDef() {
-        return methodDef;
-    }
-
-    public int getILflags() {
-        return ILflags;
-    }
-
-    public LocalVarSig getLocalVarSig() {
-        return localVarSig;
-    }
-
-    public MethodDefSig getMethodDefSig() {
+    /**
+     * Get the parsed method signature.
+     * The signature describes the arguments, return value type, calling convention etc.
+     */
+    @Override
+    public MethodDefSig getSignature() {
         return methodDefSig;
     }
 
-    @Override
-    public MethodDefSig getSignature() {
-        return MethodDefSig.read(methodDef.getSignature().read(component.getBlobHeap()), component);
-    }
-
+    /**
+     * Get the name of the method.
+     */
     @Override
     public String getName() {
         return name;
     }
 
+    /**
+     * Get whether the method is defined as a virtual method.
+     */
     @Override
     public boolean isVirtual() {
         return (methodDef.getFlags() & METHODATTRIBUTE_VIRTUAL) == METHODATTRIBUTE_VIRTUAL;
     }
 
+    /**
+     * Check whether the method definition specifies an {@code internalcall} method.
+     * {@code internalcall} methods are used by the standard library for methods implemented natively.
+     * @param method the method definition to check
+     * @return whether the defined method is {@code internalcall} or not.
+     */
     public static boolean isInternalCall(CLIMethodDefTableRow method)
     {
         return (method.getImplFlags() & METHODIMPL_INTERNALCALL) == METHODIMPL_INTERNALCALL;
     }
 
+    /**
+     * Get whether the method requests locals initialization.
+     *
+     * II.25.4.4: Call default constructor on all local variables.
+     */
     public boolean isInitLocals() {
         return initLocals;
     }
 
 
+    /**
+     * Get types of all locations (arguments and variables combined).
+     */
     @Override
     public Type[] getLocationsTypes() {
         return locationTypes;
     }
 
+    /**
+     * Get count of method local variables.
+     */
     @Override
     public int getVarsCount() {
         return varsCount;
     }
 
+    /**
+     * Get count of method arguments.
+     */
     @Override
     public int getArgsCount() {
         return argsCount;
     }
 
+    /**
+     * Returns a string representation of the method, in a format of type::methodName.
+     */
     @Override
     public String toString() {
         return definingType.toString() + "::" + getName();
     }
 
+    /**
+     * Get the type in which this method is defined.
+     */
     @Override
     public Type getDefiningType() {
         return definingType;
     }
 
+    /**
+     * Get a descriptor for all locations of this method (arguments and variables combined).
+     */
     public LocationsDescriptor getLocationDescriptor() {
         return locationDescriptor;
     }

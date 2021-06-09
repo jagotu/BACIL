@@ -4,7 +4,7 @@ import com.vztekoverflow.bacil.parser.cil.CILMethod;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.signatures.MethodDefSig;
 import com.vztekoverflow.bacil.parser.signatures.SignatureReader;
-import com.vztekoverflow.bacil.parser.signatures.SignatureType;
+import com.vztekoverflow.bacil.parser.signatures.TypeSig;
 
 import java.util.List;
 
@@ -26,7 +26,7 @@ public class SZArrayType extends Type {
     {
         List<CustomMod> mods = CustomMod.readAll(reader);
 
-        Type inner = SignatureType.read(reader, component);
+        Type inner = TypeSig.read(reader, component);
 
         return new SZArrayType(inner);
     }

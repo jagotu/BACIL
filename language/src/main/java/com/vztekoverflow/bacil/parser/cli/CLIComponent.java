@@ -16,7 +16,7 @@ import com.vztekoverflow.bacil.parser.cli.tables.generated.*;
 import com.vztekoverflow.bacil.parser.pe.PEFile;
 import com.vztekoverflow.bacil.parser.signatures.MethodDefSig;
 import com.vztekoverflow.bacil.parser.signatures.SignatureReader;
-import com.vztekoverflow.bacil.parser.signatures.SignatureType;
+import com.vztekoverflow.bacil.parser.signatures.TypeSig;
 import com.vztekoverflow.bacil.runtime.BACILContext;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
 import com.vztekoverflow.bacil.runtime.bacil.BACILComponent;
@@ -26,15 +26,14 @@ import com.vztekoverflow.bacil.runtime.types.NamedType;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import org.graalvm.polyglot.io.ByteSequence;
 
+/**
+ * A class representing a CLI Component, as described in I.9.1 Components and assemblies.
+ */
 public class CLIComponent extends BACILComponent {
 
     private final CLIHeader cliHeader;
     private final CLIMetadata cliMetadata;
     private final AssemblyIdentity assemblyIdentity;
-
-    public BACILLanguage getLanguage() {
-        return context.getLanguage();
-    }
 
     private final BACILContext context;
 
@@ -58,55 +57,11 @@ public class CLIComponent extends BACILComponent {
 
     private final PEFile pe;
 
-
-
-    public CLIHeader getCliHeader() {
-        return cliHeader;
-    }
-
-    public CLIMetadata getCliMetadata() {
-        return cliMetadata;
-    }
-
-    private final CLITables tables;
-
-    public byte[] getBlobHeap() {
-        return blobHeap;
-    }
-
-    public byte[] getStringHeap() {
-        return stringHeap;
-    }
-
-    public byte[] getGuidHeap() {
-        return guidHeap;
-    }
-
-    public byte[] getUSHeap() {
-        return USHeap;
-    }
-
-    @Override
-    public AssemblyIdentity getAssemblyIdentity() {
-        return assemblyIdentity;
-    }
-
-    private static final class FindTypeResult
-    {
-        final CLIComponent definingAssembly;
-        final CLITypeDefTableRow typeDef;
-
-        public FindTypeResult(CLIComponent definingAssembly, CLITypeDefTableRow typeDef) {
-            this.definingAssembly = definingAssembly;
-            this.typeDef = typeDef;
-        }
-
-    }
-
-    public int getFileOffsetForRVA(int RVA) {
-        return pe.getFileOffsetForRVA(RVA);
-    }
-
+    /**
+     * Get a {@link ByteSequenceBuffer} representing the data of this component starting at the specified RVA.
+     * @param RVA the RVA position to start at
+     * @return a {@link ByteSequenceBuffer} starting at the specified RVA
+     */
     public ByteSequenceBuffer getBuffer(int RVA) {
         ByteSequenceBuffer buf = new ByteSequenceBuffer(pe.getBytes());
         buf.setPosition(pe.getFileOffsetForRVA(RVA));
@@ -142,7 +97,15 @@ public class CLIComponent extends BACILComponent {
 
     }
 
-    public static CLIComponent parseComponent(ByteSequence bytes, Source source, BACILContext context, boolean isCoreLib) {
+    /**
+     * Parse component metadata from a PE file.
+     * @param bytes a {@link ByteSequence} representing the PE bytes
+     * @param source a Truffle {@link Source} containing information on the source file
+     * @param context the {@link BACILContext} for which to load the component
+     * @return a {@link CLIComponent} representation of the component
+     */
+    public static CLIComponent parseComponent(ByteSequence bytes, Source source, BACILContext context) {
+        //Noone should load an assembly in compiled code.
         CompilerAsserts.neverPartOfCompilation();
 
         PEFile peFile = PEFile.create(bytes);
@@ -154,6 +117,7 @@ public class CLIComponent extends BACILComponent {
         ByteSequenceBuffer dataBuffer = new ByteSequenceBuffer(bytes);
         dataBuffer.setPosition(cliHeaderOffset);
 
+        //Read CLI Header (II.25.3.3 CLI header)
         CLIHeader cliHeader = CLIHeader.read(dataBuffer);
 
         if (cliHeader.getMetaData().getSize() <= 0)
@@ -166,9 +130,10 @@ public class CLIComponent extends BACILComponent {
 
         dataBuffer.setPosition(cliMetadataOffset);
 
+        //Read CLI Metadata (II.24 Metadata physical layout)
         CLIMetadata cliMetadata = CLIMetadata.read(dataBuffer);
 
-
+        //Create table pointers (II.22 Metadata logical format: tables)
         CLITables tables = new CLITables(cliMetadata.getStream("#~", bytes));
 
         final byte[] blobHeap = cliMetadata.getStream("#Blob", bytes).toByteArray();
@@ -181,11 +146,15 @@ public class CLIComponent extends BACILComponent {
 
     }
 
-    public static CLIComponent parseComponent(ByteSequence bytes, Source source, BACILContext context) {
-        return parseComponent(bytes, source, context, false);
-    }
-
-    public BACILMethod getMethod(CLITablePtr token, BACILContext context)
+    /**
+     * Find a method represented by the specified token. This method can be called from a compiled context,
+     * but ONLY for local methods that were already resolved before; it probably shouldn't be on your hot path anyway.
+     *
+     * The token can be a pointer to MethodDef or MemberRef.
+     * @param token token representing the method
+     * @return a {@link BACILMethod} representing the method
+     */
+    public BACILMethod getMethod(CLITablePtr token)
     {
         switch(token.getTableId())
         {
@@ -201,34 +170,48 @@ public class CLIComponent extends BACILComponent {
         }
     }
 
-    public BACILMethod getForeignMethod(CLITablePtr token)
+    /**
+     * Get a method defined in another component.
+     * @param token token representing the method
+     * @return a {@link BACILMethod} representing the method
+     */
+    private BACILMethod getForeignMethod(CLITablePtr token)
     {
+        //As we potentially have to load an assembly, make sure we are not in compiled code.
         CompilerAsserts.neverPartOfCompilation();
 
+        //Find the type defining the method
         CLIMemberRefTableRow memberRef = getTableHeads().getMemberRefTableHead().skip(token);
         CLITypeRefTableRow typeRef = getTableHeads().getTypeRefTableHead().skip(memberRef.getKlass());
         Type type = getForeignType(typeRef);
 
+        //Stub the method if specified by command-line args
         if(context.isStubbed(memberRef.getName().read(stringHeap)))
         {
             return new MethodStub(getBuiltinTypes(), getLanguage(),
                     MethodDefSig.read(memberRef.getSignature().read(blobHeap), this),
                     type);
         }
+
+        //Get the method from the type
         return type.getMemberMethod(memberRef.getName().read(stringHeap), MethodDefSig.read(memberRef.getSignature().read(blobHeap), this));
     }
 
-
-
-
+    /**
+     * Find a (local) type which defines a method by walking the types table.
+     * @param methodDef the method to find the type for
+     * @return the defining {@link Type} or null if not found
+     */
     public Type findDefiningType(CLIMethodDefTableRow methodDef)
     {
         if(getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_TYPE_DEF) == 0) {
             return null;
         }
 
+        //Walk the TypeDef table and find the row, for which the methodList is before the target methodDef
+        //and the methodList of the next type is after the target methodDef.
         CLITypeDefTableRow previous = getTableHeads().getTypeDefTableHead();
-        if(methodDef.getRowNo() < previous.getMethodList().getRowNo() ) //can not belong to any type only when it's before the first type
+        if(methodDef.getRowNo() < previous.getMethodList().getRowNo() )
         {
             return null;
         } else if (!previous.hasNext())
@@ -248,18 +231,24 @@ public class CLIComponent extends BACILComponent {
             return getLocalType(previous);
         }
         return getLocalType(next);
-
-
     }
 
+
+    /**
+     * Find a (local) type which defines a field by walking the types table.
+     * @param field the field to find the type for
+     * @return the defining {@link Type} or null if not found
+     */
     public Type findDefiningType(CLIFieldTableRow field)
     {
         if(getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_TYPE_DEF) == 0) {
             return null;
         }
 
+        //Walk the TypeDef table and find the row, for which the fieldList is before the target field
+        //and the fieldList of the next type is after the target field.
         CLITypeDefTableRow previous = getTableHeads().getTypeDefTableHead();
-        if(field.getRowNo() < previous.getFieldList().getRowNo() ) //can not belong to any type only when it's before the first type
+        if(field.getRowNo() < previous.getFieldList().getRowNo() )
         {
             return null;
         } else if (!previous.hasNext())
@@ -281,13 +270,20 @@ public class CLIComponent extends BACILComponent {
         return getLocalType(next);
     }
 
+    /**
+     * Get a method defined in this component.
+     * @param token token representing a local method in the MethodDef table
+     * @return a {@link BACILMethod} representing the method
+     */
     public BACILMethod getLocalMethod(CLITablePtr token)
     {
 
+        assert(token.getTableId() == CLITableConstants.CLI_TABLE_METHOD_DEF);
 
+        //Check if we already have the method loaded
         if(localMethods[token.getRowNo()-1] == null)
         {
-            //it's the responsibility of method finder to not be in compilation when this can fail
+            //it's the responsibility of the caller to not be in compilation when this can fail
             CompilerAsserts.neverPartOfCompilation();
             CLIMethodDefTableRow methodDef = tables.getTableHeads().getMethodDefTableHead().skip(token);
             return getLocalMethod(methodDef, findDefiningType(methodDef));
@@ -296,14 +292,20 @@ public class CLIComponent extends BACILComponent {
         return localMethods[token.getRowNo()-1];
     }
 
+    /**
+     * Get a method defined in this component and in the specified type.
+     * @param method a local method in the MethodDef table
+     * @return a {@link BACILMethod} representing the method
+     */
     public BACILMethod getLocalMethod(CLIMethodDefTableRow method, Type type)
     {
 
-
         if(localMethods[method.getRowNo()-1] == null)
         {
-            //it's the responsibility of method finder to not be in compilation when this can fail
+            //it's the responsibility of the caller to not be in compilation when this can fail
             CompilerAsserts.neverPartOfCompilation();
+
+            //internal call methods aren't in the component and we must provide the implementation ourselves
             if(CILMethod.isInternalCall(method))
             {
                 BACILMethod internalMethod = InternalCallFinder.FindInternalCallMethod(this, method, type);
@@ -315,7 +317,7 @@ public class CLIComponent extends BACILComponent {
                 }
 
             } else {
-                localMethods[method.getRowNo()-1] = new CILMethod(this, method, type);
+                localMethods[method.getRowNo()-1] = new CILMethod(method, this, type);
             }
 
         }
@@ -323,40 +325,58 @@ public class CLIComponent extends BACILComponent {
         return localMethods[method.getRowNo()-1];
     }
 
+    /**
+     * Get a type defined in another component.
+     * @param typeRef a type reference from the TypeRef table
+     * @return a {@link Type} representing the type
+     */
     public Type getForeignType(CLITypeRefTableRow typeRef)
     {
+        //Resolve assembly
         CLIAssemblyRefTableRow assemblyRef = getTableHeads().getAssemblyRefTableHead().skip(typeRef.getResolutionScope());
         AssemblyIdentity assemblyRefIdentity = AssemblyIdentity.fromAssemblyRefRow(stringHeap, assemblyRef);
-
-        String typeName = typeRef.getTypeName().read(stringHeap);
-        String typeNamespace = typeRef.getTypeNamespace().read(stringHeap);
-
         BACILComponent assembly = context.getAssembly(assemblyRefIdentity);
 
-
-       return assembly.findLocalType(typeNamespace, typeName);
+        //Resolve type
+        String typeName = typeRef.getTypeName().read(stringHeap);
+        String typeNamespace = typeRef.getTypeNamespace().read(stringHeap);
+        return assembly.findLocalType(typeNamespace, typeName);
     }
 
-    public Type getType(CLITablePtr ptr)
+    /**
+     * Find a type represented by the specified token.
+     *
+     * The token can be a pointer to a TypeDef, TypeSpec or TypeRef.
+     * @param token token representing the type
+     * @return a {@link Type} representing the type
+     */
+    public Type getType(CLITablePtr token)
     {
-        if(ptr.getTableId() == CLITableConstants.CLI_TABLE_TYPE_REF)
+        if(token.getTableId() == CLITableConstants.CLI_TABLE_TYPE_REF)
         {
-            return getForeignType(getTableHeads().getTypeRefTableHead().skip(ptr));
+            return getForeignType(getTableHeads().getTypeRefTableHead().skip(token));
         } else {
-            return getLocalType(ptr);
+            return getLocalType(token);
         }
     }
 
-
+    /**
+     * Find a type in this component by namespace and name.
+     * @param namespace the namespace of the target type
+     * @param name the name of the target type
+     * @return the {@link Type} if found or null
+     */
     @Override
     public Type findLocalType(String namespace, String name)
     {
+        //Check typeDefs
         for(CLITypeDefTableRow row : getTableHeads().getTypeDefTableHead())
         {
             if(row.getTypeNamespace().read(stringHeap).equals(namespace) && row.getTypeName().read(stringHeap).equals(name))
                 return getLocalType(row);
         }
 
+        //Check exported types (II.6.8 Type forwarders)
         for(CLIExportedTypeTableRow row : getTableHeads().getExportedTypeTableHead())
         {
             if(row.getTypeNamespace().read(stringHeap).equals(namespace) && row.getTypeName().read(stringHeap).equals(name))
@@ -371,6 +391,11 @@ public class CLIComponent extends BACILComponent {
         throw new BACILInternalError(String.format("Type %s.%s not found.", namespace, name));
     }
 
+    /***
+     * Get a local type defined in the TypeDef table.
+     * @param typeDef the typeDef table row
+     * @return the {@link Type} representing the type
+     */
     public Type getLocalType(CLITypeDefTableRow typeDef)
     {
         if(localDefTypes[typeDef.getRowNo()-1] == null)
@@ -381,29 +406,41 @@ public class CLIComponent extends BACILComponent {
         return localDefTypes[typeDef.getRowNo()-1];
     }
 
+    /***
+     * Get a local type defined in the TypeSpec table.
+     * @param typeSpec the typeSpec table row
+     * @return the {@link Type} representing the type
+     */
     public Type getLocalType(CLITypeSpecTableRow typeSpec)
     {
         if(localSpecTypes[typeSpec.getRowNo()-1] == null)
         {
             CompilerAsserts.neverPartOfCompilation();
             SignatureReader reader = new SignatureReader(typeSpec.getSignature().read(blobHeap));
-            localSpecTypes[typeSpec.getRowNo()-1] = SignatureType.read(reader, this);
+            localSpecTypes[typeSpec.getRowNo()-1] = TypeSig.read(reader, this);
         }
         return localSpecTypes[typeSpec.getRowNo()-1];
     }
 
 
-    public Type getLocalType(CLITablePtr ptr)
+    /**
+     * Get a type defined in this component.
+     *
+     * Token can point to a TypeDef or TypeSpec row.
+     * @param token token representing a local type in the MethodDef table
+     * @return a {@link Type} representing the type.
+     */
+    public Type getLocalType(CLITablePtr token)
     {
-        if(ptr.getTableId() == CLITableConstants.CLI_TABLE_TYPE_DEF)
+        if(token.getTableId() == CLITableConstants.CLI_TABLE_TYPE_DEF)
         {
-            return getLocalType(tables.getTableHeads().getTypeDefTableHead().skip(ptr));
-        } else if (ptr.getTableId() == CLITableConstants.CLI_TABLE_TYPE_SPEC)
+            return getLocalType(tables.getTableHeads().getTypeDefTableHead().skip(token));
+        } else if (token.getTableId() == CLITableConstants.CLI_TABLE_TYPE_SPEC)
         {
-            return getLocalType(tables.getTableHeads().getTypeSpecTableHead().skip(ptr));
+            return getLocalType(tables.getTableHeads().getTypeSpecTableHead().skip(token));
         } else {
             CompilerDirectives.transferToInterpreterAndInvalidate();
-            throw new BACILInternalError("Unexpected ptr to table " + ptr.getTableId());
+            throw new BACILInternalError("Unexpected ptr to table " + token.getTableId());
         }
     }
 
@@ -415,6 +452,41 @@ public class CLIComponent extends BACILComponent {
     public CLITablesHeader getTablesHeader()
     {
         return tables.getTablesHeader();
+    }
+
+    public BACILLanguage getLanguage() {
+        return context.getLanguage();
+    }
+
+    public CLIHeader getCliHeader() {
+        return cliHeader;
+    }
+
+    public CLIMetadata getCliMetadata() {
+        return cliMetadata;
+    }
+
+    private final CLITables tables;
+
+    public byte[] getBlobHeap() {
+        return blobHeap;
+    }
+
+    public byte[] getStringHeap() {
+        return stringHeap;
+    }
+
+    public byte[] getGuidHeap() {
+        return guidHeap;
+    }
+
+    public byte[] getUSHeap() {
+        return USHeap;
+    }
+
+    @Override
+    public AssemblyIdentity getAssemblyIdentity() {
+        return assemblyIdentity;
     }
 
     @Override

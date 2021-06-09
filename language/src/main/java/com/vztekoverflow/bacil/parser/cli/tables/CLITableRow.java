@@ -8,37 +8,81 @@ import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableConstants;
 
 import java.util.Iterator;
 
+/**
+ * Class representing a row in a CLI Metadata table.
+ * @param <T> the concrete type for the specific table
+ */
 public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<T> {
 
-    protected final CLITables tables;
-    protected final int cursor;
-    private final int rowIndex;
+    protected final CLITables tables; //holds the actual table data
+    protected final int cursor; //byte offset where this row starts
+    private final int rowIndex; //index of the row in the table
 
 
+    /**
+     * Get the length of one row in bytes.
+     */
     public abstract int getLength();
+
+    /**
+     * Get the table id for this row.
+     */
     public abstract byte getTableId();
+
+    /**
+     * Create a properly typed new {@link CLITableRow} pointing to the specified row at a specified byte offset.
+     * @param tables {@link CLITables} holding the table data
+     * @param cursor byte offset of the row
+     * @param rowIndex index of the row
+     * @return {@link CLITableRow} pointing to the specified row
+     */
     protected abstract T createNew(CLITables tables, int cursor, int rowIndex);
 
+    /**
+     * Create a new {@link CLITableRow} pointing to the specified row at a specified byte offset.
+     * @param tables {@link CLITables} holding the table data
+     * @param cursor byte offset of the row
+     * @param rowIndex index of the row
+     */
     public CLITableRow(CLITables tables, int cursor, int rowIndex) {
         this.tables = tables;
         this.cursor = cursor;
         this.rowIndex = rowIndex;
     }
 
+    /**
+     * Check whether there's any row in the table after the current one.
+     */
     public final boolean hasNext() {
         return rowIndex < tables.getTablesHeader().getRowCount(getTableId())-1;
     }
 
+    /**
+     * Get the next table row (properly typed).
+     */
     public final T next()
     {
         return skip(1);
     };
 
+    /**
+     * Get a (properly typed) pointer to a row that's the specified amount of rows after the current one.
+     * @param count amount of rows to skip
+     * @return a pointer to the row that's {@code count} rows after the current one
+     */
     public final T skip(int count)
     {
         return createNew(tables, cursor+count*getLength(), rowIndex+count);
     }
 
+    /**
+     * Get a (properly typed) pointer to a row that's the amount of rows specified in the pointer after the current one.
+     * Also checks that the {@link CLITablePtr} points to the correct table.
+     *
+     * This operation mainly makes sense when the current row is the first row, therefore "resolving" the CLITablePtr.
+     * @param ptr a {@link CLITablePtr} which is used to skip
+     * @return a pointer to the row that's {@code ptr.rowNo} rows after the current one
+     */
     public final T skip(CLITablePtr ptr) {
         if (getTableId() != ptr.getTableId())
         {
@@ -51,61 +95,95 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
 
     }
 
-
-    protected final int getCursor() {
-        return cursor;
-    }
-
+    /**
+     * Get a byte at the specified offset of current row.
+     */
     protected final byte getByte(int offset)
     {
         final byte[] tableData = tables.getTablesData();
         return tableData[cursor+offset];
     }
 
+    /**
+     * Get a short at the specified offset of current row.
+     */
     protected final short getShort(int offset)
     {
         final byte[] tableData = tables.getTablesData();
         return Bytes.getShort(tableData, cursor+offset);
     }
 
+    /**
+     * Get an int at the specified offset of current row.
+     */
     protected final int getInt(int offset)
     {
         final byte[] tableData = tables.getTablesData();
         return Bytes.getInt(tableData, cursor+offset);
     }
 
+    /**
+     * Get an unsigned short at the specified offset of current row.
+     * Returns an int cause Java doesn't support unsigned shorts.
+     */
     protected final int getUShort(int offset)
     {
         final byte[] tableData = tables.getTablesData();
         return Bytes.getUShort(tableData, cursor+offset);
     }
 
+    /**
+     * Get an unsigned int at the specified offset of current row.
+     * Returns a long cause Java doesn't support unsigned ints.
+     */
     protected final long getUInt(int offset)
     {
         final byte[] tableData = tables.getTablesData();
         return Bytes.getUInt(tableData, cursor+offset);
     }
 
+    /**
+     * Get a long at the specified offset of current row.
+     */
     protected final long getLong(int offset)
     {
         final byte[] tableData = tables.getTablesData();
         return Bytes.getLong(tableData, cursor+offset);
     }
 
+    /**
+     * Get a {@link CLITablePtr} pointing to the current row.
+     */
     public final CLITablePtr getPtr()
     {
         return new CLITablePtr(this.getTableId(), rowIndex+1);
     }
 
+    /**
+     * Get the current row number.
+     */
     public int getRowNo() {
         return rowIndex+1;
     }
 
+    /**
+     * Get an iterator for all rows in this table.
+     */
     @Override
     public Iterator<T> iterator() {
         return new CLITableIterator<T>(createNew(tables, cursor, rowIndex));
     }
 
+    /**
+     * Checks whether the specified tables are small enough to use a 2 byte coded index.
+     * Coded indices are described II.24.2.6 #~ stream:
+     *
+     * If e is a coded index that points into table ti out of n possible tables t0,...,tn-1, then it
+     * is stored as e << (log n) | tag {t0,...,tn-1}[ti] using 2 bytes if the maximum number
+     * of rows of tables t0,...,tn-1, is less than 2^(16 – (log n)), and using 4 bytes otherwise.
+     * @param tables the tables this coded index can point to
+     * @return whether a 2 byte coded index should be used
+     */
     protected final boolean areSmallEnough(byte... tables)
     {
         final int limit;

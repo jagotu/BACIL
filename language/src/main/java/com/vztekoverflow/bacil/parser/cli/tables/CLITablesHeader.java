@@ -4,6 +4,10 @@ import com.vztekoverflow.bacil.parser.BACILParserException;
 import com.vztekoverflow.bacil.parser.ByteSequenceBuffer;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableConstants;
 
+/**
+ * Class representing information stored in the CLI Metadata tables stream (#~) header,
+ * as described in II.24.2.6 #~ stream.
+ */
 public class CLITablesHeader {
 
     private final byte majorVersion;
@@ -42,6 +46,11 @@ public class CLITablesHeader {
         return sorted;
     }
 
+    /**
+     * Read the CLI Metadata tables header from the provided {@link ByteSequenceBuffer}
+     * @param buf the byte sequence to read the CLI Metadata tables header
+     * @return the CLI tables header represented as a {@link CLITablesHeader} instance
+     */
     public static CLITablesHeader read(ByteSequenceBuffer buf)
     {
         buf.getInt(); //Reserved
@@ -61,7 +70,11 @@ public class CLITablesHeader {
                 rowCounts[i] = buf.getInt();
                 if(rowCounts[i] > 65535)
                 {
-                    //non-conforming SIMPLIFICATION
+                    //Breaks standard: by not supporting tables larger than 65535 rows, all simple indices will be
+                    //stored in 2 bytes, which simplifies the code.
+                    //Described in II.24.2.6 #~ stream:
+                    //If e is a simple index into a table with index i, it is stored using 2 bytes if table i has
+                    //less than 2^16 rows, otherwise it is stored using 4 bytes.
                     throw new BACILParserException("CIL files with a table larger than 65535 rows are not supported!");
                 }
             }
