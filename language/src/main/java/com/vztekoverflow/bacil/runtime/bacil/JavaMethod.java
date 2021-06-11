@@ -8,6 +8,9 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.vztekoverflow.bacil.parser.signatures.MethodDefSig;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
 
+/**
+ * Class for implementing BACIL methods in Java.
+ */
 public abstract class JavaMethod extends RootNode implements BACILMethod {
 
     private final CallTarget callTarget = Truffle.getRuntime().createCallTarget(this);

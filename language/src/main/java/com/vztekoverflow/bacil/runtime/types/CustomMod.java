@@ -7,6 +7,9 @@ import com.vztekoverflow.bacil.parser.signatures.TypeSig;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents a custom type modifier, as specified in II.7.1.1 modreq and modopt.
+ */
 public class CustomMod {
 
     private final boolean optional;

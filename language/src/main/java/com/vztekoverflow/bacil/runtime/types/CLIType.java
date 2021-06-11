@@ -12,16 +12,18 @@ import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITypeDefTableRow;
 import com.vztekoverflow.bacil.parser.signatures.FieldSig;
 import com.vztekoverflow.bacil.parser.signatures.MethodDefSig;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
+import com.vztekoverflow.bacil.runtime.locations.LocationsDescriptor;
+import com.vztekoverflow.bacil.runtime.locations.LocationsHolder;
 import com.vztekoverflow.bacil.runtime.types.builtin.*;
-import com.vztekoverflow.bacil.runtime.types.locations.LocationsDescriptor;
-import com.vztekoverflow.bacil.runtime.types.locations.LocationsHolder;
-import com.vztekoverflow.bacil.runtime.types.locations.VtableSlotIdentity;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class NamedType extends Type {
+/**
+ * Representation of a CLI type.
+ */
+public class CLIType extends Type {
 
     private final int flags;
     private final String name;
@@ -45,18 +47,25 @@ public class NamedType extends Type {
     private BACILMethod[] vtable;
 
 
-    protected NamedType(CLITypeDefTableRow type, CLIComponent component)
+    /**
+     * Create a new CLIType based on the TypeDef metadata row. This is protected as consumers should call {@link CLIType#fromTypeDef(CLITypeDefTableRow, CLIComponent)}.
+     * @param type the type definition
+     * @param component the component this type is defined in
+     */
+    protected CLIType(CLITypeDefTableRow type, CLIComponent component)
     {
         this.definingComponent = component;
         this.flags = type.getFlags();
         this.name = type.getTypeName().read(component.getStringHeap());
         this.namespace = type.getTypeNamespace().read(component.getStringHeap());
+
         if(type.getExtends().getRowNo() == 0)
         {
             this.extendz = null;
         } else {
             this.extendz = component.getType(type.getExtends());
         }
+
         this.methods = component.getTableHeads().getMethodDefTableHead().skip(type.getMethodList());
         this.fieldRows = component.getTableHeads().getFieldTableHead().skip(type.getFieldList());
         this.fieldsRowsStart = fieldRows.getRowNo();
@@ -68,32 +77,37 @@ public class NamedType extends Type {
             methodsEnd = component.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_METHOD_DEF)+1;
             fieldRowsEnd = component.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_FIELD)+1;
         }
-
-
-
-
-
     }
 
 
-
+    /**
+     * Called to initialize the type.
+     *
+     * <ol>
+     *     <li>Initializes parent class</li>
+     *     <li>Prepares fields descriptors, inheriting parent fields</li>
+     *     <li>Initializes static fields</li>
+     *     <li>Prepares and fills vtables slots, including parent virtual methods</li>
+     *     <li>Calls the class initializer (.cctor)</li>
+     * </ol>
+     */
     public void init()
     {
         if(!inited)
         {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             super.init();
+
+            //1. Init parent class
             if(extendz != null)
             {
                 extendz.init();
             }
 
-
-            //Init fields
-
+            //2. Init field descriptors
             final int totalFields = fieldRowsEnd-fieldsRowsStart;
 
-
+            //Calculate the amount of static and instance fields
             int instanceFieldsCount = 0;
             int staticFieldsCount = 0;
             CLIFieldTableRow currField = fieldRows;
@@ -119,6 +133,7 @@ public class NamedType extends Type {
                 parentInstanceFields = extendz.instanceFieldsDescriptor.getSize();
             }
 
+            //Prepare fields defined in this type
             currField = fieldRows;
             for(int i = 0; i < totalFields; i++) {
                 TypedField field;
@@ -132,11 +147,12 @@ public class NamedType extends Type {
                 allFields[i] = field;
                 currField = currField.next();
             }
+            //Create descriptors inheriting parent instance fields
             this.instanceFieldsDescriptor = LocationsDescriptor.forFields(extendz == null ? null : extendz.instanceFieldsDescriptor, instanceFields);
             this.staticFieldsDescriptor = LocationsDescriptor.forFields(staticFields);
             this.staticFieldsHolder = LocationsHolder.forDescriptor(staticFieldsDescriptor);
 
-            //Create vtable slots
+            //3. Init vtable
             //TODO respect NewSlot/ReuseSlot flags
 
             ArrayList<VtableSlotIdentity> identities = new ArrayList<VtableSlotIdentity>();
@@ -180,6 +196,7 @@ public class NamedType extends Type {
             vtableSlots = identities.toArray(new VtableSlotIdentity[0]);
             vtable = vtableList.toArray(new BACILMethod[0]);
 
+            //4. Call cctor
             MethodDefSig CCTOR_SIGNATURE = new MethodDefSig(false, false, (byte)0, 0, definingComponent.getBuiltinTypes().getVoidType(), new Type[0]);
 
             BACILMethod cctor = getMemberMethod(".cctor", CCTOR_SIGNATURE);
@@ -190,11 +207,20 @@ public class NamedType extends Type {
         }
     }
 
+    /**
+     * Get index of field represented by a Field token.
+     */
     private int getFieldIndex(CLITablePtr token)
     {
         return token.getRowNo() - fieldsRowsStart;
     }
 
+    /**
+     * Get a field available in this type, represented by a MemberRef or Field token.
+     * @param token the token for the field
+     * @param callingComponent the component resolving the field
+     * @return The {@link TypedField} representing the field.
+     */
     public TypedField getTypedField(CLITablePtr token, CLIComponent callingComponent)
     {
         if(token.getTableId() == CLITableConstants.CLI_TABLE_FIELD)
@@ -205,12 +231,6 @@ public class NamedType extends Type {
         }
 
     }
-
-    public int getFieldsCount()
-    {
-        return fieldRowsEnd-fieldsRowsStart;
-    }
-
 
     @Override
     public Type getDirectBaseClass() {
@@ -252,9 +272,14 @@ public class NamedType extends Type {
         return null;
     }
 
-    public static NamedType fromTypeDef(CLITypeDefTableRow type, CLIComponent component)
+    /**
+     * Create a new CLIType based on the TypeDef metadata row. Properly resolves builtin types.
+     * @param type the type definition
+     * @param component the component this type belongs to
+     * @return a CLIType representation of the type
+     */
+    public static CLIType fromTypeDef(CLITypeDefTableRow type, CLIComponent component)
     {
-        //final String name = type.getTypeName().read(component.getStringHeap());
         if(type.getTypeNamespace().read(component.getStringHeap()).equals("System"))
         {
             switch(type.getTypeName().read(component.getStringHeap()))
@@ -300,7 +325,7 @@ public class NamedType extends Type {
             }
         }
 
-        return new NamedType(type, component);
+        return new CLIType(type, component);
     }
 
     @Override
@@ -308,18 +333,23 @@ public class NamedType extends Type {
         return String.format("[%s]%s.%s", definingComponent, namespace, name);
     }
 
-    public TypedField[] getInstanceFields() {
-        return instanceFields;
-    }
-
+    /**
+     * Get a descriptor of fields of instances of this type.
+     */
     public LocationsDescriptor getInstanceFieldsDescriptor() {
         return instanceFieldsDescriptor;
     }
 
+    /**
+     * Get the name of this type.
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Get the namespace of this type.
+     */
     public String getNamespace() {
         return namespace;
     }

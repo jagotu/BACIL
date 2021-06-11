@@ -5,6 +5,9 @@ import com.vztekoverflow.bacil.runtime.BACILMethod;
 
 import java.util.List;
 
+/**
+ * Represents a type with a byref constraint, as specified in I.12.4.1.5.2 By-reference parameters
+ */
 public class ByRefWrapped extends Type {
 
     private final Type inner;

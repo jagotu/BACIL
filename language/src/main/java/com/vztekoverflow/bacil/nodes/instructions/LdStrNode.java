@@ -1,6 +1,7 @@
-package com.vztekoverflow.bacil.nodes;
+package com.vztekoverflow.bacil.nodes.instructions;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.vztekoverflow.bacil.nodes.EvaluationStackAwareNode;
 
 /**
  * A Truffle node representing the ldstr instruction.

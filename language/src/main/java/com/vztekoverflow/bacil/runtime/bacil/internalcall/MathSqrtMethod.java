@@ -7,6 +7,9 @@ import com.vztekoverflow.bacil.runtime.bacil.JavaMethod;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
 
+/**
+ * Implementation of System.Math.Sqrt(Double)
+ */
 public class MathSqrtMethod extends JavaMethod {
 
 

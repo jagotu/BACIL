@@ -11,6 +11,11 @@ import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
 
 import java.util.List;
 
+/**
+ * Implementation of the BACILHelpers.BACILEnvironment type.
+ *
+ * Contains methods for accessing the system timer.
+ */
 public class BACILEnvironmentType extends Type {
 
     private final Type directBaseClass;

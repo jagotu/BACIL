@@ -3,17 +3,27 @@ package com.vztekoverflow.bacil.runtime.bacil.internalcall;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLIMethodDefTableRow;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
-import com.vztekoverflow.bacil.runtime.types.NamedType;
+import com.vztekoverflow.bacil.runtime.types.CLIType;
 import com.vztekoverflow.bacil.runtime.types.Type;
 
+/**
+ * Class for finding an implementation of internalcall methods.
+ */
 public class InternalCallFinder {
 
+    /**
+     * Find an implementation for an internalcall method.
+     * @param definingComponent the component that defines the internalcall method
+     * @param method the internalcall method definition
+     * @param type the type the method belongs to
+     * @return found internalcall method or null
+     */
     public static BACILMethod FindInternalCallMethod(CLIComponent definingComponent, CLIMethodDefTableRow method, Type type)
     {
         String methodName = method.getName().read(definingComponent.getStringHeap());
-        if(type instanceof NamedType)
+        if(type instanceof CLIType)
         {
-            NamedType namedType = (NamedType) type;
+            CLIType namedType = (CLIType) type;
             if(namedType.getNamespace().equals("System") && namedType.getName().equals("Math"))
             {
                 if(methodName.equals("Sqrt"))

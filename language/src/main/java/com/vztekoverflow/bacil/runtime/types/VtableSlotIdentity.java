@@ -1,4 +1,4 @@
-package com.vztekoverflow.bacil.runtime.types.locations;
+package com.vztekoverflow.bacil.runtime.types;
 
 import com.vztekoverflow.bacil.parser.signatures.MethodDefSig;
 import com.vztekoverflow.bacil.runtime.BACILMethod;

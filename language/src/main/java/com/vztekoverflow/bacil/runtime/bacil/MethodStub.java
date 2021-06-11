@@ -9,6 +9,9 @@ import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
 import com.vztekoverflow.bacil.runtime.types.builtin.SystemValueTypeType;
 
+/**
+ * Used for stubbing methods that use unimplemented features, making them return 0/null.
+ */
 public class MethodStub extends JavaMethod {
 
     private final MethodDefSig signature;

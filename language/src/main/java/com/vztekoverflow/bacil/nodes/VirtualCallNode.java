@@ -5,8 +5,8 @@ import com.vztekoverflow.bacil.BACILInternalError;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
 import com.vztekoverflow.bacil.runtime.StaticObject;
 import com.vztekoverflow.bacil.runtime.types.Type;
+import com.vztekoverflow.bacil.runtime.types.VtableSlotIdentity;
 import com.vztekoverflow.bacil.runtime.types.builtin.SystemVoidType;
-import com.vztekoverflow.bacil.runtime.types.locations.VtableSlotIdentity;
 
 /**
  * A Truffle node representing the callvirt instruction <b>only when the target method is actually virtual</b>.

@@ -1,8 +1,9 @@
-package com.vztekoverflow.bacil.nodes;
+package com.vztekoverflow.bacil.nodes.instructions;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.vztekoverflow.bacil.BACILInternalError;
+import com.vztekoverflow.bacil.nodes.EvaluationStackAwareNode;
 import com.vztekoverflow.bacil.runtime.EvaluationStackPrimitiveMarker;
 import com.vztekoverflow.bacil.runtime.LocationReference;
 import com.vztekoverflow.bacil.runtime.SZArray;

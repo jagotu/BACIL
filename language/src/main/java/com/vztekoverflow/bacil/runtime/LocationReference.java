@@ -1,7 +1,7 @@
 package com.vztekoverflow.bacil.runtime;
 
+import com.vztekoverflow.bacil.runtime.locations.LocationsHolder;
 import com.vztekoverflow.bacil.runtime.types.Type;
-import com.vztekoverflow.bacil.runtime.types.locations.LocationsHolder;
 
 /**
  * Implements a managed reference (denoted as {@code &} in the standard).

@@ -5,8 +5,11 @@ import com.vztekoverflow.bacil.BACILInternalError;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITypeDefTableRow;
 import com.vztekoverflow.bacil.runtime.EvaluationStackPrimitiveMarker;
-import com.vztekoverflow.bacil.runtime.types.locations.LocationsHolder;
+import com.vztekoverflow.bacil.runtime.locations.LocationsHolder;
 
+/**
+ * Implementation of the System.Int64 type.
+ */
 public class SystemInt64Type extends SystemValueTypeType {
     public SystemInt64Type(CLITypeDefTableRow type, CLIComponent component) {
         super(type, component);
@@ -45,8 +48,8 @@ public class SystemInt64Type extends SystemValueTypeType {
     }
 
     @Override
-    public void objectToLocation(LocationsHolder holder, int holderOffset, Object obj) {
-        holder.getPrimitives()[holderOffset] = (Long) obj;
+    public void objectToLocation(LocationsHolder holder, int holderOffset, Object value) {
+        holder.getPrimitives()[holderOffset] = (Long) value;
     }
 
     @Override

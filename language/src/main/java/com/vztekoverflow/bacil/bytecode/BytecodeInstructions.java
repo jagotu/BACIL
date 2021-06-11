@@ -5,6 +5,9 @@ import com.vztekoverflow.bacil.runtime.EvaluationStackPrimitiveMarker;
 
 import static com.vztekoverflow.bacil.runtime.EvaluationStackPrimitiveMarker.*;
 
+/**
+ * Class holding instruction opcode constants and tables describing instruction parameters (like length, stack effect, etc.).
+ */
 public class BytecodeInstructions {
 
     //Instruction constants

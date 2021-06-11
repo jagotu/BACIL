@@ -22,6 +22,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Context of BACIL, storing all currently loaded assemblies.
+ */
 public class BACILContext {
     private final BACILLanguage language;
     private final TruffleLanguage.Env env;
@@ -34,17 +37,28 @@ public class BACILContext {
     @CompilerDirectives.CompilationFinal
     private boolean builtinInitalizing = false;
 
+    @CompilerDirectives.CompilationFinal(dimensions = 1)
+    private final String[] stubbedMethods;
+
+    /**
+     * Get the instance of {@link BACILLanguage} this context belongs to.
+     */
     public BACILLanguage getLanguage() {
         return language;
     }
 
+    /**
+     * Get the truffle environment of this context.
+     */
     public TruffleLanguage.Env getEnv() {
         return env;
     }
 
-    @CompilerDirectives.CompilationFinal(dimensions = 1)
-    private final String[] stubbedMethods;
-
+    /**
+     * Create a BACIL context for the specified {@link BACILLanguage} and environment.
+     * @param language the {@link BACILLanguage} this context belongs to
+     * @param env the truffle environment
+     */
     public BACILContext(BACILLanguage language, TruffleLanguage.Env env) {
         this.language = language;
         this.env = env;
@@ -54,12 +68,20 @@ public class BACILContext {
 
     }
 
+    /**
+     * Add all paths into the library paths, using them to locate assemblies.
+     * @param paths paths to add to library paths
+     */
     public void addLibraryPaths(List<String> paths) {
         for (String p : paths) {
             addLibraryPath(p);
         }
     }
 
+    /**
+     * Add a paths into the library paths, using it to locate assemblies.
+     * @param p the path to add
+     */
     public void addLibraryPath(String p) {
         Path path = Paths.get(p);
         TruffleFile file = getEnv().getInternalTruffleFile(path.toString());
@@ -70,10 +92,17 @@ public class BACILContext {
         }
     }
 
+    /**
+     * Find and load an assembly resolving the specified assembly reference.
+     * @param reference identity of the assembly to find
+     * @return the loaded assembly
+     */
     private BACILComponent findAssembly(AssemblyIdentity reference)
     {
+        //Loading assemblies is an expensive task and should never be compiled.
         CompilerAsserts.neverPartOfCompilation();
 
+        //Resolve BACILHelpers as our internal component
         if(reference.getName().equals("BACILHelpers"))
         {
             BACILComponent helpers = new BACILHelpersComponent(builtinTypes, getLanguage());
@@ -82,12 +111,13 @@ public class BACILContext {
         }
 
 
+        //Locate dll in libraryPaths
         for (Path p : libraryPaths) {
             Path absPath = Paths.get(p.toString(), reference.getName() + ".dll");
             TruffleFile file = getEnv().getInternalTruffleFile(absPath.toUri());
             if (file.exists()) {
                 try {
-                    CLIComponent c = loadAssembly(Source.newBuilder(BACILLanguage.ID, file).build(), language);
+                    CLIComponent c = loadAssembly(Source.newBuilder(BACILLanguage.ID, file).build());
                     if(c.getAssemblyIdentity().resolvesRef(reference))
                     {
                         return c;
@@ -100,7 +130,12 @@ public class BACILContext {
         throw new BACILInternalError("Failed to locate assembly " + reference.getName());
     }
 
-    public CLIComponent loadAssembly(Source source, BACILLanguage language)
+    /**
+     * Load an assembly from the specified source file.
+     * @param source the source file to load
+     * @return the loaded assembly as a {@link CLIComponent}
+     */
+    public CLIComponent loadAssembly(Source source)
     {
         CompilerAsserts.neverPartOfCompilation();
 
@@ -120,6 +155,8 @@ public class BACILContext {
             loadedAssemblies.add(c);
         }
 
+        //If we didn't yet initialize builtin types, use the fact that the first reference in an assembly is
+        //always the corelib reference, and resolve them from there.
         if(builtinTypes == null && !builtinInitalizing)
         {
             builtinInitalizing = true;
@@ -138,7 +175,11 @@ public class BACILContext {
         return c;
     }
 
-
+    /**
+     * Get an assembly resolving the reference, loading it if it wasn't loaded yet.
+     * @param reference identity of the assembly to get
+     * @return the assembly
+     */
     public BACILComponent getAssembly(AssemblyIdentity reference)
     {
         CompilerAsserts.neverPartOfCompilation();
@@ -154,10 +195,18 @@ public class BACILContext {
         return findAssembly(reference);
     }
 
+    /**
+     * Get the builtin types resolved in this context.
+     */
     public BuiltinTypes getBuiltinTypes() {
         return builtinTypes;
     }
 
+    /**
+     * Check whether a method with the specified name should be stubbed.
+     * @param methodName the method name to check
+     * @return whether the method should be stubbed
+     */
     public boolean isStubbed(String methodName)
     {
         for (String possibility : stubbedMethods)

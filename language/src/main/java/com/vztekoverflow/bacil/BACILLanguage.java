@@ -11,6 +11,9 @@ import org.graalvm.options.OptionDescriptors;
 
 import java.io.File;
 
+/**
+ * The BACIL language class implementing TruffleLanguage.
+ */
 @TruffleLanguage.Registration(id = BACILLanguage.ID, name = BACILLanguage.NAME, interactive = false, defaultMimeType = BACILLanguage.CIL_PE_MIME_TYPE,
 byteMimeTypes = {BACILLanguage.CIL_PE_MIME_TYPE})
 public class BACILLanguage extends TruffleLanguage<BACILContext> {
@@ -30,6 +33,9 @@ public class BACILLanguage extends TruffleLanguage<BACILContext> {
         return new BACILContext(this, env);
     }
 
+    /**
+     * CallTarget used to call the entry point, adding command line arguments and returning 0 from voids.
+     */
     private static class CallEntryPointCallTarget implements CallTarget
     {
 
@@ -61,15 +67,15 @@ public class BACILLanguage extends TruffleLanguage<BACILContext> {
     }
 
     @Override
-    protected CallTarget parse(ParsingRequest request) throws Exception {
+    protected CallTarget parse(ParsingRequest request) {
         Source source = request.getSource();
 
-        CLIComponent c = getCurrentContext(BACILLanguage.class).loadAssembly(source, this);
+        CLIComponent c = getCurrentContext(BACILLanguage.class).loadAssembly(source);
 
         String sourcePath = request.getSource().getPath();
         File file = new File(sourcePath);
         getCurrentContext(BACILLanguage.class).addLibraryPath(file.getAbsoluteFile().getParent());
-        //DebugNode node = new DebugNode(this, new FrameDescriptor(), c);
+
         if(c.getCliHeader().getEntryPointToken() == 0)
         {
             throw new RuntimeException("No entry point in file");

@@ -5,6 +5,9 @@ import com.vztekoverflow.bacil.runtime.BACILMethod;
 
 import java.util.List;
 
+/**
+ * Represents a type with modreq and/or modopt constraints, as specified in II.7.1.1 modreq and modopt.
+ */
 public class CustomModWrapped extends Type {
 
     private final Type inner;

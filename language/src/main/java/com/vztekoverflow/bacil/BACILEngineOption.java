@@ -9,6 +9,9 @@ import org.graalvm.options.OptionStability;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Options for the BACIL Engine.
+ */
 public final class BACILEngineOption {
 
     public static final String OPTION_ARRAY_SEPARATOR = ";";

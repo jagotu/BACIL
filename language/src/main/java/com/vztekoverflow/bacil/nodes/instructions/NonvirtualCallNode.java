@@ -1,6 +1,8 @@
-package com.vztekoverflow.bacil.nodes;
+package com.vztekoverflow.bacil.nodes.instructions;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.vztekoverflow.bacil.nodes.BytecodeNode;
+import com.vztekoverflow.bacil.nodes.EvaluationStackAwareNode;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.builtin.SystemVoidType;

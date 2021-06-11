@@ -5,9 +5,12 @@ import com.vztekoverflow.bacil.BACILInternalError;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITypeDefTableRow;
 import com.vztekoverflow.bacil.runtime.EvaluationStackPrimitiveMarker;
+import com.vztekoverflow.bacil.runtime.locations.LocationsHolder;
 import com.vztekoverflow.bacil.runtime.types.TypeHelpers;
-import com.vztekoverflow.bacil.runtime.types.locations.LocationsHolder;
 
+/**
+ * Implementation of the System.UInt16 type.
+ */
 public class SystemUInt16Type extends SystemValueTypeType {
 
     public SystemUInt16Type(CLITypeDefTableRow type, CLIComponent component) {
@@ -47,8 +50,8 @@ public class SystemUInt16Type extends SystemValueTypeType {
     }
 
     @Override
-    public void objectToLocation(LocationsHolder holder, int holderOffset, Object obj) {
-        holder.getPrimitives()[holderOffset] = TypeHelpers.zeroExtend16((Short) obj);
+    public void objectToLocation(LocationsHolder holder, int holderOffset, Object value) {
+        holder.getPrimitives()[holderOffset] = TypeHelpers.zeroExtend16((Short) value);
     }
 
     @Override

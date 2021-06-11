@@ -5,6 +5,9 @@ import com.vztekoverflow.bacil.runtime.BACILMethod;
 
 import java.util.List;
 
+/**
+ * Represents a type with a pinned constraint, as specified in II.7.1.2 pinned.
+ */
 public class PinnedWrapped extends Type {
     private final Type inner;
 

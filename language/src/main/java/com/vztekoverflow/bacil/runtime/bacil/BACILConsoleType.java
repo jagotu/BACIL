@@ -11,6 +11,11 @@ import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
 
 import java.util.List;
 
+/**
+ * Implementation of BACILHelpers.BACILConsole type.
+ *
+ * Used for accessing the console from BACIL.
+ */
 public class BACILConsoleType extends Type {
 
     private final Type directBaseClass;

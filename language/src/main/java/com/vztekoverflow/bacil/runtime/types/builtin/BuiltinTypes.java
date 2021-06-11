@@ -8,6 +8,9 @@ import com.vztekoverflow.bacil.runtime.types.Type;
 
 import static com.vztekoverflow.bacil.bytecode.BytecodeInstructions.*;
 
+/**
+ * Holder for the builtin types, as defined in I.8.2.2 Built-in value and reference types
+ */
 public class BuiltinTypes {
     private final Type stringType;
     private final Type objectType;
@@ -29,6 +32,10 @@ public class BuiltinTypes {
     private final Type singleType;
     private final Type doubleType;
 
+    /**
+     * Create a new BuiltinTypes, resolving the types from the provided core library.
+     * @param corlib core library containing implementations of the builtin types.
+     */
     public BuiltinTypes(CLIComponent corlib) {
         objectType = corlib.findLocalType("System", "Object");
         valueTypeType = corlib.findLocalType("System", "ValueType");
@@ -52,7 +59,12 @@ public class BuiltinTypes {
     }
 
 
-    public Type getForIndirectOpcode(int opcode)
+    /**
+     * Get the builtin type for a typed instruction (like ldind, stind, ldelem, stelem).
+     * @param opcode the instruction opcode
+     * @return the builtin type for this instruction
+     */
+    public Type getForTypedOpcode(int opcode)
     {
         switch(opcode)
         {

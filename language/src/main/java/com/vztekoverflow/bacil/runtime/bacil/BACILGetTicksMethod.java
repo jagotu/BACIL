@@ -5,6 +5,11 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
 
+/**
+ * Implementation of the BACILHelpers.BACILEnvironment.GetTicks() method.
+ *
+ * Returns the amount of ticks since BACILHelpers.BACILEnvironment.StartTimer() was called.
+ */
 public class BACILGetTicksMethod extends JavaMethod {
 
     private final Type retType;

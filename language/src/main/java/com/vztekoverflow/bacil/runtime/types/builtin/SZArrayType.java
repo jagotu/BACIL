@@ -1,13 +1,18 @@
-package com.vztekoverflow.bacil.runtime.types;
+package com.vztekoverflow.bacil.runtime.types.builtin;
 
 import com.vztekoverflow.bacil.parser.cil.CILMethod;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.signatures.MethodDefSig;
 import com.vztekoverflow.bacil.parser.signatures.SignatureReader;
 import com.vztekoverflow.bacil.parser.signatures.TypeSig;
+import com.vztekoverflow.bacil.runtime.types.CustomMod;
+import com.vztekoverflow.bacil.runtime.types.Type;
 
 import java.util.List;
 
+/**
+ * Represents a SZArray with a specific element type.
+ */
 public class SZArrayType extends Type {
 
     public static final String TYPE = "SZArrayType";

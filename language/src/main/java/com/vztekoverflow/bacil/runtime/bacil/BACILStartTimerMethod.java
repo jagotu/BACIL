@@ -5,6 +5,11 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
 
+/**
+ * Implementation of the BACILHelpers.BACILEnvironment.StartTimer() method.
+ *
+ * Starts the system timer so that later BACILHelpers.BACILEnvironment.GetTicks() can be used to get the elapsed time.
+ */
 public class BACILStartTimerMethod extends JavaMethod {
 
     private final Type retType;

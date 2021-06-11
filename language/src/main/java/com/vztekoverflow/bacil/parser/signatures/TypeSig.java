@@ -3,9 +3,9 @@ package com.vztekoverflow.bacil.parser.signatures;
 import com.vztekoverflow.bacil.parser.BACILParserException;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
-import com.vztekoverflow.bacil.runtime.types.SZArrayType;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
+import com.vztekoverflow.bacil.runtime.types.builtin.SZArrayType;
 
 /**
  * Class implementing parsing for Type, as specified in II.23.2.12 Type.

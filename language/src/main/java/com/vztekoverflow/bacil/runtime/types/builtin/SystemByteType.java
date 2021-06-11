@@ -5,9 +5,12 @@ import com.vztekoverflow.bacil.BACILInternalError;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITypeDefTableRow;
 import com.vztekoverflow.bacil.runtime.EvaluationStackPrimitiveMarker;
+import com.vztekoverflow.bacil.runtime.locations.LocationsHolder;
 import com.vztekoverflow.bacil.runtime.types.TypeHelpers;
-import com.vztekoverflow.bacil.runtime.types.locations.LocationsHolder;
 
+/**
+ * Implementation of the System.Byte type.
+ */
 public class SystemByteType extends SystemValueTypeType {
     public SystemByteType(CLITypeDefTableRow type, CLIComponent component) {
         super(type, component);
@@ -46,8 +49,8 @@ public class SystemByteType extends SystemValueTypeType {
     }
 
     @Override
-    public void objectToLocation(LocationsHolder holder, int holderOffset, Object obj) {
-        holder.getPrimitives()[holderOffset] = TypeHelpers.zeroExtend8((Byte) obj);
+    public void objectToLocation(LocationsHolder holder, int holderOffset, Object value) {
+        holder.getPrimitives()[holderOffset] = TypeHelpers.zeroExtend8((Byte) value);
     }
 
     @Override

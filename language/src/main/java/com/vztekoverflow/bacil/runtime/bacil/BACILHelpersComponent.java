@@ -7,6 +7,10 @@ import com.vztekoverflow.bacil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
 
+/**
+ * Implementation of the BACILHelpers component, used for accessing system resources that can't be accessed
+ * through the .NET methods because of incomplete implementation.
+ */
 public class BACILHelpersComponent extends BACILComponent {
 
     static AssemblyIdentity assemblyIdentity = new AssemblyIdentity((short)0, (short)0, (short)0, (short)0, "BACILHelpers");

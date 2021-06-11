@@ -15,10 +15,10 @@ import com.vztekoverflow.bacil.parser.cli.tables.generated.CLIMethodDefTableRow;
 import com.vztekoverflow.bacil.parser.signatures.LocalVarSig;
 import com.vztekoverflow.bacil.parser.signatures.MethodDefSig;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
+import com.vztekoverflow.bacil.runtime.locations.LocationsDescriptor;
 import com.vztekoverflow.bacil.runtime.types.ByRefWrapped;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.builtin.SystemValueTypeType;
-import com.vztekoverflow.bacil.runtime.types.locations.LocationsDescriptor;
 
 /**
  * Class representing a CIL method in an assembly. Holds resolved metadata like signature, location definitions,

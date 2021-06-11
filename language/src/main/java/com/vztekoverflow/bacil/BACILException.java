@@ -1,5 +1,8 @@
 package com.vztekoverflow.bacil;
 
+/**
+ * A generic runtime exception for an error that happened in BACIL.
+ */
 public abstract class BACILException extends RuntimeException{
     public BACILException() {
     }

@@ -22,7 +22,7 @@ import com.vztekoverflow.bacil.runtime.BACILMethod;
 import com.vztekoverflow.bacil.runtime.bacil.BACILComponent;
 import com.vztekoverflow.bacil.runtime.bacil.MethodStub;
 import com.vztekoverflow.bacil.runtime.bacil.internalcall.InternalCallFinder;
-import com.vztekoverflow.bacil.runtime.types.NamedType;
+import com.vztekoverflow.bacil.runtime.types.CLIType;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import org.graalvm.polyglot.io.ByteSequence;
 
@@ -401,7 +401,7 @@ public class CLIComponent extends BACILComponent {
         if(localDefTypes[typeDef.getRowNo()-1] == null)
         {
             CompilerAsserts.neverPartOfCompilation();
-            localDefTypes[typeDef.getRowNo()-1] = NamedType.fromTypeDef(typeDef, this);
+            localDefTypes[typeDef.getRowNo()-1] = CLIType.fromTypeDef(typeDef, this);
         }
         return localDefTypes[typeDef.getRowNo()-1];
     }

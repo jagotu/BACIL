@@ -6,6 +6,11 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
 
+/**
+ * Implementation of BACILHelpers.BACILConsole.Write(Object) method.
+ *
+ * Used for writing to the console from BACIL.
+ */
 public class BACILConsoleWriteMethod extends JavaMethod {
 
     private final Type retType;

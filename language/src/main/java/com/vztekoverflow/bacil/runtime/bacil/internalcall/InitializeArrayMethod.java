@@ -15,6 +15,11 @@ import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.TypeHelpers;
 import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
 
+/**
+ * Implementation of System.Runtime.CompilerServices.RuntimeHelpers.InitializeArray(Array, RuntimeFieldHandle)
+ *
+ * Used for initializing an array with static values.
+ */
 public class InitializeArrayMethod extends JavaMethod {
 
     private final Type retType;
@@ -30,7 +35,7 @@ public class InitializeArrayMethod extends JavaMethod {
     public InitializeArrayMethod(BuiltinTypes builtinTypes, TruffleLanguage<?> language, Type definingType) {
         super(language);
         retType = builtinTypes.getVoidType();
-        argTypes = new Type[] {builtinTypes.getObjectType(), builtinTypes.getObjectType()}; //Two references
+        argTypes = new Type[] {builtinTypes.getObjectType(), builtinTypes.getObjectType()}; //takes two references
         this.definingType = definingType;
     }
 
@@ -41,6 +46,7 @@ public class InitializeArrayMethod extends JavaMethod {
         CLIComponent component = token.getComponent();
         BuiltinTypes builtinTypes = component.getBuiltinTypes();
 
+        //Get the FieldRVA for the field
         CLIFieldTableRow field = component.getTableHeads().getFieldTableHead().skip(token.getPtr());
         if ((field.getFlags() & HAS_FIELD_RVA) != HAS_FIELD_RVA) {
             CompilerDirectives.transferToInterpreterAndInvalidate();
@@ -60,6 +66,7 @@ public class InitializeArrayMethod extends JavaMethod {
             throw new BACILInternalError("Can't find fieldRVA for field " + field.getName());
         }
 
+        //Copy data from the RVA to the array
         ByteSequenceBuffer data = component.getBuffer(foundRVA.getRVA());
         Type arrayElementType = arrayRef.getElementType();
 

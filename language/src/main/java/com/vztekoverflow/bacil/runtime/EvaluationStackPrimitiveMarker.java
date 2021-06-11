@@ -1,5 +1,9 @@
 package com.vztekoverflow.bacil.runtime;
 
+/**
+ * Marks evaluation stack slots where a primitive value is stored, specifying the type,
+ * as defined in I.12.3.2.1 The evaluation stack.
+ */
 public class EvaluationStackPrimitiveMarker {
 
     public static final byte EVALUATION_STACK_TAG_INT32 = 0;

@@ -8,6 +8,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.vztekoverflow.bacil.BACILInternalError;
 import com.vztekoverflow.bacil.bytecode.BytecodeBuffer;
 import com.vztekoverflow.bacil.bytecode.BytecodeInstructions;
+import com.vztekoverflow.bacil.nodes.instructions.*;
 import com.vztekoverflow.bacil.parser.cil.CILMethod;
 import com.vztekoverflow.bacil.parser.cli.tables.CLIComponentTablePtr;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
@@ -18,12 +19,12 @@ import com.vztekoverflow.bacil.runtime.BACILMethod;
 import com.vztekoverflow.bacil.runtime.EvaluationStackPrimitiveMarker;
 import com.vztekoverflow.bacil.runtime.LocationReference;
 import com.vztekoverflow.bacil.runtime.SZArray;
+import com.vztekoverflow.bacil.runtime.locations.LocationsDescriptor;
+import com.vztekoverflow.bacil.runtime.locations.LocationsHolder;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.TypeHelpers;
 import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
 import com.vztekoverflow.bacil.runtime.types.builtin.SystemVoidType;
-import com.vztekoverflow.bacil.runtime.types.locations.LocationsDescriptor;
-import com.vztekoverflow.bacil.runtime.types.locations.LocationsHolder;
 
 import java.util.Arrays;
 
@@ -211,7 +212,7 @@ public class BytecodeNode extends Node {
                 case STIND_R4:
                 case STIND_R8:
                 case STIND_REF:
-                    storeIndirect(primitives[top-1], refs[top-1], (LocationReference) refs[top-2], builtinTypes.getForIndirectOpcode(curOpcode)); break;
+                    storeIndirect(primitives[top-1], refs[top-1], (LocationReference) refs[top-2], builtinTypes.getForTypedOpcode(curOpcode)); break;
 
                 case LDIND_I1:
                 case LDIND_U1:
@@ -224,7 +225,7 @@ public class BytecodeNode extends Node {
                 case LDIND_R4:
                 case LDIND_R8:
                 case LDIND_REF:
-                    loadIndirect(primitives, refs, top-1, (LocationReference) refs[top-1], builtinTypes.getForIndirectOpcode(curOpcode)); break;
+                    loadIndirect(primitives, refs, top-1, (LocationReference) refs[top-1], builtinTypes.getForTypedOpcode(curOpcode)); break;
 
 
                 case LDELEM_I1:
@@ -238,7 +239,7 @@ public class BytecodeNode extends Node {
                 case LDELEM_R4:
                 case LDELEM_R8:
                 case LDELEM_REF:
-                    loadArrayElem(builtinTypes.getForIndirectOpcode(curOpcode), primitives, refs, top); break;
+                    loadArrayElem(builtinTypes.getForTypedOpcode(curOpcode), primitives, refs, top); break;
 
                 case STELEM_I1:
                 case STELEM_I2:
@@ -248,7 +249,7 @@ public class BytecodeNode extends Node {
                 case STELEM_R4:
                 case STELEM_R8:
                 case STELEM_REF:
-                    storeArrayElem(builtinTypes.getForIndirectOpcode(curOpcode), primitives, refs, top); break;
+                    storeArrayElem(builtinTypes.getForTypedOpcode(curOpcode), primitives, refs, top); break;
 
                 case LDELEM:
                 case STELEM:
@@ -501,7 +502,7 @@ public class BytecodeNode extends Node {
     /**
      * Loads an array element to the evaluation stack.
      *
-     * Stack transition: ..., array, index -> ..., value
+     * Stack transition: ..., array, index → ..., value
      * @param elementType the type of the element
      * @param primitives primitives on the evaluation stack
      * @param refs references on the evaluation stack
@@ -526,7 +527,7 @@ public class BytecodeNode extends Node {
     /**
      * Stores a value from the evaluation stack to an array element.
      *
-     * Stack transition: ..., array, index, value -> ...
+     * Stack transition: ..., array, index, value → ...
      * @param elementType the type of the element
      * @param primitives primitives on the evaluation stack
      * @param refs references on the evaluation stack
@@ -581,7 +582,7 @@ public class BytecodeNode extends Node {
                 }
                 break;
             case NEWOBJ:
-                node = new ConstructorNode(method.getComponent().getMethod(token), top);
+                node = new NewobjNode(method.getComponent().getMethod(token), top);
                 break;
             case NEWARR:
                 node = new NewarrNode(method.getComponent().getType(token), top);

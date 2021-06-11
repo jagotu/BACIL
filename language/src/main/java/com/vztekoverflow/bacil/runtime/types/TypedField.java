@@ -4,6 +4,9 @@ import com.vztekoverflow.bacil.parser.signatures.FieldSig;
 
 import java.util.List;
 
+/**
+ * Represents a field in a type.
+ */
 public class TypedField {
 
     private final FieldSig signature;

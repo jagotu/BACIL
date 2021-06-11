@@ -179,7 +179,7 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
      * Coded indices are described II.24.2.6 #~ stream:
      *
      * If e is a coded index that points into table ti out of n possible tables t0,...,tn-1, then it
-     * is stored as e << (log n) | tag {t0,...,tn-1}[ti] using 2 bytes if the maximum number
+     * is stored as e &lt;&lt; (log n) | tag {t0,...,tn-1}[ti] using 2 bytes if the maximum number
      * of rows of tables t0,...,tn-1, is less than 2^(16 – (log n)), and using 4 bytes otherwise.
      * @param tables the tables this coded index can point to
      * @return whether a 2 byte coded index should be used

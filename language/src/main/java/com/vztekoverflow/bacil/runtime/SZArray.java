@@ -1,12 +1,14 @@
 package com.vztekoverflow.bacil.runtime;
 
+import com.vztekoverflow.bacil.runtime.locations.LocationsHolder;
 import com.vztekoverflow.bacil.runtime.types.Type;
-import com.vztekoverflow.bacil.runtime.types.locations.LocationsHolder;
 
+/**
+ * An instance of a SZArrayType, holding array element values.
+ */
 public class SZArray {
 
     private final Type elementType;
-    //private final Object[] fields;
     private final LocationsHolder fieldsHolder;
     private final int length;
 

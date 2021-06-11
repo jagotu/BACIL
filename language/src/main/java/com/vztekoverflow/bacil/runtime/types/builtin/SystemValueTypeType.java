@@ -2,10 +2,16 @@ package com.vztekoverflow.bacil.runtime.types.builtin;
 
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITypeDefTableRow;
-import com.vztekoverflow.bacil.runtime.types.NamedType;
-import com.vztekoverflow.bacil.runtime.types.locations.LocationsHolder;
+import com.vztekoverflow.bacil.runtime.locations.LocationsHolder;
+import com.vztekoverflow.bacil.runtime.types.CLIType;
+import com.vztekoverflow.bacil.runtime.types.Type;
 
-public class SystemValueTypeType extends NamedType {
+/**
+ * Implementation of the System.ValueType type.
+ * Replaces the reference-style operations of {@link Type} with stubs so that children have to override them
+ * with proper primitive-style handlers.
+ */
+public class SystemValueTypeType extends CLIType {
     public SystemValueTypeType(CLITypeDefTableRow type, CLIComponent component) {
         super(type, component);
     }
@@ -46,7 +52,8 @@ public class SystemValueTypeType extends NamedType {
     }
 
     @Override
-    public void objectToLocation(LocationsHolder holder, int holderOffset, Object obj) {
+    public void objectToLocation(LocationsHolder holder, int holderOffset, Object value) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
+
 }

@@ -1,17 +1,19 @@
 package com.vztekoverflow.bacil.runtime;
 
-import com.vztekoverflow.bacil.runtime.types.NamedType;
-import com.vztekoverflow.bacil.runtime.types.locations.LocationsHolder;
+import com.vztekoverflow.bacil.runtime.locations.LocationsHolder;
+import com.vztekoverflow.bacil.runtime.types.CLIType;
 
+/**
+ * An instance of a type, holding instance field values.
+ */
 public final class StaticObject {
 
-    private final NamedType type;
-    //private final Object[] fields;
+    private final CLIType type;
     private final LocationsHolder fieldsHolder;
 
 
 
-    public StaticObject(NamedType type) {
+    public StaticObject(CLIType type) {
         type.init();
         this.type = type;
         this.fieldsHolder = LocationsHolder.forDescriptor(type.getInstanceFieldsDescriptor());
@@ -21,7 +23,7 @@ public final class StaticObject {
         return fieldsHolder;
     }
 
-    public NamedType getType() {
+    public CLIType getType() {
         return type;
     }
 
