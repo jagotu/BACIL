@@ -1,5 +1,6 @@
 package com.vztekoverflow.bacil.parser.cli.tables.generated;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.bacil.parser.cli.tables.CLIStringHeapPtr;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITableRow;
@@ -22,12 +23,13 @@ public class CLIEventTableRow extends CLITableRow<CLIEventTableRow> {
 		return new CLIStringHeapPtr(heapOffset);
 	}
 
+	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_EVENT_TYPE_TABLES = new byte[] { CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_TYPE_SPEC} ;
 	public final CLITablePtr getEventType() { 
 		int offset = 4;
 		if (tables.isStringHeapBig()) offset += 2;
 		int codedValue;
-		if (areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_TYPE_SPEC)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
+		if (areSmallEnough(MAP_EVENT_TYPE_TABLES)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
 		return new CLITablePtr(MAP_EVENT_TYPE_TABLES[codedValue & 3], codedValue >> 2);
 	}
 
@@ -35,7 +37,7 @@ public class CLIEventTableRow extends CLITableRow<CLIEventTableRow> {
 	public int getLength() {
 		int offset = 6;
 		if (tables.isStringHeapBig()) offset += 2;
-		if (!areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_TYPE_SPEC)) offset += 2;
+		if (!areSmallEnough(MAP_EVENT_TYPE_TABLES)) offset += 2;
 		return offset;
 	}
 

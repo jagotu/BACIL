@@ -1,5 +1,6 @@
 package com.vztekoverflow.bacil.parser.cli.tables;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.bacil.parser.BACILParserException;
 import com.vztekoverflow.bacil.parser.ByteSequenceBuffer;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableConstants;
@@ -15,6 +16,7 @@ public class CLITablesHeader {
     private final byte heapSizes;
     private final long valid;
     private final long sorted;
+    @CompilerDirectives.CompilationFinal(dimensions = 1)
     private final int[] rowCounts;
 
     public CLITablesHeader(byte majorVersion, byte minorVersion, byte heapSizes, long valid, long sorted, int[] rowCounts) {

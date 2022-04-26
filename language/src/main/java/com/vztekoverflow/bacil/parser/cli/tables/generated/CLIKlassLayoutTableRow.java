@@ -1,5 +1,6 @@
 package com.vztekoverflow.bacil.parser.cli.tables.generated;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITableRow;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITables;
@@ -19,17 +20,19 @@ public class CLIKlassLayoutTableRow extends CLITableRow<CLIKlassLayoutTableRow> 
 		return getInt(offset);
 	}
 
+	@CompilerDirectives.CompilationFinal(dimensions = 1)
+	private static final byte[] MAP_PARENT_TABLES = new byte[] {CLITableConstants.CLI_TABLE_TYPE_DEF};
 	public final CLITablePtr getParent() { 
 		int offset = 6;
 		final int rowNo;
-		if (areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
+		if (areSmallEnough(MAP_PARENT_TABLES)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
 		return new CLITablePtr(CLITableConstants.CLI_TABLE_TYPE_DEF, rowNo);
 	}
 
 	@Override
 	public int getLength() {
 		int offset = 8;
-		if (!areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF)) offset += 2;
+		if (!areSmallEnough(MAP_PARENT_TABLES)) offset += 2;
 		return offset;
 	}
 

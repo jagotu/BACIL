@@ -2,6 +2,7 @@ package com.vztekoverflow.bacil.parser.cli.tables;
 
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.vztekoverflow.bacil.BACILInternalError;
 import com.vztekoverflow.bacil.bytecode.Bytes;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableConstants;
@@ -17,6 +18,15 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
     protected final CLITables tables; //holds the actual table data
     protected final int cursor; //byte offset where this row starts
     private final int rowIndex; //index of the row in the table
+
+    /*
+    When table data was being retrieved from tables.GetTableData() instead of stored directly,
+    the CompilationFinal flag was getting lost when the TableRow was virtualized during escape analysis --
+    tables.GetTableData() would be a constant but tables.GetTableData()[0] would not. Storing a pointer
+    to the data ourselves and re-marking it as a CompilationFinal array seems to solve this issue.
+     */
+    @CompilerDirectives.CompilationFinal(dimensions = 1)
+    private final byte[] tableData;
 
 
     /**
@@ -48,6 +58,7 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
         this.tables = tables;
         this.cursor = cursor;
         this.rowIndex = rowIndex;
+        this.tableData = tables.getTablesData();
     }
 
     /**
@@ -70,6 +81,7 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
      * @param count amount of rows to skip
      * @return a pointer to the row that's {@code count} rows after the current one
      */
+
     public final T skip(int count)
     {
         return createNew(tables, cursor+count*getLength(), rowIndex+count);
@@ -100,7 +112,6 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
      */
     protected final byte getByte(int offset)
     {
-        final byte[] tableData = tables.getTablesData();
         return tableData[cursor+offset];
     }
 
@@ -109,7 +120,6 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
      */
     protected final short getShort(int offset)
     {
-        final byte[] tableData = tables.getTablesData();
         return Bytes.getShort(tableData, cursor+offset);
     }
 
@@ -118,7 +128,6 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
      */
     protected final int getInt(int offset)
     {
-        final byte[] tableData = tables.getTablesData();
         return Bytes.getInt(tableData, cursor+offset);
     }
 
@@ -128,7 +137,6 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
      */
     protected final int getUShort(int offset)
     {
-        final byte[] tableData = tables.getTablesData();
         return Bytes.getUShort(tableData, cursor+offset);
     }
 
@@ -138,7 +146,6 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
      */
     protected final long getUInt(int offset)
     {
-        final byte[] tableData = tables.getTablesData();
         return Bytes.getUInt(tableData, cursor+offset);
     }
 
@@ -147,7 +154,6 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
      */
     protected final long getLong(int offset)
     {
-        final byte[] tableData = tables.getTablesData();
         return Bytes.getLong(tableData, cursor+offset);
     }
 
@@ -184,7 +190,8 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
      * @param tables the tables this coded index can point to
      * @return whether a 2 byte coded index should be used
      */
-    protected final boolean areSmallEnough(byte... tables)
+    @ExplodeLoop
+    protected final boolean areSmallEnough(byte[] tables)
     {
         final int limit;
         if(tables.length <= 1)

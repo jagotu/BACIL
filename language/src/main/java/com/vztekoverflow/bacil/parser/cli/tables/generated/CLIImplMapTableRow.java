@@ -1,5 +1,6 @@
 package com.vztekoverflow.bacil.parser.cli.tables.generated;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.bacil.parser.cli.tables.CLIStringHeapPtr;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITableRow;
@@ -15,28 +16,31 @@ public class CLIImplMapTableRow extends CLITableRow<CLIImplMapTableRow> {
 		return getShort(offset);
 	}
 
+	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_MEMBER_FORWARDED_TABLES = new byte[] { CLITableConstants.CLI_TABLE_FIELD, CLITableConstants.CLI_TABLE_METHOD_DEF} ;
 	public final CLITablePtr getMemberForwarded() { 
 		int offset = 2;
 		int codedValue;
-		if (areSmallEnough(CLITableConstants.CLI_TABLE_FIELD, CLITableConstants.CLI_TABLE_METHOD_DEF)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
+		if (areSmallEnough(MAP_MEMBER_FORWARDED_TABLES)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
 		return new CLITablePtr(MAP_MEMBER_FORWARDED_TABLES[codedValue & 1], codedValue >> 1);
 	}
 
 	public final CLIStringHeapPtr getImportName() {
 		int offset = 4;
-		if (!areSmallEnough(CLITableConstants.CLI_TABLE_FIELD, CLITableConstants.CLI_TABLE_METHOD_DEF)) offset += 2;
+		if (!areSmallEnough(MAP_MEMBER_FORWARDED_TABLES)) offset += 2;
 		int heapOffset=0;
 		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
 	}
 
+	@CompilerDirectives.CompilationFinal(dimensions = 1)
+	private static final byte[] MAP_IMPORT_SCOPE_TABLES = new byte[] {CLITableConstants.CLI_TABLE_MODULE_REF};
 	public final CLITablePtr getImportScope() { 
 		int offset = 6;
 		if (tables.isStringHeapBig()) offset += 2;
-		if (!areSmallEnough(CLITableConstants.CLI_TABLE_FIELD, CLITableConstants.CLI_TABLE_METHOD_DEF)) offset += 2;
+		if (!areSmallEnough(MAP_MEMBER_FORWARDED_TABLES)) offset += 2;
 		final int rowNo;
-		if (areSmallEnough(CLITableConstants.CLI_TABLE_MODULE_REF)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
+		if (areSmallEnough(MAP_IMPORT_SCOPE_TABLES)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
 		return new CLITablePtr(CLITableConstants.CLI_TABLE_MODULE_REF, rowNo);
 	}
 
@@ -44,8 +48,8 @@ public class CLIImplMapTableRow extends CLITableRow<CLIImplMapTableRow> {
 	public int getLength() {
 		int offset = 8;
 		if (tables.isStringHeapBig()) offset += 2;
-		if (!areSmallEnough(CLITableConstants.CLI_TABLE_FIELD, CLITableConstants.CLI_TABLE_METHOD_DEF)) offset += 2;
-		if (!areSmallEnough(CLITableConstants.CLI_TABLE_MODULE_REF)) offset += 2;
+		if (!areSmallEnough(MAP_MEMBER_FORWARDED_TABLES)) offset += 2;
+		if (!areSmallEnough(MAP_IMPORT_SCOPE_TABLES)) offset += 2;
 		return offset;
 	}
 

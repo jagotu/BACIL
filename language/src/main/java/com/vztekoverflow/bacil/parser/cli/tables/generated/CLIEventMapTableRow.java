@@ -1,5 +1,6 @@
 package com.vztekoverflow.bacil.parser.cli.tables.generated;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITableRow;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITables;
@@ -9,26 +10,30 @@ public class CLIEventMapTableRow extends CLITableRow<CLIEventMapTableRow> {
 		super(tables, cursor, rowIndex);
 	}
 
+	@CompilerDirectives.CompilationFinal(dimensions = 1)
+	private static final byte[] MAP_PARENT_TABLES = new byte[] {CLITableConstants.CLI_TABLE_TYPE_DEF};
 	public final CLITablePtr getParent() { 
 		int offset = 0;
 		final int rowNo;
-		if (areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
+		if (areSmallEnough(MAP_PARENT_TABLES)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
 		return new CLITablePtr(CLITableConstants.CLI_TABLE_TYPE_DEF, rowNo);
 	}
 
+	@CompilerDirectives.CompilationFinal(dimensions = 1)
+	private static final byte[] MAP_EVENT_LIST_TABLES = new byte[] {CLITableConstants.CLI_TABLE_EVENT};
 	public final CLITablePtr getEventList() { 
 		int offset = 2;
-		if (!areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF)) offset += 2;
+		if (!areSmallEnough(MAP_PARENT_TABLES)) offset += 2;
 		final int rowNo;
-		if (areSmallEnough(CLITableConstants.CLI_TABLE_EVENT)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
+		if (areSmallEnough(MAP_EVENT_LIST_TABLES)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
 		return new CLITablePtr(CLITableConstants.CLI_TABLE_EVENT, rowNo);
 	}
 
 	@Override
 	public int getLength() {
 		int offset = 4;
-		if (!areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF)) offset += 2;
-		if (!areSmallEnough(CLITableConstants.CLI_TABLE_EVENT)) offset += 2;
+		if (!areSmallEnough(MAP_PARENT_TABLES)) offset += 2;
+		if (!areSmallEnough(MAP_EVENT_LIST_TABLES)) offset += 2;
 		return offset;
 	}
 

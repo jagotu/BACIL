@@ -216,17 +216,24 @@ public class CLITableClassesGenerator {
             case 'i': {
 
                 if (!fieldType.contains("|")) {
-                    writer.println(String.format("\tpublic final CLITablePtr get%s() { ", fieldName));
-                    generatePenaltiesCode(penalties, writer);
-                    //Non-conforming SIMPLIFICATION - expect all tables have 2byte indices
                     String tableConstant = "CLITableConstants.CLI_TABLE" + nameToConstName(fieldType.substring(1));
+
+                    writer.println("\t@CompilerDirectives.CompilationFinal(dimensions = 1)");
+                    writer.println(String.format("\tprivate static final byte[] MAP%s_TABLES = new byte[] {%s};", nameToConstName(fieldName), tableConstant));
+
+                    writer.println(String.format("\tpublic final CLITablePtr get%s() { ", fieldName));
+
+                    generatePenaltiesCode(penalties, writer);
+
+
                     writer.println("\t\tfinal int rowNo;");
-                    writer.println("\t\tif (areSmallEnough(" + tableConstant + ")) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}");
+                    writer.println("\t\tif (areSmallEnough(MAP" + nameToConstName(fieldName) + "_TABLES)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}");
                     writer.println("\t\treturn new CLITablePtr(" + tableConstant + ", rowNo);");
-                    penalties.tablePenalties.add("if (!areSmallEnough(" + tableConstant + ")) offset += 2;");
+                    penalties.tablePenalties.add("if (!areSmallEnough(MAP" + nameToConstName(fieldName) + "_TABLES)) offset += 2;");
                 } else {
                     //coded index
                     String[] tables = fieldType.substring(1).split("\\|");
+                    writer.println("\t@CompilerDirectives.CompilationFinal(dimensions = 1)");
                     writer.print(String.format("\tprivate static final byte[] MAP%s_TABLES = new byte[] { ", nameToConstName(fieldName)));
 
                     String tableIndices = Arrays.stream(tables).map(s -> s.equals("_") ? "CLITableConstants.CLI_TABLE_NONE_ID" : "CLITableConstants.CLI_TABLE" + nameToConstName(s)).collect(Collectors.joining(", "));
@@ -236,10 +243,9 @@ public class CLITableClassesGenerator {
                     writer.println(String.format("\tpublic final CLITablePtr get%s() { ", fieldName));
                     generatePenaltiesCode(penalties, writer);
                     writer.println("\t\tint codedValue;");
-                    writer.println("\t\tif (areSmallEnough(" + tableIndices + ")) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}");
-                    penalties.tablePenalties.add("if (!areSmallEnough(" + tableIndices + ")) offset += 2;");
+                    writer.println("\t\tif (areSmallEnough(MAP" + nameToConstName(fieldName) + "_TABLES)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}");
+                    penalties.tablePenalties.add("if (!areSmallEnough(MAP" + nameToConstName(fieldName) + "_TABLES)) offset += 2;");
 
-                    //Non-conforming SIMPLIFICATION - expect all tables have 2byte indices
 
                     int mask = 0;
                     int shift = 0;
@@ -281,6 +287,7 @@ public class CLITableClassesGenerator {
         try (PrintWriter writer = new PrintWriter(path, "UTF-8")) {
             writer.println("package " + PACKAGE + ";");
             writer.println();
+            writer.println("import com.oracle.truffle.api.CompilerDirectives;");
             writer.println("import com.vztekoverflow.bacil.parser.cli.tables.*;");
             writer.println(String.format("public class %s extends CLITableRow<%s> {", className, className));
             writer.println("");

@@ -1,5 +1,6 @@
 package com.vztekoverflow.bacil.parser.cli.tables.generated;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.bacil.parser.cli.tables.CLIStringHeapPtr;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITableRow;
@@ -27,12 +28,13 @@ public class CLIManifestResourceTableRow extends CLITableRow<CLIManifestResource
 		return new CLIStringHeapPtr(heapOffset);
 	}
 
+	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_IMPLEMENTATION_TABLES = new byte[] { CLITableConstants.CLI_TABLE_FILE, CLITableConstants.CLI_TABLE_ASSEMBLY_REF, CLITableConstants.CLI_TABLE_EXPORTED_TYPE} ;
 	public final CLITablePtr getImplementation() { 
 		int offset = 10;
 		if (tables.isStringHeapBig()) offset += 2;
 		int codedValue;
-		if (areSmallEnough(CLITableConstants.CLI_TABLE_FILE, CLITableConstants.CLI_TABLE_ASSEMBLY_REF, CLITableConstants.CLI_TABLE_EXPORTED_TYPE)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
+		if (areSmallEnough(MAP_IMPLEMENTATION_TABLES)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
 		return new CLITablePtr(MAP_IMPLEMENTATION_TABLES[codedValue & 3], codedValue >> 2);
 	}
 
@@ -40,7 +42,7 @@ public class CLIManifestResourceTableRow extends CLITableRow<CLIManifestResource
 	public int getLength() {
 		int offset = 12;
 		if (tables.isStringHeapBig()) offset += 2;
-		if (!areSmallEnough(CLITableConstants.CLI_TABLE_FILE, CLITableConstants.CLI_TABLE_ASSEMBLY_REF, CLITableConstants.CLI_TABLE_EXPORTED_TYPE)) offset += 2;
+		if (!areSmallEnough(MAP_IMPLEMENTATION_TABLES)) offset += 2;
 		return offset;
 	}
 

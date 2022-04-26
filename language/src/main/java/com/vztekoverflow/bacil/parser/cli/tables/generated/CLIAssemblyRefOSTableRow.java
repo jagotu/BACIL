@@ -1,5 +1,6 @@
 package com.vztekoverflow.bacil.parser.cli.tables.generated;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITableRow;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITables;
@@ -24,17 +25,19 @@ public class CLIAssemblyRefOSTableRow extends CLITableRow<CLIAssemblyRefOSTableR
 		return getInt(offset);
 	}
 
+	@CompilerDirectives.CompilationFinal(dimensions = 1)
+	private static final byte[] MAP_ASSEMBLY_REF_TABLES = new byte[] {CLITableConstants.CLI_TABLE_ASSEMBLY_REF};
 	public final CLITablePtr getAssemblyRef() { 
 		int offset = 12;
 		final int rowNo;
-		if (areSmallEnough(CLITableConstants.CLI_TABLE_ASSEMBLY_REF)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
+		if (areSmallEnough(MAP_ASSEMBLY_REF_TABLES)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
 		return new CLITablePtr(CLITableConstants.CLI_TABLE_ASSEMBLY_REF, rowNo);
 	}
 
 	@Override
 	public int getLength() {
 		int offset = 14;
-		if (!areSmallEnough(CLITableConstants.CLI_TABLE_ASSEMBLY_REF)) offset += 2;
+		if (!areSmallEnough(MAP_ASSEMBLY_REF_TABLES)) offset += 2;
 		return offset;
 	}
 

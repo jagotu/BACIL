@@ -1,5 +1,6 @@
 package com.vztekoverflow.bacil.parser.cli.tables.generated;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.bacil.parser.cli.tables.CLIStringHeapPtr;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITableRow;
@@ -10,17 +11,18 @@ public class CLITypeRefTableRow extends CLITableRow<CLITypeRefTableRow> {
 		super(tables, cursor, rowIndex);
 	}
 
+	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_RESOLUTION_SCOPE_TABLES = new byte[] { CLITableConstants.CLI_TABLE_MODULE, CLITableConstants.CLI_TABLE_MODULE_REF, CLITableConstants.CLI_TABLE_ASSEMBLY_REF, CLITableConstants.CLI_TABLE_TYPE_REF} ;
 	public final CLITablePtr getResolutionScope() { 
 		int offset = 0;
 		int codedValue;
-		if (areSmallEnough(CLITableConstants.CLI_TABLE_MODULE, CLITableConstants.CLI_TABLE_MODULE_REF, CLITableConstants.CLI_TABLE_ASSEMBLY_REF, CLITableConstants.CLI_TABLE_TYPE_REF)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
+		if (areSmallEnough(MAP_RESOLUTION_SCOPE_TABLES)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
 		return new CLITablePtr(MAP_RESOLUTION_SCOPE_TABLES[codedValue & 3], codedValue >> 2);
 	}
 
 	public final CLIStringHeapPtr getTypeName() {
 		int offset = 2;
-		if (!areSmallEnough(CLITableConstants.CLI_TABLE_MODULE, CLITableConstants.CLI_TABLE_MODULE_REF, CLITableConstants.CLI_TABLE_ASSEMBLY_REF, CLITableConstants.CLI_TABLE_TYPE_REF)) offset += 2;
+		if (!areSmallEnough(MAP_RESOLUTION_SCOPE_TABLES)) offset += 2;
 		int heapOffset=0;
 		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
@@ -29,7 +31,7 @@ public class CLITypeRefTableRow extends CLITableRow<CLITypeRefTableRow> {
 	public final CLIStringHeapPtr getTypeNamespace() {
 		int offset = 4;
 		if (tables.isStringHeapBig()) offset += 2;
-		if (!areSmallEnough(CLITableConstants.CLI_TABLE_MODULE, CLITableConstants.CLI_TABLE_MODULE_REF, CLITableConstants.CLI_TABLE_ASSEMBLY_REF, CLITableConstants.CLI_TABLE_TYPE_REF)) offset += 2;
+		if (!areSmallEnough(MAP_RESOLUTION_SCOPE_TABLES)) offset += 2;
 		int heapOffset=0;
 		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
@@ -39,7 +41,7 @@ public class CLITypeRefTableRow extends CLITableRow<CLITypeRefTableRow> {
 	public int getLength() {
 		int offset = 6;
 		if (tables.isStringHeapBig()) offset += 4;
-		if (!areSmallEnough(CLITableConstants.CLI_TABLE_MODULE, CLITableConstants.CLI_TABLE_MODULE_REF, CLITableConstants.CLI_TABLE_ASSEMBLY_REF, CLITableConstants.CLI_TABLE_TYPE_REF)) offset += 2;
+		if (!areSmallEnough(MAP_RESOLUTION_SCOPE_TABLES)) offset += 2;
 		return offset;
 	}
 

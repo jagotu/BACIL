@@ -1,5 +1,6 @@
 package com.vztekoverflow.bacil.parser.cli.tables.generated;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.bacil.parser.cli.tables.*;
 public class CLIMethodDefTableRow extends CLITableRow<CLIMethodDefTableRow> {
 
@@ -37,12 +38,14 @@ public class CLIMethodDefTableRow extends CLITableRow<CLIMethodDefTableRow> {
 		return new CLIBlobHeapPtr(heapOffset);
 	}
 
+	@CompilerDirectives.CompilationFinal(dimensions = 1)
+	private static final byte[] MAP_PARAM_LIST_TABLES = new byte[] {CLITableConstants.CLI_TABLE_PARAM};
 	public final CLITablePtr getParamList() { 
 		int offset = 12;
 		if (tables.isStringHeapBig()) offset += 2;
 		if (tables.isBlobHeapBig()) offset += 2;
 		final int rowNo;
-		if (areSmallEnough(CLITableConstants.CLI_TABLE_PARAM)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
+		if (areSmallEnough(MAP_PARAM_LIST_TABLES)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
 		return new CLITablePtr(CLITableConstants.CLI_TABLE_PARAM, rowNo);
 	}
 
@@ -51,7 +54,7 @@ public class CLIMethodDefTableRow extends CLITableRow<CLIMethodDefTableRow> {
 		int offset = 14;
 		if (tables.isStringHeapBig()) offset += 2;
 		if (tables.isBlobHeapBig()) offset += 2;
-		if (!areSmallEnough(CLITableConstants.CLI_TABLE_PARAM)) offset += 2;
+		if (!areSmallEnough(MAP_PARAM_LIST_TABLES)) offset += 2;
 		return offset;
 	}
 
