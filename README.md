@@ -14,7 +14,7 @@ The resulting artifacts will be the language jar in `language/target/language-1.
 
 ## Running
 
-For running you'll need to [obtain GraalVM](https://www.graalvm.org/downloads/) (we test on Java 8 based) and a copy of a .NET standard library. We tested with .NET Runtime 5.0.6 on both Linux and Windows, which you can [obtain here](https://dotnet.microsoft.com/download/dotnet/5.0).
+For running you'll need to [obtain GraalVM](https://www.graalvm.org/downloads/) and a [copy of a .NET standard library](https://dotnet.microsoft.com/download/dotnet). While the target for development was Java 8 and .NET Runtime 5.0.6 on both Linux and Windows, we succesfully ran the project on Java 11 with .NET 6.
 
 You'll also need an assembly to run. If you don't have any handy, you can clone [BACIL_examples](https://github.com/jagotu/BACIL_examples).
 

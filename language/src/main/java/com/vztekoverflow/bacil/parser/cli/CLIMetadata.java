@@ -107,7 +107,7 @@ public class CLIMetadata {
      * Get the stream content for a stream by name as a {@link ByteSequence}.
      * @param streamName the name of the stream to find
      * @param fileBytes a {@link ByteSequence} representing the source file
-     * @return a {@link ByteSequence} representing the stream content
+     * @return a {@link ByteSequence} representing the stream content or null if stream doesn't exist
      */
     public ByteSequence getStream(String streamName, ByteSequence fileBytes)
     {
@@ -117,6 +117,24 @@ public class CLIMetadata {
             return null;
 
         return fileBytes.subSequence(metadataStartPosition+header.getOffset(), metadataStartPosition+header.getOffset()+header.getSize());
+    }
+
+    /**
+     * Get the stream content for a stream by name as a byte[].
+     * @param streamName the name of the stream to find
+     * @param fileBytes a {@link ByteSequence} representing the source file
+     * @return a byte[] representing the stream content or an empty byte[] if the stream doesn't exist
+     */
+    public byte[] getStreamBytes(String streamName, ByteSequence fileBytes)
+    {
+        ByteSequence streamData = getStream(streamName, fileBytes);
+
+        if(streamData == null)
+        {
+            return new byte[0];
+        }
+
+        return streamData.toByteArray();
     }
 
 }

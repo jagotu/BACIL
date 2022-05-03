@@ -136,10 +136,10 @@ public class CLIComponent extends BACILComponent {
         //Create table pointers (II.22 Metadata logical format: tables)
         CLITables tables = new CLITables(cliMetadata.getStream("#~", bytes));
 
-        final byte[] blobHeap = cliMetadata.getStream("#Blob", bytes).toByteArray();
-        final byte[] stringHeap = cliMetadata.getStream("#Strings", bytes).toByteArray();
-        final byte[] guidHeap = cliMetadata.getStream("#GUID", bytes).toByteArray();
-        final byte[] USHeap = cliMetadata.getStream("#US", bytes).toByteArray();
+        final byte[] blobHeap = cliMetadata.getStreamBytes("#Blob", bytes);
+        final byte[] stringHeap = cliMetadata.getStreamBytes("#Strings", bytes);
+        final byte[] guidHeap = cliMetadata.getStreamBytes("#GUID", bytes);
+        final byte[] USHeap = cliMetadata.getStreamBytes("#US", bytes);
 
 
         return new CLIComponent(cliHeader, cliMetadata, blobHeap, stringHeap, guidHeap, USHeap, tables, peFile, context);
