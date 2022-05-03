@@ -1,5 +1,6 @@
 package com.vztekoverflow.bacil.parser.cli.tables;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableConstants;
 
 /**
@@ -40,6 +41,7 @@ public class CLITablePtr {
     }
 
     //A translation table for II.23.2.8 TypeDefOrRefOrSpecEncoded
+    @CompilerDirectives.CompilationFinal(dimensions = 1)
     private static final byte[] MAP_ENCODED =  new byte[] {CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_TYPE_SPEC };
 
     /**
