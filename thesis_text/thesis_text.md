@@ -1,3 +1,73 @@
+# Truffle based .NET IL interpreter and compiler: run C# on Java Virtual Machine
+
+# Abstract
+
+Interpreted and just-in-time (JIT) compiled languages are becoming more and more prevalent, with JavaScript and Python ranking in TOP 5 most popular programming languages in most surveys and statistics. In the academic and research settings, the ability to quickly prototype programming languages and test their properties also works in favor of interpreted languages, as implementing an interpreter is considerably easier than implementing a compiler. However, simple interpreters suffer from a substantial tradeoff of performance. Traditionally, if an interpreted language is to become effective and run fast, it requires creating a custom infrastructure of JIT compilers and optimizations just for that single specific language.
+
+The Truffle Language Implementation Framework [^1] attempts to alleviate this tradeoff between performance and development complexity by providing a framework for implementing a language using interpreter-style code that is later JIT compiled by the GraalVM compiler [^2]. While straightforward interpreter-style implementations in Truffle might not perform much better than simple interpreters, Truffle provides a framework for writing optimization hints that are later used by the compiler. According to Thomas Würthinger et al. [^3], such implementations can compete with hand-crafted compilers.
+
+The goal of the thesis is to implement an interpreter of a subset of Common Intermediate Language (CIL) using Truffle, such that CIL code can be run on the Java Virtual Machine. CIL is an intermediate language to which .NET applications are typically compiled, including applications written in the C# programming language. The CIL is standardized in ECMA-335 [^4]. The focus of the work will be on the feasibility of implementing an interpreter of an actual language using the Truffle interpreter-style approach in an academic setting, and comparing the resulting performance of said academic implementation with state of the art CIL JIT compilers.
+
+[^1]: https://github.com/oracle/graal/tree/master/truffle
+[^2]: https://github.com/oracle/graal/tree/master/compiler
+[^3]: Wuerthinger et al.: Practical Partial Evaluation for High-Performance Dynamic Language Runtimes, https://doi.org/10.1145/3062341.3062381
+[^4]: https://www.ecma-international.org/publications/standards/Ecma-335.htm
+
+# Introduction
+
+## Problem
+
+Traditionally, when implementing a programming language, achieving high performance required a significant development effort and resulted in complicated codebases.
+
+While writing an interpreter for even a fairly complicated language is achievable for a single person interested in the topic, state of the art optimizing compilers are usually created over several years by large teams of developers at the largest of IT companies. Not only was kickstarting such a project unthinkable for an individual, introducing changes to an already existing project is far from simple.
+
+For example, Google's state of the art JavaScript engine V8 currently has two different JIT compilers and its own internal bytecode. An experiment of adding a single new bytecode instruction to the project can mean several days of just orientating in the codebase.
+
+As cybersecurity becomes a more important topic, another factor to consider is that creating manual optimizations in JITs is very prone to bugs which can have very grave security implications. Speculated assumptions of JIT compilers introduced whole new bug families, for example "type confusion". Implementing a JIT that is not only performant but also secure is proving to be difficult even for state of the art projects.
+
+These factors resulted in academic and hobby experimentation with programming languages being mostly stuck with low-performance simple interpreters. [Qualitative Assessment of Compiled, Interpreted and Hybrid Programming Languages](https://www.researchgate.net/publication/320665812_Qualitative_Assessment_of_Compiled_Interpreted_and_Hybrid_Programming_Languages) concludes that
+
+> Interpreters are very good development tools since it [sic] can be easily edited, and are therefore ideal for beginners in programming and software development. However they are not good for professional developers due to the slow execution nature of the interpreted code.
+
+## .NET 
+
+TODO
+* what it is etc.
+* mention that we definitely don't want to implement the standard library
+
+## Truffle and Graal
+
+To implement a high-performance .NET runtime, we alleviate the 
+ [Truffle language implementation framework](https://www.graalvm.org/graalvm-as-a-platform/language-implementation-framework/) (henceforth "Truffle") and the [GraalVM Compiler](https://www.graalvm.org/22.1/docs/introduction). 
+
+TODO  high level what it is
+
+### Partial Evaluation
+
+TODO what is it and how it works
+
+### `MERGE_EXPLODE` strategy
+
+TODO it's a game changer
+
+(emphasis added)
+
+> like `ExplodeLoop.LoopExplosionKind.FULL_EXPLODE`, but copies of the loop body that have the exact same state (all local variables have the same value) are merged. This reduces the number of copies necessary, but can introduce loops again. **This kind is useful for bytecode interpreter loops.**
+
+
+## Previous work
+
+Truffle was originally described as "a novel approach to implementing AST interpreters" in [Self-Optimizing AST Interpreters (2012)](https://dl.acm.org/doi/10.1145/2384577.2384587) and wasn't directly applicable for our bytecode intepreter problem.
+
+[Bringing Low-Level Languages to the JVM: Efficient Execution of LLVM IR on Truffle (2016)](https://dl.acm.org/doi/10.1145/2998415.2998416) implemented Sulong, a LLVM IR (bytecode) runtime, and showed "how a hybrid bytecode/AST interpreter can be implemented in Truffle". This is already very similar to our current work, however it had to implement its own approach to converting unstructured control flow into AST nodes.
+
+In [Truffle version 0.15 (2016)](https://github.com/oracle/graal/blob/master/truffle/CHANGELOG.md#version-015), the `ExplodeLoop.LoopExplosionKind` enumeration was implemented, providing the [`MERGE_EXPLODE` strategy](#mergeexplode-strategy).
+
+In [GraalVM version 21.0 (2021)](https://www.graalvm.org/release-notes/21_0/), an "experimental Java Virtual Machine implementation based on a Truffle interpreter" was introduced. In general principles, this project is very similiar to our work, using the same approach for a different language.
+
+While [Truffle CIL Interpreter (2020)](https://epub.jku.at/obvulihs/content/titleinfo/5473678) also implemented the CIL runtime, it chose a completely different approach of building an AST from the text representation of IL code. Also, as it admits in the conclusion, it "didn't focus on performance optimization of the different instructions". The same implementation approach was chosen by [truffleclr](https://github.com/alex4o/truffleclr).
+
+
 # CLI Component parser
 
 Before being able to execute code, it is necessary to read the code from the assemblies. Prior to starting the work, we expected some open source parsers for this format to exist for various languages, including Java. However, the only alternative stand-alone parser (not a component of a full CLI implementation) we found was [dnlib](https://github.com/0xd4d/dnlib) targeting .NET framework itself. If even for such a popular runtime there are no suitable parsers implemented in Java, we feel that the parser implementation step is an important part to consider in the whole "Building an experimental runtime" picture.
@@ -98,7 +168,7 @@ If we were to try to improve the format to alleviate these issues, we would add 
 
 #### Extensive normalisation
 
-File format design is often a compromise between several engineering goals[^1]. One of the design concepts that apply is normalisation, a concept that each information should be stored only once, removing all redundancy. While such a goal can be beneficiary for other uses of the file format (like writing and modifying), from the point of view of a lightly-preloading consumer it results in non-ideal structures.
+File format design is often a compromise between several engineering goals[^5]. One of the design concepts that apply is normalisation, a concept that each information should be stored only once, removing all redundancy. While such a goal can be beneficiary for other uses of the file format (like writing and modifying), from the point of view of a lightly-preloading consumer it results in non-ideal structures.
 
 * In parent-child relationships, only one of the nodes has a direct reference to the other. Traversing the edge from the other side involves enumerating all the possible nodes and searching for one with the appropriate reference. If such queries are performance sensitive, the invoker has to make sure that it caches the answers.
 
@@ -106,7 +176,7 @@ File format design is often a compromise between several engineering goals[^1]. 
 
     While the complexity this adds usually amounts to a single if statement, it crosses the border between cell value semantics and metadata logical format internals - either the parser has to understand the semantics of cells as "sequence indices" to encapsulate resolving the sequence length, or the invoker has to understand the file format view of row numbers.
 
-[^1]: [A brief look at file format design](http://decoy.iki.fi/texts/filefd/filefd)
+[^5]: [A brief look at file format design](http://decoy.iki.fi/texts/filefd/filefd)
 
 ## Parser implementation details
 
@@ -175,9 +245,11 @@ if(type.hasNext())
 
 In the end, designing and implementing the parser took a non-trivial chunk of the development time. Even though straightforward code-size indicators are controversial, we feel that the parser (excluding generated code) consisting of 124131 bytes over 3625 lines of code and the rest of the language package consisting of 256063 bytes over 7103 lines is indicative of the substantiality of the parser.
 
-# TODO
+# Runtime
 
-## Dynamicity of references
+## Analysis
+
+### Dynamicity of references
 
 One of the additional things to consider when implementing a partial-evaluation friendly interpreter is dynamicity of references, where by dynamicity we mean how often the reference changes its state. This metric is important because effectively the dynamicity of a chain of references will be equal to the most dynamic of the references. As a result, what would usually be considered bad design patterns is sometimes necessary to divide the chain into more direct references, such that each object is reachable with the lowest dynamicity possible.
 
@@ -249,3 +321,9 @@ Object fieldValue = objectType.getLocationsDescriptor().locationToObject(((Stati
 ![alt](dynamicity_case_good.drawio.svg)
 
 _Scenario 2: While the `LocationHolder` remains accessible from a highly dynamic chain, the `LocationDescriptor` is accessible through a static chain. This means the bottom chain will be partially evaluated._
+
+## Implementation
+
+### Using compiler graphs
+
+# Results
