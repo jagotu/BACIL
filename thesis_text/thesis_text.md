@@ -1,8 +1,8 @@
-## Designing a CLI Component parser
+# CLI Component parser
 
 Before being able to execute code, it is necessary to read the code from the assemblies. Prior to starting the work, we expected some open source parsers for this format to exist for various languages, including Java. However, the only alternative stand-alone parser (not a component of a full CLI implementation) we found was [dnlib](https://github.com/0xd4d/dnlib) targeting .NET framework itself. If even for such a popular runtime there are no suitable parsers implemented in Java, we feel that the parser implementation step is an important part to consider in the whole "Building an experimental runtime" picture.
 
-In the end, designing and implementing the parser took a non-trivial chunk of the development time. Even though most code-size indicators are arbitrary (_TODO citation_), we feel that the parser (excluding generated code) consisting of 124131 bytes over 3625 lines of code and the rest of the language package consisting of 256063 over 7103 lines is indicative of the substantiality of the parser.
+## Analysis
 
 ### Design goals
 
@@ -14,11 +14,11 @@ Driven by the goal of partial-evaluation friendliness, we decided to design the 
 
 * trivial queries, e.g. queries for a metadata item at a constant index, would only result in a compilation constant,
 * simple queries, e.g. queries for a metadata item at a variable index, would result in a simple offset calculation (multiply and add) and reads from a compilation constant byte[],
-* all further parsing necessary for more complex queries (creating objects representing metadata concepts etc.) would be performed lazily, callers should make sure to cache their Objects themselves.
-
-
+* all further parsing necessary for more complex queries (creating objects representing metadata concepts etc.) would be performed lazily by invokers and they should make sure to cache their objects themselves.
 
 ### Definition of important CLI component structures
+
+First, we will define terms necessary for understanding our analysis of the complexities of the file format.
 
 Apart from various headers used for locating it, all metadata is stored in streams. There are two basic types of streams: heaps and tables.
 
@@ -46,7 +46,7 @@ For an example of references between these structures, this is what a single row
 
 ### Complexities of the CLI component format
 
-Subjectively, we felt the format used by CLI components is not designed well in regards to supporting different parsing approaches and platforms. To substantiate this claim, we want to highlight several factors that complicate parsing the components.
+Subjectively, we felt the format used by CLI components is not designed well in regards to supporting different parsing approaches and platforms. To substantiate this claim, we want to highlight several factors that complicate parsing the components and had to be considered in the design.
 
 #### PE Wrapping
 
@@ -61,7 +61,7 @@ On Windows (and other theoretical platforms where PE parsing is a service provid
 
 As our parser is platform-agnostic and written in Java, we can't use any of those services. Therefore, we need to manually do the sections search and RVA calculations as described in the standard.
 
-#### Parsing metadata tables
+#### Metadata tables format
 
 The biggest complexity we encountered during parser design was the format of metadata tables. These tables contain most of the metadata information of the CLI component. 
 
@@ -104,42 +104,78 @@ File format design is often a compromise between several engineering goals[^1]. 
 
 * When referencing a sequence of items in a table, only information about the beginning of the sequence is directly stored. The end of the sequence is either the last row of the table or the start of the next sequence, as specified by the next row, whichever comes first.
 
-    While the complexity this adds usually amounts to a single if statement, it crosses the border between cell value semantics and metadata logical format internals - either the parser has to understand the semantics of cells as "sequence indices" to encapsulate resolving the sequence length, or the invoker has to understand the file format view of row numbers. We decided to leave the responsibility on the invoker, resulting in code like this (from [CLIType](https://github.com/jagotu/BACIL/blob/master/language/src/main/java/com/vztekoverflow/bacil/runtime/types/CLIType.java#L72)):
-
-    ```Java
-    if(type.hasNext())
-    {
-        methodsEnd = type.next().getMethodList().getRowNo();
-        fieldRowsEnd = type.next().getFieldList().getRowNo();
-    } else {
-        methodsEnd = component.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_METHOD_DEF)+1;
-        fieldRowsEnd = component.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_FIELD)+1;
-    }
-    ```
+    While the complexity this adds usually amounts to a single if statement, it crosses the border between cell value semantics and metadata logical format internals - either the parser has to understand the semantics of cells as "sequence indices" to encapsulate resolving the sequence length, or the invoker has to understand the file format view of row numbers.
 
 [^1]: [A brief look at file format design](http://decoy.iki.fi/texts/filefd/filefd)
 
-### Parsing sequence details
+## Parser implementation details
 
-Parsing source files in Truffle starts with a [ByteSequence](https://www.graalvm.org/truffle/javadoc/org/graalvm/polyglot/io/ByteSequence.html) representing the content of the file being loaded. From there, we will:
+### Metadata tables parser
 
-1. Parse necessary PE file structures as specified in _II.25 File format extensions to PE_, specifically all of _II.25.2 PE headers_ and the _II.25.3 Section headers_ used for resolving RVAs.
+As mentioned in [Metadata tables format](#metadata-tables-format), parsing any metadata tables requires implementing the internal row format for all tables specified in ECMA-335. Implementing all 38 tables manually would both require a big amount of work and make modifications to all parsers complicated. Therefore, this problem sounded like a good opportunity for code generation.
 
-2. Resolve CLI Header RVA from PE header data directories, and parse it as described in _II.25.3.3 CLI header_.
+We decided to create a simplified text-file containing information about all the columns in all tables and is also human-readable. For example, the `TypeDef` table (used as an example in [Definition of important CLI component structures](#definition-of-important-cli-component-structures)), was specified like this:
 
-3. Resolve physical metadata RVA from CLI Header and parse it as described in _II.24.2.1 Metadata root_.
+```
+TypeDef:02
+-Flags:c4
+-TypeName:hString
+-TypeNamespace:hString
+-Extends:iTypeDef|TypeRef|TypeSpec
+-FieldList:iField
+-MethodList:iMethodDef
+```
 
-4. Read all 4 heaps (`#Strings`, `#US`, `#Blob`, `#GUID`) into byte arrays for easy access.
+For simplicity, we ended up writing the code generator in plain Java, outputting Java source files. The result can be seen in [CLITableClassesGenerator](https://github.com/jagotu/BACIL/blob/master/language/src/main/java/com/vztekoverflow/bacil/parser/cli/tables/CLITableClassesGenerator.java).
 
-5. Read the metadata tables header from the `#~` stream and pre-calculate offsets of each table.
+### CLITableRow and CLITablePtr
 
-### Table parsing
+We wanted the implementation of accessing metadata table rows to be as safe and simple-to-use as possible while keeping in mind the design goals for partial evaluation. The two operations we expected to be most common were enumerating a single table and resolving indices referencing other tables.
 
-TODO
-* table parser code generator
-* the fact we decided to break standard by not handling tables with more than 65535 rows as we want simple indices to always have 2 bytes
-* the API of tables and tableptrs
+For the enumerating, we made `CLITableRow` implement `Iterable`, allowing for a safe for-each access, completely hiding the internal table details. An example of printing all methods defined in component:
 
+```Java
+CLIComponent component = ...;
+for (CLIMethodDefTableRow methodDefTableRow : component.getTableHeads().getMethodDefTableHead()) {
+    System.out.println(methodDefTableRow.getName().read(component.getStringHeap()));
+}
+```
+
+For the index resolving, we made the tables return a `CLITablePtr` wrapped index. It can then be directly provided to `CLITableRow`'s `skip` method, which can validate that the table ID is correct. The importance of this wrapping is increased by the following fact mentioned in _II.22 Metadata logical format: tables_:
+
+> Indexes to tables begin at 1, so index 1 means the first row in any given metadata table. (An index value of zero denotes that it does not index a row at all; that is, it behaves like a null reference.)
+
+Exposing the indices as raw integers would allow for off-by-one bugs to become prevalent. Providing a wrapped variant that behaves as expected by default helps combat these issues.
+
+The pattern for safe index resolving looks like this:
+
+```Java
+CLIComponent component = ...;
+CLITypeDefTableRow typeDef = ...;
+
+CLIFieldTypeRow firstField =  component.getTableHeads().getFieldTableHead().skip(typeDef.getFieldList());
+```
+
+### Sequence references
+
+As mentioned in [Extensive normalisation](#extensive-normalisation), sequences of items in a table are stored in a way that requires either implementing column semantics in the parser or the invoker knowing logical table internals. As our table parsers are generated from a definition file, including sequence semantics would require expanding both the generator and the definition file. Instead, we decided to leave the responsibility on the invoker, resulting in code like this (from [CLIType](https://github.com/jagotu/BACIL/blob/master/language/src/main/java/com/vztekoverflow/bacil/runtime/types/CLIType.java#L72)):
+
+```Java
+if(type.hasNext())
+{
+    methodsEnd = type.next().getMethodList().getRowNo();
+    fieldRowsEnd = type.next().getFieldList().getRowNo();
+} else {
+    methodsEnd = component.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_METHOD_DEF)+1;
+    fieldRowsEnd = component.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_FIELD)+1;
+}
+```
+
+## Conclusion
+
+In the end, designing and implementing the parser took a non-trivial chunk of the development time. Even though straightforward code-size indicators are controversial, we feel that the parser (excluding generated code) consisting of 124131 bytes over 3625 lines of code and the rest of the language package consisting of 256063 bytes over 7103 lines is indicative of the substantiality of the parser.
+
+# TODO
 
 ## Dynamicity of references
 
