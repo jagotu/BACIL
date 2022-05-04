@@ -1,7 +1,6 @@
 package com.vztekoverflow.bacil.parser.cli.tables;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.vztekoverflow.bacil.parser.BACILParserException;
 import com.vztekoverflow.bacil.parser.ByteSequenceBuffer;
 import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableConstants;
 
@@ -70,15 +69,6 @@ public class CLITablesHeader {
             if((valid & (1L << i)) != 0)
             {
                 rowCounts[i] = buf.getInt();
-                if(rowCounts[i] > 65535)
-                {
-                    //Breaks standard: by not supporting tables larger than 65535 rows, all simple indices will be
-                    //stored in 2 bytes, which simplifies the code.
-                    //Described in II.24.2.6 #~ stream:
-                    //If e is a simple index into a table with index i, it is stored using 2 bytes if table i has
-                    //less than 2^16 rows, otherwise it is stored using 4 bytes.
-                    throw new BACILParserException("CIL files with a table larger than 65535 rows are not supported!");
-                }
             }
         }
 
