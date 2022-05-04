@@ -197,7 +197,7 @@ public class CLIType extends Type {
             vtable = vtableList.toArray(new BACILMethod[0]);
 
             //4. Call cctor
-            MethodDefSig CCTOR_SIGNATURE = new MethodDefSig(false, false, (byte)0, 0, definingComponent.getBuiltinTypes().getVoidType(), new Type[0]);
+            MethodDefSig CCTOR_SIGNATURE = new MethodDefSig(false, false, (byte)0, -1, definingComponent.getBuiltinTypes().getVoidType(), new Type[0]);
 
             BACILMethod cctor = getMemberMethod(".cctor", CCTOR_SIGNATURE);
             if(cctor != null)
