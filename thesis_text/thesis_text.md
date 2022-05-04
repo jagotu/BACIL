@@ -324,6 +324,28 @@ _Scenario 2: While the `LocationHolder` remains accessible from a highly dynamic
 
 ## Implementation
 
-### Using compiler graphs
+### Using compiler graphs for optimization
+
+* Aka the story how in ce2d3f710dfc4eed46a6495cee2b05432703c7ca I turned compilation of `method.getComponent().getTableHeads().getTypeDefTableHead().skip(1).getFlags()` from this:
+
+![alt](parseraccess_bad.svg)
+
+Into this:
+
+![alt](parseraccess_good.svg)
+
+
 
 # Results
+
+## Completeness
+
+* How much of CIL I actually covered
+
+## Benchmarks
+
+* it's fast
+
+# Conlusion
+
+* in a single person I was able to implement a fast interpreter for CIL = mission accomplished
