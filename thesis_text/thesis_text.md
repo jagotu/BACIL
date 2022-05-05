@@ -8,10 +8,7 @@ The Truffle Language Implementation Framework [^1] attempts to alleviate this tr
 
 The goal of the thesis is to implement an interpreter of a subset of Common Intermediate Language (CIL) using Truffle, such that CIL code can be run on the Java Virtual Machine. CIL is an intermediate language to which .NET applications are typically compiled, including applications written in the C# programming language. The CIL is standardized in ECMA-335 [^4]. The focus of the work will be on the feasibility of implementing an interpreter of an actual language using the Truffle interpreter-style approach in an academic setting, and comparing the resulting performance of said academic implementation with state of the art CIL JIT compilers.
 
-[^1]: https://github.com/oracle/graal/tree/master/truffle
-[^2]: https://github.com/oracle/graal/tree/master/compiler
-[^3]: Wuerthinger et al.: Practical Partial Evaluation for High-Performance Dynamic Language Runtimes, https://doi.org/10.1145/3062341.3062381
-[^4]: https://www.ecma-international.org/publications/standards/Ecma-335.htm
+
 
 # Introduction
 
@@ -29,15 +26,42 @@ These factors resulted in academic and hobby experimentation with programming la
 
 > Interpreters are very good development tools since it [sic] can be easily edited, and are therefore ideal for beginners in programming and software development. However they are not good for professional developers due to the slow execution nature of the interpreted code.
 
-## .NET 
+In recent years, frameworks that promise delivering close to state-of-the-art performance while requiring only a simple interpreter-style implementation started appearing. Examples of such frameworks are [RPython](https://rpython.readthedocs.io/) and the [Truffle language implementation framework](https://www.graalvm.org/graalvm-as-a-platform/language-implementation-framework/).
+Researchers concluded that Truffle's performance "is competitive with production systems even when they have been heavily optimized for the one language they support"[^5].
 
-TODO
-* what it is etc.
-* mention that we definitely don't want to implement the standard library
+As the performance of language implementations made by experts (sometimes even designers of these frameworks themselves) is well understood, in this work we wanted to focus on testing another claim: the "reduced complexity for implementing languages in our system [that] will enable more languages to benefit from optimizing compilers"[^5]. 
+
+**Is it feasible to achieve the promised performance benefits with an academic interpreter-style implementation of a language runtime?** In this work, we implement BACIL, a runtime for .NET, to answer this question.
+
+## .NET/CLI 
+
+We chose .NET as a platform to implement, mostly because:
+
+* languages targeting .NET consistently rank high on popularity surveys
+* we have experience with .NET internals and the internally used bytecode
+* no comparable truffle-based implementations were published for .NET
+
+While .NET is a well recognized name, it is actually more of a marketing/brand name whose meaning changed through history. Our implementation follows [ECMA-335 Common Language Infrastructure (CLI)](https://www.ecma-international.org/publications-and-standards/standards/ecma-335/) which doesn't mention the .NET brand at all. As such, we will be using the names defined in the standard throughout this work. All references to specific implementations/brand names are included only to aid understanding and have no ambition to be accurate, mainly when it comes to .NET vs .NET Core vs .NET Framework vs .NET Standard nomenclature.
+
+> The Common Language Infrastructure (CLI) provides a specification for executable code and the execution environment (the Virtual Execution System) in which it runs. 
+
+.NET languages (like C#) are compiled into "managed code"[^7] - instead of targeting native processor instruction sets, they target the CLI's execution environment.
+
+Using the definitions of the standard, BACIL is actually a Virtual Execution System (VES):
+
+> The VES is responsible for loading and running programs written for the CLI. It provides the services needed to execute managed code and data, using the metadata to connect separately generated modules together at runtime (late binding).
+
+.NET Framework's VES is called the Common Language Runtime (CLR), in .NET Core it's known as CoreCLR.
+
+> To a large extent, the purpose of the VES is to provide the support required to execute the [Common Intermediate Language (CIL)] instruction set.
+
+The CIL, historically also called Microsoft Intermediate Language (MSIL) or simply Intermediate Language (IL), is the instruction set used by the CLI. Interpreting (a subset of) this instruction set was the main goal of this work.
+
+Another large part of the framework are the standard libraries - the base class library, which has to be supported by all implementations of the CLI, consists of 2370 members over 207 classes. As the focus of the work was on the core interpreter, we largely ignored this part of the standard, and deferred to other standard library implementations where possible.
 
 ## Truffle and Graal
 
-To implement a high-performance .NET runtime, we alleviate the 
+To implement a high-performance CLI runtime, we alleviate the 
  [Truffle language implementation framework](https://www.graalvm.org/graalvm-as-a-platform/language-implementation-framework/) (henceforth "Truffle") and the [GraalVM Compiler](https://www.graalvm.org/22.1/docs/introduction). 
 
 TODO  high level what it is
@@ -48,7 +72,7 @@ TODO what is it and how it works
 
 ### `MERGE_EXPLODE` strategy
 
-TODO it's a game changer
+One of the key elements
 
 (emphasis added)
 
@@ -168,15 +192,13 @@ If we were to try to improve the format to alleviate these issues, we would add 
 
 #### Extensive normalisation
 
-File format design is often a compromise between several engineering goals[^5]. One of the design concepts that apply is normalisation, a concept that each information should be stored only once, removing all redundancy. While such a goal can be beneficiary for other uses of the file format (like writing and modifying), from the point of view of a lightly-preloading consumer it results in non-ideal structures.
+File format design is often a compromise between several engineering goals[^6]. One of the design concepts that apply is normalisation, a concept that each information should be stored only once, removing all redundancy. While such a goal can be beneficiary for other uses of the file format (like writing and modifying), from the point of view of a lightly-preloading consumer it results in non-ideal structures.
 
 * In parent-child relationships, only one of the nodes has a direct reference to the other. Traversing the edge from the other side involves enumerating all the possible nodes and searching for one with the appropriate reference. If such queries are performance sensitive, the invoker has to make sure that it caches the answers.
 
 * When referencing a sequence of items in a table, only information about the beginning of the sequence is directly stored. The end of the sequence is either the last row of the table or the start of the next sequence, as specified by the next row, whichever comes first.
 
     While the complexity this adds usually amounts to a single if statement, it crosses the border between cell value semantics and metadata logical format internals - either the parser has to understand the semantics of cells as "sequence indices" to encapsulate resolving the sequence length, or the invoker has to understand the file format view of row numbers.
-
-[^5]: [A brief look at file format design](http://decoy.iki.fi/texts/filefd/filefd)
 
 ## Parser implementation details
 
@@ -299,7 +321,7 @@ However, using this code results in an unoptimal dynamicity chain and uneffectiv
 
 _Scenario 1: As a `LocationHolder` is unique per object instance/method invocation/ etc., the reference to it is highly dynamic. The `LocationDescriptor` is only unique per object type/method definiton, but can only be reached through a dynamic chain._
 
-To make this more effective, we have to hold a separate reference to a `LocationDescriptor`. As every location-accessing instruction (in the implemented subset of .NET) will always use the same `LocationDescriptor`, this results in effective partial evaluation. The new implementation looks like this:
+To make this more effective, we have to hold a separate reference to a `LocationDescriptor`. As every location-accessing instruction (in the implemented subset of CLI) will always use the same `LocationDescriptor`, this results in effective partial evaluation. The new implementation looks like this:
 
 ```Java 
 public class LocationHolder {
@@ -349,3 +371,11 @@ Into this:
 # Conlusion
 
 * in a single person I was able to implement a fast interpreter for CIL = mission accomplished
+
+[^1]: https://github.com/oracle/graal/tree/master/truffle
+[^2]: https://github.com/oracle/graal/tree/master/compiler
+[^3]: Wuerthinger et al.: Practical Partial Evaluation for High-Performance Dynamic Language Runtimes, https://doi.org/10.1145/3062341.3062381
+[^4]: https://www.ecma-international.org/publications/standards/Ecma-335.htm
+[^5]: [Practical Partial Evaluation for High-Performance Dynamic Language Runtimes](https://dl.acm.org/doi/10.1145/3062341.3062381)
+[^6]: [A brief look at file format design](http://decoy.iki.fi/texts/filefd/filefd)
+[^7]: They can also be ahead-of-time compiled to native binaries, but that's out of scope for this work.
