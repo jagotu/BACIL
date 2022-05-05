@@ -66,9 +66,43 @@ To implement a high-performance CLI runtime, we alleviate the
 
 TODO  high level what it is
 
+## Previous work
+
+Truffle was originally described as "a novel approach to implementing AST interpreters" in [Self-Optimizing AST Interpreters (2012)](https://dl.acm.org/doi/10.1145/2384577.2384587) and wasn't directly applicable for our bytecode intepreter problem.
+
+[Bringing Low-Level Languages to the JVM: Efficient Execution of LLVM IR on Truffle (2016)](https://dl.acm.org/doi/10.1145/2998415.2998416) implemented Sulong, a LLVM IR (bytecode) runtime, and showed "how a hybrid bytecode/AST interpreter can be implemented in Truffle". This is already very similar to our current work, however it had to implement its own approach to converting unstructured control flow into AST nodes.
+
+In [Truffle version 0.15 (2016)](https://github.com/oracle/graal/blob/master/truffle/CHANGELOG.md#version-015), the `ExplodeLoop.LoopExplosionKind` enumeration was implemented, providing the [`MERGE_EXPLODE` strategy](#mergeexplode-strategy).
+
+In [GraalVM version 21.0 (2021)](https://www.graalvm.org/release-notes/21_0/), an "experimental Java Virtual Machine implementation based on a Truffle interpreter" was introduced. In general principles, this project is very similiar to our work, using the same approaches but implementing a different language.
+
+While [Truffle CIL Interpreter (2020)](https://epub.jku.at/obvulihs/content/titleinfo/5473678) also implemented the CIL runtime, it chose a completely different approach of building an AST from the text representation of IL code. Also, as it admits in the conclusion, it "didn't focus on performance optimization of the different instructions". The same implementation approach was chosen by [truffleclr](https://github.com/alex4o/truffleclr).
+
+# Theory
+
 ### Partial Evaluation
 
-TODO what is it and how it works
+The most important principle allowing Truffle/Graal to reach high performance is Partial Evaluation. It was theoretically known for decades, one of the foundational works being [Partial computation of programs (1983)](https://repository.kulib.kyoto-u.ac.jp/dspace/bitstream/2433/103401/1/0482-14.pdf), but modern advances in computer performance make it practically usable.
+
+The high-level view of partial evaluation offered by Futamura is "specializing a general progam based upon its operating environment into a more efficient program".
+
+Consider a program (or its chunk) as a mapping of inputs into outputs. We can divide those inputs into two sets - dynamic inputs and static inputs - denoting the program as _prog: I<sub>static</sub> × I<sub>dynamic</sub> → O_.
+
+The process of partial evaluation is then transforming _&lt;prog, I<sub>static</sub>&gt;_ into _prog*: I<sub>dynamic</sub> → O_ by incorporating the static input into the code itself. We'll call _prog*_ a specialization of _prog_ for _I<sub>static</sub>_, sometimes it is also referred to as a residual program, intermediate program or a projection of _prog_ at _I<sub>static</sub>_.
+
+For a simple example, let's consider _f(s,d) = s*(s*(s+1)+d)_. The specialization of _f_ for _s=2_ is then _f<sub>2</sub>(d)=2*(6+d)_, effectively pre-computing one multiplication. An even more interesting specialization is _f<sub>0</sub>(d)=0_, turning the whole program into a constant expression.
+
+The separation between _I<sub>static</sub>_ and _I<sub>dynamic</sub>_ is not rigorous - it is valid to both create a separate specialization for every single input combination or consider all input dynamic and therefore specialize for an empty set. However, these extremes obviously don't provide any performance benefits. Partial evaluation is therefore usually guided by heuristics analyzing when a specific input value is used _often enough_ to warrant a specialization.
+
+In his work, Futamura formulated so-called Futamura projections. Let's define a generic specializer as _specializer: prog × I<sub>static</sub> → prog*_. 
+
+The first Futamura projection is as follows: Let's define an interpreter as _interpreter: source × inputs → outputs_, a program taking two inputs: the source code and the "inner" inputs for the code. Then the result of _specializer(interpreter, source) = executable_ is a fully realized program for the specific source code, as if the source code was "compiled" in the traditional sense of the word. 
+
+The second Futamura projection observes that _specializer(specializer,intepreter) = compiler_ - we generate a tailored specializer that can transform source code into executables.
+
+The third Futamura projection observes that _specializer(specializer,specializer) = compiler-compiler_, resulting in a tool that takes _interpreter_ and returns _compiler_.
+
+### Guards and de-optimisations
 
 ### `MERGE_EXPLODE` strategy
 
@@ -78,18 +112,6 @@ One of the key elements
 
 > like `ExplodeLoop.LoopExplosionKind.FULL_EXPLODE`, but copies of the loop body that have the exact same state (all local variables have the same value) are merged. This reduces the number of copies necessary, but can introduce loops again. **This kind is useful for bytecode interpreter loops.**
 
-
-## Previous work
-
-Truffle was originally described as "a novel approach to implementing AST interpreters" in [Self-Optimizing AST Interpreters (2012)](https://dl.acm.org/doi/10.1145/2384577.2384587) and wasn't directly applicable for our bytecode intepreter problem.
-
-[Bringing Low-Level Languages to the JVM: Efficient Execution of LLVM IR on Truffle (2016)](https://dl.acm.org/doi/10.1145/2998415.2998416) implemented Sulong, a LLVM IR (bytecode) runtime, and showed "how a hybrid bytecode/AST interpreter can be implemented in Truffle". This is already very similar to our current work, however it had to implement its own approach to converting unstructured control flow into AST nodes.
-
-In [Truffle version 0.15 (2016)](https://github.com/oracle/graal/blob/master/truffle/CHANGELOG.md#version-015), the `ExplodeLoop.LoopExplosionKind` enumeration was implemented, providing the [`MERGE_EXPLODE` strategy](#mergeexplode-strategy).
-
-In [GraalVM version 21.0 (2021)](https://www.graalvm.org/release-notes/21_0/), an "experimental Java Virtual Machine implementation based on a Truffle interpreter" was introduced. In general principles, this project is very similiar to our work, using the same approach for a different language.
-
-While [Truffle CIL Interpreter (2020)](https://epub.jku.at/obvulihs/content/titleinfo/5473678) also implemented the CIL runtime, it chose a completely different approach of building an AST from the text representation of IL code. Also, as it admits in the conclusion, it "didn't focus on performance optimization of the different instructions". The same implementation approach was chosen by [truffleclr](https://github.com/alex4o/truffleclr).
 
 
 # CLI Component parser
@@ -270,6 +292,8 @@ In the end, designing and implementing the parser took a non-trivial chunk of th
 # Runtime
 
 ## Analysis
+
+### Standard libraries
 
 ### Dynamicity of references
 
