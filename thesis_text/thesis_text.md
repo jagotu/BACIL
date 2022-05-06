@@ -6,7 +6,7 @@ Interpreted and just-in-time (JIT) compiled languages are becoming more and more
 
 The Truffle Language Implementation Framework [^1] attempts to alleviate this tradeoff between performance and development complexity by providing a framework for implementing a language using interpreter-style code that is later JIT compiled by the GraalVM compiler [^2]. While straightforward interpreter-style implementations in Truffle might not perform much better than simple interpreters, Truffle provides a framework for writing optimization hints that are later used by the compiler. According to Thomas Würthinger et al. [^3], such implementations can compete with hand-crafted compilers.
 
-The goal of the thesis is to implement an interpreter of a subset of Common Intermediate Language (CIL) using Truffle, such that CIL code can be run on the Java Virtual Machine. CIL is an intermediate language to which .NET applications are typically compiled, including applications written in the C# programming language. The CIL is standardized in ECMA-335 [^4]. The focus of the work will be on the feasibility of implementing an interpreter of an actual language using the Truffle interpreter-style approach in an academic setting, and comparing the resulting performance of said academic implementation with state of the art CIL JIT compilers.
+The goal of the thesis is to implement an interpreter of a subset of Common Intermediate Language (CIL) using Truffle, such that CIL code can be run on the Java Virtual Machine. CIL is an intermediate language to which .NET applications are typically compiled, including applications written in the C# programming language. The CIL is standardized in ECMA-335 [^4]. The focus of the work will be on the feasibility of implementing an interpreter of an actual language using the Truffle interpreter-style approach in an academic setting, and comparing the resulting performance of said academic implementation with state-of-the-art CIL JIT compilers.
 
 
 
@@ -14,19 +14,19 @@ The goal of the thesis is to implement an interpreter of a subset of Common Inte
 
 ## Problem
 
-Traditionally, when implementing a programming language, achieving high performance required a significant development effort and resulted in complicated codebases.
+Traditionally, when implementing a programming language, achieving a high performance required a significant development effort and resulted in complicated codebases.
 
-While writing an interpreter for even a fairly complicated language is achievable for a single person interested in the topic, state of the art optimizing compilers are usually created over several years by large teams of developers at the largest of IT companies. Not only was kickstarting such a project unthinkable for an individual, introducing changes to an already existing project is far from simple.
+While writing an interpreter for even a fairly complicated language is achievable for a single person interested in the topic, state-of-the-art optimizing compilers are usually created over several years by large teams of developers at the largest IT companies. Not only was kickstarting such a project unthinkable for an individual but even introducing changes to an already existing project is far from simple.
 
-For example, Google's state of the art JavaScript engine V8 currently has two different JIT compilers and its own internal bytecode. An experiment of adding a single new bytecode instruction to the project can mean several days of just orientating in the codebase.
+For example, Google's state-of-the-art JavaScript engine V8 currently has two different JIT compilers and its own internal bytecode. An experiment of adding a single new bytecode instruction to the project can mean several days of just orientating in the codebase.
 
-As cybersecurity becomes a more important topic, another factor to consider is that creating manual optimizations in JITs is very prone to bugs which can have very grave security implications. Speculated assumptions of JIT compilers introduced whole new bug families, for example "type confusion". Implementing a JIT that is not only performant but also secure is proving to be difficult even for state of the art projects.
+As cybersecurity becomes a more important topic, another factor to consider is that creating manual optimizations in JITs is very prone to bugs which can have very grave security implications. Speculated assumptions of JIT compilers introduced whole new bug families including "type confusion". Implementing a JIT that is not only performant but also secure is proving to be difficult even for state-of-the-art projects.
 
 These factors resulted in academic and hobby experimentation with programming languages being mostly stuck with low-performance simple interpreters. [Qualitative Assessment of Compiled, Interpreted and Hybrid Programming Languages](https://www.researchgate.net/publication/320665812_Qualitative_Assessment_of_Compiled_Interpreted_and_Hybrid_Programming_Languages) concludes that
 
 > Interpreters are very good development tools since it [sic] can be easily edited, and are therefore ideal for beginners in programming and software development. However they are not good for professional developers due to the slow execution nature of the interpreted code.
 
-In recent years, frameworks that promise delivering close to state-of-the-art performance while requiring only a simple interpreter-style implementation started appearing. Examples of such frameworks are [RPython](https://rpython.readthedocs.io/) and the [Truffle language implementation framework](https://www.graalvm.org/graalvm-as-a-platform/language-implementation-framework/).
+In recent years, frameworks that promise to deliver close to state-of-the-art performance while requiring only a simple interpreter-style implementation started appearing. Examples of such frameworks are [RPython](https://rpython.readthedocs.io/) and the [Truffle language implementation framework](https://www.graalvm.org/graalvm-as-a-platform/language-implementation-framework/).
 Researchers concluded that Truffle's performance "is competitive with production systems even when they have been heavily optimized for the one language they support"[^5].
 
 As the performance of language implementations made by experts (sometimes even designers of these frameworks themselves) is well understood, in this work we wanted to focus on testing another claim: the "reduced complexity for implementing languages in our system [that] will enable more languages to benefit from optimizing compilers"[^5]. 
@@ -41,7 +41,7 @@ We chose .NET as a platform to implement, mostly because:
 * we have experience with .NET internals and the internally used bytecode
 * no comparable truffle-based implementations were published for .NET
 
-While .NET is a well recognized name, it is actually more of a marketing/brand name whose meaning changed through history. Our implementation follows [ECMA-335 Common Language Infrastructure (CLI)](https://www.ecma-international.org/publications-and-standards/standards/ecma-335/) which doesn't mention the .NET brand at all. As such, we will be using the names defined in the standard throughout this work. All references to specific implementations/brand names are included only to aid understanding and have no ambition to be accurate, mainly when it comes to .NET vs .NET Core vs .NET Framework vs .NET Standard nomenclature.
+While .NET sure is a well-recognized name, it is a marketing/brand name whose meaning changed through history. Our implementation follows [ECMA-335 Common Language Infrastructure (CLI)](https://www.ecma-international.org/publications-and-standards/standards/ecma-335/) which doesn't mention the .NET brand at all. As such, we will be using the names defined in the standard throughout this work. All references to specific implementations/brand names are included only to aid understanding and have no ambition to be accurate, mainly when it comes to .NET vs .NET Core vs .NET Framework vs .NET Standard nomenclature.
 
 > The Common Language Infrastructure (CLI) provides a specification for executable code and the execution environment (the Virtual Execution System) in which it runs. 
 
@@ -51,20 +51,20 @@ Using the definitions of the standard, BACIL is actually a Virtual Execution Sys
 
 > The VES is responsible for loading and running programs written for the CLI. It provides the services needed to execute managed code and data, using the metadata to connect separately generated modules together at runtime (late binding).
 
-.NET Framework's VES is called the Common Language Runtime (CLR), in .NET Core it's known as CoreCLR.
+.NET Framework's VES is called the Common Language Runtime (CLR) and in .NET Core, it's known as CoreCLR.
 
 > To a large extent, the purpose of the VES is to provide the support required to execute the [Common Intermediate Language (CIL)] instruction set.
 
 The CIL, historically also called Microsoft Intermediate Language (MSIL) or simply Intermediate Language (IL), is the instruction set used by the CLI. Interpreting (a subset of) this instruction set was the main goal of this work.
 
-Another large part of the framework are the standard libraries - the base class library, which has to be supported by all implementations of the CLI, consists of 2370 members over 207 classes. As the focus of the work was on the core interpreter, we largely ignored this part of the standard, and deferred to other standard library implementations where possible.
+Another large part of the framework is the standard libraries - the base class library, which has to be supported by all implementations of the CLI, consists of 2370 members over 207 classes. As the focus of the work was on the core interpreter, we largely ignored this part of the standard and deferred to other standard library implementations where possible.
 
 ## Truffle and Graal
 
 To implement a high-performance CLI runtime, we alleviate the 
- [Truffle language implementation framework](https://www.graalvm.org/graalvm-as-a-platform/language-implementation-framework/) (henceforth "Truffle") and the [GraalVM Compiler](https://www.graalvm.org/22.1/docs/introduction). These two components are tightly coupled together and we'll mostly be refering to them that way. 
+ [Truffle language implementation framework](https://www.graalvm.org/graalvm-as-a-platform/language-implementation-framework/) (henceforth "Truffle") and the [GraalVM Compiler](https://www.graalvm.org/22.1/docs/introduction). These two components are tightly coupled together and we'll mostly be referring to them that way. 
  
-The Graal Compiler is a general high-performance just-in-time compiler for Java bytecode that is itself written Java. It is state-of-the-art when it comes to optimization algorithms - according to official documentation, "the compiler in GraalVM Enterprise includes 62 optimization phases, of which 27 are patented". 
+The Graal Compiler is a general high-performance just-in-time compiler for Java bytecode that is itself written in Java. It is state-of-the-art when it comes to optimization algorithms - according to official documentation, "the compiler in GraalVM Enterprise includes 62 optimization phases, of which 27 are patented". 
 
 Truffle on the other hand is a framework for implementing languages that will run on Graal. From the outside, it behaves like a compiler: its job is to take guest language code and convert it to the VM's language. Unlike a hand-crafted compiler, Truffle takes an interpreter of the guest language as its input and uses [Partial evaluation](#partial-evaluation) to do the compilation, performing a so-called "first Futamura projection".
 
@@ -76,15 +76,15 @@ We want to mention that GraalVM is shipped in two editions, Community and Enterp
 
 ## Previous work
 
-Truffle was originally described as "a novel approach to implementing AST interpreters" in [Self-Optimizing AST Interpreters (2012)](https://dl.acm.org/doi/10.1145/2384577.2384587) and wasn't directly applicable for our bytecode intepreter problem.
+Truffle was originally described as "a novel approach to implementing AST interpreters" in [Self-Optimizing AST Interpreters (2012)](https://dl.acm.org/doi/10.1145/2384577.2384587) and wasn't directly applicable to our bytecode interpreter problem.
 
-[Bringing Low-Level Languages to the JVM: Efficient Execution of LLVM IR on Truffle (2016)](https://dl.acm.org/doi/10.1145/2998415.2998416) implemented Sulong, a LLVM IR (bytecode) runtime, and showed "how a hybrid bytecode/AST interpreter can be implemented in Truffle". This is already very similar to our current work, however it had to implement its own approach to converting unstructured control flow into AST nodes.
+[Bringing Low-Level Languages to the JVM: Efficient Execution of LLVM IR on Truffle (2016)](https://dl.acm.org/doi/10.1145/2998415.2998416) implemented Sulong, an LLVM IR (bytecode) runtime, and showed "how a hybrid bytecode/AST interpreter can be implemented in Truffle". This is already very similar to our current work, however, it had to implement its own approach to converting unstructured control flow into AST nodes.
 
 In [Truffle version 0.15 (2016)](https://github.com/oracle/graal/blob/master/truffle/CHANGELOG.md#version-015), the `ExplodeLoop.LoopExplosionKind` enumeration was implemented, providing the [`MERGE_EXPLODE` strategy](#mergeexplode-strategy).
 
-In [GraalVM version 21.0 (2021)](https://www.graalvm.org/release-notes/21_0/), an "experimental Java Virtual Machine implementation based on a Truffle interpreter" was introduced. In general principles, this project is very similiar to our work, using the same approaches but implementing a different language.
+In [GraalVM version 21.0 (2021)](https://www.graalvm.org/release-notes/21_0/), an "experimental Java Virtual Machine implementation based on a Truffle interpreter" was introduced. In general principles, this project is very similar to our work, using the same approaches but implementing a different language.
 
-While [Truffle CIL Interpreter (2020)](https://epub.jku.at/obvulihs/content/titleinfo/5473678) also implemented the CIL runtime, it chose a completely different approach of building an AST from the text representation of IL code. Also, as it admits in the conclusion, it "didn't focus on performance optimization of the different instructions". The same implementation approach was chosen by [truffleclr](https://github.com/alex4o/truffleclr).
+While [Truffle CIL Interpreter (2020)](https://epub.jku.at/obvulihs/content/titleinfo/5473678) also implemented the CIL runtime, it chose a completely different approach, building an AST from the text representation of IL code. Also, as it admits in the conclusion, it "didn't focus on performance optimization of the different instructions". The same implementation approach was chosen by [truffleclr](https://github.com/alex4o/truffleclr).
 
 # Theory
 
@@ -112,14 +112,15 @@ The third Futamura projection observes that _specializer(specializer,specializer
 
 ### Guards and de-optimisations
 
+TODO
+
+for practical partial evaluation, we have to use guards that transfer to interpreter on assumption invalidation, cutting branches containing exceptions etc.
+
 ### `MERGE_EXPLODE` strategy
 
-One of the key elements
-
-(emphasis added)
+One of the key elements (emphasis added)
 
 > like `ExplodeLoop.LoopExplosionKind.FULL_EXPLODE`, but copies of the loop body that have the exact same state (all local variables have the same value) are merged. This reduces the number of copies necessary, but can introduce loops again. **This kind is useful for bytecode interpreter loops.**
-
 
 
 # CLI Component parser
