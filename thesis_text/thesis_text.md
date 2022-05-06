@@ -62,9 +62,17 @@ Another large part of the framework are the standard libraries - the base class 
 ## Truffle and Graal
 
 To implement a high-performance CLI runtime, we alleviate the 
- [Truffle language implementation framework](https://www.graalvm.org/graalvm-as-a-platform/language-implementation-framework/) (henceforth "Truffle") and the [GraalVM Compiler](https://www.graalvm.org/22.1/docs/introduction). 
+ [Truffle language implementation framework](https://www.graalvm.org/graalvm-as-a-platform/language-implementation-framework/) (henceforth "Truffle") and the [GraalVM Compiler](https://www.graalvm.org/22.1/docs/introduction). These two components are tightly coupled together and we'll mostly be refering to them that way. 
+ 
+The Graal Compiler is a general high-performance just-in-time compiler for Java bytecode that is itself written Java. It is state-of-the-art when it comes to optimization algorithms - according to official documentation, "the compiler in GraalVM Enterprise includes 62 optimization phases, of which 27 are patented". 
 
-TODO  high level what it is
+Truffle on the other hand is a framework for implementing languages that will run on Graal. From the outside, it behaves like a compiler: its job is to take guest language code and convert it to the VM's language. Unlike a hand-crafted compiler, Truffle takes an interpreter of the guest language as its input and uses [Partial evaluation](#partial-evaluation) to do the compilation, performing a so-called "first Futamura projection".
+
+![alt](truffle.drawio.svg)
+
+Truffle also provides several primitives that can be used by the language implementation to guide the partial evaluation process, allowing for better results.
+
+We want to mention that GraalVM is shipped in two editions, Community and Enterprise. Supposedly, the Enterprise edition provides even higher performance than the Community one. As we wanted to avoid all potential licensing issues, we only ever used the Community edition and can't comment on Enterprise performance at all.
 
 ## Previous work
 
