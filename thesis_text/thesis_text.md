@@ -88,40 +88,175 @@ While [Truffle CIL Interpreter (2020)](https://epub.jku.at/obvulihs/content/titl
 
 # Theory
 
-### Partial Evaluation
+## Partial Evaluation
 
 The most important principle allowing Truffle/Graal to reach high performance is Partial Evaluation. It was theoretically known for decades, one of the foundational works being [Partial computation of programs (1983)](https://repository.kulib.kyoto-u.ac.jp/dspace/bitstream/2433/103401/1/0482-14.pdf), but modern advances in computer performance make it practically usable.
 
-The high-level view of partial evaluation offered by Futamura is "specializing a general progam based upon its operating environment into a more efficient program".
+The high-level view of partial evaluation offered by Futamura is "specializing a general program based upon its operating environment into a more efficient program".
 
 Consider a program (or its chunk) as a mapping of inputs into outputs. We can divide those inputs into two sets - dynamic inputs and static inputs - denoting the program as _prog: I<sub>static</sub> × I<sub>dynamic</sub> → O_.
 
-The process of partial evaluation is then transforming _&lt;prog, I<sub>static</sub>&gt;_ into _prog*: I<sub>dynamic</sub> → O_ by incorporating the static input into the code itself. We'll call _prog*_ a specialization of _prog_ for _I<sub>static</sub>_, sometimes it is also referred to as a residual program, intermediate program or a projection of _prog_ at _I<sub>static</sub>_.
+The process of partial evaluation is then transforming _&lt;prog, I<sub>static</sub>&gt;_ into _prog*: I<sub>dynamic</sub> → O_ by incorporating the static input into the code itself. We'll call _prog*_ a specialization of _prog_ for _I<sub>static</sub>_, sometimes it is also referred to as a residual program, intermediate program, or a projection of _prog_ at _I<sub>static</sub>_.
 
 For a simple example, let's consider _f(s,d) = s*(s*(s+1)+d)_. The specialization of _f_ for _s=2_ is then _f<sub>2</sub>(d)=2*(6+d)_, effectively pre-computing one multiplication. An even more interesting specialization is _f<sub>0</sub>(d)=0_, turning the whole program into a constant expression.
 
-The separation between _I<sub>static</sub>_ and _I<sub>dynamic</sub>_ is not rigorous - it is valid to both create a separate specialization for every single input combination or consider all input dynamic and therefore specialize for an empty set. However, these extremes obviously don't provide any performance benefits. Partial evaluation is therefore usually guided by heuristics analyzing when a specific input value is used _often enough_ to warrant a specialization.
+The separation between _I<sub>static</sub>_ and _I<sub>dynamic</sub>_ is not rigorous - it is valid to both create a separate specialization for every single input combination or consider all input dynamic and therefore specialize for an empty set. However, these extremes don't provide any performance benefits. Partial evaluation is therefore usually guided by heuristics analyzing when a specific input value is used _often enough_ to warrant a specialization.
 
 In his work, Futamura formulated so-called Futamura projections. Let's define a generic specializer as _specializer: prog × I<sub>static</sub> → prog*_. 
 
-The first Futamura projection is as follows: Let's define an interpreter as _interpreter: source × inputs → outputs_, a program taking two inputs: the source code and the "inner" inputs for the code. Then the result of _specializer(interpreter, source) = executable_ is a fully realized program for the specific source code, as if the source code was "compiled" in the traditional sense of the word. 
+The first Futamura projection is as follows: Let's define an interpreter as _interpreter: source × inputs → outputs_, a program taking two inputs: the source code and the "inner" inputs for the code. Then the result of _specializer(interpreter, source) = executable_ is a fully realized program for the specific source code as if the source code was "compiled" in the traditional sense of the word. 
 
-The second Futamura projection observes that _specializer(specializer,intepreter) = compiler_ - we generate a tailored specializer that can transform source code into executables.
+The second Futamura projection observes that _specializer(specializer,interpreter) = compiler_ - we generate a tailored specializer that can transform source code into executables.
 
-The third Futamura projection observes that _specializer(specializer,specializer) = compiler-compiler_, resulting in a tool that takes _interpreter_ and returns _compiler_.
+The third Futamura projection observes that _specializer(specializer,specializer) = compiler-compiler_, resulting in a tool that takes an _interpreter_ and returns a _compiler_.
 
-### Guards and de-optimisations
+### Guards and de-optimizations
 
-TODO
+For practical partial evaluation, it is valuable to perform speculative optimizations - compiling the code expecting invariants that can be broken during runtime. One common example of such speculation is optimizations of virtual calls: assuming that the method will always be called on objects of a specific type allows replacing the virtual call with a static one and enables a more aggressive specialization. 
 
-for practical partial evaluation, we have to use guards that transfer to interpreter on assumption invalidation, cutting branches containing exceptions etc.
+Also, it is often useful to make sure some exceptional code paths are never included in the compilation - for example, if dividing by zero should result in an immediate crash of the application with a message being printed out, there is no use in spending time compiling and optimizing the error-message printing code, as it will at max be called once.
+
+For that, Truffle uses guards - statements that when reached by the runtime result in de-optimization. De-optimization is a process of transferring evaluation from the compiled variant of the method back to the interpreter (at the precise point where it was interrupted) and throwing away the already compiled variant, as its assumptions no longer hold.
+
+As an example, here's a pseudo-code of what a single-cache virtual call implementation could look like.
+
+```
+bool cached = false;
+bool invariant = true;
+type expectedType = null;
+funcptr cache = null;
+
+exec(obj, method)
+{
+    if(!cached)
+    {
+        cached = true;
+        expectedType = obj.Type;
+        cache = obj.Type.ResolveVirtualFunc(method)
+    }
+
+    if (invariant)
+    {
+        if(obj.type==expectedType)
+        {
+            return cache.call()
+        } else {
+            Deoptimize()
+            invariant = false
+        }
+    } 
+    obj.Type.ResolveVirtualFunc(method).call()
+}
+```
+
+When partially evaluated with `invariant == true`, the resulting code will look like this:
+
+![alt](guard_first.drawio.svg)
+
+As long as the virtual call is effectively static at runtime, we only spend time compiling the actual target function (which can be specialized for the environment) and during invocation only pay the price of a simple equality check.
+
+Once the comparison fails, this version of the compiled method is thrown away, and a generic one is created:
+
+![alt](guard_second.drawio.svg)
+
+### Escape analysis and virtualization
+
+All Java objects traditionally have to be allocated on the heap, as the VM has no concept of stack-allocated structures. However, allocating data on the heap is slow. The solution to this issue is escape analysis: if an object never leaves the current compilation unit, it can be virtualized. A virtualized object is never actually allocated but is decomposed to its individual fields, which are then subject to partial evaluation and other optimization methods.
 
 ### `MERGE_EXPLODE` strategy
 
-One of the key elements (emphasis added)
+One of the key elements that allow for implementing bytecode interpreters that are partial evaluation friendly is the `MERGE_EXPLODE` loop explosion strategy (emphasis added):
 
 > like `ExplodeLoop.LoopExplosionKind.FULL_EXPLODE`, but copies of the loop body that have the exact same state (all local variables have the same value) are merged. This reduces the number of copies necessary, but can introduce loops again. **This kind is useful for bytecode interpreter loops.**
 
+To fully appreciate the importance of this strategy, we have to point out the following fact of CLI's design from _I.12.3.2.1 The evaluation stack_  (emphasis added):
+
+> The type state of the stack (**the stack depth** and types of each element on the stack) at any given point in a program **shall be identical for all possible control flow paths**. For example, a program that loops an unknown number of times and pushes a new element on the stack at each iteration would be prohibited. 
+
+This design choice is not a coincidence, as it is vital also for hand-crafting performant JIT compilers. With regards to `MERGE_EXPLODE`, it means that all copies of the interpreter's inner loop that have the same bytecode offset will also have the same evaluation stack depth and type layout.
+
+Thanks to this, if we have for example a push immediate 4 instruction somewhere in the code, we can be sure it can be translated to a simple statement like `stack[7] = 4`, as in every execution of this instruction the stack depth has to be the same. This enables more optimizations, as this constant can be propagated to the next instruction reading `stack[7]`. 
+
+For a more involved example, let's apply this strategy to the following pseudo bytecode of `for(int i = 0; i < 100; i++) {a = a*a; }; return a;`:
+
+```
+; i=0
+0: OPCODE_LOADCONST 0
+1: OPCODE_STOREVAR i
+
+; i < 100
+2: OPCODE_LOADVAR i
+3: OPCODE_LOADCONST 100
+4: OPCODE_JMPIFBEQ @14
+
+; a = a*a
+5: OPCODE_LOADVAR a
+6: OPCODE_LOADVAR a
+7: OPCODE_MULTIPLY
+8: OPCODE_STOREVAR a
+
+; i++
+9: OPCODE_LOADVAR i
+10: OPCODE_LOADCONST 1
+11: OPCODE_ADD
+12: OPCODE_STOREVAR i
+
+; loop
+13: OPCODE_JMP @2
+
+; return a
+14: OPCODE_LOADVAR a
+15: OPCODE_RET
+```
+
+Thanks to the strategy, for every bytecode offset only one state has to be created. Knowing exactly the stack depth, we can partially evaluate the stack positions to constants
+
+```
+; i=0
+0: stack[0] = 0
+1: vars[i] = stack[0]
+
+; i < 100
+2: stack[0] = vars[i]
+3: stack[1] = 100
+4: if(stack[0]>=stack[1]) goto @14
+
+; a = a*a
+5: stack[0] = vars[a]
+6: stack[1] = vars[a]
+7: stack[0] = stack[0] * stack[1]
+8: vars[a] = stack[0]
+
+; i++
+9: stack[0] = vars[i]
+10: stack[1] = 1
+11: stack[0] = stack[0] + stack[1]
+12: vars[i] = stack[0]
+
+; loop
+13: goto @2
+
+; return a
+14: stack[0] = vars[a]
+15: return stack[0]
+```
+
+As the stack is not used outside this method, it will be completely virtualized. The fact that all stack array accesses use constant allows for aggressive optimization resulting in completely optimizing out the array:
+
+```
+  vars[i] = 0;
+
+condition:
+  if(vars[i]>=100) goto end
+  vars[a] = vars[a]*vars[a]
+  vars[i] = vars[i]+1
+  goto condition
+
+end:
+  return vars[a]
+```
+
+The original control flow of the method was reconstructed from flat bytecode just by unrolling the interpreter loop and merging the instances having the same bytecode offset.
 
 # CLI Component parser
 
