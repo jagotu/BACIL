@@ -110,6 +110,8 @@ The second Futamura projection observes that _specializer(specializer,interprete
 
 The third Futamura projection observes that _specializer(specializer,specializer) = compiler-compiler_, resulting in a tool that takes an _interpreter_ and returns a _compiler_.
 
+In this work, we implement an interpreter and use Truffle to perform the first Futamura projection.
+
 ### Guards and de-optimizations
 
 For practical partial evaluation, it is valuable to perform speculative optimizations - compiling the code expecting invariants that can be broken during runtime. One common example of such speculation is optimizations of virtual calls: assuming that the method will always be called on objects of a specific type allows replacing the virtual call with a static one and enables a more aggressive specialization. 
