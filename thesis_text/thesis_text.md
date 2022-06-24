@@ -16,11 +16,19 @@ The goal of the thesis is to implement an interpreter of a subset of Common Inte
 
 Traditionally, when implementing a programming language, achieving a high performance required a significant development effort and resulted in complicated codebases.
 
-While writing an interpreter for even a fairly complicated language is achievable for a single person interested in the topic, state-of-the-art optimizing compilers are usually created over several years by large teams of developers at the largest IT companies. Not only was kickstarting such a project unthinkable for an individual but even introducing changes to an already existing project is far from simple.
+While writing an interpreter for even a fairly complicated language is achievable for a single person interested in the topic (as proved by the abundance of language implementation theses avilable), state-of-the-art optimizing compilers are usually created over several years by large teams of developers at the largest IT companies. Not only was kickstarting such a project unthinkable for an individual but even introducing changes to an already existing project is far from simple.
 
-For example, Google's state-of-the-art JavaScript engine V8 currently has two different JIT compilers and its own internal bytecode. An experiment of adding a single new bytecode instruction to the project can mean several days of just orientating in the codebase.
+For example, as of 2022 Google's state-of-the-art JavaScript engine V8 has two different JIT compilers and its own internal bytecode. An experiment of adding a single new bytecode instruction to the project can mean several days of just orientating in the codebase. Google provides a [step-by-step tutorial for adding a new WebAssembly opcode to v8](https://v8.dev/docs/webassembly-opcode), which admits that a lot of platform-dependant work is necessary to get a proper implementation:
 
-As cybersecurity becomes a more important topic, another factor to consider is that creating manual optimizations in JITs is very prone to bugs which can have very grave security implications. Speculated assumptions of JIT compilers introduced whole new bug families including "type confusion". Implementing a JIT that is not only performant but also secure is proving to be difficult even for state-of-the-art projects.
+> The steps required for other architectures are similar: add TurboFan machine operators, use the platform-dependent files for instruction selection, scheduling, code generation, assembler.
+
+As cybersecurity becomes a more important topic, another factor to consider is that creating manual optimizations in JITs is very prone to bugs which can have very grave security implications. Speculated assumptions of JIT compilers introduced whole new bug families. As [Compile Your Own Type Confusions: Exploiting Logic Bugs in JavaScript JIT Engines](http://phrack.org/issues/70/9.html) says (emphasis added, footnotes stripped):
+
+> JavaScript JIT compilers are commonly implemented in C++ and as such are subject to the usual list of memory- and type-safety violations. These are not specific to JIT compilers and will thus not be discussed further. Instead, the focus will be put on bugs in the compiler which lead to incorrect machine code generation which can then be exploited to cause memory corruption.
+>
+> Besides bugs in the lowering phases which often result in rather classic vulnerabilities like integer overflows in the generated machine code, many interesting bugs come from the various optimizations. There have been bugs in bounds-check elimination, escape analysis, register allocation, and others. **Each optimization pass tends to yield its own kind of vulnerabilities.**
+
+Implementing a JIT that is not only performant but also secure is proving to be difficult even for state-of-the-art projects.
 
 These factors resulted in academic and hobby experimentation with programming languages being mostly stuck with low-performance simple interpreters. [Qualitative Assessment of Compiled, Interpreted and Hybrid Programming Languages](https://www.researchgate.net/publication/320665812_Qualitative_Assessment_of_Compiled_Interpreted_and_Hybrid_Programming_Languages) concludes that
 
@@ -62,11 +70,11 @@ Another large part of the framework is the standard libraries - the base class l
 ## Truffle and Graal
 
 To implement a high-performance CLI runtime, we alleviate the 
- [Truffle language implementation framework](https://www.graalvm.org/graalvm-as-a-platform/language-implementation-framework/) (henceforth "Truffle") and the [GraalVM Compiler](https://www.graalvm.org/22.1/docs/introduction). These two components are tightly coupled together and we'll mostly be referring to them that way. 
+ [Truffle language implementation framework](https://www.graalvm.org/graalvm-as-a-platform/language-implementation-framework/) (henceforth "Truffle") and the [GraalVM Compiler](https://www.graalvm.org/22.1/docs/introduction). These two components are tightly coupled together and we'll mostly be referring to them interchangeably, as even official sources provide conflicting information on the nomenclature.
  
-The Graal Compiler is a general high-performance just-in-time compiler for Java bytecode that is itself written in Java. It is state-of-the-art when it comes to optimization algorithms - according to official documentation, "the compiler in GraalVM Enterprise includes 62 optimization phases, of which 27 are patented". 
+The Graal Compiler is a general high-performance just-in-time compiler for Java bytecode that is itself written in Java. It is state-of-the-art when it comes to optimization algorithms - according to [official documentation](https://www.graalvm.org/22.1/reference-manual/java/compiler/#compiler-advantages), "the compiler in GraalVM Enterprise includes 62 optimization phases, of which 27 are patented".
 
-Truffle on the other hand is a framework for implementing languages that will run on Graal. From the outside, it behaves like a compiler: its job is to take guest language code and convert it to the VM's language. Unlike a hand-crafted compiler, Truffle takes an interpreter of the guest language as its input and uses [Partial evaluation](#partial-evaluation) to do the compilation, performing a so-called "first Futamura projection".
+Truffle on the other hand is a framework for implementing languages that will be compiled by Graal. From the outside, it behaves like a compiler: its job is to take guest language code and convert it to the VM's language, preserving as much intrinsic metadata as possible. Unlike a hand-crafted compiler, Truffle takes an interpreter of the guest language as its input and uses [Partial evaluation](#partial-evaluation) to do the compilation, performing a so-called "first Futamura projection".
 
 ![alt](truffle.drawio.svg)
 
@@ -78,7 +86,7 @@ We want to mention that GraalVM is shipped in two editions, Community and Enterp
 
 Truffle was originally described as "a novel approach to implementing AST interpreters" in [Self-Optimizing AST Interpreters (2012)](https://dl.acm.org/doi/10.1145/2384577.2384587) and wasn't directly applicable to our bytecode interpreter problem.
 
-[Bringing Low-Level Languages to the JVM: Efficient Execution of LLVM IR on Truffle (2016)](https://dl.acm.org/doi/10.1145/2998415.2998416) implemented Sulong, an LLVM IR (bytecode) runtime, and showed "how a hybrid bytecode/AST interpreter can be implemented in Truffle". This is already very similar to our current work, however, it had to implement its own approach to converting unstructured control flow into AST nodes.
+[Bringing Low-Level Languages to the JVM: Efficient Execution of LLVM IR on     Truffle (2016)](https://dl.acm.org/doi/10.1145/2998415.2998416) implemented Sulong, an LLVM IR (bytecode) runtime, and showed "how a hybrid bytecode/AST interpreter can be implemented in Truffle". This is already very similar to our current work, however, it had to implement its own approach to converting unstructured control flow into AST nodes.
 
 In [Truffle version 0.15 (2016)](https://github.com/oracle/graal/blob/master/truffle/CHANGELOG.md#version-015), the `ExplodeLoop.LoopExplosionKind` enumeration was implemented, providing the [`MERGE_EXPLODE` strategy](#mergeexplode-strategy).
 
@@ -118,7 +126,7 @@ For practical partial evaluation, it is valuable to perform speculative optimiza
 
 Also, it is often useful to make sure some exceptional code paths are never included in the compilation - for example, if dividing by zero should result in an immediate crash of the application with a message being printed out, there is no use in spending time compiling and optimizing the error-message printing code, as it will at max be called once.
 
-For that, Truffle uses guards - statements that when reached by the runtime result in de-optimization. De-optimization is a process of transferring evaluation from the compiled variant of the method back to the interpreter (at the precise point where it was interrupted) and throwing away the already compiled variant, as its assumptions no longer hold.
+For that, Graal uses guards - statements that when reached by the runtime result in de-optimization. De-optimization is a process of transferring evaluation from the compiled variant of the method back to the interpreter (at the precise point where it was interrupted) and throwing away the already compiled variant, as its assumptions no longer hold.
 
 As an example, here's a pseudo-code of what a single-cache virtual call implementation could look like.
 
@@ -179,7 +187,7 @@ This design choice is not a coincidence, as it is vital also for hand-crafting p
 
 Thanks to this, if we have for example a push immediate 4 instruction somewhere in the code, we can be sure it can be translated to a simple statement like `stack[7] = 4`, as in every execution of this instruction the stack depth has to be the same. This enables more optimizations, as this constant can be propagated to the next instruction reading `stack[7]`. 
 
-For a more involved example, let's apply this strategy to the following pseudo bytecode of `for(int i = 0; i < 100; i++) {a = a*a; }; return a;`:
+To explain the inner working on a more involved example, let's manually apply this strategy to the following pseudo bytecode of `for(int i = 0; i < 100; i++) {a = a*a; }; return a;`:
 
 ```
 ; i=0
@@ -211,7 +219,48 @@ For a more involved example, let's apply this strategy to the following pseudo b
 15: OPCODE_RET
 ```
 
-Thanks to the strategy, for every bytecode offset only one state has to be created. Knowing exactly the stack depth, we can partially evaluate the stack positions to constants
+Our intepreter might look something like this:
+
+```
+pc = 0 //bytecode offset
+top = 0 //stack top
+
+while(True)
+    opcode = getOpcode(pc)
+    switch opcode:
+        case OPCODE_LOADCONST:
+            stack[top++] = getImmediate(pc+1)
+            break
+        case OPCODE_STOREVAR:
+            vars[getVar(pc+1)] = stack[top--]
+            break
+        case OPCODE_LOADVAR:
+            stack[top++] = vars[getVar(pc+1)]
+            break
+        case OPCODE_JMPIFBEQ:
+            top -= 2
+            if(stack[top+1]>=stack[top+2]):
+                pc = getImmediate(pc+1)
+                continue
+            break
+        case OPCODE_MULTIPLY:
+            top -= 1
+            stack[top] = stack[top]*stack[top+1]
+            break
+        case OPCODE_ADD:
+            top -= 1
+            stack[top] = stack[top]+stack[top+1]
+            break
+        case OPCODE_JMP:
+            pc = getImmediate(pc+1)
+            continue
+        case OPCODE_RET:
+            return stack[top]
+
+    pc += lenghtOf(opcode)
+```
+
+Thanks to the strategy, for every bytecode offset only one state has to be created. Knowing exactly the stack depth, we can partially evaluate the stack positions to constants:
 
 ```
 ; i=0
@@ -258,7 +307,7 @@ end:
   return vars[a]
 ```
 
-The original control flow of the method was reconstructed from flat bytecode just by unrolling the interpreter loop and merging the instances having the same bytecode offset.
+Even though we started with a big interpreter loop, by merging the instances having the same bytecode offset it disappears and the original control flow of the method is reconstructed from the flat bytecode.
 
 # CLI Component parser
 
@@ -268,7 +317,7 @@ Before being able to execute code, it is necessary to read the code from the ass
 
 ### Design goals
 
-Before we started designing and implementing the parser, we considered what additional constraints have to be put on a parser in order for it to be partial-evaluation friendly. For partial-evaluation friendliness, the key metric is how trivial can every piece of code (that can be called a hot path) be partially evaluated to. While our goal was for the parser to never be called on a hot path, for some possible scenarios including reflection it would be necessary.
+Before we started designing and implementing the parser, we considered what additional constraints have to be put on a parser in order for it to be partial-evaluation friendly. For partial-evaluation friendliness, the key metric is how trivial can every piece of code be partially evaluated to. This metric is most important for a sequence of instructions executed very frequently, often referred to as a "hot path". While our goal was for the parser to never be called on a hot path for some possible scenarios including reflection it would be necessary.
 
 There are two possible extremes for parser design: "fully lazy" where every query for the file causes it to be parsed from the start, and "fully preloaded" where all the data from the file is immediatelly fully parsed into hierarchies of objects and structures. Practical parsers usually choose a compromise between those two approaches, mainly because the extremes lead to extremely slow runtime or bootup respectively.
 
