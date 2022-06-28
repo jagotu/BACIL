@@ -581,15 +581,331 @@ Into this:
 
 ## Completeness
 
-* How much of CIL I actually covered
+Due to time constraints, several areas of the standard were ignored. The development was focus on being able to run simple calculation programs and being able to run benchmarks from [Hagmüller's work](#hagmüllers-work).
+
+In total, ECMA-335 defines 219 opcodes, consisting of 6 prefixes and 213 instructions. Of those, our runtime contains code handling 149 instructions and no prefixes. 
+
+Notable missing features include:
+
+* exceptions, overflow checking instructions
+* interfaces
+* generics
+* casting and type checks
+* general arrays - only SZArrays (single dimensional, zero-based array) are supported
+* explicit boxing/unboxing
+* operations requiring 64-bit unsigned integers
+* custom valuetype structures
+
+To validate the proper implementation of instructions, we used [.NET's CodeGenBringUpTests](https://github.com/dotnet/runtime/tree/main/src/tests/JIT/CodeGenBringUpTests). According to [the documentation](https://github.com/dotnet/runtime/blob/main/docs/design/coreclr/jit/porting-ryujit.md), they are the recommended test suit to target when porting RyuJIT (.NET's JIT engine) to a new platform:
+
+> **Initial bring-up**
+>
+> * [...]
+> * Implement the bare minimum to get the compiler building and generating code for very simple operations, like addition.
+> * Focus on the CodeGenBringUpTests (src\tests\JIT\CodeGenBringUpTests), starting with the simple ones. 
+
+As such, they are perfect for testing corner cases of implemented instructions. One example of a bug uncovered in this test suite that would be very hard to find manually was a missing int32 truncation (see TODO for details), which was fixed [here](https://github.com/jagotu/BACIL/commit/056640ec276376434f5cb32ac70c3f9eb26c4881#diff-47ca212abb11bfd59685c4b47364f4a21a015136d4d2a8d6bbe014a7c873e2c9R1110).
+
+After stubbing out `WriteLine`, `ToString` and `Concat` (to get rid of the unsupported operations used by debug prints in case of failure), the BACIL implementation presented in this work passed 126 of the 160 test included in the `v6.0.6` tag. All the failed tests were because of missing implementations and not bugs in implemented features:
+
+| Test        | Reason for failure|
+|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ArrayExc | Missing exception support |
+| ArrayMD1 | Missing multi-dimensional array support |
+| ArrayMD2 | Missing multi-dimensional array support |
+| div2     | Missing exception support |
+| DivConst | Missing exception support |
+| FPConvI2F | Missing `conv.r.un` instruction implementation (due to unsigned 64-bit integers usage) |
+| FPMath | Missing generics support (in `[System.Private.CoreLib]System.BitConverter::DoubleToInt64Bits` internally used by `[System.Private.CoreLib]System.Math::Round`) |
+| InitObj | Missing `Initobj` instruction implementation |
+| LngConv | Missing `[System.Private.CoreLib]System.ValueType.GetHashCode` internalcall implementation, overriden by `[System.Private.CoreLib]System.IntPtr` |
+| Localloc* | Missing support for `stackalloc` |
+| ModConst  | Missing exception support |
+| OpMembersOfStructLocal | Missing custom valuetype structures support |
+| RecursiveTailCall | Missing custom valuetype structures support |
+| Rotate | Missing `volatile.` prefix |
+| struct* | Missing custom valuetype structures support |
+| UDivConst | Missing exception support |
+| UModConst | Missing exception support |
+| Unbox | Missing boxing/unboxing support |
+
 
 ## Benchmarks
 
 * it's fast
 
+* in .NET we used `System.Diagnostics.StopWatch`, in BACIL we used `System.nanoTime()`
+
+### Hagmüller's work
+
+One of the goals was also to compare with Hagmüller's implementation from [Truffle CIL Interpreter (2020)](https://epub.jku.at/obvulihs/content/titleinfo/5473678). We recieved copies of the benchmark programs used in the work and were therefore able to run them against our implementation. We didn't have access to the interpreter itself. To recieve comparable nubmers, we followed the outlined methodology:
+
+> The discussed Truffle CIL Interpreter, was evaluated by running a set of different programs. All benchmarks were executed on an Intel i7-5557U processor with 2 cores, 4 virtual threads featuring 16GB of RAM and a core speed of 3.1 GHz running macOS Catalina(64 bit).
+> 
+> We parametrized each benchmark so that its execution results in high workload for our test system. In order to get a performance reference to compare with, we executed the benchmark programs in the mono runtime. We ran the benchmark programs in our Truffle CIL Interpreter on the top of the Graal VM. To find out how much our Truffle CIL Interpreter benefits from the support of compilation by Graal, we also ran the tests in an interpreter only mode, by using the standard Java JDK, instead of Graal. Because Graal optimizes functions which are called a certain number of times, we executed each program in a loop a several amount of times. For our evaluation we wanted to ignore the warm up phase of the compilation, so we just took the last 10 iterations of the execution loop. For each iteration the execution time is measured. For these 10 iterations we calculated the arithmetic mean. In order to reduce statistical outliers we repeated this 10 times and calculated the geometric mean over the arithmetic means.
+
+Our benchmarks had the following differences:
+
+* instead of an unspecified version of the mono runtime, we used .NET 6.0.301 to get the reference performance
+* our system was different, sporting an AMD Ryzen 7 PRO 4750U with 8 cores and 16 virtual threads, a Base Clock of 1.7GHz and boost up to 4.1GHz, featuring 32 GB of RAM and running Windows 10
+* to get the "interpreter only mode" results, we used the `--engine.CompileOnly=` argument when launching, resulting in no methods getting compiled
+
+The tests were run on:
+
+```
+openjdk 11.0.15 2022-04-19
+OpenJDK Runtime Environment GraalVM CE 22.1.0 (build 11.0.15+10-jvmci-22.1-b06)
+OpenJDK 64-Bit Server VM GraalVM CE 22.1.0 (build 11.0.15+10-jvmci-22.1-b06, mixed mode, sharing)
+```
+
+TODO results when the benchmark finishes :)
+
+
+
+
 # Conlusion
 
 * in a single person I was able to implement a fast interpreter for CIL = mission accomplished
+
+
+# Appendix - Opcode implementation status
+
+Implemented instructions:
+
+```
+add
+and
+beq
+beq.s
+bge
+bge.s
+bge.un
+bge.un.s
+bgt
+bgt.s
+bgt.un
+bgt.un.s
+ble
+ble.s
+ble.un
+ble.un.s
+blt
+blt.s
+blt.un
+blt.un.s
+bne.un
+bne.un.s
+box
+br
+brfalse
+brfalse.s
+br.s
+brtrue
+brtrue.s
+call
+callvirt
+ceq
+cgt
+cgt.un
+clt
+clt.un
+conv.i
+conv.i1
+conv.i2
+conv.i4
+conv.i8
+conv.r4
+conv.r8
+conv.u
+conv.u1
+conv.u2
+conv.u4
+conv.u8
+div
+dup
+ldarg.0
+ldarg.1
+ldarg.2
+ldarg.3
+ldarga.s
+ldarg.s
+ldc.i4
+ldc.i4.0
+ldc.i4.1
+ldc.i4.2
+ldc.i4.3
+ldc.i4.4
+ldc.i4.5
+ldc.i4.6
+ldc.i4.7
+ldc.i4.8
+ldc.i4.m1
+ldc.i4.s
+ldc.i8
+ldc.r4
+ldc.r8
+ldelem
+ldelema
+ldelem.i
+ldelem.i1
+ldelem.i2
+ldelem.i4
+ldelem.i8
+ldelem.r4
+ldelem.r8
+ldelem.ref
+ldelem.u1
+ldelem.u2
+ldelem.u4
+ldfld
+ldflda
+ldind.i
+ldind.i1
+ldind.i2
+ldind.i4
+ldind.i8
+ldind.r4
+ldind.r8
+ldind.ref
+ldind.u1
+ldind.u2
+ldind.u4
+ldlen
+ldloc.0
+ldloc.1
+ldloc.2
+ldloc.3
+ldloca.s
+ldloc.s
+ldnull
+ldsfld
+ldsflda
+ldstr
+ldtoken
+mul
+neg
+newarr
+newobj
+nop
+not
+or
+pop
+rem
+ret
+shl
+shr
+shr.un
+starg.s
+stelem
+stelem.i
+stelem.i1
+stelem.i2
+stelem.i4
+stelem.i8
+stelem.r4
+stelem.r8
+stelem.ref
+stfld
+stind.i
+stind.i1
+stind.i2
+stind.i4
+stind.i8
+stind.r4
+stind.r8
+stind.ref
+stloc.0
+stloc.1
+stloc.2
+stloc.3
+stloc.s
+stsfld
+sub
+xor 
+```
+
+Unimplemented instructions and prefixes:
+
+```
+add.ovf
+add.ovf.un
+arglist
+break
+calli
+castclass
+ckfinite
+constrained.
+conv.ovf.i
+conv.ovf.i1
+conv.ovf.i1.un
+conv.ovf.i2
+conv.ovf.i2.un
+conv.ovf.i4
+conv.ovf.i4.un
+conv.ovf.i8
+conv.ovf.i8.un
+conv.ovf.i.un
+conv.ovf.u
+conv.ovf.u1
+conv.ovf.u1.un
+conv.ovf.u2
+conv.ovf.u2.un
+conv.ovf.u4
+conv.ovf.u4.un
+conv.ovf.u8
+conv.ovf.u8.un
+conv.ovf.u.un
+conv.r.un
+cpblk
+cpobj
+div.un
+endfilter
+endfinally
+initblk
+Initobj
+isinst
+jmp
+ldarg
+ldarga
+ldftn
+ldloc
+ldloca
+ldobj
+ldvirtftn
+leave
+leave.s
+localloc
+mkrefany
+mul.ovf
+mul.ovf.un
+no.
+readonly.
+Refanytype
+refanyval
+rem.un
+rethrow
+sizeof
+starg
+stloc
+stobj
+sub.ovf
+sub.ovf.un
+switch
+tail.
+throw
+unaligned.
+unbox
+unbox.any
+volatile.
+```
+
+# Appendix - CodeGenBringUpTests failures
+
+
+
+
+
+
 
 [^1]: https://github.com/oracle/graal/tree/master/truffle
 [^2]: https://github.com/oracle/graal/tree/master/compiler
