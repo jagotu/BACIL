@@ -488,8 +488,6 @@ In the end, designing and implementing the parser took a non-trivial chunk of th
 
 ## Analysis
 
-### Standard libraries
-
 ### Dynamicity of references
 
 One of the additional things to consider when implementing a partial-evaluation friendly interpreter is dynamicity of references, where by dynamicity we mean how often the reference changes its state. This metric is important because effectively the dynamicity of a chain of references will be equal to the most dynamic of the references. As a result, what would usually be considered bad design patterns is sometimes necessary to divide the chain into more direct references, such that each object is reachable with the lowest dynamicity possible.
@@ -563,6 +561,67 @@ Object fieldValue = objectType.getLocationsDescriptor().locationToObject(((Stati
 
 _Scenario 2: While the `LocationHolder` remains accessible from a highly dynamic chain, the `LocationDescriptor` is accessible through a static chain. This means the bottom chain will be partially evaluated._
 
+### Standard libraries
+
+### Values and locations
+
+Another batch of important design decisions is related to values and their storage. As specified in ECMA-335, the values can have the following "homes":
+
+> **I.12.1.6.1 Homes for values**
+> The **home** of a data value is where it is stored for possible reuse. The CLI directly supports the following home locations:
+> * An incoming **argument**
+> * A **local variable** of a method
+> * An instance **field** of an object or value type
+> * A **static** field of a class, interface, or module
+> * An **array element**
+> 
+> [...]
+> 
+> In addition to homes, built-in values can exist in two additional ways (i.e., without homes):
+> 1. as constant values (typically embedded in the CIL instruction stream using ldc.* instructions)
+> 2. as an intermediate value on the evaluation stack, when returned by a method or CIL instruction.
+
+As Truffle requires Java objects to be passed on the node boundary, BACIL also has an additional state where the value is a Java object.
+
+In .NET, all locations are typed (ECMA-335 I.8.6.1.2 Location signatures). While evaluation stack slots are also typed, they use a different and more coarse type system. 
+
+We need to decide how to represent the various homes and the values themselves and also how transitions between various states will be implemented.
+
+#### Primitives and refs
+
+* all storages will be separated to long[] for primitives and refs[] for references
+
+#### Locations
+
+#### Evaluation stack
+
+#### State transitions
+
+Keeping in mind the [Dynamicity of references](#dynamicity-of-references) and the fact that all locations are typed (and the type of a location never changes), it follows to make the `Type` objects responsible for implementing the state transitions. There are 6 possible transitions between objects, evaluation stack and locations which will be implemented as the following methods of `Type`:
+
+```Java
+public void stackToLocation(LocationsHolder holder, int holderOffset, Object ref, long primitive)
+public void locationToStack(LocationsHolder holder, int holderOffset, Object[] refs, long[] primitives, int slot)
+public Object stackToObject(Object ref, long primitive)
+public void objectToStack(Object[] refs, long[] primitives, int slot, Object value)
+public Object locationToObject(LocationsHolder holder, int holderOffset)
+public void objectToLocation(LocationsHolder holder, int holderOffset, Object value)
+```
+
+The `Type` class will provide the default transitions for reference types, while subclasses of this class can provide special variants for primitives.
+A `LocationHolder` can then resolve the (compilation constant) location type and use it to transition the value, for example like this:
+
+```Java
+public void locationToStack(LocationsHolder holder, int locationIndex, Object[] refs, long[] primitives, int slot)
+{
+    locationTypes[locationIndex].locationToStack(holder, offsets[locationIndex], refs, primitives, slot);
+}
+```
+
+* complain about all the constant narrowing and widening
+
+
+
 ## Implementation
 
 ### Using compiler graphs for optimization
@@ -592,7 +651,7 @@ Notable missing features include:
 * generics
 * casting and type checks
 * general arrays - only SZArrays (single dimensional, zero-based array) are supported
-* explicit boxing/unboxing
+* unboxing
 * operations requiring 64-bit unsigned integers
 * custom valuetype structures
 
