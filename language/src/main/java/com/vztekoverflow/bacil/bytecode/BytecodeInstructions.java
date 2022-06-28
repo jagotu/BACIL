@@ -402,6 +402,8 @@ public class BytecodeInstructions {
         def(OR, "or", "o", -1);
         def(XOR, "xor", "o", -1);
 
+        def(NOT, "not", "o", 0);
+
         def(SHL, "shl", "o", -1);
         def(SHR, "shr", "o", -1);
         def(SHR_UN, "shr.un", "o", -1);
@@ -460,6 +462,7 @@ public class BytecodeInstructions {
         def(CONV_U8, "conv.u8", "o", 0);
         def(CONV_I, "conv.i", "o", 0);
         def(CONV_U, "conv.u", "o", 0);
+        def(CONV_R_UN, "conv.r.un", "o", 0);
 
         def(TRUFFLE_NODE, "truffle.node", "oiiii", 0);
     }

@@ -342,6 +342,9 @@ public class BytecodeNode extends Node {
                 case XOR:
                     doIntegerBinary(curOpcode, primitives, refs, top-2, top-1); break;
 
+                case NOT:
+                    doNot(primitives, refs, top-1); break;
+
                 case CEQ:
                 case CGT:
                 case CLT:
@@ -1033,6 +1036,26 @@ public class BytecodeNode extends Node {
             primitives[slot] = Double.doubleToLongBits(-Double.longBitsToDouble(primitives[slot]));
         } else { //INT64, NATIVE INT
             primitives[slot] = -primitives[slot];
+        }
+    }
+
+    /**
+     * Bitwise complement an integer on the evaluation stack.
+     * @param primitives primitives on the evaluation stack
+     * @param refs references on the evaluation stack
+     * @param slot the slot the value is in
+     */
+    private static void doNot(long[] primitives, Object[] refs, int slot)
+    {
+        if(refs[slot] == EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32)
+        {
+            primitives[slot] = TypeHelpers.truncate32(~(int)primitives[slot]);
+        } else if (refs[slot] == EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT64)
+        {
+            primitives[slot] = ~primitives[slot];
+        } else { //float, ref
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            throw new BACILInternalError("not instruction called on invalid object: " + refs[slot].toString());
         }
     }
 
