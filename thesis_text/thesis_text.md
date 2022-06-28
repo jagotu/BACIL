@@ -600,12 +600,12 @@ We need to decide how to represent the various homes and the values themselves a
 Keeping in mind the [Dynamicity of references](#dynamicity-of-references) and the fact that all locations are typed (and the type of a location never changes), it follows to make the `Type` objects responsible for implementing the state transitions. There are 6 possible transitions between objects, evaluation stack and locations which will be implemented as the following methods of `Type`:
 
 ```Java
-public void stackToLocation(LocationsHolder holder, int holderOffset, Object ref, long primitive)
-public void locationToStack(LocationsHolder holder, int holderOffset, Object[] refs, long[] primitives, int slot)
+public void stackToLocation(LocationsHolder holder, int primitiveOffset, int refOffset, Object ref, long primitive)
+public void locationToStack(LocationsHolder holder, int primitiveOffset, int refOffset, Object[] refs, long[] primitives, int slot)
 public Object stackToObject(Object ref, long primitive)
 public void objectToStack(Object[] refs, long[] primitives, int slot, Object value)
-public Object locationToObject(LocationsHolder holder, int holderOffset)
-public void objectToLocation(LocationsHolder holder, int holderOffset, Object value)
+public Object locationToObject(LocationsHolder holder, int primitiveOffset, int refOffset)
+public void objectToLocation(LocationsHolder holder, int primitiveOffset, int refOffset, Object value)
 ```
 
 The `Type` class will provide the default transitions for reference types, while subclasses of this class can provide special variants for primitives.
@@ -642,7 +642,7 @@ Into this:
 
 Due to time constraints, several areas of the standard were ignored. The development was focus on being able to run simple calculation programs and being able to run benchmarks from [Hagmüller's work](#hagmüllers-work).
 
-In total, ECMA-335 defines 219 opcodes, consisting of 6 prefixes and 213 instructions. Of those, our runtime contains code handling 149 instructions and no prefixes. 
+In total, ECMA-335 defines 219 opcodes, consisting of 6 prefixes and 213 instructions. Of those, our runtime contains code handling 151 instructions and no prefixes. 
 
 Notable missing features include:
 
@@ -651,9 +651,8 @@ Notable missing features include:
 * generics
 * casting and type checks
 * general arrays - only SZArrays (single dimensional, zero-based array) are supported
-* unboxing
 * operations requiring 64-bit unsigned integers
-* custom valuetype structures
+* unmanaged pointers and localloc
 
 To validate the proper implementation of instructions, we used [.NET's CodeGenBringUpTests](https://github.com/dotnet/runtime/tree/main/src/tests/JIT/CodeGenBringUpTests). According to [the documentation](https://github.com/dotnet/runtime/blob/main/docs/design/coreclr/jit/porting-ryujit.md), they are the recommended test suit to target when porting RyuJIT (.NET's JIT engine) to a new platform:
 
@@ -665,7 +664,7 @@ To validate the proper implementation of instructions, we used [.NET's CodeGenBr
 
 As such, they are perfect for testing corner cases of implemented instructions. One example of a bug uncovered in this test suite that would be very hard to find manually was a missing int32 truncation (see TODO for details), which was fixed [here](https://github.com/jagotu/BACIL/commit/056640ec276376434f5cb32ac70c3f9eb26c4881#diff-47ca212abb11bfd59685c4b47364f4a21a015136d4d2a8d6bbe014a7c873e2c9R1110).
 
-After stubbing out `WriteLine`, `ToString` and `Concat` (to get rid of the unsupported operations used by debug prints in case of failure), the BACIL implementation presented in this work passed 126 of the 160 test included in the `v6.0.6` tag. All the failed tests were because of missing implementations and not bugs in implemented features:
+After stubbing out `Write`, `WriteLine`, `ToString` and `Concat` (to get rid of the unsupported operations used by debug prints in case of failure), the BACIL implementation presented in this work passed 85%, e.g. 133 out of the 155  tests, included in the `v6.0.6` tag. All the failed tests were because of missing features and not bugs in implemented features:
 
 | Test        | Reason for failure|
 |---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -676,17 +675,14 @@ After stubbing out `WriteLine`, `ToString` and `Concat` (to get rid of the unsup
 | DivConst | Missing exception support |
 | FPConvI2F | Missing `conv.r.un` instruction implementation (due to unsigned 64-bit integers usage) |
 | FPMath | Missing generics support (in `[System.Private.CoreLib]System.BitConverter::DoubleToInt64Bits` internally used by `[System.Private.CoreLib]System.Math::Round`) |
-| InitObj | Missing `Initobj` instruction implementation |
-| LngConv | Missing `[System.Private.CoreLib]System.ValueType.GetHashCode` internalcall implementation, overriden by `[System.Private.CoreLib]System.IntPtr` |
-| Localloc* | Missing support for `stackalloc` |
+| LngConv | Missing generics support internally used by `[System.Private.CoreLib]System.IntPtr` |
+| Localloc* (8 tests) | Missing support for localloc and raw pointers |
 | ModConst  | Missing exception support |
-| OpMembersOfStructLocal | Missing custom valuetype structures support |
-| RecursiveTailCall | Missing custom valuetype structures support |
+| RecursiveTailCall | Missing generics support |
 | Rotate | Missing `volatile.` prefix |
-| struct* | Missing custom valuetype structures support |
+| StructReturn | The test (incorrectly) compares floats using `==` instead of checking their difference against an epsilon |
 | UDivConst | Missing exception support |
 | UModConst | Missing exception support |
-| Unbox | Missing boxing/unboxing support |
 
 
 ## Benchmarks
@@ -782,6 +778,7 @@ conv.u4
 conv.u8
 div
 dup
+initobj
 ldarg.0
 ldarg.1
 ldarg.2
@@ -880,6 +877,7 @@ stloc.3
 stloc.s
 stsfld
 sub
+unbox.any
 xor 
 ```
 
@@ -921,7 +919,6 @@ div.un
 endfilter
 endfinally
 initblk
-Initobj
 isinst
 jmp
 ldarg
@@ -954,7 +951,6 @@ tail.
 throw
 unaligned.
 unbox
-unbox.any
 volatile.
 ```
 

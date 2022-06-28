@@ -145,6 +145,13 @@ public class BytecodeNode extends Node {
                 case POP:
                     break;
 
+                case INITOBJ:
+                    // > If typeTok is a value type, the initobj instruction initializes each field of dest to null
+                    // > or a zero of the appropriate built-in type. [...] If typeTok is a reference
+                    // > type, the initobj instruction has the same effect as ldnull followed by stind.ref
+                    // As we are in Java and everything is always zero/null initialized, this is a nop for us
+                    break;
+
                 case LDNULL:
                     refs[top] = null; break;
                 case LDC_I4_M1:
@@ -386,6 +393,7 @@ public class BytecodeNode extends Node {
                 case NEWARR:
                 case BOX:
                 case LDSTR:
+                case UNBOX_ANY:
                     top = nodeizeOpToken(frame, primitives, refs, top, bytecodeBuffer.getImmToken(pc), pc, curOpcode); break;
 
                 case LDLEN:
@@ -418,7 +426,7 @@ public class BytecodeNode extends Node {
      */
     private static LocationReference getLocalReference(LocationsDescriptor descriptor, LocationsHolder holder, int index)
     {
-        return new LocationReference(holder, descriptor.getOffset(index), descriptor.getType(index));
+        return new LocationReference(holder, descriptor.getPrimitiveOffset(index), descriptor.getRefOffset(index), descriptor.getType(index));
     }
 
 
@@ -523,7 +531,8 @@ public class BytecodeNode extends Node {
 
         int index = (int)primitives[top-1];
         SZArray array = (SZArray) refs[top-2];
-        elementType.locationToStack(array.getFieldsHolder(), index, refs, primitives, top-2);
+        // Only used for builtin types so no need to support valuetype structures
+        elementType.locationToStack(array.getFieldsHolder(), index, index, refs, primitives, top-2);
     }
 
 
@@ -548,7 +557,8 @@ public class BytecodeNode extends Node {
 
         int index = (int)primitives[top-2];
         SZArray array = (SZArray) refs[top-3];
-        elementType.stackToLocation(array.getFieldsHolder(), index, refs[top-1], primitives[top-1]);
+        // Only used for builtin types so no need to support valuetype structures
+        elementType.stackToLocation(array.getFieldsHolder(), index, index, refs[top-1], primitives[top-1]);
     }
 
     /**
@@ -592,6 +602,9 @@ public class BytecodeNode extends Node {
                 break;
             case BOX:
                 node = new BoxNode(method.getComponent().getType(token), top);
+                break;
+            case UNBOX_ANY:
+                node = new UnboxAnyNode(method.getComponent().getType(token), top);
                 break;
             case LDSTR:
                 CLIUSHeapPtr ptr = new CLIUSHeapPtr(token.getRowNo());
@@ -955,6 +968,9 @@ public class BytecodeNode extends Node {
         }
     }
 
+
+
+
     /**
      * Do a binary comparison of values on the evaluation stack and put the result on the evaluation stack.
      * @param opcode the opcode of the instruction
@@ -1315,7 +1331,7 @@ public class BytecodeNode extends Node {
     private static void loadIndirect(long[] primitives, Object[] refs, int slot, LocationReference locationReference, Type type)
     {
         //type safety check should be here, comparing compatibility of the reference type and the type from the instruction
-        type.locationToStack(locationReference.getHolder(), locationReference.getHolderOffset(), refs, primitives, slot);
+        type.locationToStack(locationReference.getHolder(), locationReference.getPrimitiveOffset(), locationReference.getRefOffset(), refs, primitives, slot);
     }
 
     /**
@@ -1328,7 +1344,7 @@ public class BytecodeNode extends Node {
     private static void storeIndirect(long primitive, Object ref, LocationReference locationReference, Type type)
     {
         //type safety check should be here, comparing compatibility of the reference type and the type from the instruction
-        type.stackToLocation(locationReference.getHolder(), locationReference.getHolderOffset(), ref, primitive);
+        type.stackToLocation(locationReference.getHolder(), locationReference.getPrimitiveOffset(), locationReference.getRefOffset(), ref, primitive);
     }
 
     /**

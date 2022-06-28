@@ -1,6 +1,7 @@
 package com.vztekoverflow.bacil.runtime.locations;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.vztekoverflow.bacil.runtime.types.CLIType;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.TypedField;
 
@@ -13,7 +14,10 @@ public class LocationsDescriptor {
     private final Type[] locationTypes;
 
     @CompilerDirectives.CompilationFinal(dimensions = 1)
-    private final int[] offsets;
+    private final int[] primitiveOffsets;
+
+    @CompilerDirectives.CompilationFinal(dimensions = 1)
+    private final int[] refOffsets;
 
     private final int primitiveCount;
     private final int refCount;
@@ -41,14 +45,16 @@ public class LocationsDescriptor {
             this.locationTypes = locationTypes;
         }
 
-        offsets = new int[this.locationTypes.length];
+        primitiveOffsets = new int[this.locationTypes.length];
+        refOffsets = new int[this.locationTypes.length];
         int primitiveOffset = 0;
         int refOffset = 0;
         int start = 0;
 
         if(parent != null)
         {
-            System.arraycopy(parent.offsets, 0, this.offsets, 0, parent.offsets.length);
+            System.arraycopy(parent.primitiveOffsets, 0, this.primitiveOffsets, 0, parent.primitiveOffsets.length);
+            System.arraycopy(parent.refOffsets, 0, this.refOffsets, 0, parent.refOffsets.length);
             primitiveOffset = parent.primitiveCount;
             refOffset = parent.refCount;
             start = parent.locationTypes.length;
@@ -58,11 +64,25 @@ public class LocationsDescriptor {
         for(int i = 0; i < locationTypes.length; i++)
         {
             Type t = locationTypes[i];
-            if(t.isPrimitiveStorage())
+            primitiveOffsets[start+i] = primitiveOffset;
+            refOffsets[start+i] = refOffset;
+
+            switch(t.getStorageType())
             {
-                offsets[start+i] = primitiveOffset++;
-            } else {
-                offsets[start+i] = refOffset++;
+                case Type.STORAGE_PRIMITIVE:
+                    primitiveOffset++;
+                    break;
+
+                case Type.STORAGE_REF:
+                    refOffset++;
+                    break;
+
+                case Type.STORAGE_VALUETYPE:
+                    CLIType cliType = (CLIType)t;
+                    t.init();
+                    primitiveOffset += cliType.getInstanceFieldsDescriptor().primitiveCount;
+                    refOffset += cliType.getInstanceFieldsDescriptor().refCount;
+                    break;
             }
         }
 
@@ -107,11 +127,20 @@ public class LocationsDescriptor {
 
     /**
      * Get the array offset at which the location at index is stored.
-     * This will be an offset into the primitives or references array based on the location type.
+     * This will be an offset into the primitives array.
      */
-    public int getOffset(int index)
+    public int getPrimitiveOffset(int index)
     {
-        return offsets[index];
+        return primitiveOffsets[index];
+    }
+
+    /**
+     * Get the array offset at which the location at index is stored.
+     * This will be an offset into the refs array.
+     */
+    public int getRefOffset(int index)
+    {
+        return refOffsets[index];
     }
 
     /**
@@ -138,7 +167,7 @@ public class LocationsDescriptor {
      */
     public void locationToStack(LocationsHolder holder, int locationIndex, Object[] refs, long[] primitives, int slot)
     {
-       locationTypes[locationIndex].locationToStack(holder, offsets[locationIndex], refs, primitives, slot);
+       locationTypes[locationIndex].locationToStack(holder, primitiveOffsets[locationIndex], refOffsets[locationIndex], refs, primitives, slot);
     }
 
     /**
@@ -150,7 +179,7 @@ public class LocationsDescriptor {
      */
     public void stackToLocation(LocationsHolder holder, int locationIndex, Object ref, long primitive)
     {
-        locationTypes[locationIndex].stackToLocation(holder, offsets[locationIndex], ref, primitive);
+        locationTypes[locationIndex].stackToLocation(holder, primitiveOffsets[locationIndex], refOffsets[locationIndex], ref, primitive);
     }
 
     /**
@@ -161,7 +190,7 @@ public class LocationsDescriptor {
      */
     public void objectToLocation(LocationsHolder holder, int locationIndex, Object value)
     {
-        locationTypes[locationIndex].objectToLocation(holder, offsets[locationIndex], value);
+        locationTypes[locationIndex].objectToLocation(holder, primitiveOffsets[locationIndex], refOffsets[locationIndex], value);
     }
 
     /**
@@ -172,7 +201,7 @@ public class LocationsDescriptor {
      */
     public Object locationToObject(LocationsHolder holder, int locationIndex)
     {
-        return locationTypes[locationIndex].locationToObject(holder, offsets[locationIndex]);
+        return locationTypes[locationIndex].locationToObject(holder, primitiveOffsets[locationIndex], refOffsets[locationIndex]);
     }
 
     /**

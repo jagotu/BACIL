@@ -6,15 +6,18 @@ import com.vztekoverflow.bacil.runtime.types.Type;
 /**
  * Implements a managed reference (denoted as {@code &} in the standard).
  */
-public class LocationReference {
+public final class LocationReference {
 
     private final LocationsHolder holder;
-    private final int holderOffset;
+    private final int primitiveOffset;
+    private final int refOffset;
     private final Type referencedType;
 
-    public LocationReference(LocationsHolder holder, int holderOffset, Type referencedType) {
+
+    public LocationReference(LocationsHolder holder, int primitiveOffset, int refOffset, Type referencedType) {
         this.holder = holder;
-        this.holderOffset = holderOffset;
+        this.primitiveOffset = primitiveOffset;
+        this.refOffset = refOffset;
         this.referencedType = referencedType;
     }
 
@@ -22,11 +25,15 @@ public class LocationReference {
         return holder;
     }
 
-    public int getHolderOffset() {
-        return holderOffset;
-    }
-
     public Type getReferencedType() {
         return referencedType;
+    }
+
+    public int getPrimitiveOffset() {
+        return primitiveOffset;
+    }
+
+    public int getRefOffset() {
+        return refOffset;
     }
 }

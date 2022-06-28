@@ -5,7 +5,6 @@ import com.vztekoverflow.bacil.BACILInternalError;
 import com.vztekoverflow.bacil.nodes.EvaluationStackAwareNode;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
-import com.vztekoverflow.bacil.runtime.StaticObject;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.TypedField;
 
@@ -39,8 +38,7 @@ public class LdfldaNode extends EvaluationStackAwareNode {
 
     @Override
     public int execute(VirtualFrame frame, long[] primitives, Object[] refs) {
-        StaticObject obj = (StaticObject)refs[top-1];
-        refs[top-1] = objType.getInstanceFieldReference(field, obj);
+        refs[top-1] = objType.getInstanceFieldReference(field, refs[top-1]);
         return top;
     }
 }

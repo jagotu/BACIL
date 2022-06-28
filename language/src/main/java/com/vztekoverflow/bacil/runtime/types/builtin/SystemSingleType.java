@@ -22,19 +22,19 @@ public class SystemSingleType extends SystemValueTypeType {
     }
 
     @Override
-    public void stackToLocation(LocationsHolder holder, int holderOffset, Object ref, long primitive) {
+    public void stackToLocation(LocationsHolder holder, int primitiveOffset, int refOffset, Object ref, long primitive) {
         if(ref != EvaluationStackPrimitiveMarker.EVALUATION_STACK_F)
         {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILInternalError("Saving a non-Float value into System.Single location.");
         }
-        holder.getPrimitives()[holderOffset]=primitive;
+        holder.getPrimitives()[primitiveOffset]=primitive;
     }
 
     @Override
-    public void locationToStack(LocationsHolder holder, int holderOffset, Object[] refs, long[] primitives, int slot) {
+    public void locationToStack(LocationsHolder holder, int primitiveOffset, int refOffset, Object[] refs, long[] primitives, int slot) {
         refs[slot] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_F;
-        primitives[slot] = holder.getPrimitives()[holderOffset];
+        primitives[slot] = holder.getPrimitives()[primitiveOffset];
     }
 
     @Override
@@ -54,12 +54,18 @@ public class SystemSingleType extends SystemValueTypeType {
     }
 
     @Override
-    public Object locationToObject(LocationsHolder holder, int holderOffset) {
-        return (float)Double.longBitsToDouble(holder.getPrimitives()[holderOffset]);
+    public Object locationToObject(LocationsHolder holder, int primitiveOffset, int refOffset) {
+        return (float)Double.longBitsToDouble(holder.getPrimitives()[primitiveOffset]);
     }
 
     @Override
-    public void objectToLocation(LocationsHolder holder, int holderOffset, Object value) {
-        holder.getPrimitives()[holderOffset] = Double.doubleToLongBits((Float) value);
+    public void objectToLocation(LocationsHolder holder, int primitiveOffset, int refOffset, Object value) {
+        holder.getPrimitives()[primitiveOffset] = Double.doubleToLongBits((Float) value);
+    }
+
+
+    @Override
+    public int getStorageType() {
+        return STORAGE_PRIMITIVE;
     }
 }

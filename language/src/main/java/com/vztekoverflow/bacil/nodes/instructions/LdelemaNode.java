@@ -7,6 +7,7 @@ import com.vztekoverflow.bacil.nodes.EvaluationStackAwareNode;
 import com.vztekoverflow.bacil.runtime.EvaluationStackPrimitiveMarker;
 import com.vztekoverflow.bacil.runtime.LocationReference;
 import com.vztekoverflow.bacil.runtime.SZArray;
+import com.vztekoverflow.bacil.runtime.types.CLIType;
 import com.vztekoverflow.bacil.runtime.types.Type;
 
 /**
@@ -19,6 +20,10 @@ public class LdelemaNode extends EvaluationStackAwareNode {
     private final Type elementType;
     private final int top;
 
+    private final int primitiveSize;
+    private final int refSize;
+
+
     /**
      * Create a new node representing the ldelema instruction.
      * @param elementType type of the array element
@@ -27,6 +32,16 @@ public class LdelemaNode extends EvaluationStackAwareNode {
     public LdelemaNode(Type elementType, int top) {
         this.elementType = elementType;
         this.top = top;
+
+        if(elementType.getStorageType() == Type.STORAGE_VALUETYPE)
+        {
+            CLIType cliType = (CLIType) elementType;
+            primitiveSize = cliType.getInstanceFieldsDescriptor().getPrimitiveCount();
+            refSize = cliType.getInstanceFieldsDescriptor().getRefCount();
+        } else {
+            primitiveSize = 1;
+            refSize = 1;
+        }
     }
 
     @Override
@@ -43,7 +58,7 @@ public class LdelemaNode extends EvaluationStackAwareNode {
 
         int index = (int)primitives[top-1];
         SZArray array = (SZArray) refs[top-2]; //ldelema only works on SZArrays
-        refs[top-2] = new LocationReference(array.getFieldsHolder(), index, elementType);
+        refs[top-2] = new LocationReference(array.getFieldsHolder(), primitiveSize*index, refSize*index, elementType);
 
         return top-1;
     }

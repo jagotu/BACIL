@@ -26,6 +26,11 @@ import java.util.List;
  */
 public abstract class Type {
 
+    public static final int STORAGE_PRIMITIVE = 0;
+    public static final int STORAGE_REF = 1;
+    public static final int STORAGE_VALUETYPE = 2;
+
+
     @CompilerDirectives.CompilationFinal
     protected boolean inited = false;
 
@@ -69,26 +74,28 @@ public abstract class Type {
     /**
      * Move a value of this type from the evaluation stack to a location.
      * @param holder location holder to store to
-     * @param holderOffset offset of the location to store to
+     * @param primitiveOffset offset of the location to store to in primitives
+     * @param refOffset offset of the location to store to in refs
      * @param ref the reference from the evaluation stack
      * @param primitive the primitive from the evaluation stack
      */
-    public void stackToLocation(LocationsHolder holder, int holderOffset, Object ref, long primitive)
+    public void stackToLocation(LocationsHolder holder, int primitiveOffset, int refOffset, Object ref, long primitive)
     {
-        holder.getRefs()[holderOffset] = ref;
+        holder.getRefs()[refOffset] = ref;
     }
 
     /**
      * Move a value of this type from a location to the evaluation stack.
      * @param holder location holder to load from
-     * @param holderOffset offset of the location to load from
+     * @param primitiveOffset offset of the location to load from in primitives
+     * @param refOffset offset of the location to load from in refs
      * @param refs references currently on the evaluation stack
      * @param primitives primitives currently on the evaluation stack
      * @param slot the evaluation stack slot to put the value into
      */
-    public void locationToStack(LocationsHolder holder, int holderOffset, Object[] refs, long[] primitives, int slot)
+    public void locationToStack(LocationsHolder holder, int primitiveOffset, int refOffset, Object[] refs, long[] primitives, int slot)
     {
-        refs[slot] = holder.getRefs()[holderOffset];
+        refs[slot] = holder.getRefs()[refOffset];
     }
 
     /**
@@ -117,23 +124,25 @@ public abstract class Type {
     /**
      * Get a value of this type from a location as a Java object.
      * @param holder location holder to load from
-     * @param holderOffset offset of the location to load from
+     * @param primitiveOffset offset of the location to load from in primitives
+     * @param refOffset offset of the location to load from in refs
      * @return the value as a Java object
      */
-    public Object locationToObject(LocationsHolder holder, int holderOffset)
+    public Object locationToObject(LocationsHolder holder, int primitiveOffset, int refOffset)
     {
-        return holder.getRefs()[holderOffset];
+        return holder.getRefs()[refOffset];
     }
 
     /**
      * Put an object holding a value of this type into a location.
      * @param holder location holder to store to
-     * @param holderOffset offset of the location to store to
+     * @param primitiveOffset offset of the location to store to in primitives
+     * @param refOffset offset of the location to store to in refs
      * @param value an object holding the value
      */
-    public void objectToLocation(LocationsHolder holder, int holderOffset, Object value)
+    public void objectToLocation(LocationsHolder holder, int primitiveOffset, int refOffset, Object value)
     {
-        holder.getRefs()[holderOffset] = value;
+        holder.getRefs()[refOffset] = value;
     }
 
     /**
@@ -165,11 +174,11 @@ public abstract class Type {
     public abstract List<CustomMod> getMods();
 
     /**
-     * Whether this type values are stored as a primitive or a reference.
+     * Strategy for storing values of this type
      */
-    public boolean isPrimitiveStorage()
+    public int getStorageType()
     {
-        return false;
+        return STORAGE_REF;
     }
 
     /**
@@ -189,7 +198,7 @@ public abstract class Type {
      */
     public void staticFieldToStackVar(TypedField field, Object[] refs, long[] primitives, int slot)
     {
-        staticFieldsDescriptor.locationToStack(staticFieldsHolder, field.getOffset(), refs, primitives, slot);
+        staticFieldsDescriptor.locationToStack(staticFieldsHolder, field.getIndex(), refs, primitives, slot);
     }
 
     /**
@@ -200,7 +209,7 @@ public abstract class Type {
      */
     public void staticFieldFromStackVar(TypedField field, Object ref, long primitive)
     {
-        staticFieldsDescriptor.stackToLocation(staticFieldsHolder, field.getOffset(), ref, primitive);
+        staticFieldsDescriptor.stackToLocation(staticFieldsHolder, field.getIndex(), ref, primitive);
     }
 
     /**
@@ -211,9 +220,10 @@ public abstract class Type {
      * @param primitives primitives currently on the evaluation stack
      * @param slot the evaluation stack slot to put the value into
      */
-    public void instanceFieldToStackVar(StaticObject object, TypedField field, Object[] refs, long[] primitives, int slot)
+    public void instanceFieldToStackVar(Object object, TypedField field, Object[] refs, long[] primitives, int slot)
     {
-        instanceFieldsDescriptor.locationToStack(object.getFieldsHolder(), field.getOffset(), refs, primitives, slot);
+        StaticObject obj = (StaticObject)object;
+        instanceFieldsDescriptor.locationToStack(obj.getFieldsHolder(), field.getIndex(), refs, primitives, slot);
     }
 
     /**
@@ -223,9 +233,10 @@ public abstract class Type {
      * @param ref the reference from the evaluation stack
      * @param primitive the primitive from the evaluation stack
      */
-    public void instanceFieldFromStackVar(StaticObject object, TypedField field, Object ref, long primitive)
+    public void instanceFieldFromStackVar(Object object, TypedField field, Object ref, long primitive)
     {
-        instanceFieldsDescriptor.stackToLocation(object.getFieldsHolder(), field.getOffset(), ref, primitive);
+        StaticObject obj = (StaticObject)object;
+        instanceFieldsDescriptor.stackToLocation(obj.getFieldsHolder(), field.getIndex(), ref, primitive);
     }
 
 
@@ -250,7 +261,7 @@ public abstract class Type {
      */
     public LocationReference getStaticFieldReference(TypedField field)
     {
-        return new LocationReference(staticFieldsHolder, field.getOffset(), field.getType());
+        return new LocationReference(staticFieldsHolder, staticFieldsDescriptor.getPrimitiveOffset(field.getIndex()), staticFieldsDescriptor.getRefOffset(field.getIndex()), field.getType());
     }
 
     /**
@@ -259,9 +270,10 @@ public abstract class Type {
      * @param object the object to reference
      * @return a managed reference to the field represented by a {@link LocationReference}
      */
-    public LocationReference getInstanceFieldReference(TypedField field, StaticObject object)
+    public LocationReference getInstanceFieldReference(TypedField field, Object object)
     {
-        return new LocationReference(object.getFieldsHolder(), field.getOffset(), field.getType());
+        StaticObject obj = (StaticObject) object;
+        return new LocationReference(obj.getFieldsHolder(), instanceFieldsDescriptor.getPrimitiveOffset(field.getIndex()), instanceFieldsDescriptor.getRefOffset(field.getIndex()), field.getType());
     }
 
 
@@ -294,6 +306,25 @@ public abstract class Type {
      */
     public BACILMethod[] getVtable() {
         return null;
+    }
+
+    /**
+     * Get the type representing "this" (possibly ByRef wrapped)
+     * @return Type representing "this"
+     */
+    public Type getThisType() {
+        //I.8.6.1.5
+        //if the calling convention specifies this is an instance method and the owning method
+        //definition belongs to a type T then the type of the this pointer is
+        //given by the first parameter signature, if the calling convention is instance
+        //explicit (§II.15.3),
+        //o inferred as &T, if T is a value type and the method definition is non-virtual
+        //  (§I.8.9.7),
+        //o inferred as “boxed” T, if T is a value type and the method definition is virtual
+        //  (this includes method definitions from an interface implemented by T)
+        //  (§I.8.9.7),
+        //o inferred as T, otherwise
+        return this;
     }
 
 }

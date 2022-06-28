@@ -41,6 +41,7 @@ public class CLIType extends Type {
 
     private final CLIComponent definingComponent;
 
+
     @CompilerDirectives.CompilationFinal(dimensions = 1)
     private VtableSlotIdentity[] vtableSlots;
     @CompilerDirectives.CompilationFinal(dimensions = 1)
@@ -77,6 +78,7 @@ public class CLIType extends Type {
             methodsEnd = component.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_METHOD_DEF)+1;
             fieldRowsEnd = component.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_FIELD)+1;
         }
+
     }
 
 
@@ -242,7 +244,6 @@ public class CLIType extends Type {
         CompilerAsserts.neverPartOfCompilation();
 
         CLIMethodDefTableRow curr = methods;
-        int end;
 
 
         while(curr.getRowNo() < methodsEnd)
@@ -325,6 +326,11 @@ public class CLIType extends Type {
             }
         }
 
+        if(type.getExtends().getRowNo() != 0 && component.getType(type.getExtends()) == component.getBuiltinTypes().getValueTypeType())
+        {
+            return new SystemValueTypeType(type, component);
+        }
+
         return new CLIType(type, component);
     }
 
@@ -363,5 +369,6 @@ public class CLIType extends Type {
     public BACILMethod[] getVtable() {
         return vtable;
     }
+
 }
 

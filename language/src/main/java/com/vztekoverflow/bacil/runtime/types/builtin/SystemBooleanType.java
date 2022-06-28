@@ -16,19 +16,19 @@ public class SystemBooleanType extends SystemValueTypeType {
     }
 
     @Override
-    public void locationToStack(LocationsHolder holder, int holderOffset, Object[] refs, long[] primitives, int slot) {
+    public void locationToStack(LocationsHolder holder, int primitiveOffset, int refOffset, Object[] refs, long[] primitives, int slot) {
         refs[slot] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32;
-        primitives[slot] = holder.getPrimitives()[holderOffset];
+        primitives[slot] = holder.getPrimitives()[primitiveOffset];
     }
 
     @Override
-    public void stackToLocation(LocationsHolder holder, int holderOffset, Object ref, long primitive) {
+    public void stackToLocation(LocationsHolder holder, int primitiveOffset, int refOffset, Object ref, long primitive) {
         if(ref != EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32)
         {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILInternalError("Saving a non-Int32 value into System.Boolean location.");
         }
-        holder.getPrimitives()[holderOffset]= primitive;
+        holder.getPrimitives()[primitiveOffset]= primitive;
     }
 
     @Override
@@ -48,13 +48,13 @@ public class SystemBooleanType extends SystemValueTypeType {
     }
 
     @Override
-    public void objectToLocation(LocationsHolder holder, int holderOffset, Object value) {
-        holder.getPrimitives()[holderOffset] = ((Boolean) value) ? 1 : 0;
+    public void objectToLocation(LocationsHolder holder, int primitiveOffset, int refOffset, Object value) {
+        holder.getPrimitives()[primitiveOffset] = ((Boolean) value) ? 1 : 0;
     }
 
     @Override
-    public Object locationToObject(LocationsHolder holder, int holderOffset) {
-        return holder.getPrimitives()[holderOffset] != 1;
+    public Object locationToObject(LocationsHolder holder, int primitiveOffset, int refOffset) {
+        return holder.getPrimitives()[primitiveOffset] != 1;
     }
 
     @Override
@@ -62,4 +62,8 @@ public class SystemBooleanType extends SystemValueTypeType {
         return 0;
     }
 
+    @Override
+    public int getStorageType() {
+        return STORAGE_PRIMITIVE;
+    }
 }

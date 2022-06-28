@@ -18,19 +18,19 @@ public class SystemUInt16Type extends SystemValueTypeType {
     }
 
     @Override
-    public void locationToStack(LocationsHolder holder, int holderOffset, Object[] refs, long[] primitives, int slot) {
+    public void locationToStack(LocationsHolder holder, int primitiveOffset, int refOffset, Object[] refs, long[] primitives, int slot) {
         refs[slot] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32;
-        primitives[slot] = TypeHelpers.zeroExtend16(holder.getPrimitives()[holderOffset]);
+        primitives[slot] = TypeHelpers.zeroExtend16(holder.getPrimitives()[primitiveOffset]);
     }
 
     @Override
-    public void stackToLocation(LocationsHolder holder, int holderOffset, Object ref, long primitive) {
+    public void stackToLocation(LocationsHolder holder, int primitiveOffset, int refOffset, Object ref, long primitive) {
         if(ref != EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32)
         {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILInternalError("Saving a non-Int32 value into System.UInt16 location.");
         }
-        holder.getPrimitives()[holderOffset]= TypeHelpers.truncate16(primitive);
+        holder.getPrimitives()[primitiveOffset]= TypeHelpers.truncate16(primitive);
     }
 
     @Override
@@ -50,18 +50,24 @@ public class SystemUInt16Type extends SystemValueTypeType {
     }
 
     @Override
-    public void objectToLocation(LocationsHolder holder, int holderOffset, Object value) {
-        holder.getPrimitives()[holderOffset] = TypeHelpers.zeroExtend16((Short) value);
+    public void objectToLocation(LocationsHolder holder, int primitiveOffset, int refOffset, Object value) {
+        holder.getPrimitives()[primitiveOffset] = TypeHelpers.zeroExtend16((Short) value);
     }
 
     @Override
-    public Object locationToObject(LocationsHolder holder, int holderOffset) {
-        return (short)holder.getPrimitives()[holderOffset];
+    public Object locationToObject(LocationsHolder holder, int primitiveOffset, int refOffset) {
+        return (short)holder.getPrimitives()[primitiveOffset];
     }
 
     @Override
     public Object initialValue() {
         return (short)0;
+    }
+
+
+    @Override
+    public int getStorageType() {
+        return STORAGE_PRIMITIVE;
     }
 }
 

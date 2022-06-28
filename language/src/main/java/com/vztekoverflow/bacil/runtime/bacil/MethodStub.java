@@ -4,10 +4,8 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.vztekoverflow.bacil.parser.signatures.MethodDefSig;
-import com.vztekoverflow.bacil.runtime.types.ByRefWrapped;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
-import com.vztekoverflow.bacil.runtime.types.builtin.SystemValueTypeType;
 
 /**
  * Used for stubbing methods that use unimplemented features, making them return 0/null.
@@ -29,13 +27,8 @@ public class MethodStub extends JavaMethod {
         if (signature.isHasThis() && !signature.isExplicitThis())
         {
             args = new Type[signature.getParamCount() +1];
-            if(definingType instanceof SystemValueTypeType)
-            {
-                //TODO if virtual then boxed
-                args[0] = new ByRefWrapped(definingType);
-            } else {
-                args[0] = definingType;
-            }
+            args[0] = definingType.getThisType();
+
             System.arraycopy(signature.getParamTypes(), 0, args, 1, signature.getParamCount());
         } else {
             args = signature.getParamTypes();

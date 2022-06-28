@@ -1,5 +1,8 @@
 package com.vztekoverflow.bacil.runtime.locations;
 
+import com.oracle.truffle.api.CompilerDirectives;
+import com.vztekoverflow.bacil.BACILInternalError;
+import com.vztekoverflow.bacil.runtime.types.CLIType;
 import com.vztekoverflow.bacil.runtime.types.Type;
 
 /**
@@ -35,11 +38,18 @@ public final class LocationsHolder {
      */
     public static LocationsHolder forArray(Type type, int count)
     {
-        if(type.isPrimitiveStorage())
+        switch(type.getStorageType())
         {
-            return new LocationsHolder(0, count);
-        } else {
-            return new LocationsHolder(count, 0);
+            case Type.STORAGE_PRIMITIVE:
+                return new LocationsHolder(0, count);
+            case Type.STORAGE_REF:
+                return new LocationsHolder(count, 0);
+            case Type.STORAGE_VALUETYPE:
+                CLIType cliType = (CLIType) type;
+                return new LocationsHolder(count*cliType.getInstanceFieldsDescriptor().getRefCount(), count*cliType.getInstanceFieldsDescriptor().getPrimitiveCount());
+            default:
+                CompilerDirectives.transferToInterpreterAndInvalidate();
+                throw new BACILInternalError("Invalid storage type");
         }
     }
 

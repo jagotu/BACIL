@@ -42,6 +42,12 @@ public class InternalCallFinder {
                 {
                     return new InitializeArrayMethod(definingComponent.getBuiltinTypes(), definingComponent.getLanguage(), type);
                 }
+            } else if (namedType.getNamespace().equals("System") && namedType.getName().equals("ValueType"))
+            {
+                if (methodName.equals("GetHashCode"))
+                {
+                    return new ValueTypeGetHashCodeMethod(definingComponent.getBuiltinTypes(), definingComponent.getLanguage(), type);
+                }
             }
         }
         return null;

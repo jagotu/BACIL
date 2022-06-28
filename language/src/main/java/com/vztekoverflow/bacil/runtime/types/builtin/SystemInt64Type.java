@@ -16,19 +16,19 @@ public class SystemInt64Type extends SystemValueTypeType {
     }
 
     @Override
-    public void locationToStack(LocationsHolder holder, int holderOffset, Object[] refs, long[] primitives, int slot) {
+    public void locationToStack(LocationsHolder holder, int primitiveOffset, int refOffset, Object[] refs, long[] primitives, int slot) {
         refs[slot] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT64;
-        primitives[slot] = holder.getPrimitives()[holderOffset];
+        primitives[slot] = holder.getPrimitives()[primitiveOffset];
     }
 
     @Override
-    public void stackToLocation(LocationsHolder holder, int holderOffset, Object ref, long primitive) {
+    public void stackToLocation(LocationsHolder holder, int primitiveOffset, int refOffset, Object ref, long primitive) {
         if(ref != EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT64)
         {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             throw new BACILInternalError("Saving a non-Int64 value into System.Int64 location.");
         }
-        holder.getPrimitives()[holderOffset]= primitive;
+        holder.getPrimitives()[primitiveOffset]= primitive;
     }
 
     @Override
@@ -48,17 +48,22 @@ public class SystemInt64Type extends SystemValueTypeType {
     }
 
     @Override
-    public void objectToLocation(LocationsHolder holder, int holderOffset, Object value) {
-        holder.getPrimitives()[holderOffset] = (Long) value;
+    public void objectToLocation(LocationsHolder holder, int primitiveOffset, int refOffset, Object value) {
+        holder.getPrimitives()[primitiveOffset] = (Long) value;
     }
 
     @Override
-    public Object locationToObject(LocationsHolder holder, int holderOffset) {
-        return holder.getPrimitives()[holderOffset];
+    public Object locationToObject(LocationsHolder holder, int primitiveOffset, int refOffset) {
+        return holder.getPrimitives()[primitiveOffset];
     }
 
     @Override
     public Object initialValue() {
         return 0L;
+    }
+
+    @Override
+    public int getStorageType() {
+        return STORAGE_PRIMITIVE;
     }
 }

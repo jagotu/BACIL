@@ -216,6 +216,7 @@ public class BytecodeInstructions {
     public static final int CGT_UN = 0xFE03;
     public static final int CLT = 0xFE04;
     public static final int CLT_UN = 0xFE05;
+    public static final int INITOBJ = 0xFE15;
 
 
     //Custom truffle instructions start here
@@ -422,6 +423,8 @@ public class BytecodeInstructions {
         defPrefixed(CGT_UN, "cgt.un", "o", -1);
         defPrefixed(CLT_UN, "clt.un", "o", -1);
 
+        defPrefixed(INITOBJ, "initobj", "otttt", -1);
+
         def(BEQ, "beq", "otttt", -2);
         def(BGE, "bge", "otttt", -2);
         def(BGT, "bgt", "otttt", -2);
@@ -448,6 +451,7 @@ public class BytecodeInstructions {
 
         def(BOX, "box", "otttt", 0);
         def(UNBOX, "unbox", "otttt", 0);
+        def(UNBOX_ANY, "unbox.any", "otttt", 0);
 
 
         def(CONV_I1, "conv.i1", "o", 0);

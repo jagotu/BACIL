@@ -16,9 +16,7 @@ import com.vztekoverflow.bacil.parser.signatures.LocalVarSig;
 import com.vztekoverflow.bacil.parser.signatures.MethodDefSig;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
 import com.vztekoverflow.bacil.runtime.locations.LocationsDescriptor;
-import com.vztekoverflow.bacil.runtime.types.ByRefWrapped;
 import com.vztekoverflow.bacil.runtime.types.Type;
-import com.vztekoverflow.bacil.runtime.types.builtin.SystemValueTypeType;
 
 /**
  * Class representing a CIL method in an assembly. Holds resolved metadata like signature, location definitions,
@@ -171,17 +169,11 @@ public class CILMethod implements BACILMethod {
             //  (§I.8.9.7),
             //o inferred as T, otherwise
 
-            if(definingType instanceof SystemValueTypeType)
+            if(isVirtual())
             {
-                if(isVirtual())
-                {
-                    locationTypes[varsCount] = definingType;
-                } else {
-                    locationTypes[varsCount] = new ByRefWrapped(definingType);
-                }
-
-            } else {
                 locationTypes[varsCount] = definingType;
+            } else {
+                locationTypes[varsCount] = definingType.getThisType();
             }
 
         }
