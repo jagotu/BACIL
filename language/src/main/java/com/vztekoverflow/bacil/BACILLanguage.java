@@ -7,6 +7,8 @@ import com.vztekoverflow.bacil.parser.cli.CLIComponent;
 import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.bacil.runtime.BACILContext;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
+import com.vztekoverflow.bacil.runtime.SZArray;
+import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
 import org.graalvm.options.OptionDescriptors;
 
 import java.io.File;
@@ -41,10 +43,18 @@ public class BACILLanguage extends TruffleLanguage<BACILContext> {
 
         private final CallTarget inner;
         private final boolean shouldAddArgs;
+        private final Object arg;
 
-        private CallEntryPointCallTarget(CallTarget inner, boolean shouldAddArgs) {
+        private CallEntryPointCallTarget(CallTarget inner, boolean shouldAddArgs, BuiltinTypes builtinTypes) {
             this.inner = inner;
             this.shouldAddArgs = shouldAddArgs;
+            if(shouldAddArgs)
+            {
+                SZArray argsArray = new SZArray(builtinTypes.getStringType(), 0);
+                arg = argsArray;
+            } else {
+                arg = null;
+            }
         }
 
         @Override
@@ -53,7 +63,7 @@ public class BACILLanguage extends TruffleLanguage<BACILContext> {
             Object result;
             if(shouldAddArgs)
             {
-                result = inner.call((Object) null);
+                result = inner.call(arg);
             } else {
                 result = inner.call();
             }
@@ -84,7 +94,7 @@ public class BACILLanguage extends TruffleLanguage<BACILContext> {
         CLITablePtr entryPtr = CLITablePtr.fromToken(c.getCliHeader().getEntryPointToken());
 
         BACILMethod entryMethod = c.getLocalMethod(entryPtr);
-        return new CallEntryPointCallTarget(entryMethod.getMethodCallTarget(), entryMethod.getArgsCount() == 1);
+        return new CallEntryPointCallTarget(entryMethod.getMethodCallTarget(), entryMethod.getArgsCount() == 1, c.getBuiltinTypes());
     }
 
     @Override
