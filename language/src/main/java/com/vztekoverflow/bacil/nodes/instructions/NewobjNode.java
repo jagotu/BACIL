@@ -5,8 +5,11 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.vztekoverflow.bacil.nodes.BytecodeNode;
 import com.vztekoverflow.bacil.nodes.EvaluationStackAwareNode;
 import com.vztekoverflow.bacil.runtime.BACILMethod;
+import com.vztekoverflow.bacil.runtime.LocationReference;
 import com.vztekoverflow.bacil.runtime.StaticObject;
+import com.vztekoverflow.bacil.runtime.locations.LocationsHolder;
 import com.vztekoverflow.bacil.runtime.types.CLIType;
+import com.vztekoverflow.bacil.runtime.types.Type;
 
 /**
  * A Truffle node representing the newobj instruction.
@@ -35,17 +38,27 @@ public class NewobjNode extends EvaluationStackAwareNode {
 
     @Override
     public int execute(VirtualFrame frame, long[] primitives, Object[] refs) {
-        //Create a new object for the type
-        StaticObject obj = new StaticObject(objType);
+        Object retval;
+        Object arg;
+        //Create a new storage for the type
+        if(objType.getStorageType() == Type.STORAGE_VALUETYPE)
+        {
+            LocationsHolder storage = LocationsHolder.forDescriptor(objType.getInstanceFieldsDescriptor());
+            arg = new LocationReference(storage, 0, 0, objType);
+            retval = storage;
+        } else {
+            retval = new StaticObject(objType);
+            arg = retval;
+        }
 
         //Call the constructor with the new object as "this"
         Object[] args = BytecodeNode.prepareArgs(primitives, refs, top, method, 1);
-        args[0] = obj;
+        args[0] = arg;
         directCallNode.call(args);
 
         //Put the new object on the evaluation stack as a result
         final int firstArg = top - method.getArgsCount() + 1;
-        refs[firstArg] = obj;
+        refs[firstArg] = retval;
         return firstArg+1;
     }
 

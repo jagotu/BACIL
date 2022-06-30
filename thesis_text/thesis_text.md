@@ -703,7 +703,9 @@ Our benchmarks had the following differences:
 
 * instead of an unspecified version of the mono runtime, we used .NET 6.0.301 to get the reference performance
 * our system was different, sporting an AMD Ryzen 7 PRO 4750U with 8 cores and 16 virtual threads, a Base Clock of 1.7GHz and boost up to 4.1GHz, featuring 32 GB of RAM and running Windows 10
-* to get the "interpreter only mode" results, we used the `--engine.CompileOnly=` argument when launching, resulting in no methods getting compiled
+* we ignored "interpreter only mode" results -- the interpreter was tailored for partial evaluation, so the slowdowns in interpreter mode are usually more than 200x; we don't see value in precisely benchmarking such a glaring difference
+
+It wasn't obvious if CIL-level optimizations were enabled when compiling the tests in Hagmüller's work. For that reason, we measured both the debug (unoptimized) and release (optimized) compilation configurations.
 
 The tests were run on:
 
@@ -713,7 +715,20 @@ OpenJDK Runtime Environment GraalVM CE 22.1.0 (build 11.0.15+10-jvmci-22.1-b06)
 OpenJDK 64-Bit Server VM GraalVM CE 22.1.0 (build 11.0.15+10-jvmci-22.1-b06, mixed mode, sharing)
 ```
 
-TODO results when the benchmark finishes :)
+The measured slowdowns (relative to .NET in release configuration) were as follows:
+
+|                       | Debug BACIL | Debug .NET | Release BACIL | Release .NET | Hagmüller |
+|-----------------------|-------------|------------|---------------|--------------|-----------|
+| Binarytrees           | 2.605       | 2.009      | 2.693         | 1            | 24        |
+| Sieve of Eratosthenes | 1.968       | 4.308      | 1.584         | 1            | 226       |
+| Fibonacci             | 1.106       | 2.964      | 1.021         | 1            | 38        |
+| Mandelbrot            | 5.699       | 2.713      | 4.845         | 1            | 38        |
+| N-Body                | 7.225       | 5.057      | 6.762         | 1            | 194       |
+
+
+_Linear bar chart including comparison with Hagmüller's work_
+
+_Linear bar chart with only BACIL results_
 
 
 

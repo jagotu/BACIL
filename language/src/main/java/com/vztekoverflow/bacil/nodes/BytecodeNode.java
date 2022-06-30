@@ -2,6 +2,7 @@ package com.vztekoverflow.bacil.nodes;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.HostCompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
@@ -70,6 +71,7 @@ public class BytecodeNode extends Node {
      * @return return value of the method
      */
     @ExplodeLoop(kind = ExplodeLoop.LoopExplosionKind.MERGE_EXPLODE)
+    @HostCompilerDirectives.BytecodeInterpreterSwitch
     public Object execute(VirtualFrame frame)
     {
         //As this is the most critical method for the performance of BACIL,
