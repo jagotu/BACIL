@@ -46,6 +46,7 @@ public final class LocationsHolder {
                 return new LocationsHolder(count, 0);
             case Type.STORAGE_VALUETYPE:
                 CLIType cliType = (CLIType) type;
+                type.init();
                 return new LocationsHolder(count*cliType.getInstanceFieldsDescriptor().getRefCount(), count*cliType.getInstanceFieldsDescriptor().getPrimitiveCount());
             default:
                 CompilerDirectives.transferToInterpreterAndInvalidate();
