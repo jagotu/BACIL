@@ -1,6 +1,6 @@
 # BACIL 🦠
 
-An experimental interpreter for .NET CIL binaries for [GraalVM](https://github.com/oracle/graal). While it only implements a small subset of the full [ECMA-335 Common Language Infrastructure (CLI) standard](https://www.ecma-international.org/publications-and-standards/standards/ecma-335/), stuff it can run it runs with performance comparable to .NET 5.0's official JIT runtime (citation pending 😇).
+An experimental interpreter for .NET CIL binaries for [GraalVM](https://github.com/oracle/graal). While it only implements a [small subset](thesis_text/thesis_text.md#Completeness) of the full [ECMA-335 Common Language Infrastructure (CLI) standard](https://www.ecma-international.org/publications-and-standards/standards/ecma-335/), stuff it can run it [runs within 10 times slower than .NET's official JIT runtime](thesis_text/thesis_text.md#performance-benchmarks).
 
 The project is written like an interpreter (you will find a familiar `while(true) switch(opcode)` in [BytecodeNode.execute()](language/src/main/java/com/vztekoverflow/bacil/nodes/BytecodeNode.java)), and leverages [Truffle](https://github.com/oracle/graal/tree/master/truffle) and the Graal compiler to turn it into a Just-In-Time (JIT) compiler.
 
