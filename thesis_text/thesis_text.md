@@ -488,6 +488,11 @@ In the end, designing and implementing the parser took a non-trivial chunk of th
 
 ## Analysis
 
+### Nodes
+
+* bytecotenode - splitting by methods vs blocks
+* nodeization as a way of caching
+
 ### Dynamicity of references
 
 One of the additional things to consider when implementing a partial-evaluation friendly interpreter is dynamicity of references, where by dynamicity we mean how often the reference changes its state. This metric is important because effectively the dynamicity of a chain of references will be equal to the most dynamic of the references. As a result, what would usually be considered bad design patterns is sometimes necessary to divide the chain into more direct references, such that each object is reachable with the lowest dynamicity possible.
@@ -563,6 +568,10 @@ _Scenario 2: While the `LocationHolder` remains accessible from a highly dynamic
 
 ### Standard libraries
 
+* internalcall
+* strings :(
+* BACILHelpers
+
 ### Values and locations
 
 Another batch of important design decisions is related to values and their storage. As specified in ECMA-335, the values can have the following "homes":
@@ -587,13 +596,19 @@ In .NET, all locations are typed (ECMA-335 I.8.6.1.2 Location signatures). While
 
 We need to decide how to represent the various homes and the values themselves and also how transitions between various states will be implemented.
 
-#### Primitives and refs
+To avoid boxing and unboxing numbers (integers and floating point numbers), we cannot just store all values in an `Object[]`. Therefore, it is necessary to always have separate storages for primitives, best implemened by a `long[]`.
 
-* all storages will be separated to long[] for primitives and refs[] for references
+Locations usually exist in multiples (local variables, arguments, fields, etc.) and are always statically typed - one location will always have one type through its lifetime and only ever contain values type-compatible with its type. As such, we divide the Location into two parts: a descriptor and a holder.
 
-#### Locations
+The holder is actually extremely simple: it only has an `Object[] refs` and a `long[] primitives` that are big enough to hold all the values required by the descriptor. The holder knows nothing of the types or identities of object inside. This represents one instance of a value storage. 
 
-#### Evaluation stack
+On the other hand, the descriptor represents the "shape" of the locations, knowing the type of each location and indices into the holder to store values at. 
+
+One feature of .NET are so-called user-defined ValueTypes, structures that have the semantics of a primitive. The idea is that two integers (x,y) and a Point structure (with x,y fields) will look exactly the same on the stack, instead of the latter turning into an object reference. Our implementation will follow that example, as we will "flatten" the structure, reserving space for each of the fields. 
+
+
+The evaluation stack is a bit more complicated: while at each point in time the type of the evaluation stack field is known, it changes throughout execution. Each stack slot will therefore have to exist as both a reference slot and a primitive slot and we'll have to keep track of which one to use. To achieve that, we will just by default expect the value to be in the refs slot and in case it's not, we repurpose the refs slot to hold a "marker" object describing the stack-type of the value in the primitive slot. As such, while an object would be stored in `(ref, primitive)` as `(obj, undefined)`, a native int 42 would be stored as a `(EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT, (long)42)`.
+
 
 #### State transitions
 
@@ -618,8 +633,7 @@ public void locationToStack(LocationsHolder holder, int locationIndex, Object[] 
 }
 ```
 
-* complain about all the constant narrowing and widening
-
+One factor to keep in mind is that to follow the standard, the state transitions are coupled with widening or narrowing operations. For example, according to ECMA-335 _I.12.1 Supported data types_ "Short numeric values (int8, int16, unsigned int8, and unsigned int16) are widened when loaded and narrowed when stored.".  We also need to perform our own housekeeping because we store all primitives in a flat `long[]`. Each class representing a primitive implements its own widening and narrowing as necessary.
 
 
 ## Implementation
@@ -662,7 +676,7 @@ To validate the proper implementation of instructions, we used [.NET's CodeGenBr
 > * Implement the bare minimum to get the compiler building and generating code for very simple operations, like addition.
 > * Focus on the CodeGenBringUpTests (src\tests\JIT\CodeGenBringUpTests), starting with the simple ones. 
 
-As such, they are perfect for testing corner cases of implemented instructions. One example of a bug uncovered in this test suite that would be very hard to find manually was a missing int32 truncation (see TODO for details), which was fixed [here](https://github.com/jagotu/BACIL/commit/056640ec276376434f5cb32ac70c3f9eb26c4881#diff-47ca212abb11bfd59685c4b47364f4a21a015136d4d2a8d6bbe014a7c873e2c9R1110).
+As such, they are perfect for testing corner cases of implemented instructions. One example of a bug uncovered in this test suite that would be very hard to find manually was a missing int32 truncation which was fixed [here](https://github.com/jagotu/BACIL/commit/056640ec276376434f5cb32ac70c3f9eb26c4881#diff-47ca212abb11bfd59685c4b47364f4a21a015136d4d2a8d6bbe014a7c873e2c9R1110).
 
 After stubbing out `Write`, `WriteLine`, `ToString` and `Concat` (to get rid of the unsupported operations used by debug prints in case of failure), the BACIL implementation presented in this work passed 85%, e.g. 133 out of the 155  tests, included in the `v6.0.6` tag. All the failed tests were because of missing features and not bugs in implemented features:
 
