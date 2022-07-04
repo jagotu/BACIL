@@ -685,15 +685,78 @@ After stubbing out `Write`, `WriteLine`, `ToString` and `Concat` (to get rid of 
 | UModConst | Missing exception support |
 
 
-## Benchmarks
+## Performance benchmarks
 
-* it's fast
+All benchmarks mentioned here were performed on a laptop with an AMD Ryzen 7 PRO 4750U with 8 cores and 16 virtual threads, a Base Clock of 1.7GHz and boost up to 4.1GHz, featuring 32 GB of RAM and running Windows 10.
 
-* in .NET we used `System.Diagnostics.StopWatch`, in BACIL we used `System.nanoTime()`
+The tests were run on GraalVM:
+
+```
+openjdk 11.0.15 2022-04-19
+OpenJDK Runtime Environment GraalVM CE 22.1.0 (build 11.0.15+10-jvmci-22.1-b06)
+OpenJDK 64-Bit Server VM GraalVM CE 22.1.0 (build 11.0.15+10-jvmci-22.1-b06, mixed mode, sharing)
+```
+
+and .NET:
+
+```
+Host (useful for support):
+  Version: 6.0.6
+  Commit:  7cca709db2
+```
+
+### Harness
+
+As mentioned in XXX, our way of exposing additional functionality consisted of implementing them in the `BACILHelpers` assembly which .NET calls directly and BACIL replaces with its own implementaiton. To facilitate benchmarks, we added two new methods: `StartTimer` which starts a timer and `GetTicks` which return the number of ticks since the start. The API was inspired by the API of `System.Diagnostics.StopWatch`, which is what the .NET implementation uses:
+
+
+```C#
+static Stopwatch stopWatch = new Stopwatch();
+static long nanosecPerTick = (1000L * 1000L * 1000L) / Stopwatch.Frequency;
+
+public static void StartTimer()
+{
+    stopWatch.Restart();
+}
+
+public static long GetTicks()
+{
+    stopWatch.Stop();
+    return stopWatch.ElapsedTicks * nanosecPerTick;
+}
+```
+
+On the BACIL side, we used `System.nanoTime()`, saving a value on start and the substracting it from the value on end. Combining with the console writing capabilities, this is what our final harness looked like (`DoCalculation` and the iteration count being replaced as necessary):
+
+```C#
+static void report(int iteration, long ticks, int result)
+{
+    BACILHelpers.BACILConsole.Write("iteration:");
+    BACILHelpers.BACILConsole.Write(iteration);
+    BACILHelpers.BACILConsole.Write(" ticks:");
+    BACILHelpers.BACILConsole.Write(ticks);
+    BACILHelpers.BACILConsole.Write(" res:");
+    BACILHelpers.BACILConsole.Write(result);
+    BACILHelpers.BACILConsole.Write("\n");
+} 
+
+public static void Main(String[] args)
+{
+    int r;
+    for(int i=0;i<1500;i++)
+    {
+        BACILHelpers.BACILEnvironment.StartTimer();
+        var result = DoCalculation();
+        long duration = BACILHelpers.BACILEnvironment.GetTicks();
+
+        report(i, duration, result);
+    }
+}
+```
 
 ### Hagmüller's work
 
-One of the goals was also to compare with Hagmüller's implementation from [Truffle CIL Interpreter (2020)](https://epub.jku.at/obvulihs/content/titleinfo/5473678). We recieved copies of the benchmark programs used in the work and were therefore able to run them against our implementation. We didn't have access to the interpreter itself. To recieve comparable nubmers, we followed the outlined methodology:
+One of the goals was to compare with Hagmüller's implementation from [Truffle CIL Interpreter (2020)](https://epub.jku.at/obvulihs/content/titleinfo/5473678). We recieved copies of the benchmark programs used in the work and were therefore able to run them against our implementation. When researching [.NET runtime JIT benchmarks](#net-runtime-jit-benchmarks), we discovered that the used benchmarks are based on code from the repository. However, to keep the comparison fair, we used the provided modified versions, only changing out the harness. We didn't have access to the interpreter itself so couldn't replicate the original benchmarks and only used the numbers provided in the work. To recieve comparable nubmers, we followed the outlined methodology:
 
 > The discussed Truffle CIL Interpreter, was evaluated by running a set of different programs. All benchmarks were executed on an Intel i7-5557U processor with 2 cores, 4 virtual threads featuring 16GB of RAM and a core speed of 3.1 GHz running macOS Catalina(64 bit).
 > 
@@ -702,36 +765,84 @@ One of the goals was also to compare with Hagmüller's implementation from [Truf
 Our benchmarks had the following differences:
 
 * instead of an unspecified version of the mono runtime, we used .NET 6.0.301 to get the reference performance
-* our system was different, sporting an AMD Ryzen 7 PRO 4750U with 8 cores and 16 virtual threads, a Base Clock of 1.7GHz and boost up to 4.1GHz, featuring 32 GB of RAM and running Windows 10
+* our system was different
 * we ignored "interpreter only mode" results -- the interpreter was tailored for partial evaluation, so the slowdowns in interpreter mode are usually more than 200x; we don't see value in precisely benchmarking such a glaring difference
 
 It wasn't obvious if CIL-level optimizations were enabled when compiling the tests in Hagmüller's work. For that reason, we measured both the debug (unoptimized) and release (optimized) compilation configurations.
 
-The tests were run on:
 
-```
-openjdk 11.0.15 2022-04-19
-OpenJDK Runtime Environment GraalVM CE 22.1.0 (build 11.0.15+10-jvmci-22.1-b06)
-OpenJDK 64-Bit Server VM GraalVM CE 22.1.0 (build 11.0.15+10-jvmci-22.1-b06, mixed mode, sharing)
-```
 
 The measured slowdowns (relative to .NET in release configuration) were as follows:
 
 |                       | Debug BACIL | Debug .NET | Release BACIL | Release .NET | Hagmüller |
 |-----------------------|-------------|------------|---------------|--------------|-----------|
-| Binarytrees           | 2.605       | 2.009      | 2.693         | 1            | 24        |
-| Sieve of Eratosthenes | 1.968       | 4.308      | 1.584         | 1            | 226       |
-| Fibonacci             | 1.106       | 2.964      | 1.021         | 1            | 38        |
-| Mandelbrot            | 5.699       | 2.713      | 4.845         | 1            | 38        |
-| N-Body                | 7.225       | 5.057      | 6.762         | 1            | 194       |
+| Binarytrees           | 2.573       | 2.003      | 2.649         | 1            | 24        |
+| Sieve of Eratosthenes | 2.172       | 4.696      | 1.698         | 1            | 226       |
+| Fibonacci             | 1.635       | 4.449      | 1.512         | 1            | 38        |
+| Mandelbrot            | 5.612       | 2.666      | 4.779         | 1            | 38        |
+| N-Body                | 7.237       | 5.000      | 6.763         | 1            | 194       |
 
 
+![alt](hagmuller1.svg)
 _Linear bar chart including comparison with Hagmüller's work_
 
+![alt](hagmuller2.svg)
 _Linear bar chart with only BACIL results_
 
+### .NET runtime JIT benchmarks
 
+To get more performance comparisons we used (a subset of) [.NET's JIT benchamrks](https://github.com/dotnet/runtime/tree/main/src/tests/JIT/Performance/CodeQuality). The subset selection was driven by picking only tests using features the BACIL implements.
 
+Originally the tests used `Xunit` framework for benchmarks. Apart from switching the `Xunit` harness for our own, no other modifications were made to the code.
+
+Our methodology was driven by our interest in getting results for as many different binaries rather than making sure the comparison is extremely precise. As such, for each test we ran it once, took the arithmetic average of iterations 250-299 and calculated the slowdown ratio between BACIL and .NET. We used the benchmarks as compiled by the .NET runtime compilation process without changing any settings regarding optimizations.
+
+The results were as follows:
+
+| Benchmark        | BACIL Slowdown |
+|------------------|----------------|
+| TreeInsert       | 1.036          |
+| Pi               | 1.125          |
+| HeapSort         | 1.172          |
+| Array1           | 1.322          |
+| QuickSort        | 1.428          |
+| Fib              | 1.519          |
+| BubbleSort       | 1.538          |
+| BubbleSort2      | 1.722          |
+| CSieve           | 1.741          |
+| fannkuch-redux-2 | 1.818          |
+| spectralnorm-1   | 2.063          |
+| MatInv4          | 2.351          |
+| 8queens          | 2.355          |
+| Permutate        | 2.595          |
+| Ackermann        | 3.008          |
+| TreeSort         | 3.158          |
+| binarytrees-2    | 3.412          |
+| Lorenz           | 4.600          |
+| n-body-3         | 4.974          |
+
+![alt](mybench.svg)
+_Chart showing slowdown of BACIL compared to .NET runtime_
+
+### Warmup concerns
+
+One fact that's important for real-world performance but our benchmarks ignore is that both the internal workings of GraalVM and our design result in the warmup time (time before full performance potential is reached) being significant. 
+
+While the cause inherent to GraalVM is the tiered compilation model, which has to compromise between the time spent compiling and the quality of the resulting compilation, BACIL has another important performance limitation: as mentioned in XXX, for BACIL the smallest compilation unit is a method and we  we don't support On-Stack Replacement (OSR). As such, performance for the first few iterations is (expectedly) terrible. Here's an example chart of time-per-iteration when running the `MatInv4` .NET runtime benchmark:
+
+![alt](warmup.svg)
+
+The first iteration was 83 times slower than iterations 30+.
+
+### Interpreting the results
+
+We draw two main conclusions from the performance benchmarks:
+
+* our implementation outperforms Hagmüller's work
+* in code BACIL can run it is less than an order of magnitude slower than .NET runtime, with the worst case measured being 7.237 times slower
+
+The last observation we want to make is with regards to IL-level optimizations.
+While for the .NET runtime the IL optimizations (in Release mode) made it significantly more performant, for BACIL such optimizations were very much insignificant. One interesting fact is that when ran on BACIL Hagmüller's binarytrees performed slightly worse in the optimized Release version than the Debug version. This probably has to do with the fact that the "optimizations" (which are surely tailored for .NET runtimes) resulted in using different instructions that were incidentally less performant on BACIL.
 
 # Conlusion
 
