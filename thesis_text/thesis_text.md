@@ -86,7 +86,7 @@ We want to mention that GraalVM is shipped in two editions, Community and Enterp
 
 Truffle was originally described as "a novel approach to implementing AST interpreters" in [Self-Optimizing AST Interpreters (2012)](https://dl.acm.org/doi/10.1145/2384577.2384587) and wasn't directly applicable to our bytecode interpreter problem.
 
-[Bringing Low-Level Languages to the JVM: Efficient Execution of LLVM IR on     Truffle (2016)](https://dl.acm.org/doi/10.1145/2998415.2998416) implemented Sulong, an LLVM IR (bytecode) runtime, and showed "how a hybrid bytecode/AST interpreter can be implemented in Truffle". This is already very similar to our current work, however, it had to implement its own approach to converting unstructured control flow into AST nodes.
+[Bringing Low-Level Languages to the JVM: Efficient Execution of LLVM IR on Truffle (2016)](https://dl.acm.org/doi/10.1145/2998415.2998416) implemented Sulong, an LLVM IR (bytecode) runtime, and showed "how a hybrid bytecode/AST interpreter can be implemented in Truffle". This is already very similar to our current work, however, it had to implement its own approach to converting unstructured control flow into AST nodes.
 
 In [Truffle version 0.15 (2016)](https://github.com/oracle/graal/blob/master/truffle/CHANGELOG.md#version-015), the `ExplodeLoop.LoopExplosionKind` enumeration was implemented, providing the [`MERGE_EXPLODE` strategy](#mergeexplode-strategy).
 
@@ -490,8 +490,59 @@ In the end, designing and implementing the parser took a non-trivial chunk of th
 
 ### Nodes
 
-* bytecotenode - splitting by methods vs blocks
-* nodeization as a way of caching
+#### Bytecode nodes
+
+The smallest compilation unit of Truffle is a Node. The nomenclature comes from Truffle's original AST-based design, where nodes represented actual nodes in the tree. As such, the supported pattern was that the nodes were small, typically representing a single operation - for example an `AddNode` that had two child nodes and added them together.
+
+However, this design is not applicable for our bytecode interpreter. Inside one method, the bytecode doesn't have any tree structure we could replicate with the nodes. As such, the most straightforward solution is to have one node per method, which we can call a `BytecodeNode`. This design has some limitations, mainly the fact that without additional work (described below), once a node starts executing in a specific performance mode (interpreted mode, a low tier compilation etc.), it has to finish running in that specific mode. Truffle always starts executing code immediately in interpreted mode and only later it considers compiling it. This can lead to bad results - for example, let's consider the following code running in a one-node-per-method implementation:
+
+```C#
+static int Main()
+{
+    int result = 0;
+    for (int i = 0; i < 20000; i++)
+    {
+        for (int j = 0; j < 20000; j++)
+        {
+            result += i * j;
+        }
+    }
+    return result;
+}
+```
+
+The runtime will immediately enter the `Main` node and start executing in in interpreter mode and as the entire execution is spent in this one node, it will never have a chance to run a single compiled statement. This has very significant performance impacts (see [Warmup concerns](#warmup-concerns) for final benchmarks).
+
+In [Bringing Low-Level Languages to the JVM: Efficient Execution of LLVM IR on Truffle (2016)](https://dl.acm.org/doi/10.1145/2998415.2998416), the authors described a method of separating the bytecode into "basic blocks" that only contain instructions that don't affect the control flow. The flow between these basic blocks is done by a "block dispatcher", selecting the adequate basic block to continue the execution with.
+
+![alt](basicblocks_0.svg)
+
+_A small C program containing a loop. (citation)_
+
+![alt](basicblocks_1.svg)
+
+_LLVM IR of the C program. (citation)_
+
+![alt](basicblocks_2.svg)
+
+_Basic block dispatch node for the LLVM IR. (citation)_
+
+While this approach alleviates the issue and would separate our nested loops into smaller compilation units, it was superseded by a more generic strategy directly implemented in Truffle.
+
+This strategy, called On-Stack Replacement (OSR), was made specifically to target the described issue:
+
+> During execution, Truffle will schedule “hot” call targets for compilation. Once a target is compiled, later invocations of the target can execute the compiled version. However, an ongoing execution of a call target will not benefit from this compilation, since it cannot transfer execution to the compiled code. This means that a long-running target can get “stuck” in the interpreter, harming warmup performance.
+> 
+> On-stack replacement (OSR) is a technique used in Truffle to “break out” of the interpreter, transferring execution from interpreted to compiled code. Truffle supports OSR for both AST interpreters (i.e., ASTs with LoopNodes) and bytecode interpreters (i.e., nodes with dispatch loops). In either case, Truffle uses heuristics to detect when a long-running loop is being interpreted and can perform OSR to speed up execution.
+
+During our design phase, the OSR was still being worked on, being only introduced in Graal 21.3 released in October 2021. For that reason, our design isn't compatible with it - to support it, all state has to be stored in Truffle's frames, while we only use them to pass/recieve arguments and store the rest of the state in plain variables. However, moving this state into the frame should be the only major step necessary to support OSR. Because of the significance of OSR, if we were designing the runtime again, we'd definitely focus on supporting it.
+
+#### Instruction nodes
+
+Some instructions require values that can be pre-calculated. A typical example in CIL are instructions that have a token as its argument - a token is a pointer into metadata tables and requires calling into the parser to resolve. We want to perform this resolving only once and cache it for future executions.
+
+For that, we'll use a process of nodeization (called "quickening" in Espresso, the Java bytecode interpreter for GraalVM) - we create a node representing the instruction with the data already precomputed and patch the bytecode, replacing the original instruction with a BACIL-specific `TRUFFLE_NODE` opcode. When this instruction is later hit, the child node is called directly.
+
 
 ### Dynamicity of references
 
@@ -842,7 +893,9 @@ _Chart showing slowdown of BACIL compared to .NET runtime_
 
 One fact that's important for real-world performance but our benchmarks ignore is that both the internal workings of GraalVM and our design result in the warmup time (time before full performance potential is reached) being significant. 
 
-While the cause inherent to GraalVM is the tiered compilation model, which has to compromise between the time spent compiling and the quality of the resulting compilation, BACIL has another important performance limitation: as mentioned in XXX, for BACIL the smallest compilation unit is a method and we  we don't support On-Stack Replacement (OSR). As such, performance for the first few iterations is (expectedly) terrible. Here's an example chart of time-per-iteration when running the `MatInv4` .NET runtime benchmark:
+While the cause inherent to GraalVM is the tiered compilation model, which has to compromise between the time spent compiling and the quality of the resulting compilation, BACIL has another important performance limitation: as mentioned in [Nodes](#nodes), for BACIL the smallest compilation unit is a method and we we don't support On-Stack Replacement (OSR). As such, performance for the first few iterations is (expectedly) terrible.
+
+The example code from [Nodes](#nodes) (nested for loops in one method) runs about 60 times slower on BACIL than on .NET. Here's an example chart of time-per-iteration when running the `MatInv4` .NET runtime benchmark with default Truffle heuristics:
 
 ![alt](warmup.svg)
 
@@ -853,7 +906,7 @@ The first iteration was 83 times slower than iterations 30+.
 We draw two main conclusions from the performance benchmarks:
 
 * our implementation outperforms Hagmüller's work
-* in code BACIL can run it is less than an order of magnitude slower than .NET runtime, with the worst case measured being 7.237 times slower
+* in compiled code BACIL can run it is less than an order of magnitude slower than .NET runtime, with the worst case measured being 7.237 times slower
 
 The last observation we want to make is with regards to IL-level optimizations.
 While for the .NET runtime the IL optimizations (in Release mode) made it significantly more performant, for BACIL such optimizations were very much insignificant. One interesting fact is that when ran on BACIL Hagmüller's binarytrees performed slightly worse in the optimized Release version than the Debug version. This probably has to do with the fact that the "optimizations" (which are surely tailored for .NET runtimes) resulted in using different instructions that were incidentally less performant on BACIL.
