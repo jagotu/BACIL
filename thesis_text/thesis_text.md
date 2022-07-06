@@ -1,5 +1,9 @@
 # Truffle based .NET IL interpreter and compiler: run C# on Java Virtual Machine
 
+_This is not the official copy of the thesis._
+
+TODO: consistent use of past/present tenses
+
 # Abstract
 
 Interpreted and just-in-time (JIT) compiled languages are becoming more and more prevalent, with JavaScript and Python ranking in TOP 5 most popular programming languages in most surveys and statistics. In the academic and research settings, the ability to quickly prototype programming languages and test their properties also works in favor of interpreted languages, as implementing an interpreter is considerably easier than implementing a compiler. However, simple interpreters suffer from a substantial tradeoff of performance. Traditionally, if an interpreted language is to become effective and run fast, it requires creating a custom infrastructure of JIT compilers and optimizations just for that single specific language.
@@ -488,6 +492,8 @@ In the end, designing and implementing the parser took a non-trivial chunk of th
 
 ## Analysis
 
+In this chapter we'll focus on the overall design of our interpreter and the approaches required to achieve acceptable performance.
+
 ### Nodes
 
 #### Bytecode nodes
@@ -619,9 +625,58 @@ _Scenario 2: While the `LocationHolder` remains accessible from a highly dynamic
 
 ### Standard libraries
 
-* internalcall
-* strings :(
-* BACILHelpers
+Our goal was to have to implement as little of the standard library as possible. When starting with the implementation, our hope was that the boundary between the parts implemented in CIL and native methods would be well decoupled, so that we can reuse all of the CIL parts and for the native parts either implement them or even possibly call .NET's implementation. Unfortunately, that's not always the case. As the [documentation](https://github.com/dotnet/runtime/blob/main/docs/design/coreclr/botr/corelib.md) admits, "CoreLib has several unique properties, many of which are due to its tight coupling to the CLR.".
+
+The biggest offender in this regard are strings. To achieve high performance, .NET's runtime expects the native view (`StringObject`) and managed view (`System.String`) of the string to be identical, so the coupling is extremely tight. This is the reason why BACIL doesn't support most operations with strings, apart from loading them as a constant - we'd either have to reimplement the operations or implement the strict marshalling that's expected by .NET's code.
+
+The runtime uses two kinds of calls into native code, QCalls and FCalls. QCalls are using the P/Invoke mechanism, while FCalls are using methods marked with `MethodImplOptions.InternalCall` in the metadata. 
+
+Truffle's official mechanism of calling into native code is called the Native Function Interface (NFI). Unfortunately, at the time of designing BACIL, it was missing key features, for example not supporting custom ABIs (calling conventions).
+
+In the end, our experiments with calling native .NET runtime code using NFI showed it would significantly complicate the whole codebase with uncertain results, and we decided against it. That however means that we'll have to implement all necessary native code ourselves.
+
+### BACILHelpers
+
+We will need a way to expose our own "native" BACIL functionality to C# code. For that, we'll create an assembly called BACILHelpers. This assembly will have two implementations: there will be a .NET CIL variant (written in C#) for running on .NET, but when BACIL recognizes a reference to this assembly, it will instead replace it with a "virtual" assembly leading to BACIL'S implementations.
+
+That way, we can for example have a `BACILConsole.Write` method implemented like this in the C# implementation:
+
+```C#
+public class BACILConsole
+{
+    public static void Write(Object value)
+    {
+        Console.Write(value);
+    }
+}
+```
+
+And the following is an example implementation in BACIL (shortened and simplified):
+
+```Java
+public class BACILHelpersComponent extends BACILComponent {
+     public Type findLocalType(String namespace, String name) {
+        if(name.equals("BACILConsole"))
+            return new BACILConsoleType();
+    }
+}
+
+public class BACILConsoleType extends Type {
+     public BACILMethod getMemberMethod(String name, MethodDefSig signature) {
+        if(name.equals("Write"))
+            return new BACILConsoleWriteMethod();
+     }
+}
+
+public class BACILConsoleWriteMethod extends JavaMethod {
+    public Object execute(VirtualFrame frame) {
+        CompilerDirectives.transferToInterpreter();
+        System.out.print(frame.getArguments()[0]);
+        return null;
+    }
+}
+```
+
 
 ### Values and locations
 
@@ -686,10 +741,15 @@ public void locationToStack(LocationsHolder holder, int locationIndex, Object[] 
 
 One factor to keep in mind is that to follow the standard, the state transitions are coupled with widening or narrowing operations. For example, according to ECMA-335 _I.12.1 Supported data types_ "Short numeric values (int8, int16, unsigned int8, and unsigned int16) are widened when loaded and narrowed when stored.".  We also need to perform our own housekeeping because we store all primitives in a flat `long[]`. Each class representing a primitive implements its own widening and narrowing as necessary.
 
+### CompilationFinal annotation
+
+As explained in [Partial Evaluation](#partial-evaluation), one of the key parts is separating inputs into two sets - dynamic inputs and static inputs. Java's `final` keyword is therefore integral for achieving performance as it guarantees that the variable will be considered as a static input.
+
+An additional issue is that for arrays, marking them as `final` only means that the reference to the array doesn't change, while the contents of the array can change freely. The solution to this issue is the `CompilerDirectives.CompilationFinal`, which can mark arrays such that the compiler considers reads with a constant index as constants. Unlike the built-in `final` keyword, the compiler cannot actually enforce that no writes happen to the array. It is the responsibility of the implementation to always invalidate the current compilation when modifying a `CompilationFinal` array.
 
 ## Implementation
 
-### Using compiler graphs for optimization
+### Using compiler graphs for debugging performance
 
 * Aka the story how in ce2d3f710dfc4eed46a6495cee2b05432703c7ca I turned compilation of `method.getComponent().getTableHeads().getTypeDefTableHead().skip(1).getFlags()` from this:
 
@@ -698,8 +758,6 @@ One factor to keep in mind is that to follow the standard, the state transitions
 Into this:
 
 ![alt](parseraccess_good.svg)
-
-
 
 # Results
 
@@ -749,6 +807,14 @@ After stubbing out `Write`, `WriteLine`, `ToString` and `Concat` (to get rid of 
 | UDivConst | Missing exception support |
 | UModConst | Missing exception support |
 
+### Library methods
+
+While we defer library calls to the .NET runtime implementations, the majority of them either require generics or use native methods. We only implemented the following native methods:-
+
+* `System.Runtime.CompilerServices.RuntimeHelpers.InitializeArray(Array, RuntimeFieldHandle)` used for constant array initializatons (like `int[] a = new int[] {0, 1}`).
+* `System.Math.Abs(Double)`, `System.Math.Cos(Double)` and `System.Math.Sqrt(Double)` required by some float instruction tests.
+* `System.ValueType.GetHashCode()` as user-defined value types override this virtual method and as such it must exist.
+
 
 ## Performance benchmarks
 
@@ -772,7 +838,7 @@ Host (useful for support):
 
 ### Harness
 
-As mentioned in XXX, our way of exposing additional functionality consisted of implementing them in the `BACILHelpers` assembly which .NET calls directly and BACIL replaces with its own implementaiton. To facilitate benchmarks, we added two new methods: `StartTimer` which starts a timer and `GetTicks` which return the number of ticks since the start. The API was inspired by the API of `System.Diagnostics.StopWatch`, which is what the .NET implementation uses:
+As mentioned in [BACILHelpers](#bacilhelpers), our way of exposing additional functionality consists of implementing them in the `BACILHelpers` assembly which .NET calls directly and BACIL replaces with its own implementaiton. To facilitate benchmarks, we add two new methods: `StartTimer` which starts a timer and `GetTicks` which return the number of ticks since the start. The API was inspired by the API of `System.Diagnostics.StopWatch`, which is what the .NET implementation uses:
 
 
 ```C#
@@ -791,7 +857,7 @@ public static long GetTicks()
 }
 ```
 
-On the BACIL side, we used `System.nanoTime()`, saving a value on start and the substracting it from the value on end. Combining with the console writing capabilities, this is what our final harness looked like (`DoCalculation` and the iteration count being replaced as necessary):
+On the BACIL side, we use `System.nanoTime()`, saving a value on start and the substracting it from the value on end. Combining with the console writing capabilities, this is what our final harness looks like (`DoCalculation` and the iteration count being replaced as necessary):
 
 ```C#
 static void report(int iteration, long ticks, int result)
@@ -1146,14 +1212,6 @@ unaligned.
 unbox
 volatile.
 ```
-
-# Appendix - CodeGenBringUpTests failures
-
-
-
-
-
-
 
 [^1]: https://github.com/oracle/graal/tree/master/truffle
 [^2]: https://github.com/oracle/graal/tree/master/compiler
