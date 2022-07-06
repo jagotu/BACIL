@@ -6,6 +6,10 @@ TODO: consistent use of past/present tenses
 
 # Abstract
 
+TODO
+
+# Original thesis goal statement
+
 Interpreted and just-in-time (JIT) compiled languages are becoming more and more prevalent, with JavaScript and Python ranking in TOP 5 most popular programming languages in most surveys and statistics. In the academic and research settings, the ability to quickly prototype programming languages and test their properties also works in favor of interpreted languages, as implementing an interpreter is considerably easier than implementing a compiler. However, simple interpreters suffer from a substantial tradeoff of performance. Traditionally, if an interpreted language is to become effective and run fast, it requires creating a custom infrastructure of JIT compilers and optimizations just for that single specific language.
 
 The Truffle Language Implementation Framework [^1] attempts to alleviate this tradeoff between performance and development complexity by providing a framework for implementing a language using interpreter-style code that is later JIT compiled by the GraalVM compiler [^2]. While straightforward interpreter-style implementations in Truffle might not perform much better than simple interpreters, Truffle provides a framework for writing optimization hints that are later used by the compiler. According to Thomas Würthinger et al. [^3], such implementations can compete with hand-crafted compilers.
