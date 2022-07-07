@@ -751,17 +751,75 @@ As explained in [Partial Evaluation](#partial-evaluation), one of the key parts 
 
 An additional issue is that for arrays, marking them as `final` only means that the reference to the array doesn't change, while the contents of the array can change freely. The solution to this issue is the `CompilerDirectives.CompilationFinal`, which can mark arrays such that the compiler considers reads with a constant index as constants. Unlike the built-in `final` keyword, the compiler cannot actually enforce that no writes happen to the array. It is the responsibility of the implementation to always invalidate the current compilation when modifying a `CompilationFinal` array.
 
-## Implementation
+## Debugging performance issues
 
-### Using compiler graphs for debugging performance
+To achieve high performance, it is necessary to be able to debug performance issues. Unfortunately, traditional methods (like sampling) don't provide the necessary insight for outputs of Graal compilation - during partial evaluation, the code is too transformed for these methods to properly work. A single instruction can possibly be the result of partial evaluation of several different methods and as such cannot be properly attributed to one.
 
-* Aka the story how in ce2d3f710dfc4eed46a6495cee2b05432703c7ca I turned compilation of `method.getComponent().getTableHeads().getTypeDefTableHead().skip(1).getFlags()` from this:
+Internally, the Graal compiler represents the code during compilation in graphs. The various optimization phases are then transformations on these graphs. Graal allows to dump the current graph in various stages of the compilation pipeline by using the `graal.Dump` VM argument. These graphs are key to understanding results of the partial evaluation, mainly which code was eliminated (by constant folding) and which remained. For our analysis, the "After TruffleTier" phase is most important, which reflects the graph after partial evaluation.
+
+The official tool for analyzing these graphs is the [Ideal Graph Visualizer](https://www.graalvm.org/22.1/tools/igv/). However, obtaining it requires "accepting the Oracle Technology Network Developer License", which contains strict limitations for allowed use. As such, we don't consider the tool suitable for general use, as using it during development may limit the future uses of the project.
+
+Fortunately, an MIT licensed opensource project [Seafoam](https://github.com/Shopify/seafoam) provides all the necessary functionality and will be used exclusively in this work.
+
+The most common issue we hit when analyzing those graphs was that a piece of code we thought would be eliminated by partial evaluation was still included in the compilation - we designed it to be optimized out, but from the view of the compiler it couldn't be. To debug these issues, we used the `CompilerAsserts.partialEvaluationConstant` method. It allows us to express our belief that something should be a partial evaluation constant to the compiler and get an error message with detailed information about the compiler's view of the expression when it's not.
+
+### Case study
+
+For a case study, let's look into optmizing a specific parser call. As specified in [Design goals](#design-goals), we designed the parser so that trivial queries, e.g. queries for a metadata item at a constant index, would only result in a compilation constant. Is that the case? Let's see the compilation graph (in commit 42e5cb2e6e34956aca75be0c4c71ac7eb0f4bea8) after TruffleTier for a function returning `method.getComponent().getTableHeads().getTypeDefTableHead().skip(1).getFlags()`:
 
 ![alt](parseraccess_bad.svg)
 
-Into this:
+That definitely contains more than just a constant. Using `CompilerAsserts.partialEvaluationConstant` and checking the errors (enabled with `--engine.CompilationFailureAction=Print`) leads us to the following code where the first expression is a constant and the second isn't:
+
+```Java
+CLITypeDefTableRow row = method.getComponent().getTableHeads().getTypeDefTableHead();
+CompilerAsserts.partialEvaluationConstant(row.getFlags());
+CompilerAsserts.partialEvaluationConstant(row.skip(1).getFlags());
+```
+
+From this we can discern that our implementation of `skip` is at fault.
+Our skip method contains just one statement, `return createNew(tables, cursor+count*getLength(), rowIndex+count);`. Let's first validate whether all the used arguments are constants:
+
+```Java
+public final T skip(int count)
+{
+    CompilerAsserts.partialEvaluationConstant(tables);
+    CompilerAsserts.partialEvaluationConstant(cursor);
+    CompilerAsserts.partialEvaluationConstant(getLength());
+    return createNew(tables, cursor+count*getLength(), rowIndex+count);
+}
+```
+
+We get the following error when checking the `getLength()` statement:
+
+```
+Partial evaluation did not reduce value to a constant, is a regular compiler node: 516|ValuePhi(459 515, i32) (513|Merge; 459|ValuePhi(401 458, i32); 515|+; )
+```
+
+Let's dig into `getLength()`, enhancing it with asserts to see if `isStringHeapBig()` or `areSmallEnough` are at fault:
+
+```Java
+public int getLength() {
+    int offset = 14;
+    CompilerAsserts.partialEvaluationConstant(tables.isStringHeapBig());
+    CompilerAsserts.partialEvaluationConstant(areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_TYPE_SPEC));
+    if (tables.isStringHeapBig()) offset += 4;
+    if (!areSmallEnough(CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_TYPE_SPEC)) offset += 2;
+    if (!areSmallEnough(CLITableConstants.CLI_TABLE_FIELD)) offset += 2;
+    if (!areSmallEnough(CLITableConstants.CLI_TABLE_METHOD_DEF)) offset += 2;
+    return offset;
+}
+```
+
+And we get an error on `areSmallEnough`. We continue digging into that method, eventually realising that inside `protected final boolean areSmallEnough(byte... tables)`, the `tables[0]` isn't a constant! Turns out that even though the calls to `areSmallEnough` look to just be providing constant integers, as the function is using varargs a **new array is allocated** for those constants that is then passed to the function. As we explain in [CompilationFinal annotation](#compilationfinal-annotation), array elements are not considered to be constant unless the array is properly annotated as `CompilationFinal`. Our inplace arrays have no way to be annotated. We modified `areSmallEnough` to take a `byte[]` instead of varargs (to make what's happening more obvious) and instead of using inplace arrays used constant fields annotated with `@CompilerDirectives.CompilationFinal(dimensions = 1)`.
+
+After two additional small changes (adding a field to cache `tableData` with the `CompilationFinal` annotation and annotating `areSmallEnough` with `@ExplodeLoop`), the graph for the same expression (`method.getComponent().getTableHeads().getTypeDefTableHead().skip(1).getFlags()`) after TruffleTier looks like this:
 
 ![alt](parseraccess_good.svg)
+
+This case study provides a great example how choices that are functionally equivalent in regular Java can provide vastly different compilation results when partially evaluated. In the end, we mostly only had to add annotations to make a big difference.
+
+We used this process of checking if graphs look as expected using Seafoam and then using `CompilerAsserts.partialEvaluationConstant` to express our desires about constants multiple times during development.
 
 # Results
 
@@ -981,7 +1039,7 @@ We draw two main conclusions from the performance benchmarks:
 The last observation we want to make is with regards to IL-level optimizations.
 While for the .NET runtime the IL optimizations (in Release mode) made it significantly more performant, for BACIL such optimizations were very much insignificant. One interesting fact is that when ran on BACIL Hagmüller's binarytrees performed slightly worse in the optimized Release version than the Debug version. This probably has to do with the fact that the "optimizations" (which are surely tailored for .NET runtimes) resulted in using different instructions that were incidentally less performant on BACIL.
 
-# Conlusion
+# Conclusion
 
 * in a single person I was able to implement a fast interpreter for CIL = mission accomplished
 
