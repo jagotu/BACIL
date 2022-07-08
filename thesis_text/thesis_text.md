@@ -16,21 +16,19 @@ The Truffle Language Implementation Framework [^1] attempts to alleviate this tr
 
 The goal of the thesis is to implement an interpreter of a subset of Common Intermediate Language (CIL) using Truffle, such that CIL code can be run on the Java Virtual Machine. CIL is an intermediate language to which .NET applications are typically compiled, including applications written in the C# programming language. The CIL is standardized in ECMA-335 [^4]. The focus of the work will be on the feasibility of implementing an interpreter of an actual language using the Truffle interpreter-style approach in an academic setting, and comparing the resulting performance of said academic implementation with state-of-the-art CIL JIT compilers.
 
-
-
 # Introduction
 
 ## Problem
 
 Traditionally, when implementing a programming language, achieving a high performance required a significant development effort and resulted in complicated codebases.
 
-While writing an interpreter for even a fairly complicated language is achievable for a single person interested in the topic (as proved by the abundance of language implementation theses avilable), state-of-the-art optimizing compilers are usually created over several years by large teams of developers at the largest IT companies. Not only was kickstarting such a project unthinkable for an individual but even introducing changes to an already existing project is far from simple.
+While writing an interpreter for even a fairly complicated language is achievable for a single person interested in the topic (as proved by the abundance of language implementation theses available), creating state-of-the-art optimizing compilers usually took several years spent by large teams of developers at the largest IT companies. Not only was kick-starting such a project unthinkable for an individual, but even introducing changes to an existing project is far from simple.
 
-For example, as of 2022 Google's state-of-the-art JavaScript engine V8 has two different JIT compilers and its own internal bytecode. An experiment of adding a single new bytecode instruction to the project can mean several days of just orientating in the codebase. Google provides a [step-by-step tutorial for adding a new WebAssembly opcode to v8](https://v8.dev/docs/webassembly-opcode), which admits that a lot of platform-dependant work is necessary to get a proper implementation:
+For example, as of 2022, Google's state-of-the-art JavaScript engine V8 has two different JIT compilers and its own internal bytecode. An experiment of adding a single new bytecode instruction to the project can mean several days of just orientating in the codebase. Google provides a [step-by-step tutorial for adding a new WebAssembly opcode to v8](https://v8.dev/docs/webassembly-opcode), which admits that a lot of platform-dependant work is necessary to get a proper implementation:
 
 > The steps required for other architectures are similar: add TurboFan machine operators, use the platform-dependent files for instruction selection, scheduling, code generation, assembler.
 
-As cybersecurity becomes a more important topic, another factor to consider is that creating manual optimizations in JITs is very prone to bugs which can have very grave security implications. Speculated assumptions of JIT compilers introduced whole new bug families. As [Compile Your Own Type Confusions: Exploiting Logic Bugs in JavaScript JIT Engines](http://phrack.org/issues/70/9.html) says (emphasis added, footnotes stripped):
+As cybersecurity becomes a more important topic, another factor to consider is that creating manual optimizations in JITs is prone to bugs which can have grave security implications. Speculated assumptions of JIT compilers introduce whole new bug families. As [Compile Your Own Type Confusions: Exploiting Logic Bugs in JavaScript JIT Engines](http://phrack.org/issues/70/9.html) says (emphasis added, footnotes stripped):
 
 > JavaScript JIT compilers are commonly implemented in C++ and as such are subject to the usual list of memory- and type-safety violations. These are not specific to JIT compilers and will thus not be discussed further. Instead, the focus will be put on bugs in the compiler which lead to incorrect machine code generation which can then be exploited to cause memory corruption.
 >
@@ -42,24 +40,24 @@ These factors resulted in academic and hobby experimentation with programming la
 
 > Interpreters are very good development tools since it [sic] can be easily edited, and are therefore ideal for beginners in programming and software development. However they are not good for professional developers due to the slow execution nature of the interpreted code.
 
-In recent years, frameworks that promise to deliver close to state-of-the-art performance while requiring only a simple interpreter-style implementation started appearing. Examples of such frameworks are [RPython](https://rpython.readthedocs.io/) and the [Truffle language implementation framework](https://www.graalvm.org/graalvm-as-a-platform/language-implementation-framework/).
+In recent years, frameworks appeared that promise to deliver performance comparable to state-of-the-art JIT compilers while requiring only a simple interpreter-style implementation. Examples of such frameworks are [RPython](https://rpython.readthedocs.io/) and the [Truffle language implementation framework](https://www.graalvm.org/graalvm-as-a-platform/language-implementation-framework/).
 Researchers concluded that Truffle's performance "is competitive with production systems even when they have been heavily optimized for the one language they support"[^5].
 
-As the performance of language implementations made by experts (sometimes even designers of these frameworks themselves) is well understood, in this work we wanted to focus on testing another claim: the "reduced complexity for implementing languages in our system [that] will enable more languages to benefit from optimizing compilers"[^5]. 
+As the performance aspects of language implementations made by experts (sometimes even designers of these frameworks themselves) are well understood, in this work we wanted to focus on testing another claim: the "reduced complexity for implementing languages in our system [that] will enable more languages to benefit from optimizing compilers"[^5]. 
 
 **Is it feasible to achieve the promised performance benefits with an academic interpreter-style implementation of a language runtime?** In this work, we implement BACIL, a runtime for .NET, to answer this question.
 
-## .NET/CLI 
+## .NET/CLI
 
 We chose .NET as a platform to implement, mostly because:
 
 * languages targeting .NET consistently rank high on popularity surveys
 * we have experience with .NET internals and the internally used bytecode
-* no comparable truffle-based implementations were published for .NET
+* no comparable truffle-based implementations were already published for .NET 
 
-While .NET sure is a well-recognized name, it is a marketing/brand name whose meaning changed through history. Our implementation follows [ECMA-335 Common Language Infrastructure (CLI)](https://www.ecma-international.org/publications-and-standards/standards/ecma-335/) which doesn't mention the .NET brand at all. As such, we will be using the names defined in the standard throughout this work. All references to specific implementations/brand names are included only to aid understanding and have no ambition to be accurate, mainly when it comes to .NET vs .NET Core vs .NET Framework vs .NET Standard nomenclature.
+While .NET is a well-recognized name, it is a marketing/brand name whose meaning changed through history. Our implementation follows [ECMA-335 Common Language Infrastructure (CLI)](https://www.ecma-international.org/publications-and-standards/standards/ecma-335/) which doesn't mention the .NET brand at all. We will use the names defined in the standard throughout this work. All references to specific implementations/brand names we include only to aid understanding with no ambition to be accurate, mainly for .NET vs .NET Core vs .NET Framework vs .NET Standard nomenclature.
 
-> The Common Language Infrastructure (CLI) provides a specification for executable code and the execution environment (the Virtual Execution System) in which it runs. 
+> The Common Language Infrastructure (CLI) provides a specification for executable code and the execution environment (the Virtual Execution System) in which it runs. 
 
 .NET languages (like C#) are compiled into "managed code"[^7] - instead of targeting native processor instruction sets, they target the CLI's execution environment.
 
@@ -71,34 +69,33 @@ Using the definitions of the standard, BACIL is actually a Virtual Execution Sys
 
 > To a large extent, the purpose of the VES is to provide the support required to execute the [Common Intermediate Language (CIL)] instruction set.
 
-The CIL, historically also called Microsoft Intermediate Language (MSIL) or simply Intermediate Language (IL), is the instruction set used by the CLI. Interpreting (a subset of) this instruction set was the main goal of this work.
+The CIL, historically also called Microsoft Intermediate Language (MSIL) or simply Intermediate Language (IL), is the instruction set used by the CLI. Interpreting (a subset of) this instruction set was the primary goal of this work.
 
-Another large part of the framework is the standard libraries - the base class library, which has to be supported by all implementations of the CLI, consists of 2370 members over 207 classes. As the focus of the work was on the core interpreter, we largely ignored this part of the standard and deferred to other standard library implementations where possible.
+Another large part of the framework is the standard libraries - the base class library, which has to be supported by all implementations of the CLI, comprises 2370 members over 207 classes. As the focus of the work was on the core interpreter, we largely ignore this part of the standard and defer to other standard library implementations where possible.
 
 ## Truffle and Graal
 
-To implement a high-performance CLI runtime, we alleviate the 
- [Truffle language implementation framework](https://www.graalvm.org/graalvm-as-a-platform/language-implementation-framework/) (henceforth "Truffle") and the [GraalVM Compiler](https://www.graalvm.org/22.1/docs/introduction). These two components are tightly coupled together and we'll mostly be referring to them interchangeably, as even official sources provide conflicting information on the nomenclature.
- 
-The Graal Compiler is a general high-performance just-in-time compiler for Java bytecode that is itself written in Java. It is state-of-the-art when it comes to optimization algorithms - according to [official documentation](https://www.graalvm.org/22.1/reference-manual/java/compiler/#compiler-advantages), "the compiler in GraalVM Enterprise includes 62 optimization phases, of which 27 are patented".
+To implement a high-performance CLI runtime, we employ the [Truffle language implementation framework](https://www.graalvm.org/graalvm-as-a-platform/language-implementation-framework/) (henceforth "Truffle") and the [GraalVM Compiler](https://www.graalvm.org/22.1/docs/introduction). These two components are tightly coupled together and we'll mostly be referring to them interchangeably, as even official sources provide conflicting information on the nomenclature. 
 
-Truffle on the other hand is a framework for implementing languages that will be compiled by Graal. From the outside, it behaves like a compiler: its job is to take guest language code and convert it to the VM's language, preserving as much intrinsic metadata as possible. Unlike a hand-crafted compiler, Truffle takes an interpreter of the guest language as its input and uses [Partial evaluation](#partial-evaluation) to do the compilation, performing a so-called "first Futamura projection".
+The Graal Compiler is a general high-performance just-in-time compiler for Java bytecode that is itself written in Java. It is state-of-the-art in optimization algorithms - according to [official documentation](https://www.graalvm.org/22.1/reference-manual/java/compiler/#compiler-advantages), "the compiler in GraalVM Enterprise includes 62 optimization phases, of which 27 are patented".
+
+Truffle is a framework for implementing languages that will be compiled by Graal. From the outside, it behaves like a compiler: its job is to take guest language code and convert it to the VM's language, preserving as much intrinsic metadata as possible. Unlike a hand-crafted compiler, Truffle takes an interpreter of the guest language as its input and uses [Partial evaluation](#partial-evaluation) to do the compilation, performing a so-called "first Futamura projection".
 
 ![alt](truffle.drawio.svg)
 
-Truffle also provides several primitives that can be used by the language implementation to guide the partial evaluation process, allowing for better results.
+Truffle also provides several primitives that the language implementation can use to guide the partial evaluation process, allowing for better results.
 
-We want to mention that GraalVM is shipped in two editions, Community and Enterprise. Supposedly, the Enterprise edition provides even higher performance than the Community one. As we wanted to avoid all potential licensing issues, we only ever used the Community edition and can't comment on Enterprise performance at all.
+We want to mention that GraalVM ships in two editions, Community and Enterprise. Supposedly, the Enterprise edition provides even higher performance than the Community one. As we want to avoid all potential licensing issues, we only ever used the Community edition and can't comment on Enterprise performance at all.
 
 ## Previous work
 
 Truffle was originally described as "a novel approach to implementing AST interpreters" in [Self-Optimizing AST Interpreters (2012)](https://dl.acm.org/doi/10.1145/2384577.2384587) and wasn't directly applicable to our bytecode interpreter problem.
 
-[Bringing Low-Level Languages to the JVM: Efficient Execution of LLVM IR on Truffle (2016)](https://dl.acm.org/doi/10.1145/2998415.2998416) implemented Sulong, an LLVM IR (bytecode) runtime, and showed "how a hybrid bytecode/AST interpreter can be implemented in Truffle". This is already very similar to our current work, however, it had to implement its own approach to converting unstructured control flow into AST nodes.
+[Bringing Low-Level Languages to the JVM: Efficient Execution of LLVM IR on Truffle (2016)](https://dl.acm.org/doi/10.1145/2998415.2998416) implemented Sulong, an LLVM IR (bytecode) runtime, and showed "how a hybrid bytecode/AST interpreter can be implemented in Truffle". This is already very similar to our current work, however, it implemented an unique approach of converting unstructured control flow into AST nodes.
 
 In [Truffle version 0.15 (2016)](https://github.com/oracle/graal/blob/master/truffle/CHANGELOG.md#version-015), the `ExplodeLoop.LoopExplosionKind` enumeration was implemented, providing the [`MERGE_EXPLODE` strategy](#mergeexplode-strategy).
 
-In [GraalVM version 21.0 (2021)](https://www.graalvm.org/release-notes/21_0/), an "experimental Java Virtual Machine implementation based on a Truffle interpreter" was introduced. In general principles, this project is very similar to our work, using the same approaches but implementing a different language.
+In [GraalVM version 21.0 (2021)](https://www.graalvm.org/release-notes/21_0/), an "experimental Java Virtual Machine implementation based on a Truffle interpreter" was introduced. In general principles, this project is very similar to our work, using the same approaches for implementing a different language.
 
 While [Truffle CIL Interpreter (2020)](https://epub.jku.at/obvulihs/content/titleinfo/5473678) also implemented the CIL runtime, it chose a completely different approach, building an AST from the text representation of IL code. Also, as it admits in the conclusion, it "didn't focus on performance optimization of the different instructions". The same implementation approach was chosen by [truffleclr](https://github.com/alex4o/truffleclr).
 
@@ -106,7 +103,7 @@ While [Truffle CIL Interpreter (2020)](https://epub.jku.at/obvulihs/content/titl
 
 ## Partial Evaluation
 
-The most important principle allowing Truffle/Graal to reach high performance is Partial Evaluation. It was theoretically known for decades, one of the foundational works being [Partial computation of programs (1983)](https://repository.kulib.kyoto-u.ac.jp/dspace/bitstream/2433/103401/1/0482-14.pdf), but modern advances in computer performance make it practically usable.
+The most important principle allowing Truffle/Graal to reach high performance is Partial Evaluation. It is theoretically known for decades, one of the foundations being [Partial computation of programs (1983)](https://repository.kulib.kyoto-u.ac.jp/dspace/bitstream/2433/103401/1/0482-14.pdf), but modern advances in computer performance make it practically usable.
 
 The high-level view of partial evaluation offered by Futamura is "specializing a general program based upon its operating environment into a more efficient program".
 
@@ -114,13 +111,13 @@ Consider a program (or its chunk) as a mapping of inputs into outputs. We can di
 
 The process of partial evaluation is then transforming _&lt;prog, I<sub>static</sub>&gt;_ into _prog*: I<sub>dynamic</sub> → O_ by incorporating the static input into the code itself. We'll call _prog*_ a specialization of _prog_ for _I<sub>static</sub>_, sometimes it is also referred to as a residual program, intermediate program, or a projection of _prog_ at _I<sub>static</sub>_.
 
-For a simple example, let's consider _f(s,d) = s*(s*(s+1)+d)_. The specialization of _f_ for _s=2_ is then _f<sub>2</sub>(d)=2*(6+d)_, effectively pre-computing one multiplication. An even more interesting specialization is _f<sub>0</sub>(d)=0_, turning the whole program into a constant expression.
+For a simple example, let's consider _f(s,d) = s*(s*(s+1)+d)_. The specialization of _f_ for _s=2_ is then _f<sub>2</sub>(d)=2*(6+d)_, effectively pre-computing one multiplication. An even more interesting specialization is _f<sub>0</sub>(d)=0_, turning the entire program into a constant expression.
 
-The separation between _I<sub>static</sub>_ and _I<sub>dynamic</sub>_ is not rigorous - it is valid to both create a separate specialization for every single input combination or consider all input dynamic and therefore specialize for an empty set. However, these extremes don't provide any performance benefits. Partial evaluation is therefore usually guided by heuristics analyzing when a specific input value is used _often enough_ to warrant a specialization.
+The separation between _I<sub>static</sub>_ and _I<sub>dynamic</sub>_ is not rigorous - it is valid both to create a separate specialization for every single input combination or to consider all input dynamic and therefore specialize for an empty set. However, these extremes don't provide any performance benefits. Partial evaluation is therefore usually guided by heuristics that analyze when a specific input value is used _often enough_ to warrant a specialization.
 
-In his work, Futamura formulated so-called Futamura projections. Let's define a generic specializer as _specializer: prog × I<sub>static</sub> → prog*_. 
+In his work, Futamura formulates so-called Futamura projections. Let's define a generic specializer as _specializer: prog × I<sub>static</sub> → prog*_. 
 
-The first Futamura projection is as follows: Let's define an interpreter as _interpreter: source × inputs → outputs_, a program taking two inputs: the source code and the "inner" inputs for the code. Then the result of _specializer(interpreter, source) = executable_ is a fully realized program for the specific source code as if the source code was "compiled" in the traditional sense of the word. 
+The first Futamura projection is as follows: Let's define an interpreter as _interpreter: source × inputs → outputs_, a program taking two inputs: the source code and the "inner" inputs for the code. Then the result of _specializer(interpreter, source) = executable_ is a fully realized program for the specific source code as if the source code was "compiled" in the traditional sense of the word. 
 
 The second Futamura projection observes that _specializer(specializer,interpreter) = compiler_ - we generate a tailored specializer that can transform source code into executables.
 
@@ -128,13 +125,23 @@ The third Futamura projection observes that _specializer(specializer,specializer
 
 In this work, we implement an interpreter and use Truffle to perform the first Futamura projection.
 
+### Tiered compilation
+
+Because more aggressive compilation optimizations result in the compilation taking more time, it is a common practice to use tiered compilation. As a specific code gets called more often, it becomes worth it to recompile it again and better optimize it.
+
+In Truffle/Graal, there is always a fallback of interpreting the code with no partial evaluation and compilation. This fallback is used both before the first compilation happens and when a de-optimization happens (see below).
+
+One reason behind always starting in interpreter before compiling is that the interpreted invocations can already provide observations about the code, for example branch probability, if such observations are implemented. These observations can be used so that the first compilations are already of high quality.
+
+For our project, the difference between compiled tiers is not too interesting, as they usually have a relatively small performance difference between them. The biggest gap happens between the interpreted code and the first compiled tier, where the execution time can differ by more than an order of magnitude.
+
 ### Guards and de-optimizations
 
-For practical partial evaluation, it is valuable to perform speculative optimizations - compiling the code expecting invariants that can be broken during runtime. One common example of such speculation is optimizations of virtual calls: assuming that the method will always be called on objects of a specific type allows replacing the virtual call with a static one and enables a more aggressive specialization. 
+For practical partial evaluation, it is valuable to perform speculative optimizations - compiling the code expecting invariants that can be broken during runtime. One common example of such speculation is optimizations of virtual calls: assuming that the method will always be called on objects of a specific type allows replacing the virtual call with a static one and enables a more aggressive specialization. 
 
-Also, it is often useful to make sure some exceptional code paths are never included in the compilation - for example, if dividing by zero should result in an immediate crash of the application with a message being printed out, there is no use in spending time compiling and optimizing the error-message printing code, as it will at max be called once.
+Also, it is often useful to make sure some exceptional code paths are never included in the compilation - for example, if dividing by zero should cause an immediate crash of the application with a message being printed out, there is no use in spending time compiling and optimizing the error-message printing code, as it will at max be called once.
 
-For that, Graal uses guards - statements that when reached by the runtime result in de-optimization. De-optimization is a process of transferring evaluation from the compiled variant of the method back to the interpreter (at the precise point where it was interrupted) and throwing away the already compiled variant, as its assumptions no longer hold.
+For that, Graal uses guards - statements that, when reached by the runtime, result in de-optimization. De-optimization is a process of transferring evaluation from the compiled variant of the method back to the interpreter at the precise point where it was interrupted and throwing away the already compiled variant, as its assumptions no longer hold.
 
 As an example, here's a pseudo-code of what a single-cache virtual call implementation could look like.
 
@@ -183,17 +190,17 @@ All Java objects traditionally have to be allocated on the heap, as the VM has n
 
 ### `MERGE_EXPLODE` strategy
 
-One of the key elements that allow for implementing bytecode interpreters that are partial evaluation friendly is the `MERGE_EXPLODE` loop explosion strategy (emphasis added):
+One of the key elements that allows for implementing partial evaluation friendly bytecode interpreters is the `MERGE_EXPLODE` loop explosion strategy (emphasis added):
 
 > like `ExplodeLoop.LoopExplosionKind.FULL_EXPLODE`, but copies of the loop body that have the exact same state (all local variables have the same value) are merged. This reduces the number of copies necessary, but can introduce loops again. **This kind is useful for bytecode interpreter loops.**
 
-To fully appreciate the importance of this strategy, we have to point out the following fact of CLI's design from _I.12.3.2.1 The evaluation stack_  (emphasis added):
+To fully appreciate the importance of this strategy, we have to point out the following fact of CLI's design from _I.12.3.2.1 The evaluation stack_  (emphasis added):
 
-> The type state of the stack (**the stack depth** and types of each element on the stack) at any given point in a program **shall be identical for all possible control flow paths**. For example, a program that loops an unknown number of times and pushes a new element on the stack at each iteration would be prohibited. 
+> The type state of the stack (**the stack depth** and types of each element on the stack) at any given point in a program **shall be identical for all possible control flow paths**. For example, a program that loops an unknown number of times and pushes a new element on the stack at each iteration would be prohibited. 
 
-This design choice is not a coincidence, as it is vital also for hand-crafting performant JIT compilers. With regards to `MERGE_EXPLODE`, it means that all copies of the interpreter's inner loop that have the same bytecode offset will also have the same evaluation stack depth and type layout.
+This design choice is not a coincidence, as it is vital also for hand-crafting performant JIT compilers. Regarding `MERGE_EXPLODE`, it means that all copies of the interpreter's inner loop that have the same bytecode offset will also have the same evaluation stack depth and type layout.
 
-Thanks to this, if we have for example a push immediate 4 instruction somewhere in the code, we can be sure it can be translated to a simple statement like `stack[7] = 4`, as in every execution of this instruction the stack depth has to be the same. This enables more optimizations, as this constant can be propagated to the next instruction reading `stack[7]`. 
+Thanks to this if we have, for example, a push immediate 4 instruction somewhere in the code, it can be translated to a simple statement like `stack[7] = 4`, as in every execution of this instruction the stack depth has to be the same. This enables more optimizations, as this constant can be propagated to the next instruction reading `stack[7]`. 
 
 To explain the inner working on a more involved example, let's manually apply this strategy to the following pseudo bytecode of `for(int i = 0; i < 100; i++) {a = a*a; }; return a;`:
 
@@ -227,7 +234,7 @@ To explain the inner working on a more involved example, let's manually apply th
 15: OPCODE_RET
 ```
 
-Our intepreter might look something like this:
+Our interpreter might look something like this:
 
 ```
 pc = 0 //bytecode offset
@@ -268,7 +275,7 @@ while(True)
     pc += lenghtOf(opcode)
 ```
 
-Thanks to the strategy, for every bytecode offset only one state has to be created. Knowing exactly the stack depth, we can partially evaluate the stack positions to constants:
+Thanks to the strategy, only one state per bytecode offset has to be created. Knowing exactly the stack depth, we can partially evaluate the stack positions to constants:
 
 ```
 ; i=0
@@ -300,7 +307,7 @@ Thanks to the strategy, for every bytecode offset only one state has to be creat
 15: return stack[0]
 ```
 
-As the stack is not used outside this method, it will be completely virtualized. The fact that all stack array accesses use constant allows for aggressive optimization resulting in completely optimizing out the array:
+As the stack does not leave this method, it will be completely virtualized. Thanks to all stack array accesses using constant indices, we can apply aggressive optimization and optimize out the array:
 
 ```
   vars[i] = 0;
@@ -315,7 +322,7 @@ end:
   return vars[a]
 ```
 
-Even though we started with a big interpreter loop, by merging the instances having the same bytecode offset it disappears and the original control flow of the method is reconstructed from the flat bytecode.
+Even though we started with a big interpreter loop, by merging the instances having the same bytecode offset, the interpreter loop disappears and the original control flow of the method reappears from the flat bytecode.
 
 # CLI Component parser
 
