@@ -10,16 +10,18 @@ public class CLITableIterator<T extends CLITableRow<T>> implements Iterator<T> {
 
     private boolean first = true;
     private T current;
+    private final boolean empty;
 
-    public CLITableIterator(T current) {
+    public CLITableIterator(T current, boolean empty) {
         this.current = current;
+        this.empty = empty;
     }
 
     @Override
     public boolean hasNext() {
         if(first)
         {
-            return true;
+            return !empty;
         }
         return current.hasNext();
     }

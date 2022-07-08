@@ -4,10 +4,12 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleFile;
 import com.oracle.truffle.api.TruffleLanguage;
+import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.source.Source;
 import com.vztekoverflow.bacil.BACILEngineOption;
 import com.vztekoverflow.bacil.BACILInternalError;
 import com.vztekoverflow.bacil.BACILLanguage;
+import com.vztekoverflow.bacil.interop.BACILBindings;
 import com.vztekoverflow.bacil.parser.BACILParserException;
 import com.vztekoverflow.bacil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.bacil.parser.cli.CLIComponent;
@@ -31,11 +33,18 @@ public class BACILContext {
     private final List<Path> libraryPaths = new ArrayList<>();
     private final ArrayList<BACILComponent> loadedAssemblies = new ArrayList<>();
 
+    private final TruffleObject topBindings;
+
     @CompilerDirectives.CompilationFinal
     private BuiltinTypes builtinTypes = null;
 
     @CompilerDirectives.CompilationFinal
     private boolean builtinInitalizing = false;
+
+
+    public TruffleObject getBindings() {
+        return topBindings;
+    }
 
     @CompilerDirectives.CompilationFinal(dimensions = 1)
     private final String[] stubbedMethods;
@@ -65,6 +74,7 @@ public class BACILContext {
 
         addLibraryPaths(BACILEngineOption.getPolyglotOptionSearchPaths(env));
         this.stubbedMethods = BACILEngineOption.getPolyglotOptionStubbedMethods(env);
+        this.topBindings = new BACILBindings(this);
 
     }
 
@@ -117,7 +127,7 @@ public class BACILContext {
             TruffleFile file = getEnv().getInternalTruffleFile(absPath.toUri());
             if (file.exists()) {
                 try {
-                    CLIComponent c = loadAssembly(Source.newBuilder(BACILLanguage.ID, file).build());
+                    CLIComponent c = loadAssembly(Source.newBuilder(BACILLanguage.ID, file).mimeType(BACILLanguage.CIL_PE_MIME_TYPE).build());
                     if(c.getAssemblyIdentity().resolvesRef(reference))
                     {
                         return c;
@@ -127,7 +137,7 @@ public class BACILContext {
                 }
             }
         }
-        throw new BACILInternalError("Failed to locate assembly " + reference.getName());
+        return null;
     }
 
     /**
@@ -218,4 +228,5 @@ public class BACILContext {
         }
         return false;
     }
+
 }

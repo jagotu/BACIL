@@ -493,4 +493,32 @@ public class CLIComponent extends BACILComponent {
     public String toString() {
         return assemblyIdentity.getName();
     }
+
+    private String getFriendlyName(String namespace, String name)
+    {
+        if(!namespace.equals(""))
+        {
+            return namespace + "." + name;
+        }
+        return name;
+    }
+
+    @Override
+    public String[] getAvailableTypes() {
+        final int defCount = tables.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_TYPE_DEF);
+        final int expCount = tables.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_EXPORTED_TYPE);
+        String[] types = new String[defCount + expCount];
+
+
+        for(CLITypeDefTableRow row : getTableHeads().getTypeDefTableHead())
+        {
+            types[row.getRowNo()-1] = getFriendlyName(row.getTypeNamespace().read(stringHeap), row.getTypeName().read(stringHeap));
+        }
+
+        for(CLIExportedTypeTableRow row : getTableHeads().getExportedTypeTableHead())
+        {
+            types[defCount+row.getRowNo()-1] = getFriendlyName(row.getTypeNamespace().read(stringHeap), row.getTypeName().read(stringHeap));
+        }
+        return types;
+    }
 }

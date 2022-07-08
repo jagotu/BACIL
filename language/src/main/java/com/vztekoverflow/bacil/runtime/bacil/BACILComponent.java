@@ -46,4 +46,6 @@ public abstract class BACILComponent {
      */
     public abstract Type findLocalType(String namespace, String name);
 
+    public String[] getAvailableTypes() { return new String[0]; };
+
 }

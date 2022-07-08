@@ -177,7 +177,7 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
      */
     @Override
     public Iterator<T> iterator() {
-        return new CLITableIterator<T>(createNew(tables, cursor, rowIndex));
+        return new CLITableIterator<T>(createNew(tables, cursor, rowIndex), tables.getTablesHeader().getRowCount(getTableId()) == 0);
     }
 
     /**

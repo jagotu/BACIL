@@ -249,7 +249,7 @@ public class CLIType extends Type {
         while(curr.getRowNo() < methodsEnd)
         {
             if(curr.getName().read(definingComponent.getStringHeap()).equals(name)
-                    && MethodDefSig.read(curr.getSignature().read(definingComponent.getBlobHeap()), definingComponent).compatibleWith(signature))
+                    && signature.compatibleWith(MethodDefSig.read(curr.getSignature().read(definingComponent.getBlobHeap()), definingComponent)))
                 return definingComponent.getLocalMethod(curr, this);
 
             curr = curr.next();

@@ -53,7 +53,7 @@ public class BACILLauncher extends AbstractLanguageLauncher {
         contextBuilder.allowAllAccess(true);
 
         try (Context context = contextBuilder.build()) {
-            final Source source = Source.newBuilder(LANGUAGE_ID, new File(inputFile)).build();
+            final Source source = Source.newBuilder(LANGUAGE_ID, new File(inputFile)).mimeType("application/x-dosexec").build();
             final long start = System.currentTimeMillis();
             returnValue = context.eval(source).asInt();
             System.err.println("Returned: " + returnValue);
