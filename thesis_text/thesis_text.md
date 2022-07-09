@@ -492,7 +492,7 @@ if(type.hasNext())
 
 ## Conclusion
 
-In the end, design and implementation of the parser took a non-trivial chunk of the development time. Even though straightforward code-size indicators are controversial, we feel that the parser (excluding generated code) comprising TODO 124131 bytes over 3625 lines of code and the rest of the language package comprising 256063 bytes over 7103 lines shows the substantiality of the parser.
+In the end, design and implementation of the parser took a non-trivial chunk of the development time. Even though straightforward code-size indicators are controversial, we feel that the parser (excluding generated code) comprising 119594 bytes over 3609 lines of code and the rest of the language package comprising 266010 bytes over 7534 lines shows the substantiality of the parser.
 
 # Runtime
 
