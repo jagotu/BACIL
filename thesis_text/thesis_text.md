@@ -43,7 +43,7 @@ These factors resulted in academic and hobby experimentation with programming la
 In recent years, frameworks appeared that promise to deliver performance comparable to state-of-the-art JIT compilers while requiring only a simple interpreter-style implementation. Examples of such frameworks are [RPython](https://rpython.readthedocs.io/) and the [Truffle language implementation framework](https://www.graalvm.org/graalvm-as-a-platform/language-implementation-framework/).
 Researchers concluded that Truffle's performance "is competitive with production systems even when they have been heavily optimized for the one language they support"[^5].
 
-As the performance aspects of language implementations made by experts (sometimes even designers of these frameworks themselves) are well understood, in this work we wanted to focus on testing another claim: the "reduced complexity for implementing languages in our system [that] will enable more languages to benefit from optimizing compilers"[^5]. 
+As the performance aspects of language implementations made by experts (sometimes even designers of these frameworks themselves) are well understood, in this work we wanted to focus on testing another claim: the "reduced complexity for implementing languages in our system [that] will enable more languages to benefit from optimizing compilers"[^5].
 
 **Is it feasible to achieve the promised performance benefits with an academic interpreter-style implementation of a language runtime?** In this work, we implement BACIL, a runtime for .NET, to answer this question.
 
@@ -57,7 +57,7 @@ We chose .NET as a platform to implement, mostly because:
 
 While .NET is a well-recognized name, it is a marketing/brand name whose meaning changed through history. Our implementation follows [ECMA-335 Common Language Infrastructure (CLI)](https://www.ecma-international.org/publications-and-standards/standards/ecma-335/) which doesn't mention the .NET brand at all. We will use the names defined in the standard throughout this work. All references to specific implementations/brand names we include only to aid understanding with no ambition to be accurate, mainly for .NET vs .NET Core vs .NET Framework vs .NET Standard nomenclature.
 
-> The Common Language Infrastructure (CLI) provides a specification for executable code and the execution environment (the Virtual Execution System) in which it runs. 
+> The Common Language Infrastructure (CLI) provides a specification for executable code and the execution environment (the Virtual Execution System) in which it runs.
 
 .NET languages (like C#) are compiled into "managed code"[^7] - instead of targeting native processor instruction sets, they target the CLI's execution environment.
 
@@ -75,7 +75,7 @@ Another large part of the framework is the standard libraries - the base class l
 
 ## Truffle and Graal
 
-To implement a high-performance CLI runtime, we employ the [Truffle language implementation framework](https://www.graalvm.org/graalvm-as-a-platform/language-implementation-framework/) (henceforth "Truffle") and the [GraalVM Compiler](https://www.graalvm.org/22.1/docs/introduction). These two components are tightly coupled together and we'll mostly be referring to them interchangeably, as even official sources provide conflicting information on the nomenclature. 
+To implement a high-performance CLI runtime, we employ the [Truffle language implementation framework](https://www.graalvm.org/graalvm-as-a-platform/language-implementation-framework/) (henceforth "Truffle") and the [GraalVM Compiler](https://www.graalvm.org/22.1/docs/introduction). These two components are tightly coupled together and we'll mostly be referring to them interchangeably, as even official sources provide conflicting information on the nomenclature.
 
 The Graal Compiler is a general high-performance just-in-time compiler for Java bytecode that is itself written in Java. It is state-of-the-art in optimization algorithms - according to [official documentation](https://www.graalvm.org/22.1/reference-manual/java/compiler/#compiler-advantages), "the compiler in GraalVM Enterprise includes 62 optimization phases, of which 27 are patented".
 
@@ -115,9 +115,9 @@ For a simple example, let's consider _f(s,d) = s*(s*(s+1)+d)_. The specializatio
 
 The separation between _I<sub>static</sub>_ and _I<sub>dynamic</sub>_ is not rigorous - it is valid both to create a separate specialization for every single input combination or to consider all input dynamic and therefore specialize for an empty set. However, these extremes don't provide any performance benefits. Partial evaluation is therefore usually guided by heuristics that analyze when a specific input value is used _often enough_ to warrant a specialization.
 
-In his work, Futamura formulates so-called Futamura projections. Let's define a generic specializer as _specializer: prog × I<sub>static</sub> → prog*_. 
+In his work, Futamura formulates so-called Futamura projections. Let's define a generic specializer as _specializer: prog × I<sub>static</sub> → prog*_.
 
-The first Futamura projection is as follows: Let's define an interpreter as _interpreter: source × inputs → outputs_, a program taking two inputs: the source code and the "inner" inputs for the code. Then the result of _specializer(interpreter, source) = executable_ is a fully realized program for the specific source code as if the source code was "compiled" in the traditional sense of the word. 
+The first Futamura projection is as follows: Let's define an interpreter as _interpreter: source × inputs → outputs_, a program taking two inputs: the source code and the "inner" inputs for the code. Then the result of _specializer(interpreter, source) = executable_ is a fully realized program for the specific source code as if the source code was "compiled" in the traditional sense of the word.
 
 The second Futamura projection observes that _specializer(specializer,interpreter) = compiler_ - we generate a tailored specializer that can transform source code into executables.
 
@@ -137,7 +137,7 @@ For our project, the difference between compiled tiers is not too interesting, a
 
 ### Guards and de-optimizations
 
-For practical partial evaluation, it is valuable to perform speculative optimizations - compiling the code expecting invariants that can be broken during runtime. One common example of such speculation is optimizations of virtual calls: assuming that the method will always be called on objects of a specific type allows replacing the virtual call with a static one and enables a more aggressive specialization. 
+For practical partial evaluation, it is valuable to perform speculative optimizations - compiling the code expecting invariants that can be broken during runtime. One common example of such speculation is optimizations of virtual calls: assuming that the method will always be called on objects of a specific type allows replacing the virtual call with a static one and enables a more aggressive specialization.
 
 Also, it is often useful to make sure some exceptional code paths are never included in the compilation - for example, if dividing by zero should cause an immediate crash of the application with a message being printed out, there is no use in spending time compiling and optimizing the error-message printing code, as it will at max be called once.
 
@@ -194,13 +194,13 @@ One of the key elements that allows for implementing partial evaluation friendly
 
 > like `ExplodeLoop.LoopExplosionKind.FULL_EXPLODE`, but copies of the loop body that have the exact same state (all local variables have the same value) are merged. This reduces the number of copies necessary, but can introduce loops again. **This kind is useful for bytecode interpreter loops.**
 
-To fully appreciate the importance of this strategy, we have to point out the following fact of CLI's design from _I.12.3.2.1 The evaluation stack_  (emphasis added):
+To fully appreciate the importance of this strategy, we have to point out the following fact of CLI's design from _I.12.3.2.1 The evaluation stack_(emphasis added):
 
-> The type state of the stack (**the stack depth** and types of each element on the stack) at any given point in a program **shall be identical for all possible control flow paths**. For example, a program that loops an unknown number of times and pushes a new element on the stack at each iteration would be prohibited. 
+> The type state of the stack (**the stack depth** and types of each element on the stack) at any given point in a program **shall be identical for all possible control flow paths**. For example, a program that loops an unknown number of times and pushes a new element on the stack at each iteration would be prohibited.
 
 This design choice is not a coincidence, as it is vital also for hand-crafting performant JIT compilers. Regarding `MERGE_EXPLODE`, it means that all copies of the interpreter's inner loop that have the same bytecode offset will also have the same evaluation stack depth and type layout.
 
-Thanks to this if we have, for example, a push immediate 4 instruction somewhere in the code, it can be translated to a simple statement like `stack[7] = 4`, as in every execution of this instruction the stack depth has to be the same. This enables more optimizations, as this constant can be propagated to the next instruction reading `stack[7]`. 
+Thanks to this if we have, for example, a push immediate 4 instruction somewhere in the code, it can be translated to a simple statement like `stack[7] = 4`, as in every execution of this instruction the stack depth has to be the same. This enables more optimizations, as this constant can be propagated to the next instruction reading `stack[7]`.
 
 To explain the inner working on a more involved example, let's manually apply this strategy to the following pseudo bytecode of `for(int i = 0; i < 100; i++) {a = a*a; }; return a;`:
 
@@ -326,37 +326,34 @@ Even though we started with a big interpreter loop, by merging the instances hav
 
 # CLI Component parser
 
-Before being able to execute code, it is necessary to read the code from the assemblies. Prior to starting the work, we expected some open source parsers for this format to exist for various languages, including Java. However, the only alternative stand-alone parser (not a component of a full CLI implementation) we found was [dnlib](https://github.com/0xd4d/dnlib) targeting .NET framework itself. If even for such a popular runtime there are no suitable parsers implemented in Java, we feel that the parser implementation step is an important part to consider in the whole "Building an experimental runtime" picture.
+Before being able to execute any code, it is necessary to read the code from the assemblies. Prior to starting the work, we expected some open source parsers for this format to exist for various languages, including Java. However, the only alternative stand-alone parser (not a component of a full CLI implementation) we found was [dnlib](https://github.com/0xd4d/dnlib) targeting .NET framework itself. If even for such a popular runtime there are no suitable parsers implemented in Java, we feel that the parser implementation step is an important part to consider in the whole "Building an experimental runtime" picture.
 
 ## Analysis
 
 ### Design goals
 
-Before we started designing and implementing the parser, we considered what additional constraints have to be put on a parser in order for it to be partial-evaluation friendly. For partial-evaluation friendliness, the key metric is how trivial can every piece of code be partially evaluated to. This metric is most important for a sequence of instructions executed very frequently, often referred to as a "hot path". While our goal was for the parser to never be called on a hot path for some possible scenarios including reflection it would be necessary.
+Before we design and implement the parser, we consider what additional constraints have to be put on a parser in order for it to be partial-evaluation friendly. For partial-evaluation friendliness, the key metric is how trivial can every piece of code get after partial evaluation. This metric is most important for a sequence of instructions executed frequently, often referred to as a "hot path". While our goal was for the parser to never be called on a hot path, for some scenarios, including reflection, it would be necessary.
 
-There are two possible extremes for parser design: "fully lazy" where every query for the file causes it to be parsed from the start, and "fully preloaded" where all the data from the file is immediatelly fully parsed into hierarchies of objects and structures. Practical parsers usually choose a compromise between those two approaches, mainly because the extremes lead to extremely slow runtime or bootup respectively.
+There are two possible extremes for parser design: "fully lazy" where every query for the file causes it to be parsed from the start, and "fully preloaded" where all the data from the file is immediately fully parsed into hierarchies of objects and structures. Practical parsers usually choose a compromise between those two approaches, mainly because the extremes lead to extremely slow runtime or boot-up, respectively.
 
-Driven by the goal of partial-evaluation friendliness, we decided to design the initial parsing such that:
+Driven by the goal of partial-evaluation friendliness, we design the initial parsing such that:
 
-* trivial queries, e.g. queries for a metadata item at a constant index, would only result in a compilation constant,
-* simple queries, e.g. queries for a metadata item at a variable index, would result in a simple offset calculation (multiply and add) and reads from a compilation constant byte[],
-* all further parsing necessary for more complex queries (creating objects representing metadata concepts etc.) would be performed lazily by invokers and they should make sure to cache their objects themselves.
+* trivial queries, e.g. queries for a metadata item at a constant index, will only result in a compilation constant,
+* simple queries, e.g. queries for a metadata item at a variable index, will get compiled to a simple offset calculation (multiply and add) and a read from a (compilation constant) byte array,
+* all further parsing necessary for more complex queries (creating objects representing metadata concepts etc.) will be lazy and invokers should cache the results themselves.
 
 ### Definition of important CLI component structures
 
-First, we will define terms necessary for understanding our analysis of the complexities of the file format.
+Most of the metadata are stored in streams, with headers outside of the streams describing their locations. There are two basic types of streams: heaps and tables.
 
-Apart from various headers used for locating it, all metadata is stored in streams. There are two basic types of streams: heaps and tables.
-
-Heaps contain sequences of bytes, the meaning of which changes based on the specific heap. The specification defines 4 heaps:
+Heaps contain a sequence of bytes, the meaning of which changes based on the specific heap. The specification defines 4 heaps:
 
 * `#Strings` containing values of identifier strings.
-* `#US` containing values of strings used by the program code itself during runtime.
+* `#US` containing "user strings" - values of strings used by the program code itself during runtime.
 * `#Blob` containing variable-length metadata as binary blobs.
 * `#GUID` containing GUIDs.
 
-The tables are stored in a stream called `#~`. This is the root of all metadata information. The specification describes 38 tables. Cell values can be either  a constant or an index. Indices can point to heaps (the value is a byte offset),
-another table (the value is a row number), or one of multiple tables (the value is a "coded index" specifying both the table and row number).
+The tables are stored in a stream called `#~`. This is the root of all metadata information. The specification describes 38 tables. Cell values can be a constant or an index. Indices can point to heaps (the value is a byte offset), another table (the value is a row number), or one of multiple tables (the value is a "coded index" specifying both the table and row number).
 
 For an example of references between these structures, this is what a single row looks like in the metadata table `TypeDef`, which contains definitions of types:
 
@@ -372,26 +369,24 @@ For an example of references between these structures, this is what a single row
 
 ### Complexities of the CLI component format
 
-Subjectively, we felt the format used by CLI components is not designed well in regards to supporting different parsing approaches and platforms. To substantiate this claim, we want to highlight several factors that complicate parsing the components and had to be considered in the design.
+Subjectively, we feel the format used by CLI components is not designed well with regard to supporting different parsing approaches and platforms. To substantiate this claim, we want to highlight several factors that complicate parsing the components and had to be considered in the design.
 
 #### PE Wrapping
 
 As stated in ECMA-335 _II.25 File format extensions to PE_:
-> The file format for CLI components is a strict extension of the current Portable Executable (PE) File Format. [...] The PE format frequently uses the term RVA (Relative Virtual Address). An RVA is the address of an
-item _once loaded into memory_ [...].
+> The file format for CLI components is a strict extension of the current Portable Executable (PE) File Format. [...] The PE format frequently uses the term RVA (Relative Virtual Address). An RVA is the address of an item _once loaded into memory_ [...].
 > 
-> The RVA of an item will almost always differ from its
-position within the file on disk. To compute the file position of an item with RVA r, search all the sections in the PE file to find the section with RVA _s_, length _l_ and file position _p_ in which the RVA lies, ie _s ≤ r < s+l_. The file position of the item is then given by _p+(r-s)_.
+> The RVA of an item will almost always differ from its position within the file on disk. To compute the file position of an item with RVA r, search all the sections in the PE file to find the section with RVA _s_, length _l_ and file position _p_ in which the RVA lies, ie _s ≤ r < s+l_. The file position of the item is then given by _p+(r-s)_.
 
-On Windows (and other theoretical platforms where PE parsing is a service provided by the operating system) this allows for the component to be loaded into virtual memory as any other executable files. RVA addresses can then be resolved transparently by the CPU's and operating system's virtual memory mappings. For all other platforms this adds one more level of indirection that needs to be handled.
+On Windows and other theoretical platforms where PE parsing is a service provided by the operating system, this allows for the component to be loaded into virtual memory as any other executable files. RVA addresses can then be resolved transparently by the CPU's and operating system's virtual memory mappings. For all other platforms, this adds one more level of indirection that needs to be handled.
 
-As our parser is platform-agnostic and written in Java, we can't use any of those services. Therefore, we need to manually do the sections search and RVA calculations as described in the standard.
+As our parser is platform-agnostic and written in Java, we can't use any of those services. Therefore, we need to manually perform the sections search and RVA calculations as described in the standard.
 
 #### Metadata tables format
 
-The biggest complexity we encountered during parser design was the format of metadata tables. These tables contain most of the metadata information of the CLI component. 
+The biggest complexity we encountered during parser design was the format of metadata tables. These tables contain most of the metadata information of the CLI component.
 
-The data of the tables is stored in the `#~` stream. This stream consists of a header followed by a simple concatenation of values of all rows of all tables with no additional metadata in between. 
+The data of the tables is stored in the `#~` stream. This stream comprises a header followed by a simple concatenation of values of all rows of all tables, with no additional metadata in between.
 
 The header itself contains only the following fields relevant for locating data in the tables (shortened, for full structure see _II.24.2.6 #~ stream_):
 
@@ -401,7 +396,7 @@ The header itself contains only the following fields relevant for locating data 
 | 8      | 8    | Valid     | Bit vectors of present tables                                                            |
 | 24     | 4*n  | Rows      | Array of n 4-byte unsigned integers indicating the number of rows for each present table |
 
-Herein lies the first issue: no information about table lengths are present. This results in **every single parser implementing the format having to implement the format for every single metadata table**, as skipping a table requires knowing the byte length of its rows. This completely prohibits an iterative developement cycle, adding support for only the necessary tables. For example, to implement an utility that only outputs names of all the types available in the component, while only data from the TypeDef table is necessary, all 38 tables defined in ECMA-335 must be implemented. The BACIL implementation described here only accesses 11 of these tables.
+The first issue is that no information about table lengths is present. This results in **every single parser implementing the format having to implement the format for every single metadata table**, as skipping a table requires knowing the byte length of its rows. This completely prohibits an iterative development cycle that adds support for only the necessary tables. For example, to implement a utility that only outputs names of all the types available in the component, while only data from the TypeDef table is necessary, all 38 tables defined in ECMA-335 must be implemented. The BACIL implementation described here only accesses 11 of these tables.
 
 The second caveat comes in _II.22 Metadata logical format: tables_ and _II.24.2.6 #~ stream_:
 
@@ -416,17 +411,17 @@ in a 2-byte value, the indexer column need only be 2 bytes wide. Conversely, for
 > 
 > If _e_ is a _coded index_ that points into table _t<sub>i</sub>_ out of _n_ possible tables _t<sub>0</sub>, … t<sub>n-1</sub>_, then it is stored as e << (log n) | tag{ t0, …tn-1}[ t<sub>i</sub>] using 2 bytes if the maximum number of rows of tables  _t<sub>0</sub>, … t<sub>n-1</sub>_, is less than 2<sup>(16 – (log n))</sup>, and using 4 bytes otherwise. 
 
-While this decision saves storage size it means that table row length can't be considered a constant and is dependant on the row count of other tables. For example, a `TypeDef` table row can be from 14 up to 24 bytes in size.
+While this decision saves storage size, it means that table row length isn’t a constant and depends on the row count of other tables. For example, a `TypeDef` table row can be from 14 up to 24 bytes in size.
 
 This means that the parser can't workaround the first issue by expecting the table row length be constant.
 
-If we were to try to improve the format to alleviate these issues, we would add information about the row length of present tables into the header. Even if each size was stored as a full byte (which all tables defined in the standard fit into), this would at most increase the binary size by 38 bytes and allow for skipping tables without dealing with their internal row format.
+If we were to improve the format to remove these issues, we would add information about the row length of present tables into the header. Even if each size was stored as a full byte (which all tables defined in the standard fit into), this would at most increase each binary’s size by 38 bytes and allow for skipping tables without dealing with their internal row format.
 
 #### Extensive normalisation
 
-File format design is often a compromise between several engineering goals[^6]. One of the design concepts that apply is normalisation, a concept that each information should be stored only once, removing all redundancy. While such a goal can be beneficiary for other uses of the file format (like writing and modifying), from the point of view of a lightly-preloading consumer it results in non-ideal structures.
+File format design is often a compromise between several engineering goals[^6]. One of the design concepts that apply is normalisation, a concept that each information should be stored only once, removing all redundancy. While such a goal can be beneficiary for other uses of the file format (like writing and modifying), from the point of view of a lightly preloading consumer, it results in non-ideal structures.
 
-* In parent-child relationships, only one of the nodes has a direct reference to the other. Traversing the edge from the other side involves enumerating all the possible nodes and searching for one with the appropriate reference. If such queries are performance sensitive, the invoker has to make sure that it caches the answers.
+* In parent-child relationships, only one node has a direct reference to the other. Traversing the edge backwards involves enumerating all the nodes and searching for one with the appropriate reference. If such queries are performance sensitive, the invoker has to cache the answers.
 
 * When referencing a sequence of items in a table, only information about the beginning of the sequence is directly stored. The end of the sequence is either the last row of the table or the start of the next sequence, as specified by the next row, whichever comes first.
 
@@ -436,9 +431,9 @@ File format design is often a compromise between several engineering goals[^6]. 
 
 ### Metadata tables parser
 
-As mentioned in [Metadata tables format](#metadata-tables-format), parsing any metadata tables requires implementing the internal row format for all tables specified in ECMA-335. Implementing all 38 tables manually would both require a big amount of work and make modifications to all parsers complicated. Therefore, this problem sounded like a good opportunity for code generation.
+As mentioned in [Metadata tables format](#metadata-tables-format), parsing any metadata tables requires implementing the internal row format for all tables specified in ECMA-335. Implementing all 38 tables manually would require a sizeable amount of work and make modifications to the parser complicated. Therefore, this problem is a nice match for code generation.
 
-We decided to create a simplified text-file containing information about all the columns in all tables and is also human-readable. For example, the `TypeDef` table (used as an example in [Definition of important CLI component structures](#definition-of-important-cli-component-structures)), was specified like this:
+We created a simplified text-file containing information about all the columns in all tables that is also human readable. For example, the `TypeDef` table (used as an example in [Definition of important CLI component structures](#definition-of-important-cli-component-structures)), was specified like this:
 
 ```
 TypeDef:02
@@ -450,13 +445,13 @@ TypeDef:02
 -MethodList:iMethodDef
 ```
 
-For simplicity, we ended up writing the code generator in plain Java, outputting Java source files. The result can be seen in [CLITableClassesGenerator](https://github.com/jagotu/BACIL/blob/master/language/src/main/java/com/vztekoverflow/bacil/parser/cli/tables/CLITableClassesGenerator.java).
+For simplicity, we write the code generator in plain Java, outputting Java source files. The result is a `CLITableClassesGenerator` class.
 
 ### CLITableRow and CLITablePtr
 
-We wanted the implementation of accessing metadata table rows to be as safe and simple-to-use as possible while keeping in mind the design goals for partial evaluation. The two operations we expected to be most common were enumerating a single table and resolving indices referencing other tables.
+We want the implementation of accessing metadata table rows to be as safe and simple-to-use as possible while keeping in mind the design goals for partial evaluation. The two operations we expect to be most common are enumerating a single table and resolving indices that reference other tables.
 
-For the enumerating, we made `CLITableRow` implement `Iterable`, allowing for a safe for-each access, completely hiding the internal table details. An example of printing all methods defined in component:
+To support enumeration we make `CLITableRow` implement `Iterable`, allowing for a safe for-each access, completely hiding the internal table details. An example of printing all methods defined in a component:
 
 ```Java
 CLIComponent component = ...;
@@ -465,7 +460,7 @@ for (CLIMethodDefTableRow methodDefTableRow : component.getTableHeads().getMetho
 }
 ```
 
-For the index resolving, we made the tables return a `CLITablePtr` wrapped index. It can then be directly provided to `CLITableRow`'s `skip` method, which can validate that the table ID is correct. The importance of this wrapping is increased by the following fact mentioned in _II.22 Metadata logical format: tables_:
+For resolving indices, we made the tables return a `CLITablePtr` wrapped index. Such a pointer can then be directly provided to `CLITableRow`'s `skip` method, which validates that the table ID is correct. The importance of this wrapping is increased by the following fact mentioned in _II.22 Metadata logical format: tables_:
 
 > Indexes to tables begin at 1, so index 1 means the first row in any given metadata table. (An index value of zero denotes that it does not index a row at all; that is, it behaves like a null reference.)
 
@@ -482,7 +477,7 @@ CLIFieldTypeRow firstField =  component.getTableHeads().getFieldTableHead().skip
 
 ### Sequence references
 
-As mentioned in [Extensive normalisation](#extensive-normalisation), sequences of items in a table are stored in a way that requires either implementing column semantics in the parser or the invoker knowing logical table internals. As our table parsers are generated from a definition file, including sequence semantics would require expanding both the generator and the definition file. Instead, we decided to leave the responsibility on the invoker, resulting in code like this (from [CLIType](https://github.com/jagotu/BACIL/blob/master/language/src/main/java/com/vztekoverflow/bacil/runtime/types/CLIType.java#L72)):
+As mentioned in [Extensive normalisation](#extensive-normalisation), sequences of items in a table are stored in a way that requires either implementing column semantics in the parser or the invoker knowing logical table internals. As we generate our table parsers from a definition file, including sequence semantics would require expanding both the generator and the definition file. Instead, we leave the responsibility on the invoker, resulting in code like this (example from the `CLIType` class):
 
 ```Java
 if(type.hasNext())
@@ -497,21 +492,23 @@ if(type.hasNext())
 
 ## Conclusion
 
-In the end, designing and implementing the parser took a non-trivial chunk of the development time. Even though straightforward code-size indicators are controversial, we feel that the parser (excluding generated code) consisting of 124131 bytes over 3625 lines of code and the rest of the language package consisting of 256063 bytes over 7103 lines is indicative of the substantiality of the parser.
+In the end, design and implementation of the parser took a non-trivial chunk of the development time. Even though straightforward code-size indicators are controversial, we feel that the parser (excluding generated code) comprising TODO 124131 bytes over 3625 lines of code and the rest of the language package comprising 256063 bytes over 7103 lines shows the substantiality of the parser.
 
 # Runtime
 
 ## Analysis
 
-In this chapter we'll focus on the overall design of our interpreter and the approaches required to achieve acceptable performance.
+This chapter focuses on the overall design of our interpreter and the approaches required to achieve acceptable performance.
 
 ### Nodes
 
 #### Bytecode nodes
 
-The smallest compilation unit of Truffle is a Node. The nomenclature comes from Truffle's original AST-based design, where nodes represented actual nodes in the tree. As such, the supported pattern was that the nodes were small, typically representing a single operation - for example an `AddNode` that had two child nodes and added them together.
+The smallest compilation unit of Truffle is a Node. This nomenclature comes from Truffle's original AST-based design, where nodes represented actual nodes in the syntax tree. The supported pattern was that the nodes were small, typically representing a single operation - for example, an `AddNode` that had two child nodes and added them together.
 
-However, this design is not applicable for our bytecode interpreter. Inside one method, the bytecode doesn't have any tree structure we could replicate with the nodes. As such, the most straightforward solution is to have one node per method, which we can call a `BytecodeNode`. This design has some limitations, mainly the fact that without additional work (described below), once a node starts executing in a specific performance mode (interpreted mode, a low tier compilation etc.), it has to finish running in that specific mode. Truffle always starts executing code immediately in interpreted mode and only later it considers compiling it. This can lead to bad results - for example, let's consider the following code running in a one-node-per-method implementation:
+However, this design is not applicable for our bytecode interpreter. Inside one method, the bytecode doesn't have any tree structure we could replicate with the nodes. The most straightforward solution is to have one node per one bytecode chunk, which in the CLI subset we implement corresponds to one method. We call such a node the `BytecodeNode`. 
+
+Having big nodes with several instructions has its tradeoffs, mainly the fact that without additional work (described below), once a node starts executing in a specific performance tier (see [Tiered compilation](#tiered-compilation), it has to finish running in that specific tier. Truffle always starts executing code immediately in interpreted mode and only later considers compiling it. This can lead to poor results. For example, let's consider the following code running in a one-node-per-method implementation:
 
 ```C#
 static int Main()
@@ -528,9 +525,9 @@ static int Main()
 }
 ```
 
-The runtime will immediately enter the `Main` node and start executing in in interpreter mode and as the entire execution is spent in this one node, it will never have a chance to run a single compiled statement. This has very significant performance impacts (see [Warmup concerns](#warmup-concerns) for final benchmarks).
+The runtime will immediately enter the `Main` node and start executing it in interpreter mode. As the entire execution is spent in this one node, it will never get a chance to run a single compiled statement. This significantly affects the performance (see [Warmup concerns](#warmup-concerns) for an example of the slowdown in interpreted mode).
 
-In [Bringing Low-Level Languages to the JVM: Efficient Execution of LLVM IR on Truffle (2016)](https://dl.acm.org/doi/10.1145/2998415.2998416), the authors described a method of separating the bytecode into "basic blocks" that only contain instructions that don't affect the control flow. The flow between these basic blocks is done by a "block dispatcher", selecting the adequate basic block to continue the execution with.
+In [Bringing Low-Level Languages to the JVM: Efficient Execution of LLVM IR on Truffle (2016)](https://dl.acm.org/doi/10.1145/2998415.2998416), the authors described a method of separating the bytecode chunk into "basic blocks", each containing only instructions that don't affect the control flow. A "block dispatcher" controls the flow between these basic blocks, selecting the adequate basic block to continue the execution with.
 
 ![alt](basicblocks_0.svg)
 
@@ -544,42 +541,41 @@ _LLVM IR of the C program. (citation)_
 
 _Basic block dispatch node for the LLVM IR. (citation)_
 
-While this approach alleviates the issue and would separate our nested loops into smaller compilation units, it was superseded by a more generic strategy directly implemented in Truffle.
+While this approach eases the issue and would separate our nested loops into smaller compilation units, it was superseded by a more generic strategy directly implemented in Truffle.
 
 This strategy, called On-Stack Replacement (OSR), was made specifically to target the described issue:
 
-> During execution, Truffle will schedule “hot” call targets for compilation. Once a target is compiled, later invocations of the target can execute the compiled version. However, an ongoing execution of a call target will not benefit from this compilation, since it cannot transfer execution to the compiled code. This means that a long-running target can get “stuck” in the interpreter, harming warmup performance.
-> 
-> On-stack replacement (OSR) is a technique used in Truffle to “break out” of the interpreter, transferring execution from interpreted to compiled code. Truffle supports OSR for both AST interpreters (i.e., ASTs with LoopNodes) and bytecode interpreters (i.e., nodes with dispatch loops). In either case, Truffle uses heuristics to detect when a long-running loop is being interpreted and can perform OSR to speed up execution.
+> During execution, Truffle will schedule "hot" call targets for compilation. Once a target is compiled, later invocations of the target can execute the compiled version. However, an ongoing execution of a call target will not benefit from this compilation, since it cannot transfer execution to the compiled code. This means that a long-running target can get "stuck" in the interpreter, harming warmup performance.
+>
+> On-stack replacement (OSR) is a technique used in Truffle to "break out" of the interpreter, transferring execution from interpreted to compiled code. Truffle supports OSR for both AST interpreters (i.e., ASTs with LoopNodes) and bytecode interpreters (i.e., nodes with dispatch loops). In either case, Truffle uses heuristics to detect when a long-running loop is being interpreted and can perform OSR to speed up execution.
 
-During our design phase, the OSR was still being worked on, being only introduced in Graal 21.3 released in October 2021. For that reason, our design isn't compatible with it - to support it, all state has to be stored in Truffle's frames, while we only use them to pass/recieve arguments and store the rest of the state in plain variables. However, moving this state into the frame should be the only major step necessary to support OSR. Because of the significance of OSR, if we were designing the runtime again, we'd definitely focus on supporting it.
+During our design phase, the OSR was still being worked on, being only introduced in Graal 21.3 released in October 2021. For that reason, our design isn't compatible with it - to support it, all state has to be stored in Truffle's frames, while we only use frames to pass/receive arguments and store the rest of the state in plain variables. However, moving this state into the frame should be the only major step necessary to support OSR. Because of the significance of OSR, if we were designing the runtime again, we'd definitely focus on supporting it.
 
 #### Instruction nodes
 
-Some instructions require values that can be pre-calculated. A typical example in CIL are instructions that have a token as its argument - a token is a pointer into metadata tables and requires calling into the parser to resolve. We want to perform this resolving only once and cache it for future executions.
+Some instructions require values that can be pre-calculated. A typical example in CIL are instructions that have a token as its argument - a token is a pointer into metadata tables and requires calling into the parser to resolve. We want to perform this resolution only once and cache it for future executions.
 
-For that, we'll use a process of nodeization (called "quickening" in Espresso, the Java bytecode interpreter for GraalVM) - we create a node representing the instruction with the data already precomputed and patch the bytecode, replacing the original instruction with a BACIL-specific `TRUFFLE_NODE` opcode. When this instruction is later hit, the child node is called directly.
-
+For that, we'll use a process of nodeization (called "quickening" by Espresso, the Java bytecode interpreter for GraalVM) - we create a node representing the instruction with the data already pre-computed and patch the bytecode, replacing the original instruction with a BACIL-specific `TRUFFLE_NODE` opcode. When the interpreter hits this instruction, it calls the respective child node.
 
 ### Dynamicity of references
 
-One of the additional things to consider when implementing a partial-evaluation friendly interpreter is dynamicity of references, where by dynamicity we mean how often the reference changes its state. This metric is important because effectively the dynamicity of a chain of references will be equal to the most dynamic of the references. As a result, what would usually be considered bad design patterns is sometimes necessary to divide the chain into more direct references, such that each object is reachable with the lowest dynamicity possible.
+One of the additional things to consider when implementing a partial-evaluation friendly interpreter is dynamicity of references, whereby dynamicity we mean how often the reference changes its state. This metric is important because effectively the dynamicity of a chain of references will be equal to the most dynamic of the references. As a result, what would traditionally be considered bad design patterns is sometimes necessary to divide the chain into more direct references, such that each object is reachable with the lowest dynamicity possible.
 
 The following reference graph shows the refactoring in a generic case:
 
 ![alt](dynamicity_generic.drawio.svg)
 
-_Scenario 1: Reference chain results in class B being accessible with high dynamicity and therefore not being effectively partially evaluated_
+_Scenario 1: Reference chain results in class B being accessible with high dynamicity and therefore not being effectively partially evaluated._
 
 ![alt](dynamicity_generic_good.drawio.svg)
 
-_Scenario 2: Class B is accessible with a low dynamicity reference, resulting in more effective partial evaluation_
+_Scenario 2: Class B is accessible with a low dynamicity reference, resulting in more effective partial evaluation._
 
-For a case study from the BACIL implementation, let's consider the design decisions behind `LocationDescriptor` and `LocationHolder`. Each location has a type and a value. While the value itself (and the type of the value) changes based on the running code, the type of the location never changes. This is a perfect example of two pieces of information with different dynamicity. 
+For a case study from the BACIL implementation, let's consider the design decisions behind `LocationDescriptor` and `LocationHolder`. Each location has a type and a value. While the value itself (and the type of the value) changes based on the running code, the type of the location never changes. This is a perfect example of two pieces of information with different dynamicity.
 
-Even from regular developement patterns, it makes sense to divide location values and location types into separate classes - store the location type information in the metadata as a "prototype" for then creating the value storage based on it. In BACIL, `LocationDescriptor` contains the Type information and `LocationHolder` contains the actual values.
+Even from regular development patterns, it makes sense to divide location values and location types into separate classes - store the location type information in the metadata as a "prototype" for then creating the value storage based on it. In BACIL, `LocationDescriptor` contains the Type information and `LocationHolder` contains the actual values.
 
-To work with the values, it is always necessary to know the location type (mainly to differentiate between ValueTypes and references). The rule of encapsulation would dictate that the final caller doesn't need to know that there's a `LocationDescriptor` tied to the `LocationHolder`, as it's an internal detail. Such an implementation would look something like this:
+To work with the values, it is always necessary to know the location type (mainly to differentiate between ValueTypes and references). The rule of encapsulation would dictate that the consumer doesn't need to know that there's a `LocationDescriptor` tied to the `LocationHolder`, as it's an internal detail. Such an implementation would look something like this:
 
 ```Java 
 public class LocationHolder {
@@ -605,7 +601,7 @@ public class LocationHolder {
 Object fieldValue = ((StaticObject)object).getLocationsHolder().locationToObject(0);
 ```
 
-However, using this code results in an unoptimal dynamicity chain and uneffective partial evaluation:
+However, using this code results in a non-optimal dynamicity chain and ineffective partial evaluation:
 
 ![alt](dynamicity_case.drawio.svg)
 
@@ -636,21 +632,21 @@ _Scenario 2: While the `LocationHolder` remains accessible from a highly dynamic
 
 ### Standard libraries
 
-Our goal was to have to implement as little of the standard library as possible. When starting with the implementation, our hope was that the boundary between the parts implemented in CIL and native methods would be well decoupled, so that we can reuse all of the CIL parts and for the native parts either implement them or even possibly call .NET's implementation. Unfortunately, that's not always the case. As the [documentation](https://github.com/dotnet/runtime/blob/main/docs/design/coreclr/botr/corelib.md) admits, "CoreLib has several unique properties, many of which are due to its tight coupling to the CLR.".
+Our goal was to implement as little of the standard library as possible. When starting with the implementation, we hoped parts implemented in CIL and native methods will be well decoupled, so that we can reuse all CIL parts. For the native parts, we would call .NET's native implementation if possible, and implement them in BACIL otherwise. Unfortunately, the coupling is tight, as the [documentation](https://github.com/dotnet/runtime/blob/main/docs/design/coreclr/botr/corelib.md) admits:
 
-The biggest offender in this regard are strings. To achieve high performance, .NET's runtime expects the native view (`StringObject`) and managed view (`System.String`) of the string to be identical, so the coupling is extremely tight. This is the reason why BACIL doesn't support most operations with strings, apart from loading them as a constant - we'd either have to reimplement the operations or implement the strict marshalling that's expected by .NET's code.
+> CoreLib has several unique properties, many of which are due to its tight coupling to the CLR.
 
-The runtime uses two kinds of calls into native code, QCalls and FCalls. QCalls are using the P/Invoke mechanism, while FCalls are using methods marked with `MethodImplOptions.InternalCall` in the metadata. 
+The biggest offender are strings. To achieve high performance, .NET's runtime expects the native view (`StringObject`) and managed view (`System.String`) of strings to be identical, so the coupling is extremely tight. To support string operations in BACIL, we'd either have to reimplement the operations or implement the strict marshalling that's expected by .NET's native code.
 
-Truffle's official mechanism of calling into native code is called the Native Function Interface (NFI). Unfortunately, at the time of designing BACIL, it was missing key features, for example not supporting custom ABIs (calling conventions).
+Truffle's official mechanism of calling into native code is called the Native Function Interface (NFI). Unfortunately, at the time of designing BACIL, it was missing key features, for example support of custom ABIs (calling conventions).
 
-In the end, our experiments with calling native .NET runtime code using NFI showed it would significantly complicate the whole codebase with uncertain results, and we decided against it. That however means that we'll have to implement all necessary native code ourselves.
+In the end, our experiments with calling native .NET runtime code using NFI showed it would significantly complicate the whole codebase with uncertain results, and we decided against it. Unfortunately, we'll have to re-implement all necessary native code ourselves in BACIL.
 
 ### BACILHelpers
 
-We will need a way to expose our own "native" BACIL functionality to C# code. For that, we'll create an assembly called BACILHelpers. This assembly will have two implementations: there will be a .NET CIL variant (written in C#) for running on .NET, but when BACIL recognizes a reference to this assembly, it will instead replace it with a "virtual" assembly leading to BACIL'S implementations.
+To provide additional BACIL APIs, we need to expose our own "native" BACIL functionality to C# code. For that, we create an assembly called BACILHelpers. This assembly has two implementations: a proper .NET variant (written in C#) for running on .NET, and a "virtual" assembly leading to BACIL’s internal methods that BACIL silently injects.
 
-That way, we can for example have a `BACILConsole.Write` method implemented like this in the C# implementation:
+Here’s an example of how we can implement a `BACILConsole.Write` method in the C# variant:
 
 ```C#
 public class BACILConsole
@@ -662,7 +658,7 @@ public class BACILConsole
 }
 ```
 
-And the following is an example implementation in BACIL (shortened and simplified):
+And the same method in BACIL (shortened and simplified):
 
 ```Java
 public class BACILHelpersComponent extends BACILComponent {
@@ -688,10 +684,9 @@ public class BACILConsoleWriteMethod extends JavaMethod {
 }
 ```
 
-
 ### Values and locations
 
-Another batch of important design decisions is related to values and their storage. As specified in ECMA-335, the values can have the following "homes":
+As specified in ECMA-335, values can have the following "homes":
 
 > **I.12.1.6.1 Homes for values**
 > The **home** of a data value is where it is stored for possible reuse. The CLI directly supports the following home locations:
@@ -709,27 +704,23 @@ Another batch of important design decisions is related to values and their stora
 
 As Truffle requires Java objects to be passed on the node boundary, BACIL also has an additional state where the value is a Java object.
 
-In .NET, all locations are typed (ECMA-335 I.8.6.1.2 Location signatures). While evaluation stack slots are also typed, they use a different and more coarse type system. 
+In .NET, all locations are typed (ECMA-335 I.8.6.1.2 Location signatures). While evaluation stack slots are also typed, they use a different and more coarse type system.
 
-We need to decide how to represent the various homes and the values themselves and also how transitions between various states will be implemented.
+To avoid boxing and unboxing numbers (integers and floating-point numbers), we cannot just store all values in an `Object[]`. Therefore, it is necessary to always have separate storages for primitives, best implemented by a `long[]`.
 
-To avoid boxing and unboxing numbers (integers and floating point numbers), we cannot just store all values in an `Object[]`. Therefore, it is necessary to always have separate storages for primitives, best implemened by a `long[]`.
+Locations usually exist in multiples (local variables, arguments, fields, etc.) and are always statically typed - one location will always have one type through its lifetime and only ever contain values type-compatible with its type. We divide the Location into two parts: a descriptor and a holder.
 
-Locations usually exist in multiples (local variables, arguments, fields, etc.) and are always statically typed - one location will always have one type through its lifetime and only ever contain values type-compatible with its type. As such, we divide the Location into two parts: a descriptor and a holder.
+The holder is actually extremely simple: it only has an `Object[] refs` and a `long[] primitives` that are big enough to hold all the values required by the descriptor. The holder knows nothing of the types or identities of values inside. This represents one instance of a value storage.
 
-The holder is actually extremely simple: it only has an `Object[] refs` and a `long[] primitives` that are big enough to hold all the values required by the descriptor. The holder knows nothing of the types or identities of object inside. This represents one instance of a value storage. 
+The descriptor represents the "shape" of the locations, knowing the type of each location and indices into the holder to store values at.
 
-On the other hand, the descriptor represents the "shape" of the locations, knowing the type of each location and indices into the holder to store values at. 
+One feature of ECMA-335 is so-called user-defined ValueTypes, structures that have the semantics of a primitive. The idea is that two integers (x,y) and a Point structure (with x,y fields) will look exactly the same on the stack, instead of the latter turning into an object reference. Our implementation will follow that example, as we will "flatten" the structure, reserving space in the ValueType’s parent for each of its fields.
 
-One feature of .NET are so-called user-defined ValueTypes, structures that have the semantics of a primitive. The idea is that two integers (x,y) and a Point structure (with x,y fields) will look exactly the same on the stack, instead of the latter turning into an object reference. Our implementation will follow that example, as we will "flatten" the structure, reserving space for each of the fields. 
-
-
-The evaluation stack is a bit more complicated: while at each point in time the type of the evaluation stack field is known, it changes throughout execution. Each stack slot will therefore have to exist as both a reference slot and a primitive slot and we'll have to keep track of which one to use. To achieve that, we will just by default expect the value to be in the refs slot and in case it's not, we repurpose the refs slot to hold a "marker" object describing the stack-type of the value in the primitive slot. As such, while an object would be stored in `(ref, primitive)` as `(obj, undefined)`, a native int 42 would be stored as a `(EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT, (long)42)`.
-
+The evaluation stack is a bit more complicated: while at each point in time the type of the evaluation stack field is known, it changes throughout execution. Each stack slot therefore has to exist as both a reference slot and a primitive slot and we'll have to keep track of which one to use. To achieve that, we by default expect the value to be in the refs slot. In case it's not, we repurpose the refs slot to hold a "marker" object describing the stack-type of the value in the primitive slot. An object will be stored in `(ref, primitive)` as `(obj, undefined)`, a native int 42 will be stored as a `(EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT, (long)42)`.
 
 #### State transitions
 
-Keeping in mind the [Dynamicity of references](#dynamicity-of-references) and the fact that all locations are typed (and the type of a location never changes), it follows to make the `Type` objects responsible for implementing the state transitions. There are 6 possible transitions between objects, evaluation stack and locations which will be implemented as the following methods of `Type`:
+Keeping in mind the [Dynamicity of references](#dynamicity-of-references) and the fact that all locations are typed (and the type of a location never changes), it follows to make the `Type` objects responsible for implementing the state transitions. There are 6 possible transitions between objects, evaluation stack and locations implemented as the following methods of `Type`:
 
 ```Java
 public void stackToLocation(LocationsHolder holder, int primitiveOffset, int refOffset, Object ref, long primitive)
@@ -741,6 +732,7 @@ public void objectToLocation(LocationsHolder holder, int primitiveOffset, int re
 ```
 
 The `Type` class will provide the default transitions for reference types, while subclasses of this class can provide special variants for primitives.
+
 A `LocationHolder` can then resolve the (compilation constant) location type and use it to transition the value, for example like this:
 
 ```Java
@@ -750,25 +742,25 @@ public void locationToStack(LocationsHolder holder, int locationIndex, Object[] 
 }
 ```
 
-One factor to keep in mind is that to follow the standard, the state transitions are coupled with widening or narrowing operations. For example, according to ECMA-335 _I.12.1 Supported data types_ "Short numeric values (int8, int16, unsigned int8, and unsigned int16) are widened when loaded and narrowed when stored.".  We also need to perform our own housekeeping because we store all primitives in a flat `long[]`. Each class representing a primitive implements its own widening and narrowing as necessary.
+One factor to keep in mind is that to follow the standard, the state transitions are coupled with widening or narrowing operations. For example, according to ECMA-335 _I.12.1 Supported data types_ "Short numeric values (int8, int16, unsigned int8, and unsigned int16) are widened when loaded and narrowed when stored.".We also need to perform our own housekeeping because we store all primitives in a flat `long[]`. Each class representing a primitive implements its own widening and narrowing as necessary.
 
 ### CompilationFinal annotation
 
-As explained in [Partial Evaluation](#partial-evaluation), one of the key parts is separating inputs into two sets - dynamic inputs and static inputs. Java's `final` keyword is therefore integral for achieving performance as it guarantees that the variable will be considered as a static input.
+As explained in [Partial Evaluation](#partial-evaluation), one of the key decisions is separating inputs into two sets - dynamic inputs and static inputs. Java's `final` keyword is therefore integral for achieving performance, as it guarantees that the variable will be considered a static input.
 
-An additional issue is that for arrays, marking them as `final` only means that the reference to the array doesn't change, while the contents of the array can change freely. The solution to this issue is the `CompilerDirectives.CompilationFinal`, which can mark arrays such that the compiler considers reads with a constant index as constants. Unlike the built-in `final` keyword, the compiler cannot actually enforce that no writes happen to the array. It is the responsibility of the implementation to always invalidate the current compilation when modifying a `CompilationFinal` array.
+There is an issue that, for arrays, marking them as `final` only means that the reference to the array doesn't change, while the contents of the array can change freely. The solution is the `CompilerDirectives.CompilationFinal` annotation, which can mark arrays such that the compiler considers reads with a constant index as constants. Unlike the built-in `final` keyword, the compiler cannot actually enforce that no writes happen to the array. It is the responsibility of the implementation to always invalidate the current compilation when modifying a `CompilationFinal` array.
 
 ## Debugging performance issues
 
-To achieve high performance, it is necessary to be able to debug performance issues. Unfortunately, traditional methods (like sampling) don't provide the necessary insight for outputs of Graal compilation - during partial evaluation, the code is too transformed for these methods to properly work. A single instruction can possibly be the result of partial evaluation of several different methods and as such cannot be properly attributed to one.
+To achieve high performance, the ability to debug performance issues is necessary. Unfortunately, traditional methods (like sampling) don't provide the required insight for outputs of Graal compilation - during partial evaluation, the code gets transformed too much for these methods to work properly. A single instruction can result from a partial evaluation of several methods and, as such, cannot be attributed properly to one.
 
-Internally, the Graal compiler represents the code during compilation in graphs. The various optimization phases are then transformations on these graphs. Graal allows to dump the current graph in various stages of the compilation pipeline by using the `graal.Dump` VM argument. These graphs are key to understanding results of the partial evaluation, mainly which code was eliminated (by constant folding) and which remained. For our analysis, the "After TruffleTier" phase is most important, which reflects the graph after partial evaluation.
+Internally, the Graal compiler represents the code during compilation in graphs. The various optimization phases are then transformations on these graphs. Graal allows to dump the current graph in various stages of the compilation pipeline by using the `graal.Dump` VM argument. These graphs are key to understanding results of the partial evaluation, mainly which code was eliminated (by constant folding) and which remained. For our analysis, the "After TruffleTier" phase is the most important, as it reflects the graph state after partial evaluation.
 
-The official tool for analyzing these graphs is the [Ideal Graph Visualizer](https://www.graalvm.org/22.1/tools/igv/). However, obtaining it requires "accepting the Oracle Technology Network Developer License", which contains strict limitations for allowed use. As such, we don't consider the tool suitable for general use, as using it during development may limit the future uses of the project.
+The official tool for analyzing these graphs is the [Ideal Graph Visualizer](https://www.graalvm.org/22.1/tools/igv/). However, getting it requires "accepting the Oracle Technology Network Developer License", which contains strict limitations for allowed use. We don't consider the tool suitable for general use, as using it during development may limit the future uses of the project.
 
-Fortunately, an MIT licensed opensource project [Seafoam](https://github.com/Shopify/seafoam) provides all the necessary functionality and will be used exclusively in this work.
+Fortunately, an MIT licensed open source project [Seafoam](https://github.com/Shopify/seafoam) provides all the necessary functionality. Compilation graphs in this work were all generated by Seafoam.
 
-The most common issue we hit when analyzing those graphs was that a piece of code we thought would be eliminated by partial evaluation was still included in the compilation - we designed it to be optimized out, but from the view of the compiler it couldn't be. To debug these issues, we used the `CompilerAsserts.partialEvaluationConstant` method. It allows us to express our belief that something should be a partial evaluation constant to the compiler and get an error message with detailed information about the compiler's view of the expression when it's not.
+The most common issue we hit when analyzing those graphs was that a piece of code we expected to be eliminated by partial evaluation was still included in the compilation - we designed it to be optimized out, but from the view of the compiler it couldn't be. To debug these issues, we used the `CompilerAsserts.partialEvaluationConstant` method. It allows us to express our belief that something should be a partial evaluation constant to the compiler and get an error message with detailed information about the compiler's view of the expression when it's not.
 
 ### Case study
 
@@ -824,7 +816,7 @@ After two additional small changes (adding a field to cache `tableData` with the
 
 ![alt](parseraccess_good.svg)
 
-This case study provides a great example how choices that are functionally equivalent in regular Java can provide vastly different compilation results when partially evaluated. In the end, we mostly only had to add annotations to make a big difference.
+This case study provides a great example of how choices that are functionally equivalent in regular Java can provide vastly different compilation results when partially evaluated. In the end, we mostly only had to add annotations to make a big difference.
 
 We used this process of checking if graphs look as expected using Seafoam and then using `CompilerAsserts.partialEvaluationConstant` to express our desires about constants multiple times during development.
 
@@ -832,9 +824,9 @@ We used this process of checking if graphs look as expected using Seafoam and th
 
 ## Completeness
 
-Due to time constraints, several areas of the standard were ignored. The development was focus on being able to run simple calculation programs and being able to run benchmarks from [Hagmüller's work](#hagmüllers-work).
+Due to time constraints, several areas of the standard were ignored. The development focused on being able to run simple calculation programs and being able to run benchmarks from [Hagmüller's work](#hagmüllers-work).
 
-In total, ECMA-335 defines 219 opcodes, consisting of 6 prefixes and 213 instructions. Of those, our runtime contains code handling 151 instructions and no prefixes. 
+In total, ECMA-335 defines 219 opcodes, consisting of 6 prefixes and 213 instructions. Of those, our runtime contains code handling 151 instructions and no prefixes.
 
 Notable missing features include:
 
@@ -852,11 +844,11 @@ To validate the proper implementation of instructions, we used [.NET's CodeGenBr
 >
 > * [...]
 > * Implement the bare minimum to get the compiler building and generating code for very simple operations, like addition.
-> * Focus on the CodeGenBringUpTests (src\tests\JIT\CodeGenBringUpTests), starting with the simple ones. 
+> * Focus on the CodeGenBringUpTests (src\tests\JIT\CodeGenBringUpTests), starting with the simple ones.
 
-As such, they are perfect for testing corner cases of implemented instructions. One example of a bug uncovered in this test suite that would be very hard to find manually was a missing int32 truncation which was fixed [here](https://github.com/jagotu/BACIL/commit/056640ec276376434f5cb32ac70c3f9eb26c4881#diff-47ca212abb11bfd59685c4b47364f4a21a015136d4d2a8d6bbe014a7c873e2c9R1110).
+They are perfect for testing corner cases of implemented instructions. One example of a bug uncovered in this test suite that would be very hard to find manually was a missing int32 truncation which was fixed [here](https://github.com/jagotu/BACIL/commit/056640ec276376434f5cb32ac70c3f9eb26c4881#diff-47ca212abb11bfd59685c4b47364f4a21a015136d4d2a8d6bbe014a7c873e2c9R1110).
 
-After stubbing out `Write`, `WriteLine`, `ToString` and `Concat` (to get rid of the unsupported operations used by debug prints in case of failure), the BACIL implementation presented in this work passed 85%, e.g. 133 out of the 155  tests, included in the `v6.0.6` tag. All the failed tests were because of missing features and not bugs in implemented features:
+After stubbing out `Write`, `WriteLine`, `ToString` and `Concat` (to get rid of the unsupported operations used by debug prints in case of failure), the BACIL implementation presented in this work passed 85%, e.g. 133 out of the 155tests, included in the `v6.0.6` tag. All the failed tests were because of missing features and not bugs in implemented features:
 
 | Test        | Reason for failure|
 |---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -878,18 +870,17 @@ After stubbing out `Write`, `WriteLine`, `ToString` and `Concat` (to get rid of 
 
 ### Library methods
 
-While we defer library calls to the .NET runtime implementations, the majority of them either require generics or use native methods. We only implemented the following native methods:-
+While we defer library calls to the .NET runtime implementations, most of them either require generics or use native methods. We only implemented the following native methods:-
 
 * `System.Runtime.CompilerServices.RuntimeHelpers.InitializeArray(Array, RuntimeFieldHandle)` used for constant array initializatons (like `int[] a = new int[] {0, 1}`).
 * `System.Math.Abs(Double)`, `System.Math.Cos(Double)` and `System.Math.Sqrt(Double)` required by some float instruction tests.
-* `System.ValueType.GetHashCode()` as user-defined value types override this virtual method and as such it must exist.
-
+* `System.ValueType.GetHashCode()` required by user-defined value types, as they override this virtual method.
 
 ## Performance benchmarks
 
-All benchmarks mentioned here were performed on a laptop with an AMD Ryzen 7 PRO 4750U with 8 cores and 16 virtual threads, a Base Clock of 1.7GHz and boost up to 4.1GHz, featuring 32 GB of RAM and running Windows 10.
+We performed all benchmarks mentioned here on a laptop with an AMD Ryzen 7 PRO 4750U with 8 cores and 16 virtual threads, a Base Clock of 1.7GHz and boost up to 4.1GHz, featuring 32 GB of RAM and running Windows 10.
 
-The tests were run on GraalVM:
+We ran the tests on GraalVM version:
 
 ```
 openjdk 11.0.15 2022-04-19
@@ -897,7 +888,7 @@ OpenJDK Runtime Environment GraalVM CE 22.1.0 (build 11.0.15+10-jvmci-22.1-b06)
 OpenJDK 64-Bit Server VM GraalVM CE 22.1.0 (build 11.0.15+10-jvmci-22.1-b06, mixed mode, sharing)
 ```
 
-and .NET:
+and .NET version:
 
 ```
 Host (useful for support):
@@ -907,8 +898,7 @@ Host (useful for support):
 
 ### Harness
 
-As mentioned in [BACILHelpers](#bacilhelpers), our way of exposing additional functionality consists of implementing them in the `BACILHelpers` assembly which .NET calls directly and BACIL replaces with its own implementaiton. To facilitate benchmarks, we add two new methods: `StartTimer` which starts a timer and `GetTicks` which return the number of ticks since the start. The API was inspired by the API of `System.Diagnostics.StopWatch`, which is what the .NET implementation uses:
-
+As mentioned in [BACILHelpers](#bacilhelpers), our way of exposing additional functionality comprises implementing them in the `BACILHelpers` assembly, which .NET calls directly and BACIL replaces with its own implementation. To facilitate benchmarks, we add two new methods: `StartTimer` which starts a timer and `GetTicks` which return the number of ticks since the start. The API was inspired by the API of `System.Diagnostics.StopWatch`, which is what the .NET implementation uses:
 
 ```C#
 static Stopwatch stopWatch = new Stopwatch();
@@ -926,7 +916,7 @@ public static long GetTicks()
 }
 ```
 
-On the BACIL side, we use `System.nanoTime()`, saving a value on start and the substracting it from the value on end. Combining with the console writing capabilities, this is what our final harness looks like (`DoCalculation` and the iteration count being replaced as necessary):
+On the BACIL side, we use `System.nanoTime()`, saving a value on start and the subtracting it from the value on end. Combining with the console writing capabilities, this is what our final harness looks like (`DoCalculation` and the iteration count being replaced as necessary):
 
 ```C#
 static void report(int iteration, long ticks, int result)
@@ -956,23 +946,21 @@ public static void Main(String[] args)
 
 ### Hagmüller's work
 
-One of the goals was to compare with Hagmüller's implementation from [Truffle CIL Interpreter (2020)](https://epub.jku.at/obvulihs/content/titleinfo/5473678). We recieved copies of the benchmark programs used in the work and were therefore able to run them against our implementation. When researching [.NET runtime JIT benchmarks](#net-runtime-jit-benchmarks), we discovered that the used benchmarks are based on code from the repository. However, to keep the comparison fair, we used the provided modified versions, only changing out the harness. We didn't have access to the interpreter itself so couldn't replicate the original benchmarks and only used the numbers provided in the work. To recieve comparable nubmers, we followed the outlined methodology:
+One goal was to compare with Hagmüller's implementation from [Truffle CIL Interpreter (2020)](https://epub.jku.at/obvulihs/content/titleinfo/5473678). We received copies of the benchmark programs used in the work and could therefore run them against our implementation. When researching [.NET runtime JIT benchmarks](#net-runtime-jit-benchmarks), we discovered that the used benchmarks are based on code from the repository. However, to keep the comparison fair, we used the provided modified versions, only changing out the harness. We didn't have access to the interpreter itself, so couldn't replicate the original benchmarks, and only use the numbers provided in their work. To receive comparable numbers, we followed the outlined methodology:
 
 > The discussed Truffle CIL Interpreter, was evaluated by running a set of different programs. All benchmarks were executed on an Intel i7-5557U processor with 2 cores, 4 virtual threads featuring 16GB of RAM and a core speed of 3.1 GHz running macOS Catalina(64 bit).
-> 
+>
 > We parametrized each benchmark so that its execution results in high workload for our test system. In order to get a performance reference to compare with, we executed the benchmark programs in the mono runtime. We ran the benchmark programs in our Truffle CIL Interpreter on the top of the Graal VM. To find out how much our Truffle CIL Interpreter benefits from the support of compilation by Graal, we also ran the tests in an interpreter only mode, by using the standard Java JDK, instead of Graal. Because Graal optimizes functions which are called a certain number of times, we executed each program in a loop a several amount of times. For our evaluation we wanted to ignore the warm up phase of the compilation, so we just took the last 10 iterations of the execution loop. For each iteration the execution time is measured. For these 10 iterations we calculated the arithmetic mean. In order to reduce statistical outliers we repeated this 10 times and calculated the geometric mean over the arithmetic means.
 
 Our benchmarks had the following differences:
 
 * instead of an unspecified version of the mono runtime, we used .NET 6.0.301 to get the reference performance
 * our system was different
-* we ignored "interpreter only mode" results -- the interpreter was tailored for partial evaluation, so the slowdowns in interpreter mode are usually more than 200x; we don't see value in precisely benchmarking such a glaring difference
+* we ignored "interpreter only mode" results - we tailored the interpreter for partial evaluation, so the slowdowns in interpreter mode are usually more than 200x; we don't see value in precisely benchmarking such a glaring difference
 
 It wasn't obvious if CIL-level optimizations were enabled when compiling the tests in Hagmüller's work. For that reason, we measured both the debug (unoptimized) and release (optimized) compilation configurations.
 
-
-
-The measured slowdowns (relative to .NET in release configuration) were as follows:
+The measured slowdowns (relative to .NET in release configuration) were:
 
 |                       | Debug BACIL | Debug .NET | Release BACIL | Release .NET | Hagmüller |
 |-----------------------|-------------|------------|---------------|--------------|-----------|
@@ -982,7 +970,6 @@ The measured slowdowns (relative to .NET in release configuration) were as follo
 | Mandelbrot            | 5.612       | 2.666      | 4.779         | 1            | 38        |
 | N-Body                | 7.237       | 5.000      | 6.763         | 1            | 194       |
 
-
 ![alt](hagmuller1.svg)
 _Linear bar chart including comparison with Hagmüller's work_
 
@@ -991,11 +978,11 @@ _Linear bar chart with only BACIL results_
 
 ### .NET runtime JIT benchmarks
 
-To get more performance comparisons we used (a subset of) [.NET's JIT benchamrks](https://github.com/dotnet/runtime/tree/main/src/tests/JIT/Performance/CodeQuality). The subset selection was driven by picking only tests using features the BACIL implements.
+To get more performance comparisons, we used (a subset of) [.NET's JIT benchamrks](https://github.com/dotnet/runtime/tree/main/src/tests/JIT/Performance/CodeQuality). The subset selection was driven by picking only tests using features the BACIL implements.
 
-Originally the tests used `Xunit` framework for benchmarks. Apart from switching the `Xunit` harness for our own, no other modifications were made to the code.
+Originally, the tests use `Xunit` framework for benchmarks. Apart from switching the `Xunit` harness for our own, we made no other modifications to the code.
 
-Our methodology was driven by our interest in getting results for as many different binaries rather than making sure the comparison is extremely precise. As such, for each test we ran it once, took the arithmetic average of iterations 250-299 and calculated the slowdown ratio between BACIL and .NET. We used the benchmarks as compiled by the .NET runtime compilation process without changing any settings regarding optimizations.
+Our methodology was driven by our interest in getting results for as many binaries as possible, rather than making sure the comparison is extremely precise. We ran each test once, took the arithmetic average of iterations 250-299 and calculated the slowdown ratio between BACIL and .NET. We used the benchmarks as compiled by the .NET runtime compilation process without changing any settings regarding optimizations.
 
 The results were as follows:
 
@@ -1026,9 +1013,9 @@ _Chart showing slowdown of BACIL compared to .NET runtime_
 
 ### Warmup concerns
 
-One fact that's important for real-world performance but our benchmarks ignore is that both the internal workings of GraalVM and our design result in the warmup time (time before full performance potential is reached) being significant. 
+One fact that's important for real-world performance but our benchmarks ignore is that both the internal workings of GraalVM and our design result in the warmup time (e.g. time before reaching full performance potential is) being significant.
 
-While the cause inherent to GraalVM is the tiered compilation model, which has to compromise between the time spent compiling and the quality of the resulting compilation, BACIL has another important performance limitation: as mentioned in [Nodes](#nodes), for BACIL the smallest compilation unit is a method and we we don't support On-Stack Replacement (OSR). As such, performance for the first few iterations is (expectedly) terrible.
+While the cause inherent to GraalVM is the [tiered compilation](#tiered-compilation) model, which has to compromise between the time spent compiling and the quality of the resulting compilation, BACIL has another important performance limitation. As mentioned in [Nodes](#nodes), for BACIL the smallest compilation unit is a method and we don't support On-Stack Replacement (OSR). Therefore, performance for the first few iterations is (expectedly) terrible.
 
 The example code from [Nodes](#nodes) (nested for loops in one method) runs about 60 times slower on BACIL than on .NET. Here's an example chart of time-per-iteration when running the `MatInv4` .NET runtime benchmark with default Truffle heuristics:
 
@@ -1041,10 +1028,9 @@ The first iteration was 83 times slower than iterations 30+.
 We draw two main conclusions from the performance benchmarks:
 
 * our implementation outperforms Hagmüller's work
-* in compiled code BACIL can run it is less than an order of magnitude slower than .NET runtime, with the worst case measured being 7.237 times slower
+* in compiled code BACIL is less than an order of magnitude slower than .NET runtime, with the worst case measured being 7.237 times slower
 
-The last observation we want to make is with regards to IL-level optimizations.
-While for the .NET runtime the IL optimizations (in Release mode) made it significantly more performant, for BACIL such optimizations were very much insignificant. One interesting fact is that when ran on BACIL Hagmüller's binarytrees performed slightly worse in the optimized Release version than the Debug version. This probably has to do with the fact that the "optimizations" (which are surely tailored for .NET runtimes) resulted in using different instructions that were incidentally less performant on BACIL.
+The last observation we want to make is regarding IL-level optimizations. While for the .NET runtime, the IL optimizations (in Release mode) made it significantly more performant, for BACIL such optimizations were very much insignificant. One interesting fact is that running Hagmüller's binarytrees on BACIL, they performed slightly worse in the optimized Release version than the Debug version. This probably has to do with the fact that the "optimizations" (which are surely tailored for .NET runtimes) resulted in using different instructions that were incidentally less performant on BACIL.
 
 # Conclusion
 
