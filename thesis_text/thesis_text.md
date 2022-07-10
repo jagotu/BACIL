@@ -43,9 +43,9 @@ These factors resulted in academic and hobby experimentation with programming la
 In recent years, frameworks appeared that promise to deliver performance comparable to state-of-the-art JIT compilers while requiring only a simple interpreter-style implementation. Examples of such frameworks are [RPython](https://rpython.readthedocs.io/) and the [Truffle language implementation framework](https://www.graalvm.org/graalvm-as-a-platform/language-implementation-framework/).
 Researchers concluded that Truffle's performance "is competitive with production systems even when they have been heavily optimized for the one language they support"[^5].
 
-As the performance aspects of language implementations made by experts (sometimes even designers of these frameworks themselves) are well understood, in this work we wanted to focus on testing another claim: the "reduced complexity for implementing languages in our system [that] will enable more languages to benefit from optimizing compilers"[^5].
+As the performance aspects of language implementations made by experts (sometimes even designers of these frameworks themselves) are well understood, in this work we want to focus on testing another claim: the "reduced complexity for implementing languages in our system [that] will enable more languages to benefit from optimizing compilers"[^5].
 
-**Is it feasible to achieve the promised performance benefits with an academic interpreter-style implementation of a language runtime?** In this work, we implement BACIL, a runtime for .NET, to answer this question.
+**Is it feasible to achieve the promised performance benefits with an academic interpreter-style implementation of a language runtime?** In order to answer this question, we implement BACIL, a runtime for .NET.
 
 ## .NET/CLI
 
@@ -55,7 +55,7 @@ We chose .NET as a platform to implement, mostly because:
 * we have experience with .NET internals and the internally used bytecode
 * no comparable truffle-based implementations were already published for .NET 
 
-While .NET is a well-recognized name, it is a marketing/brand name whose meaning changed through history. Our implementation follows [ECMA-335 Common Language Infrastructure (CLI)](https://www.ecma-international.org/publications-and-standards/standards/ecma-335/) which doesn't mention the .NET brand at all. We will use the names defined in the standard throughout this work. All references to specific implementations/brand names we include only to aid understanding with no ambition to be accurate, mainly for .NET vs .NET Core vs .NET Framework vs .NET Standard nomenclature.
+While .NET is a well-recognized name, it is a marketing/brand name whose meaning changed through history. Our implementation follows [ECMA-335 Common Language Infrastructure (CLI)](https://www.ecma-international.org/publications-and-standards/standards/ecma-335/) which doesn't mention the .NET brand at all. We will use the names defined in the standard throughout this work. We include all references to specific implementations/brand names only to aid understanding with no ambition to be accurate, mainly for .NET vs .NET Core vs .NET Framework vs .NET Standard nomenclature.
 
 > The Common Language Infrastructure (CLI) provides a specification for executable code and the execution environment (the Virtual Execution System) in which it runs.
 
@@ -71,7 +71,7 @@ Using the definitions of the standard, BACIL is actually a Virtual Execution Sys
 
 The CIL, historically also called Microsoft Intermediate Language (MSIL) or simply Intermediate Language (IL), is the instruction set used by the CLI. Interpreting (a subset of) this instruction set was the primary goal of this work.
 
-Another large part of the framework is the standard libraries - the base class library, which has to be supported by all implementations of the CLI, comprises 2370 members over 207 classes. As the focus of the work was on the core interpreter, we largely ignore this part of the standard and defer to other standard library implementations where possible.
+Another large part of the framework is the standard libraries - the base class library, which has to be supported by all implementations of the CLI, comprises 2370 members over 207 classes. As the focus of the work was on the core interpreter, we largely ignore this part of the standard and delegate to other standard library implementations where possible.
 
 ## Truffle and Graal
 
@@ -85,7 +85,7 @@ Truffle is a framework for implementing languages that will be compiled by Graal
 
 Truffle also provides several primitives that the language implementation can use to guide the partial evaluation process, allowing for better results.
 
-We want to mention that GraalVM ships in two editions, Community and Enterprise. Supposedly, the Enterprise edition provides even higher performance than the Community one. As we want to avoid all potential licensing issues, we only ever used the Community edition and can't comment on Enterprise performance at all.
+We want to mention that GraalVM is distributed in two editions, Community and Enterprise. Supposedly, the Enterprise edition provides even higher performance than the Community one. As we want to avoid all potential licensing issues, we only used the Community edition and can't comment on Enterprise performance at all.
 
 ## Previous work
 
@@ -95,7 +95,7 @@ Truffle was originally described as "a novel approach to implementing AST interp
 
 In [Truffle version 0.15 (2016)](https://github.com/oracle/graal/blob/master/truffle/CHANGELOG.md#version-015), the `ExplodeLoop.LoopExplosionKind` enumeration was implemented, providing the [`MERGE_EXPLODE` strategy](#mergeexplode-strategy).
 
-In [GraalVM version 21.0 (2021)](https://www.graalvm.org/release-notes/21_0/), an "experimental Java Virtual Machine implementation based on a Truffle interpreter" was introduced. In general principles, this project is very similar to our work, using the same approaches for implementing a different language.
+In [GraalVM version 21.0 (2021)](https://www.graalvm.org/release-notes/21_0/), an "experimental Java Virtual Machine implementation based on a Truffle interpreter" was introduced. This project is very similar to our work, using the same approaches for implementing a different language.
 
 While [Truffle CIL Interpreter (2020)](https://epub.jku.at/obvulihs/content/titleinfo/5473678) also implemented the CIL runtime, it chose a completely different approach, building an AST from the text representation of IL code. Also, as it admits in the conclusion, it "didn't focus on performance optimization of the different instructions". The same implementation approach was chosen by [truffleclr](https://github.com/alex4o/truffleclr).
 
@@ -103,7 +103,7 @@ While [Truffle CIL Interpreter (2020)](https://epub.jku.at/obvulihs/content/titl
 
 ## Partial Evaluation
 
-The most important principle allowing Truffle/Graal to reach high performance is Partial Evaluation. It is theoretically known for decades, one of the foundations being [Partial computation of programs (1983)](https://repository.kulib.kyoto-u.ac.jp/dspace/bitstream/2433/103401/1/0482-14.pdf), but modern advances in computer performance make it practically usable.
+The most important technique allowing Truffle/Graal to reach high performance is Partial Evaluation. It is theoretically known for decades, one of the foundations being [Partial computation of programs (1983)](https://repository.kulib.kyoto-u.ac.jp/dspace/bitstream/2433/103401/1/0482-14.pdf), but only advances in computer performance make it practically usable.
 
 The high-level view of partial evaluation offered by Futamura is "specializing a general program based upon its operating environment into a more efficient program".
 
@@ -133,15 +133,15 @@ In Truffle/Graal, there is always a fallback of interpreting the code with no pa
 
 One reason behind always starting in interpreter before compiling is that the interpreted invocations can already provide observations about the code, for example branch probability, if such observations are implemented. These observations can be used so that the first compilations are already of high quality.
 
-For our project, the difference between compiled tiers is not too interesting, as they usually have a relatively small performance difference between them. The biggest gap happens between the interpreted code and the first compiled tier, where the execution time can differ by more than an order of magnitude.
+For our project, the difference between compiled tiers is not too interesting, as they usually have a relatively small performance difference between them. The biggest gap occurs between the interpreted code and the first compiled tier, where the execution time can differ by more than an order of magnitude.
 
 ### Guards and de-optimizations
 
 For practical partial evaluation, it is valuable to perform speculative optimizations - compiling the code expecting invariants that can be broken during runtime. One common example of such speculation is optimizations of virtual calls: assuming that the method will always be called on objects of a specific type allows replacing the virtual call with a static one and enables a more aggressive specialization.
 
-Also, it is often useful to make sure some exceptional code paths are never included in the compilation - for example, if dividing by zero should cause an immediate crash of the application with a message being printed out, there is no use in spending time compiling and optimizing the error-message printing code, as it will at max be called once.
+Also, it is often useful to exclude some exceptional code paths from the compilation - for example, if dividing by zero should cause an immediate crash of the application with a message being printed out, there is no use in spending time compiling and optimizing the error-message printing code, as it will be called no more than once.
 
-For that, Graal uses guards - statements that, when reached by the runtime, result in de-optimization. De-optimization is a process of transferring evaluation from the compiled variant of the method back to the interpreter at the precise point where it was interrupted and throwing away the already compiled variant, as its assumptions no longer hold.
+To achieve that, Graal uses guards - statements that, when reached by the runtime, result in de-optimization. De-optimization is a process of transferring evaluation from the compiled variant of the method back to the interpreter at the precise point where it was interrupted and throwing away the already compiled variant, as its assumptions no longer hold.
 
 As an example, here's a pseudo-code of what a single-cache virtual call implementation could look like.
 
@@ -307,7 +307,7 @@ Thanks to the strategy, only one state per bytecode offset has to be created. Kn
 15: return stack[0]
 ```
 
-As the stack does not leave this method, it will be completely virtualized. Thanks to all stack array accesses using constant indices, we can apply aggressive optimization and optimize out the array:
+As the stack does not leave this method, it will be completely virtualized. Since the stack array is always accessed using constant indices, we can apply aggressive optimization and optimize out the array:
 
 ```
   vars[i] = 0;
@@ -870,7 +870,7 @@ After stubbing out `Write`, `WriteLine`, `ToString` and `Concat` (to get rid of 
 
 ### Library methods
 
-While we defer library calls to the .NET runtime implementations, most of them either require generics or use native methods. We only implemented the following native methods:-
+While we pass library calls to the .NET runtime implementations, most of them either require generics or use native methods. We only implemented the following native methods:-
 
 * `System.Runtime.CompilerServices.RuntimeHelpers.InitializeArray(Array, RuntimeFieldHandle)` used for constant array initializatons (like `int[] a = new int[] {0, 1}`).
 * `System.Math.Abs(Double)`, `System.Math.Cos(Double)` and `System.Math.Sqrt(Double)` required by some float instruction tests.
