@@ -362,9 +362,9 @@ For an example of references between these structures, this is what a single row
 | Flags         | 0x100000  | Constant bitmask specifying TypeAttributes.                                                                                                                                         |
 | TypeName      | 0x01A9    | An offset into the `#String` heap, where the name of the type can be found. In this example, `Program` was written there.                                                           |
 | TypeNamespace | 0x01DE    | An offset into the `#String` heap, where the namespace of the type can be found. In this example, `SampleProject` was written there.                                                |
-| Extends       | 0x0031    | A coded index into `TypeDef`, `TypeRef`, or `TypeSpec`. In this example an index to `TypeRef` table index 12, which is a reference to `System.Object`.                              |
-| FieldList     | 0x0002    | An index into the `Field` table where fields for this type start. As in this case the type has no fields, the index points past the end of the `Field` table, which has only 1 row. |
-| MethodList    | 0x0002    | An index into the `Method` table where methods for this type start. As this type has multiple methods, row 2 of `Method` contains information about `Main`, other methods follow.   |
+| Extends       | 0x0031    | A coded index into `TypeDef`, `TypeRef`, or `TypeSpec`. In this example an index to `TypeRef` table row 12, which is a reference to `System.Object`.                              |
+| FieldList     | 0x0002    | An index into the `Field` table where the fields for this type start. As in this case the type has no fields, the index points past the end of the `Field` table, which has only 1 row. |
+| MethodList    | 0x0002    | An index into the `Method` table where the methods for this type start. As this type has multiple methods, row 2 of `Method` contains information about `Main`, other methods follow.   |
 
 
 ### Complexities of the CLI component format
@@ -378,7 +378,7 @@ As stated in ECMA-335 _II.25 File format extensions to PE_:
 > 
 > The RVA of an item will almost always differ from its position within the file on disk. To compute the file position of an item with RVA r, search all the sections in the PE file to find the section with RVA _s_, length _l_ and file position _p_ in which the RVA lies, ie _s ≤ r < s+l_. The file position of the item is then given by _p+(r-s)_.
 
-On Windows and other theoretical platforms where PE parsing is a service provided by the operating system, this allows for the component to be loaded into virtual memory as any other executable files. RVA addresses can then be resolved transparently by the CPU's and operating system's virtual memory mappings. For all other platforms, this adds one more level of indirection that needs to be handled.
+On Windows and other theoretical platforms where PE parsing is a service provided by the operating system, this allows for the component to be loaded into virtual memory as any other executable file. RVA addresses can then be resolved transparently by the CPU's and operating system's virtual memory mappings. For all other platforms, this adds one more level of indirection that needs to be handled.
 
 As our parser is platform-agnostic and written in Java, we can't use any of those services. Therefore, we need to manually perform the sections search and RVA calculations as described in the standard.
 
@@ -386,7 +386,7 @@ As our parser is platform-agnostic and written in Java, we can't use any of thos
 
 The biggest complexity we encountered during parser design was the format of metadata tables. These tables contain most of the metadata information of the CLI component.
 
-The data of the tables is stored in the `#~` stream. This stream comprises a header followed by a simple concatenation of values of all rows of all tables, with no additional metadata in between.
+The data of the tables is stored in the `#~` stream. This stream consists of a header followed by a simple concatenation of values of all rows of all tables, with no additional metadata in between.
 
 The header itself contains only the following fields relevant for locating data in the tables (shortened, for full structure see _II.24.2.6 #~ stream_):
 
@@ -396,16 +396,15 @@ The header itself contains only the following fields relevant for locating data 
 | 8      | 8    | Valid     | Bit vectors of present tables                                                            |
 | 24     | 4*n  | Rows      | Array of n 4-byte unsigned integers indicating the number of rows for each present table |
 
-The first issue is that no information about table lengths is present. This results in **every single parser implementing the format having to implement the format for every single metadata table**, as skipping a table requires knowing the byte length of its rows. This completely prohibits an iterative development cycle that adds support for only the necessary tables. For example, to implement a utility that only outputs names of all the types available in the component, while only data from the TypeDef table is necessary, all 38 tables defined in ECMA-335 must be implemented. The BACIL implementation described here only accesses 11 of these tables.
+The first issue is that no information about table length in bytes is present. This results in **every single parser implementing the format having to implement the format for every single metadata table**, as skipping a table requires knowing the byte length of its rows. This completely prohibits an iterative development cycle that adds support for only the necessary tables. For example, to implement a utility that only outputs names of all the types available in the component, while only data from the TypeDef table is necessary, all 38 tables defined in ECMA-335 must be implemented. The BACIL implementation described here only accesses 11 of these tables.
 
-The second caveat comes in _II.22 Metadata logical format: tables_ and _II.24.2.6 #~ stream_:
+The second complication comes in _II.22 Metadata logical format: tables_ and _II.24.2.6 #~ stream_:
 
 > Each entry in each column of each table is either a constant or an index.
 > 
 > [...]
 > 
-> Each index is either 2 or 4 bytes wide. The index points into the same or another table, or into one of the four heaps. The size of each index column in a table is only made 4 bytes if it needs to be for that particular module. So, if a particular column indexes a table, or tables, whose highest row number fits
-in a 2-byte value, the indexer column need only be 2 bytes wide. Conversely, for tables containing 64K or more rows, an indexer of that table will be 4 bytes wide. 
+> Each index is either 2 or 4 bytes wide. The index points into the same or another table, or into one of the four heaps. The size of each index column in a table is only made 4 bytes if it needs to be for that particular module. So, if a particular column indexes a table, or tables, whose highest row number fits in a 2-byte value, the indexer column need only be 2 bytes wide. Conversely, for tables containing 64K or more rows, an indexer of that table will be 4 bytes wide. 
 > 
 > [...]
 > 
@@ -415,17 +414,17 @@ While this decision saves storage size, it means that table row length isn’t a
 
 This means that the parser can't workaround the first issue by expecting the table row length be constant.
 
-If we were to improve the format to remove these issues, we would add information about the row length of present tables into the header. Even if each size was stored as a full byte (which all tables defined in the standard fit into), this would at most increase each binary’s size by 38 bytes and allow for skipping tables without dealing with their internal row format.
+If we were to improve the format to remove these issues, we would add information about the row length of present tables into the header. Even if each size was stored as a full byte (which all tables defined in the standard fit into), in the worst case this would increase each binary’s size by 38 bytes and allow for skipping tables without dealing with their internal row format.
 
 #### Extensive normalisation
 
 File format design is often a compromise between several engineering goals[^6]. One of the design concepts that apply is normalisation, a concept that each information should be stored only once, removing all redundancy. While such a goal can be beneficiary for other uses of the file format (like writing and modifying), from the point of view of a lightly preloading consumer, it results in non-ideal structures.
 
-* In parent-child relationships, only one node has a direct reference to the other. Traversing the edge backwards involves enumerating all the nodes and searching for one with the appropriate reference. If such queries are performance sensitive, the invoker has to cache the answers.
+* In parent-child relationships, only one node has a direct reference to the other one. Traversing the edge backwards involves enumerating all the nodes and searching for one with the appropriate reference. If such queries are performance sensitive, the invoker has to cache the answers.
 
 * When referencing a sequence of items in a table, only information about the beginning of the sequence is directly stored. The end of the sequence is either the last row of the table or the start of the next sequence, as specified by the next row, whichever comes first.
 
-    While the complexity this adds usually amounts to a single if statement, it crosses the border between cell value semantics and metadata logical format internals - either the parser has to understand the semantics of cells as "sequence indices" to encapsulate resolving the sequence length, or the invoker has to understand the file format view of row numbers.
+    While the complexity this adds usually amounts to a single "if" statement, it crosses the border between cell value semantics and metadata logical format internals - either the parser has to understand the semantics of cells as "sequence indices" to encapsulate resolving the sequence length, or the invoker has to understand the file format's internal detail of row numbers.
 
 ## Parser implementation details
 
@@ -492,7 +491,7 @@ if(type.hasNext())
 
 ## Conclusion
 
-In the end, design and implementation of the parser took a non-trivial chunk of the development time. Even though straightforward code-size indicators are controversial, we feel that the parser (excluding generated code) comprising 119594 bytes over 3609 lines of code and the rest of the language package comprising 266010 bytes over 7534 lines shows the substantiality of the parser.
+In the end, design and implementation of the parser took a non-trivial portion of the development time. Even though straightforward code-size indicators are controversial, we feel that the fact, that the parser (excluding generated code) comprises 119594 bytes over 3609 lines of code and the rest of the language package comprises 266010 bytes over 7534 lines, demonstrates the substantiality of the parser.
 
 # Runtime
 
