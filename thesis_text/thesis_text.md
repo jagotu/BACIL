@@ -491,7 +491,7 @@ if(type.hasNext())
 
 ## Conclusion
 
-In the end, design and implementation of the parser took a non-trivial portion of the development time. Even though straightforward code-size indicators are controversial, we feel that the fact, that the parser (excluding generated code) comprises 119594 bytes over 3609 lines of code and the rest of the language package comprises 266010 bytes over 7534 lines, demonstrates the substantiality of the parser.
+In the end, design and implementation of the parser took a non-trivial portion of the development time. Even though straightforward code-size indicators are controversial, they demonstrate the substantiality of the parser, being about 30% of the whole project. Excluding generated code it comprises 119594 bytes over 3609 lines of code, while the rest of the language package comprises 266010 bytes over 7534 lines.
 
 # Runtime
 
@@ -503,11 +503,11 @@ This chapter focuses on the overall design of our interpreter and the approaches
 
 #### Bytecode nodes
 
-The smallest compilation unit of Truffle is a Node. This nomenclature comes from Truffle's original AST-based design, where nodes represented actual nodes in the syntax tree. The supported pattern was that the nodes were small, typically representing a single operation - for example, an `AddNode` that had two child nodes and added them together.
+The smallest compilation unit of Truffle is a Node. This nomenclature comes from Truffle's original AST-based design, where nodes represented actual nodes in the syntax tree. The supported pattern was that the nodes were small, typically representing a single operation - for example, an `AddNode` that has two child nodes and adds them together.
 
-However, this design is not applicable for our bytecode interpreter. Inside one method, the bytecode doesn't have any tree structure we could replicate with the nodes. The most straightforward solution is to have one node per one bytecode chunk, which in the CLI subset we implement corresponds to one method. We call such a node the `BytecodeNode`. 
+However, this design is not applicable to our bytecode interpreter. Inside one method, the bytecode doesn't have any tree structure we could replicate with the nodes. The most straightforward solution is to have one node per one bytecode chunk, which in the CLI subset we implement corresponds to one method. We call such a node the `BytecodeNode`. 
 
-Having big nodes with several instructions has its tradeoffs, mainly the fact that without additional work (described below), once a node starts executing in a specific performance tier (see [Tiered compilation](#tiered-compilation), it has to finish running in that specific tier. Truffle always starts executing code immediately in interpreted mode and only later considers compiling it. This can lead to poor results. For example, let's consider the following code running in a one-node-per-method implementation:
+Having big nodes with several instructions has its tradeoffs, mainly the fact that without additional work (described below) once a node starts executing in a specific performance tier (see [Tiered compilation](#tiered-compilation)), it has to finish running in that specific tier. Truffle always starts executing code immediately in interpreted mode and only later considers compiling it. This can lead to poor results. For example, let's consider the following code running in a one-node-per-method implementation:
 
 ```C#
 static int Main()
@@ -524,7 +524,7 @@ static int Main()
 }
 ```
 
-The runtime will immediately enter the `Main` node and start executing it in interpreter mode. As the entire execution is spent in this one node, it will never get a chance to run a single compiled statement. This significantly affects the performance (see [Warmup concerns](#warmup-concerns) for an example of the slowdown in interpreted mode).
+The runtime will immediately enter the `Main` node and start executing it in interpreter mode. As the entire execution time is spent in this one node, the runtime will never get a chance to run a single compiled statement. This significantly affects the performance (see [Warmup concerns](#warmup-concerns) for an example of the slowdown in interpreted mode).
 
 In [Bringing Low-Level Languages to the JVM: Efficient Execution of LLVM IR on Truffle (2016)](https://dl.acm.org/doi/10.1145/2998415.2998416), the authors described a method of separating the bytecode chunk into "basic blocks", each containing only instructions that don't affect the control flow. A "block dispatcher" controls the flow between these basic blocks, selecting the adequate basic block to continue the execution with.
 
@@ -540,7 +540,7 @@ _LLVM IR of the C program. (citation)_
 
 _Basic block dispatch node for the LLVM IR. (citation)_
 
-While this approach eases the issue and would separate our nested loops into smaller compilation units, it was superseded by a more generic strategy directly implemented in Truffle.
+While this approach eases the issue and would divide our nested loops into smaller compilation units, it was superseded by a more generic strategy directly implemented in Truffle.
 
 This strategy, called On-Stack Replacement (OSR), was made specifically to target the described issue:
 
@@ -548,7 +548,7 @@ This strategy, called On-Stack Replacement (OSR), was made specifically to targe
 >
 > On-stack replacement (OSR) is a technique used in Truffle to "break out" of the interpreter, transferring execution from interpreted to compiled code. Truffle supports OSR for both AST interpreters (i.e., ASTs with LoopNodes) and bytecode interpreters (i.e., nodes with dispatch loops). In either case, Truffle uses heuristics to detect when a long-running loop is being interpreted and can perform OSR to speed up execution.
 
-During our design phase, the OSR was still being worked on, being only introduced in Graal 21.3 released in October 2021. For that reason, our design isn't compatible with it - to support it, all state has to be stored in Truffle's frames, while we only use frames to pass/receive arguments and store the rest of the state in plain variables. However, moving this state into the frame should be the only major step necessary to support OSR. Because of the significance of OSR, if we were designing the runtime again, we'd definitely focus on supporting it.
+During our design phase, the OSR was still being worked on, being only introduced in Graal 21.3 released in October 2021. For that reason, our design isn't compatible with it - to support it, the whole execution state has to be stored in Truffle's frames, while we only use frames to pass/receive arguments and store the rest of the state in plain variables. However, moving this state into the frame should be the only major step necessary to support OSR. Because of the significance of OSR, if we were designing the runtime again, we'd definitely focus on supporting it.
 
 #### Instruction nodes
 
@@ -558,7 +558,7 @@ For that, we'll use a process of nodeization (called "quickening" by Espresso, t
 
 ### Dynamicity of references
 
-One of the additional things to consider when implementing a partial-evaluation friendly interpreter is dynamicity of references, whereby dynamicity we mean how often the reference changes its state. This metric is important because effectively the dynamicity of a chain of references will be equal to the most dynamic of the references. As a result, what would traditionally be considered bad design patterns is sometimes necessary to divide the chain into more direct references, such that each object is reachable with the lowest dynamicity possible.
+One of the additional things to consider when implementing a partial-evaluation friendly interpreter is dynamicity of references, whereby dynamicity we mean how often the reference changes its state. This metric is important because, effectively, the dynamicity of a chain of references will be equal to the most dynamic of the references. As a result, what would traditionally be considered bad design patterns is sometimes necessary to divide the chain into more direct references, in order to make each object reachable with the lowest dynamicity possible.
 
 The following reference graph shows the refactoring in a generic case:
 
@@ -572,9 +572,9 @@ _Scenario 2: Class B is accessible with a low dynamicity reference, resulting in
 
 For a case study from the BACIL implementation, let's consider the design decisions behind `LocationDescriptor` and `LocationHolder`. Each location has a type and a value. While the value itself (and the type of the value) changes based on the running code, the type of the location never changes. This is a perfect example of two pieces of information with different dynamicity.
 
-Even from regular development patterns, it makes sense to divide location values and location types into separate classes - store the location type information in the metadata as a "prototype" for then creating the value storage based on it. In BACIL, `LocationDescriptor` contains the Type information and `LocationHolder` contains the actual values.
+Even from regular development patterns, it makes sense to divide location values and location types into separate classes - store the location type information in the metadata as a "prototype" for later creating the value storage based on it. In BACIL, `LocationDescriptor` contains the type information and `LocationHolder` contains the actual values.
 
-To work with the values, it is always necessary to know the location type (mainly to differentiate between ValueTypes and references). The rule of encapsulation would dictate that the consumer doesn't need to know that there's a `LocationDescriptor` tied to the `LocationHolder`, as it's an internal detail. Such an implementation would look something like this:
+It is always necessary to know the location type to work with the values, mainly to differentiate between ValueTypes and references. The rule of encapsulation would dictate that the consumer doesn't need to know that there's a `LocationDescriptor` tied to the `LocationHolder`, as it's an internal detail. Such an implementation would look something like this:
 
 ```Java 
 public class LocationHolder {
@@ -606,7 +606,7 @@ However, using this code results in a non-optimal dynamicity chain and ineffecti
 
 _Scenario 1: As a `LocationHolder` is unique per object instance/method invocation/ etc., the reference to it is highly dynamic. The `LocationDescriptor` is only unique per object type/method definiton, but can only be reached through a dynamic chain._
 
-To make this more effective, we have to hold a separate reference to a `LocationDescriptor`. As every location-accessing instruction (in the implemented subset of CLI) will always use the same `LocationDescriptor`, this results in effective partial evaluation. The new implementation looks like this:
+In order to make this more effective, we have to hold a separate reference to a `LocationDescriptor`. As every location-accessing instruction (in the implemented subset of CLI) will always use the same `LocationDescriptor`, this results in effective partial evaluation. The new implementation looks like this:
 
 ```Java 
 public class LocationHolder {
@@ -631,7 +631,7 @@ _Scenario 2: While the `LocationHolder` remains accessible from a highly dynamic
 
 ### Standard libraries
 
-Our goal was to implement as little of the standard library as possible. When starting with the implementation, we hoped parts implemented in CIL and native methods will be well decoupled, so that we can reuse all CIL parts. For the native parts, we would call .NET's native implementation if possible, and implement them in BACIL otherwise. Unfortunately, the coupling is tight, as the [documentation](https://github.com/dotnet/runtime/blob/main/docs/design/coreclr/botr/corelib.md) admits:
+Our goal was to implement as little of the standard library as possible. When starting with the implementation, we hoped parts implemented in CIL and native methods would be well decoupled, so that we could reuse all CIL parts. For the native parts, we would call .NET's native implementation if possible and only implement them in BACIL if not. Unfortunately, the coupling is tight, as the [documentation](https://github.com/dotnet/runtime/blob/main/docs/design/coreclr/botr/corelib.md) admits:
 
 > CoreLib has several unique properties, many of which are due to its tight coupling to the CLR.
 
@@ -707,15 +707,15 @@ In .NET, all locations are typed (ECMA-335 I.8.6.1.2 Location signatures). While
 
 To avoid boxing and unboxing numbers (integers and floating-point numbers), we cannot just store all values in an `Object[]`. Therefore, it is necessary to always have separate storages for primitives, best implemented by a `long[]`.
 
-Locations usually exist in multiples (local variables, arguments, fields, etc.) and are always statically typed - one location will always have one type through its lifetime and only ever contain values type-compatible with its type. We divide the Location into two parts: a descriptor and a holder.
+Locations usually exist in multiples (local variables, arguments, fields, etc.) and are always statically typed - one location will always have one type through its lifetime and only ever contain values type-compatible with its type. We divide the location into two parts: a descriptor and a holder.
 
 The holder is actually extremely simple: it only has an `Object[] refs` and a `long[] primitives` that are big enough to hold all the values required by the descriptor. The holder knows nothing of the types or identities of values inside. This represents one instance of a value storage.
 
-The descriptor represents the "shape" of the locations, knowing the type of each location and indices into the holder to store values at.
+The descriptor represents the "shape" of the locations, knowing the type of each location and its position in the holder.
 
 One feature of ECMA-335 is so-called user-defined ValueTypes, structures that have the semantics of a primitive. The idea is that two integers (x,y) and a Point structure (with x,y fields) will look exactly the same on the stack, instead of the latter turning into an object reference. Our implementation will follow that example, as we will "flatten" the structure, reserving space in the ValueType’s parent for each of its fields.
 
-The evaluation stack is a bit more complicated: while at each point in time the type of the evaluation stack field is known, it changes throughout execution. Each stack slot therefore has to exist as both a reference slot and a primitive slot and we'll have to keep track of which one to use. To achieve that, we by default expect the value to be in the refs slot. In case it's not, we repurpose the refs slot to hold a "marker" object describing the stack-type of the value in the primitive slot. An object will be stored in `(ref, primitive)` as `(obj, undefined)`, a native int 42 will be stored as a `(EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT, (long)42)`.
+The evaluation stack is a bit more complicated: while at each point in time the type of the evaluation stack field is known, it changes throughout execution. Each stack slot therefore has to exist as both a reference slot and a primitive slot and we'll have to keep track of which one to use. To achieve that, we by default expect the value to be in the refs slot. In case it is not, we repurpose the refs slot to hold a "marker" object describing the stack-type of the value in the primitive slot. An object will be stored in `(ref, primitive)` as `(obj, undefined)`, a native int 42 will be stored as a `(EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT, (long)42)`.
 
 #### State transitions
 
@@ -741,7 +741,7 @@ public void locationToStack(LocationsHolder holder, int locationIndex, Object[] 
 }
 ```
 
-One factor to keep in mind is that to follow the standard, the state transitions are coupled with widening or narrowing operations. For example, according to ECMA-335 _I.12.1 Supported data types_ "Short numeric values (int8, int16, unsigned int8, and unsigned int16) are widened when loaded and narrowed when stored.".We also need to perform our own housekeeping because we store all primitives in a flat `long[]`. Each class representing a primitive implements its own widening and narrowing as necessary.
+One factor to keep in mind is that to follow the standard, the state transitions are coupled with widening or narrowing operations. For example, according to ECMA-335 _I.12.1 Supported data types_ "Short numeric values (int8, int16, unsigned int8, and unsigned int16) are widened when loaded and narrowed when stored". We also need to perform our own housekeeping because we store all primitives in a flat `long[]`. Each class representing a primitive implements its own widening and narrowing as necessary.
 
 ### CompilationFinal annotation
 
@@ -763,7 +763,7 @@ The most common issue we hit when analyzing those graphs was that a piece of cod
 
 ### Case study
 
-For a case study, let's look into optmizing a specific parser call. As specified in [Design goals](#design-goals), we designed the parser so that trivial queries, e.g. queries for a metadata item at a constant index, would only result in a compilation constant. Is that the case? Let's see the compilation graph (in commit 42e5cb2e6e34956aca75be0c4c71ac7eb0f4bea8) after TruffleTier for a function returning `method.getComponent().getTableHeads().getTypeDefTableHead().skip(1).getFlags()`:
+For a case study, let's look into optimizing a specific parser call. As specified in [Design goals](#design-goals), we designed the parser so that trivial queries, e.g. queries for a metadata item at a constant index, would only result in a compilation constant. Is that the case? Let's see the compilation graph (in commit 42e5cb2e6e34956aca75be0c4c71ac7eb0f4bea8) after TruffleTier for a function returning `method.getComponent().getTableHeads().getTypeDefTableHead().skip(1).getFlags()`:
 
 ![alt](parseraccess_bad.svg)
 
@@ -845,9 +845,9 @@ To validate the proper implementation of instructions, we used [.NET's CodeGenBr
 > * Implement the bare minimum to get the compiler building and generating code for very simple operations, like addition.
 > * Focus on the CodeGenBringUpTests (src\tests\JIT\CodeGenBringUpTests), starting with the simple ones.
 
-They are perfect for testing corner cases of implemented instructions. One example of a bug uncovered in this test suite that would be very hard to find manually was a missing int32 truncation which was fixed [here](https://github.com/jagotu/BACIL/commit/056640ec276376434f5cb32ac70c3f9eb26c4881#diff-47ca212abb11bfd59685c4b47364f4a21a015136d4d2a8d6bbe014a7c873e2c9R1110).
+They are perfect for testing edge cases of implemented instructions. One example of a bug uncovered in this test suite that would be very hard to find manually was a missing int32 truncation which was fixed [here](https://github.com/jagotu/BACIL/commit/056640ec276376434f5cb32ac70c3f9eb26c4881#diff-47ca212abb11bfd59685c4b47364f4a21a015136d4d2a8d6bbe014a7c873e2c9R1110).
 
-After stubbing out `Write`, `WriteLine`, `ToString` and `Concat` (to get rid of the unsupported operations used by debug prints in case of failure), the BACIL implementation presented in this work passed 85%, e.g. 133 out of the 155tests, included in the `v6.0.6` tag. All the failed tests were because of missing features and not bugs in implemented features:
+After stubbing out `Write`, `WriteLine`, `ToString` and `Concat` (to get rid of the unsupported operations used by debug prints in case of failure), the BACIL implementation presented in this work passed 85%, e.g. 133 out of the 155 tests, included in the `v6.0.6` tag. All the failed tests were because of missing features and not bugs in implemented features:
 
 | Test        | Reason for failure|
 |---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -869,7 +869,7 @@ After stubbing out `Write`, `WriteLine`, `ToString` and `Concat` (to get rid of 
 
 ### Library methods
 
-While we pass library calls to the .NET runtime implementations, most of them either require generics or use native methods. We only implemented the following native methods:-
+While we pass library calls to the .NET runtime implementations, most of them either require generics or use native methods. We only implemented the following native methods:
 
 * `System.Runtime.CompilerServices.RuntimeHelpers.InitializeArray(Array, RuntimeFieldHandle)` used for constant array initializatons (like `int[] a = new int[] {0, 1}`).
 * `System.Math.Abs(Double)`, `System.Math.Cos(Double)` and `System.Math.Sqrt(Double)` required by some float instruction tests.
@@ -877,7 +877,7 @@ While we pass library calls to the .NET runtime implementations, most of them ei
 
 ## Performance benchmarks
 
-We performed all benchmarks mentioned here on a laptop with an AMD Ryzen 7 PRO 4750U with 8 cores and 16 virtual threads, a Base Clock of 1.7GHz and boost up to 4.1GHz, featuring 32 GB of RAM and running Windows 10.
+We performed all benchmarks mentioned here on a laptop with an AMD Ryzen 7 PRO 4750U with 8 cores and 16 virtual threads, a base clock of 1.7GHz and boost up to 4.1GHz, featuring 32 GB of RAM and running Windows 10.
 
 We ran the tests on GraalVM version:
 
@@ -1027,7 +1027,7 @@ The first iteration was 83 times slower than iterations 30+.
 We draw two main conclusions from the performance benchmarks:
 
 * our implementation outperforms Hagmüller's work
-* in compiled code BACIL is less than an order of magnitude slower than .NET runtime, with the worst case measured being 7.237 times slower
+* in compiled code, BACIL is less than an order of magnitude slower than .NET runtime, with the worst case measured being 7.237 times slower
 
 The last observation we want to make is regarding IL-level optimizations. While for the .NET runtime, the IL optimizations (in Release mode) made it significantly more performant, for BACIL such optimizations were very much insignificant. One interesting fact is that running Hagmüller's binarytrees on BACIL, they performed slightly worse in the optimized Release version than the Debug version. This probably has to do with the fact that the "optimizations" (which are surely tailored for .NET runtimes) resulted in using different instructions that were incidentally less performant on BACIL.
 
