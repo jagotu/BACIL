@@ -1,8 +1,11 @@
 package com.vztekoverflow.bacil.bytecode;
 
+import com.oracle.truffle.api.memory.ByteArraySupport;
+
 /**
  * A collection of utility methods for reading integers from byte arrays.
  */
+// Long term TODO: this should use ByteArraySupport from Truffle instead
 public final class Bytes {
 
     /**

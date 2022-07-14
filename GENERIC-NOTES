@@ -1,0 +1,5 @@
+- Code formatting: it's a minor issue, but does not look good -- seems that lot of things are not consistent: placing of { and }, space after if, in conditions, ...
+- Small number of tests
+  - I am not a big fan of "unit test every little trivial helper", but some amount of
+  integration tests like a bunch of C# programs and a driver that executes them on
+  BACIL/dotnet and compares the output would be nice. EDIT: I see there's the .NET's own test suite, that's good. Still some more custom tests would be great.

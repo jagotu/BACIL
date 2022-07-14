@@ -99,6 +99,9 @@ In [GraalVM version 21.0 (2021)](https://www.graalvm.org/release-notes/21_0/), a
 
 While [Truffle CIL Interpreter (2020)](https://epub.jku.at/obvulihs/content/titleinfo/5473678) also implemented the CIL runtime, it chose a completely different approach, building an AST from the text representation of IL code. Also, as it admits in the conclusion, it "didn't focus on performance optimization of the different instructions". The same implementation approach was chosen by [truffleclr](https://github.com/alex4o/truffleclr).
 
+
+Is there anywhere explained why you chose bytecode style interpreter over AST? You could say it was part of the problem statement: is it feasible to implement .NET interpreter in one person and will using the bytecode interpreter approach pionieered by Espresso work for .NET and deliver cleaner/leaner/faster (interpreter speed) implementation than AST style interpreter already implemented by [...] and [...].
+
 # Theory
 
 ## Partial Evaluation
@@ -507,7 +510,8 @@ The smallest compilation unit of Truffle is a Node. This nomenclature comes from
 
 However, this design is not applicable to our bytecode interpreter. Inside one method, the bytecode doesn't have any tree structure we could replicate with the nodes. The most straightforward solution is to have one node per one bytecode chunk, which in the CLI subset we implement corresponds to one method. We call such a node the `BytecodeNode`. 
 
-Having big nodes with several instructions has its tradeoffs, mainly the fact that without additional work (described below) once a node starts executing in a specific performance tier (see [Tiered compilation](#tiered-compilation)), it has to finish running in that specific tier. Truffle always starts executing code immediately in interpreted mode and only later considers compiling it. This can lead to poor results. For example, let's consider the following code running in a one-node-per-method implementation:
+Having big nodes with several instructions has its tradeoffs, mainly the fact that without additional work (described below) once a node starts executing in a specific performance tier (see [Tiered compilation](#tiered-compilation)), 
+it has to finish running in that specific tier (NOTE: it can deopt to interpreter). Truffle always starts executing code immediately in interpreted mode and only later considers compiling it. This can lead to poor results. For example, let's consider the following code running in a one-node-per-method implementation:
 
 ```C#
 static int Main()
@@ -548,7 +552,7 @@ This strategy, called On-Stack Replacement (OSR), was made specifically to targe
 >
 > On-stack replacement (OSR) is a technique used in Truffle to "break out" of the interpreter, transferring execution from interpreted to compiled code. Truffle supports OSR for both AST interpreters (i.e., ASTs with LoopNodes) and bytecode interpreters (i.e., nodes with dispatch loops). In either case, Truffle uses heuristics to detect when a long-running loop is being interpreted and can perform OSR to speed up execution.
 
-During our design phase, the OSR was still being worked on, being only introduced in Graal 21.3 released in October 2021. For that reason, our design isn't compatible with it - to support it, the whole execution state has to be stored in Truffle's frames, while we only use frames to pass/receive arguments and store the rest of the state in plain variables. However, moving this state into the frame should be the only major step necessary to support OSR. Because of the significance of OSR, if we were designing the runtime again, we'd definitely focus on supporting it.
+During our design phase, the OSR (NOTE: the OSR for bytecode interpreters, OSR for AST interpreters is quite old now) was still being worked on, being only introduced in Graal 21.3 released in October 2021. For that reason, our design isn't compatible with it - to support it, the whole execution state has to be stored in Truffle's frames, while we only use frames to pass/receive arguments and store the rest of the state in plain variables. However, moving this state into the frame should be the only major step necessary to support OSR. Because of the significance of OSR, if we were designing the runtime again, we'd definitely focus on supporting it.
 
 #### Instruction nodes
 
@@ -639,7 +643,12 @@ The biggest offender are strings. To achieve high performance, .NET's runtime ex
 
 Truffle's official mechanism of calling into native code is called the Native Function Interface (NFI). Unfortunately, at the time of designing BACIL, it was missing key features, for example support of custom ABIs (calling conventions).
 
+Dalo by se tohle vyresit tak, ze si clovek udela trampolinu v C, ve ktere uz muze udelat libovolny marshalling, volani pres jinou konvenci, atd. Ta trampolina by mela vhodnout volaci konvenci a brala by data ve formatu, ktery se hodil BACILu, ale pak by je mohla zmasirovat na cokoliv na nativni strane.
+
 In the end, our experiments with calling native .NET runtime code using NFI showed it would significantly complicate the whole codebase with uncertain results, and we decided against it. Unfortunately, we'll have to re-implement all necessary native code ourselves in BACIL.
+
+Nekteri oponenti jsou haklivi na vagni vysvetleni proc neco neslo. Pokud by tohle slo trochu vice rozebrat, nebylo by to na skodu.
+Pozor neni dobre psat, ze na to "nebyl cas". Dalsi variantou by mohl byt Sulong, mozna by se to melo zminit?
 
 ### BACILHelpers
 
@@ -747,11 +756,11 @@ One factor to keep in mind is that to follow the standard, the state transitions
 
 As explained in [Partial Evaluation](#partial-evaluation), one of the key decisions is separating inputs into two sets - dynamic inputs and static inputs. Java's `final` keyword is therefore integral for achieving performance, as it guarantees that the variable will be considered a static input.
 
-There is an issue that, for arrays, marking them as `final` only means that the reference to the array doesn't change, while the contents of the array can change freely. The solution is the `CompilerDirectives.CompilationFinal` annotation, which can mark arrays such that the compiler considers reads with a constant index as constants. Unlike the built-in `final` keyword, the compiler cannot actually enforce that no writes happen to the array. It is the responsibility of the implementation to always invalidate the current compilation when modifying a `CompilationFinal` array.
+There is an issue that, for arrays, marking them as `final` only means that the reference to the array doesn't change, while the contents of the array can change freely. The solution is the `CompilerDirectives.CompilationFinal` annotation (...with the dimensions argument?), which can mark arrays such that the compiler considers reads with a constant index as constants. Unlike the built-in `final` keyword, the compiler cannot actually enforce that no writes happen to the array (NOTE: can compiler enforce that for `final`? one can change them via reflections -- that's terrible, but valid thing to do, Java `final` is treated like `@CompilationFinal` by partial evaluator, which is one of the semantic differences between PE code and plain Java code.). It is the responsibility of the implementation to always invalidate the current compilation (unit?) when modifying a `CompilationFinal` array.
 
 ## Debugging performance issues
 
-To achieve high performance, the ability to debug performance issues is necessary. Unfortunately, traditional methods (like sampling) don't provide the required insight for outputs of Graal compilation - during partial evaluation, the code gets transformed too much for these methods to work properly. A single instruction can result from a partial evaluation of several methods and, as such, cannot be attributed properly to one.
+To achieve high performance, the ability to debug performance issues is necessary. Unfortunately, traditional methods (like sampling) don't provide the required insight (instead: work only to some degree? or provide only limited insight?) for outputs of Graal compilation - during partial evaluation, the code gets transformed too much for these methods to work properly. A single instruction can result from a partial evaluation of several methods and, as such, cannot be attributed properly to one.
 
 Internally, the Graal compiler represents the code during compilation in graphs. The various optimization phases are then transformations on these graphs. Graal allows to dump the current graph in various stages of the compilation pipeline by using the `graal.Dump` VM argument. These graphs are key to understanding results of the partial evaluation, mainly which code was eliminated (by constant folding) and which remained. For our analysis, the "After TruffleTier" phase is the most important, as it reflects the graph state after partial evaluation.
 
@@ -767,7 +776,7 @@ For a case study, let's look into optimizing a specific parser call. As specifie
 
 ![alt](parseraccess_bad.svg)
 
-That definitely contains more than just a constant. Using `CompilerAsserts.partialEvaluationConstant` and checking the errors (enabled with `--engine.CompilationFailureAction=Print`) leads us to the following code where the first expression is a constant and the second isn't:
+That definitely contains more than just a constant. Using `CompilerAsserts.partialEvaluationConstant` and checking the errors (enabled with `--engine.CompilationFailureAction=Print`) leads us to the following code where the first expression is a constant and the second isn't (at first sight there are 3 statements, multiple expressions, if the reader thinks a bit they can figure it out, but why not help them bit more, e.g. with a marker comment in the code or better explanation):
 
 ```Java
 CLITypeDefTableRow row = method.getComponent().getTableHeads().getTypeDefTableHead();
@@ -823,6 +832,8 @@ We used this process of checking if graphs look as expected using Seafoam and th
 
 ## Completeness
 
+NOTE: Volil bych "to keep the work focused" nebo "some area were out of the scope of this work", "not necessary to evaluate the main goal of the thesis" etc. 
+Na "lack of time" nebo "time constrains" muze nekdo zareagovat slovy "tak my vam ten cas dame do dalsiho terminu..."
 Due to time constraints, several areas of the standard were ignored. The development focused on being able to run simple calculation programs and being able to run benchmarks from [Hagmüller's work](#hagmüllers-work).
 
 In total, ECMA-335 defines 219 opcodes, consisting of 6 prefixes and 213 instructions. Of those, our runtime contains code handling 151 instructions and no prefixes.
@@ -867,7 +878,13 @@ After stubbing out `Write`, `WriteLine`, `ToString` and `Concat` (to get rid of 
 | UDivConst | Missing exception support |
 | UModConst | Missing exception support |
 
+It would be good to include the tests and some script to run them in the thesis artifact too. In general there are only few unit tests in BACIL, that's not going to look very good.
+You could also add some unit tests that use the Graal SDK to create the Context and pass various options including malformed and to execute few snippets.
+
 ### Library methods
+
+Maybe explain how this relates to BACILHelpers, why you use BACILHelpers for some things, while these library methods are intrinsified?, overridden?, what is the actual mechanism?
+The same question arises with the Stopwatch class below.
 
 While we pass library calls to the .NET runtime implementations, most of them either require generics or use native methods. We only implemented the following native methods:
 
@@ -947,6 +964,8 @@ public static void Main(String[] args)
 
 One goal was to compare with Hagmüller's implementation from [Truffle CIL Interpreter (2020)](https://epub.jku.at/obvulihs/content/titleinfo/5473678). We received copies of the benchmark programs used in the work and could therefore run them against our implementation. When researching [.NET runtime JIT benchmarks](#net-runtime-jit-benchmarks), we discovered that the used benchmarks are based on code from the repository. However, to keep the comparison fair, we used the provided modified versions, only changing out the harness. We didn't have access to the interpreter itself, so couldn't replicate the original benchmarks, and only use the numbers provided in their work. To receive comparable numbers, we followed the outlined methodology:
 
+Maybe explain that they provide relative (or you derived from their measurements) relative speedup/slowdown to dotnet and this should be comparable. Nothing that the reader could not infer from the later text, but could help busy reader that skims through...
+
 > The discussed Truffle CIL Interpreter, was evaluated by running a set of different programs. All benchmarks were executed on an Intel i7-5557U processor with 2 cores, 4 virtual threads featuring 16GB of RAM and a core speed of 3.1 GHz running macOS Catalina(64 bit).
 >
 > We parametrized each benchmark so that its execution results in high workload for our test system. In order to get a performance reference to compare with, we executed the benchmark programs in the mono runtime. We ran the benchmark programs in our Truffle CIL Interpreter on the top of the Graal VM. To find out how much our Truffle CIL Interpreter benefits from the support of compilation by Graal, we also ran the tests in an interpreter only mode, by using the standard Java JDK, instead of Graal. Because Graal optimizes functions which are called a certain number of times, we executed each program in a loop a several amount of times. For our evaluation we wanted to ignore the warm up phase of the compilation, so we just took the last 10 iterations of the execution loop. For each iteration the execution time is measured. For these 10 iterations we calculated the arithmetic mean. In order to reduce statistical outliers we repeated this 10 times and calculated the geometric mean over the arithmetic means.
@@ -956,6 +975,8 @@ Our benchmarks had the following differences:
 * instead of an unspecified version of the mono runtime, we used .NET 6.0.301 to get the reference performance
 * our system was different
 * we ignored "interpreter only mode" results - we tailored the interpreter for partial evaluation, so the slowdowns in interpreter mode are usually more than 200x; we don't see value in precisely benchmarking such a glaring difference
+
+hmm, one of the reasons for BCI vs AST intepreters was interpreter performance (well, compared to AST intepr., but Espresso's goal is to get closer to HostSpot interpreter). OTOH you indeed did not focus on interpreter perf., meaningful comparison would be to the .NET AST interpreter (not to dotnet reference impl.) and we do not have numbers for that?
 
 It wasn't obvious if CIL-level optimizations were enabled when compiling the tests in Hagmüller's work. For that reason, we measured both the debug (unoptimized) and release (optimized) compilation configurations.
 
@@ -1027,16 +1048,24 @@ The first iteration was 83 times slower than iterations 30+.
 We draw two main conclusions from the performance benchmarks:
 
 * our implementation outperforms Hagmüller's work
-* in compiled code, BACIL is less than an order of magnitude slower than .NET runtime, with the worst case measured being 7.237 times slower
+* in compiled code, BACIL is less than an order of magnitude slower than .NET runtime, with the worst case measured being 7.237 times slower, where is the best case?! You can embrace bit more the american/sales person attitude (but stay formal) in the whole thesis :-)
 
 The last observation we want to make is regarding IL-level optimizations. While for the .NET runtime, the IL optimizations (in Release mode) made it significantly more performant, for BACIL such optimizations were very much insignificant. One interesting fact is that running Hagmüller's binarytrees on BACIL, they performed slightly worse in the optimized Release version than the Debug version. This probably has to do with the fact that the "optimizations" (which are surely tailored for .NET runtimes) resulted in using different instructions that were incidentally less performant on BACIL.
 
 # Conclusion
 
+This is a placeholder for at least two paragraphs, right :-)
+
 * in a single person I was able to implement a fast interpreter for CIL = mission accomplished
 
 
 # Appendix - Opcode implementation status
+
+Other appendices: in order of imporance (all IMO):
+  * contents of the attached USB
+  * build instructions, how to run tests, benchmarks
+  * some basic user manual (how to start BACIL, what options it has)
+  * some more details for the benchmarks: more methodology details, raw numbers, ...
 
 Implemented instructions:
 

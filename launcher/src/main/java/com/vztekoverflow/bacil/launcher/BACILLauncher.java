@@ -56,6 +56,7 @@ public class BACILLauncher extends AbstractLanguageLauncher {
             final Source source = Source.newBuilder(LANGUAGE_ID, new File(inputFile)).build();
             final long start = System.currentTimeMillis();
             returnValue = context.eval(source).asInt();
+            // TODO: maybe hide behind a flag?
             System.err.println("Returned: " + returnValue);
             final long done = System.currentTimeMillis();
             System.err.println("Runtime: " + (done-start) + "ms");
@@ -71,6 +72,6 @@ public class BACILLauncher extends AbstractLanguageLauncher {
 
     @Override
     protected void printHelp(OptionCategory maxCategory) {
-
+        // TODO: user documentation/help/... in general
     }
 }

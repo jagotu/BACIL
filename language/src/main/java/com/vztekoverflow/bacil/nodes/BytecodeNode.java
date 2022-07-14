@@ -96,6 +96,7 @@ public class BytecodeNode extends Node {
         //For references, the ref is stored directly in refs[] and the slot in primitives[] is undefined.
         //For primitives, the refs[] slot is filled with EvaluationStackPrimitiveMarker objects
         //that allow tracking of the type (int64/int32/native int/F)
+        // Long term TODO: change this to use the new Truffle frame indexed slots
         long[] primitives = new long[evaluationStackCount];
         Object[] refs = new Object[evaluationStackCount];
 
@@ -290,6 +291,10 @@ public class BytecodeNode extends Node {
                 case BLE_UN:
                 case BLT_UN:
                 case BNE_UN:
+                    // Long term TODO: this should use Truffle bytecode OSR support,
+                    //  have a counter of backedges (loop jumps) and report that counter via LoopNode.reportLoopCount
+                    //  once the function finishes. Also these if should be maybe profiled with ConditionProfile.createCountingProfile
+                    //  (the implementation can be inlined to save the indirection)
                     if(binaryCompareResult(curOpcode, primitives, refs, top-2, top-1))
                     {
                         pc = nextpc + bytecodeBuffer.getImmInt(pc);
