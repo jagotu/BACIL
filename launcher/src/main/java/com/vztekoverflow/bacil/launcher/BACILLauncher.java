@@ -62,7 +62,7 @@ public class BACILLauncher extends AbstractLanguageLauncher {
             final long done = System.currentTimeMillis();
             System.err.println("Runtime: " + (done-start) + "ms");
         } catch (IOException e) {
-            e.printStackTrace();
+            printFileNotFound(inputFile);
         }
     }
 
@@ -79,5 +79,11 @@ public class BACILLauncher extends AbstractLanguageLauncher {
         System.out.println();
         System.out.println("Usage: cilostazol [options] [path-to-application]");
         printDefaultHelp(OptionCategory.USER);
+    }
+
+    private void printFileNotFound(String filePath) {
+        System.out.println("Could not execute because the specified file was not found.");
+        System.out.println("Possible reasons for this include:");
+        System.out.println("\t* You intended to execute a .NET program, but dotnet-" + filePath + " does not exist.");
     }
 }
