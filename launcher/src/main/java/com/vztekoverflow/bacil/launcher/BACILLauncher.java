@@ -20,11 +20,9 @@ public class BACILLauncher extends AbstractLanguageLauncher {
     private int returnValue = 0;
 
     public static void main(String[] args) {
-
         BACILLauncher launcher = new BACILLauncher();
         launcher.launch(args);
         System.exit(launcher.getReturnValue());
-
     }
 
     public int getReturnValue() {
@@ -41,6 +39,12 @@ public class BACILLauncher extends AbstractLanguageLauncher {
                 unrecognized.add(arg);
             }
         }
+
+        if (inputFile == null) {
+            printUsage();
+            System.exit(getReturnValue());
+        }
+
         return unrecognized;
     }
 
@@ -69,7 +73,11 @@ public class BACILLauncher extends AbstractLanguageLauncher {
 
     @Override
     protected void printHelp(OptionCategory maxCategory) {
+    }
+
+    private void printUsage() {
         System.out.println();
         System.out.println("Usage: cilostazol [options] [path-to-application]");
+        printDefaultHelp(OptionCategory.USER);
     }
 }
