@@ -19,7 +19,7 @@ public class BACILLauncher extends AbstractLanguageLauncher {
     private String inputFile = null;
     private int returnValue = 0;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 
         BACILLauncher launcher = new BACILLauncher();
         launcher.launch(args);
@@ -34,10 +34,8 @@ public class BACILLauncher extends AbstractLanguageLauncher {
     @Override
     protected List<String> preprocessArguments(List<String> arguments, Map<String, String> polyglotOptions) {
         ArrayList<String> unrecognized = new ArrayList<>();
-        for (int i = 0; i < arguments.size(); i++) {
-            String arg = arguments.get(i);
-            if(!arg.startsWith("-"))
-            {
+        for (String arg : arguments) {
+            if (!arg.startsWith("-")) {
                 inputFile = arg;
             } else {
                 unrecognized.add(arg);
@@ -71,6 +69,7 @@ public class BACILLauncher extends AbstractLanguageLauncher {
 
     @Override
     protected void printHelp(OptionCategory maxCategory) {
-
+        System.out.println();
+        System.out.println("Usage: cilostazol [options] [path-to-application]");
     }
 }
