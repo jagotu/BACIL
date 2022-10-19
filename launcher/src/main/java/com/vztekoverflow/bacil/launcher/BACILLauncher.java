@@ -19,12 +19,10 @@ public class BACILLauncher extends AbstractLanguageLauncher {
     private String inputFile = null;
     private int returnValue = 0;
 
-    public static void main(String[] args) throws IOException {
-
+    public static void main(String[] args) {
         BACILLauncher launcher = new BACILLauncher();
         launcher.launch(args);
         System.exit(launcher.getReturnValue());
-
     }
 
     public int getReturnValue() {
@@ -34,15 +32,19 @@ public class BACILLauncher extends AbstractLanguageLauncher {
     @Override
     protected List<String> preprocessArguments(List<String> arguments, Map<String, String> polyglotOptions) {
         ArrayList<String> unrecognized = new ArrayList<>();
-        for (int i = 0; i < arguments.size(); i++) {
-            String arg = arguments.get(i);
-            if(!arg.startsWith("-"))
-            {
+        for (String arg : arguments) {
+            if (!arg.startsWith("-")) {
                 inputFile = arg;
             } else {
                 unrecognized.add(arg);
             }
         }
+
+        if (inputFile == null) {
+            printUsage();
+            System.exit(getReturnValue());
+        }
+
         return unrecognized;
     }
 
@@ -60,7 +62,7 @@ public class BACILLauncher extends AbstractLanguageLauncher {
             final long done = System.currentTimeMillis();
             System.err.println("Runtime: " + (done-start) + "ms");
         } catch (IOException e) {
-            e.printStackTrace();
+            printFileNotFound(inputFile);
         }
     }
 
@@ -71,6 +73,17 @@ public class BACILLauncher extends AbstractLanguageLauncher {
 
     @Override
     protected void printHelp(OptionCategory maxCategory) {
+    }
 
+    private void printUsage() {
+        System.out.println();
+        System.out.println("Usage: cilostazol [options] [path-to-application]");
+        printDefaultHelp(OptionCategory.USER);
+    }
+
+    private void printFileNotFound(String filePath) {
+        System.out.println("Could not execute because the specified file was not found.");
+        System.out.println("Possible reasons for this include:");
+        System.out.println("\t* You intended to execute a .NET program, but dotnet-" + filePath + " does not exist.");
     }
 }
