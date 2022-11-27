@@ -126,7 +126,7 @@ public class CILMethod implements BACILMethod {
         //Create a BytecodeNode to represent the body
         FrameDescriptor frameDescriptor = new FrameDescriptor();
         CILRootNode rootNode = new CILRootNode(frameDescriptor, new BytecodeNode(this, body));
-        this.callTarget = Truffle.getRuntime().createCallTarget(rootNode);
+        this.callTarget = rootNode.getCallTarget();
 
 
         int explicitArgsStart = 0;

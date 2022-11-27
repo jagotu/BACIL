@@ -15,6 +15,7 @@ import com.vztekoverflow.bacil.runtime.bacil.BACILComponent;
 import com.vztekoverflow.bacil.runtime.bacil.BACILHelpersComponent;
 import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
 import org.graalvm.polyglot.io.ByteSequence;
+import com.oracle.truffle.api.nodes.Node;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -39,6 +40,13 @@ public class BACILContext {
 
     @CompilerDirectives.CompilationFinal(dimensions = 1)
     private final String[] stubbedMethods;
+
+    private static final TruffleLanguage.ContextReference<BACILContext> REFERENCE =
+            TruffleLanguage.ContextReference.create(BACILLanguage.class);
+
+    public static BACILContext get(Node node) {
+        return REFERENCE.get(node);
+    }
 
     /**
      * Get the instance of {@link BACILLanguage} this context belongs to.
