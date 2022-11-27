@@ -1,0 +1,6 @@
+# JetBrains
+.idea
+
+# Targets
+language/target/**
+launcher/target/**
