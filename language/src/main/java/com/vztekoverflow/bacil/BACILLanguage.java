@@ -10,6 +10,7 @@ import com.vztekoverflow.bacil.runtime.BACILMethod;
 import com.vztekoverflow.bacil.runtime.SZArray;
 import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
 import org.graalvm.options.OptionDescriptors;
+import com.oracle.truffle.api.nodes.Node;
 
 import java.io.File;
 
@@ -24,6 +25,12 @@ public class BACILLanguage extends TruffleLanguage<BACILContext> {
     public static final String NAME = "CIL";
 
     public static final String CIL_PE_MIME_TYPE = "application/x-dosexec";
+
+    private static final LanguageReference<BACILLanguage> REFERENCE = LanguageReference.create(BACILLanguage.class);
+
+    public static BACILLanguage get(Node node) {
+        return REFERENCE.get(node);
+    }
 
     public BACILLanguage()
     {
@@ -80,11 +87,11 @@ public class BACILLanguage extends TruffleLanguage<BACILContext> {
     protected CallTarget parse(ParsingRequest request) {
         Source source = request.getSource();
 
-        CLIComponent c = getCurrentContext(BACILLanguage.class).loadAssembly(source);
+        CLIComponent c = BACILContext.get(null).loadAssembly(source);
 
         String sourcePath = request.getSource().getPath();
         File file = new File(sourcePath);
-        getCurrentContext(BACILLanguage.class).addLibraryPath(file.getAbsoluteFile().getParent());
+        BACILContext.get(null).addLibraryPath(file.getAbsoluteFile().getParent());
 
         if(c.getCliHeader().getEntryPointToken() == 0)
         {
