@@ -19,7 +19,7 @@
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!-- If you update this number make sure the VERSION value in ./cilostazol matches -->
-        <org.graalvm.version>22.0.0</org.graalvm.version>
+        <org.graalvm.version>22.2.0</org.graalvm.version>
     </properties>
 
     <build>

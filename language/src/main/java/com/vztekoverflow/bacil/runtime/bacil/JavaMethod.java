@@ -13,7 +13,7 @@ import com.vztekoverflow.bacil.runtime.BACILMethod;
  */
 public abstract class JavaMethod extends RootNode implements BACILMethod {
 
-    private final CallTarget callTarget = Truffle.getRuntime().createCallTarget(this);
+    private final CallTarget callTarget = getCallTarget();
 
     protected JavaMethod(TruffleLanguage<?> language) {
         super(language);
