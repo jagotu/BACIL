@@ -4,3 +4,7 @@
 # Targets
 language/target/**
 launcher/target/**
+
+# CSharp
+**/bin/**
+**/obj/**
