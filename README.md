@@ -9,12 +9,13 @@ Written as a part of a bachelor thesis called _Truffle based .NET IL interpreter
 ## Building
 
 For ease of building we use [Maven](https://maven.apache.org/), therefore building consists of running `mvn package` in the root of the project.
+> You will need java [GraalVM compiler](https://github.com/graalvm/graalvm-ce-builds/releases/tag/vm-21.3.3.1) of version at least 21.3
 
 The resulting artifacts will be the language jar in `language/target/language-1.0-SNAPSHOT.jar` and a (shaded) launcher jar in `launcher/target/bacil-launcher.jar`.
 
 ## Running
 
-For running you'll need to [obtain GraalVM](https://www.graalvm.org/downloads/) and a [copy of a .NET standard library](https://dotnet.microsoft.com/download/dotnet). While the target for development was Java 8 and .NET Runtime 5.0.6 on both Linux and Windows, we succesfully ran the project on Java 11 with .NET 6.
+For running you'll need to [obtain GraalVM](https://www.graalvm.org/downloads/) and a [copy of a .NET standard library](https://dotnet.microsoft.com/download/dotnet). While the target for development was Java 8 and .NET Runtime 5.0.6 on both Linux and Windows, we succesfully ran the project on Java 11 and 17 with .NET 6.
 
 You'll also need an assembly to run. If you don't have any handy, you can clone [BACIL_examples](https://github.com/jagotu/BACIL_examples).
 
@@ -67,3 +68,9 @@ Returned 4
 
 Always make sure you are running GraalVM and replace the `libraryPath` with path to the .NET standard library DLLs.
 
+## Development
+
+For development purposes you can use provided Intellij configurations.
+ - CILOSTAZOL-100mg, copy of .NET standard library and assembly to run (provided BACIL_examples) is supposed to be at the same level.
+ - Make sure GraalVM java version is configured correctly
+ - run BACIL-clean-build application

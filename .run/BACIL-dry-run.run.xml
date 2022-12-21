@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="BACIL-dry-run" type="Application" factoryName="Application">
+    <option name="ALTERNATIVE_JRE_PATH" value="$PROJECT_DIR$/../../../../../../graalvm-ee-java17-22.3.0" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+    <option name="MAIN_CLASS_NAME" value="com.vztekoverflow.bacil.launcher.BACILLauncher" />
+    <module name="launcher" />
+    <option name="PROGRAM_PARAMETERS" value="--cil.libraryPath=..\Microsoft.NETCore.App\6.0.10 ..\BACIL_examples\Inheritance\bin\Release\net5.0\TestHarness.dll" />
+    <option name="VM_PARAMETERS" value="-Dtruffle.class.path.append=language/target/language-1.0-SNAPSHOT.jar" />
+    <method v="2" />
+  </configuration>
+</component>
