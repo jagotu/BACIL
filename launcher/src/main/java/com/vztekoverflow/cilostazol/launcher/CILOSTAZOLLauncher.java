@@ -1,4 +1,4 @@
-package com.vztekoverflow.bacil.launcher;
+package com.vztekoverflow.cilostazol.launcher;
 
 import org.graalvm.launcher.AbstractLanguageLauncher;
 import org.graalvm.options.OptionCategory;
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class BACILLauncher extends AbstractLanguageLauncher {
+public class CILOSTAZOLLauncher extends AbstractLanguageLauncher {
 
     private static final String LANGUAGE_ID = "cil";
     private String inputFile = null;
@@ -21,7 +21,7 @@ public class BACILLauncher extends AbstractLanguageLauncher {
 
     public static void main(String[] args) throws IOException {
 
-        BACILLauncher launcher = new BACILLauncher();
+        CILOSTAZOLLauncher launcher = new CILOSTAZOLLauncher();
         launcher.launch(args);
         System.exit(launcher.getReturnValue());
 
@@ -56,9 +56,9 @@ public class BACILLauncher extends AbstractLanguageLauncher {
             final Source source = Source.newBuilder(LANGUAGE_ID, new File(inputFile)).build();
             final long start = System.currentTimeMillis();
             returnValue = context.eval(source).asInt();
-            System.err.println("Returned: " + returnValue);
+            System.err.println(LauncherBundle.message("launcher.output.return.value", returnValue));
             final long done = System.currentTimeMillis();
-            System.err.println("Runtime: " + (done-start) + "ms");
+            System.err.println(LauncherBundle.message("launcher.output.return.time", done));
         } catch (IOException e) {
             e.printStackTrace();
         }
