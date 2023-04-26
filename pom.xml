@@ -5,12 +5,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.vztekoverflow</groupId>
-    <artifactId>BACIL</artifactId>
+    <artifactId>CILOSTAZOL</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
     <modules>
         <module>launcher</module>
         <module>language</module>
+        <module>parser</module>
+        <module>tests</module>
     </modules>
 
 
