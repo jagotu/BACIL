@@ -137,7 +137,7 @@ public class BytecodeNode extends Node {
             CompilerAsserts.partialEvaluationConstant(curOpcode);
             CompilerAsserts.partialEvaluationConstant(top);
             CompilerAsserts.partialEvaluationConstant(nextpc);
-
+            System.out.println(String.format("Unsupported opcode %02x (%s) in %s (offset %x)", curOpcode, BytecodeInstructions.getName(curOpcode), method, pc));
             //Print all executed instructions for debugging
             //System.out.printf("%s:%04x %s\n", method.getName(), pc, BytecodeInstructions.getName(curOpcode));
 
