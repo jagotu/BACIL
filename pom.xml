@@ -11,7 +11,7 @@
     <modules>
         <module>launcher</module>
         <module>language</module>
-        <module>parser</module>
+        <module>cil-parser</module>
         <module>tests</module>
     </modules>
 

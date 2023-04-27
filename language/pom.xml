@@ -17,26 +17,6 @@
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
     </properties>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.4</version>
-                <configuration>
-                    <archive>
-                        <manifestEntries>
-                            <Bundle-Name>BACIL</Bundle-Name>
-                            <Bundle-Symbolic-Name>com.vztekoverflow.bacil</Bundle-Symbolic-Name>
-                            <Bundle-Version>1.0</Bundle-Version>
-                            <Bundle-RequireCapability>org.graalvm</Bundle-RequireCapability>
-                            <x-GraalVM-Polyglot-Part>True</x-GraalVM-Polyglot-Part>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 
     <dependencies>
         <dependency>
