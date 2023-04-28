@@ -12,7 +12,6 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.Assembly;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.Type;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.TypeFactory;
 import org.graalvm.polyglot.io.ByteSequence;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class CILComponent extends Component {
     private final CLIComponent _cliComponent;
@@ -86,6 +85,9 @@ public class CILComponent extends Component {
      */
     public Type getLocalType(CLITypeSpecTableRow typeSpec)
     {
-        throw new NotImplementedException();
+
+        //TODO
+        return null;
+
     }
 }
