@@ -1,6 +1,6 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.type;
 
-import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITypeDefTableRow;
+import com.vztekoverflow.cil.parser.cli.table.generated.CLITypeDefTableRow;
 
 public class TypeFactory {
     public static Type createType(CLITypeDefTableRow typeDef) {

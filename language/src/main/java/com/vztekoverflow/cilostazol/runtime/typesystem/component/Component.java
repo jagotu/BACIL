@@ -1,4 +1,4 @@
-package com.vztekoverflow.cilostazol.runtime.typesystem;
+package com.vztekoverflow.cilostazol.runtime.typesystem.component;
 
 import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.Type;

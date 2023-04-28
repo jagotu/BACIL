@@ -1,5 +1,7 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem;
 
+import com.vztekoverflow.cilostazol.runtime.typesystem.component.CILComponent;
+import com.vztekoverflow.cilostazol.runtime.typesystem.component.Component;
 import junit.framework.TestCase;
 import org.graalvm.polyglot.io.ByteSequence;
 
@@ -16,9 +18,11 @@ public class TypeParsingTest extends TestCase {
     }
 
     public void testComponentParsing1() throws Exception {
+
         byte[] data = Files.readAllBytes(getDllPath("ComponentParsing1"));
         ByteSequence bytes = ByteSequence.create(data);
-        Component c = CILComponent.parse(bytes);
+        AppDomain domain = new AppDomain();
+        Component c = CILComponent.parse(bytes, domain);
         //assert component
     }
 }
