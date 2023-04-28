@@ -12,3 +12,5 @@ launcher/target/**
 /parser/target/maven-archiver/pom.properties
 /tests/target/maven-archiver/pom.properties
 /tests/target/tests-1.0-SNAPSHOT.jar
+**.class
+**/target/**
