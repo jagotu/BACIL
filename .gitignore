@@ -1,16 +1,13 @@
 # JetBrains
 .idea
 
-# Targets
+# Jave
 language/target/**
 launcher/target/**
+cil-parser/target/**
+tests/target/**
 
-# CSharp
-**/bin/**
-**/obj/**
-/parser/target/parser-1.0-SNAPSHOT.jar
-/parser/target/maven-archiver/pom.properties
-/tests/target/maven-archiver/pom.properties
-/tests/target/tests-1.0-SNAPSHOT.jar
-**.class
-**/target/**
+#CSharp
+BACILHelpersCS/**/bin/**
+BACILHelpersCS/**/obj/**
+language/src/test/resources/**/obj/**
