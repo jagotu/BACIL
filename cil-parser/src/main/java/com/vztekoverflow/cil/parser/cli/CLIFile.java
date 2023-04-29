@@ -15,7 +15,7 @@ import org.graalvm.polyglot.io.ByteSequence;
 /**
  * A class representing a CLI Component, as described in I.9.1 Components and assemblies.
  */
-public class CLIComponent {
+public class CLIFile {
 
     private final CLIHeader cliHeader;
     private final CLIMetadata cliMetadata;
@@ -43,7 +43,7 @@ public class CLIComponent {
         return buf;
     }
 
-    public CLIComponent(CLIHeader cliHeader, CLIMetadata cliMetadata, byte[] blobHeap, byte[] stringHeap, byte[] guidHeap, byte[] USHeap, CLITables tables, PEFile pe) {
+    public CLIFile(CLIHeader cliHeader, CLIMetadata cliMetadata, byte[] blobHeap, byte[] stringHeap, byte[] guidHeap, byte[] USHeap, CLITables tables, PEFile pe) {
         this.cliHeader = cliHeader;
         this.cliMetadata = cliMetadata;
         this.blobHeap = blobHeap;
@@ -69,9 +69,9 @@ public class CLIComponent {
     /**
      * Parse component metadata from a PE file.
      * @param bytes a {@link ByteSequence} representing the PE bytes
-     * @return a {@link CLIComponent} representation of the component
+     * @return a {@link CLIFile} representation of the component
      */
-    public static CLIComponent parseComponent(ByteSequence bytes) {
+    public static CLIFile parseComponent(ByteSequence bytes) {
         //Noone should load an assembly in compiled code.
         CompilerAsserts.neverPartOfCompilation();
 
@@ -109,7 +109,7 @@ public class CLIComponent {
         final byte[] USHeap = cliMetadata.getStreamBytes("#US", bytes);
 
 
-        return new CLIComponent(cliHeader, cliMetadata, blobHeap, stringHeap, guidHeap, USHeap, tables, peFile);
+        return new CLIFile(cliHeader, cliMetadata, blobHeap, stringHeap, guidHeap, USHeap, tables, peFile);
     }
 
     public CLITableHeads getTableHeads()

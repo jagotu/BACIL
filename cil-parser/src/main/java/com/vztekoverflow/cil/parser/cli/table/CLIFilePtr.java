@@ -1,26 +1,26 @@
 package com.vztekoverflow.cil.parser.cli.table;
 
-import com.vztekoverflow.cil.parser.cli.CLIComponent;
+import com.vztekoverflow.cil.parser.cli.CLIFile;
 
 /**
  * A class combining a table pointer with the component it belongs to.
  * Used for implementing the ldtoken instruction.
  */
-public class CLIComponentTablePtr
+public class CLIFilePtr
 {
     private final CLITablePtr ptr;
-    private final CLIComponent component;
+    private final CLIFile cliFile;
 
-    public CLIComponentTablePtr(CLITablePtr ptr, CLIComponent component) {
+    public CLIFilePtr(CLITablePtr ptr, CLIFile component) {
         this.ptr = ptr;
-        this.component = component;
+        this.cliFile = component;
     }
 
     public CLITablePtr getPtr() {
         return ptr;
     }
 
-    public CLIComponent getComponent() {
-        return component;
+    public CLIFile getCLIFile() {
+        return cliFile;
     }
 }

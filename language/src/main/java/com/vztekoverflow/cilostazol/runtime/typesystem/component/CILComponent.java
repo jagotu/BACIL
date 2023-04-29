@@ -2,8 +2,9 @@ package com.vztekoverflow.cilostazol.runtime.typesystem.component;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.source.Source;
 import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
-import com.vztekoverflow.cil.parser.cli.CLIComponent;
+import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cil.parser.cli.table.generated.*;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.runtime.typesystem.AppDomain;
@@ -14,47 +15,47 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.type.TypeFactory;
 import org.graalvm.polyglot.io.ByteSequence;
 
 public class CILComponent extends Component {
-    private final CLIComponent _cliComponent;
+    private final CLIFile _cliFile;
     private final AppDomain _domain;
     @CompilerDirectives.CompilationFinal(dimensions = 1)
     private final Type[] _localDefTypes;
     @CompilerDirectives.CompilationFinal(dimensions = 1)
     private final Type[] _localSpecTypes;
 
-    private CILComponent(CLIComponent component, AppDomain domain){
-        _cliComponent = component;
+    private CILComponent(CLIFile component, AppDomain domain){
+        _cliFile = component;
         _localDefTypes = new Type[component.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_TYPE_DEF)];
         _localSpecTypes = new Type[component.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_TYPE_SPEC)];
         _domain = domain;
     }
 
-    public static CILComponent parse(ByteSequence bytes, AppDomain domain) {
-        CLIComponent component = CLIComponent.parseComponent(bytes);
+    public static CILComponent parse(Source dllSource, AppDomain domain) {
+        CLIFile component = CLIFile.parseComponent(dllSource.getBytes());
 
         return new CILComponent(component, domain);
     }
 
     @Override
-    public AssemblyIdentity getAssemblyIdentity() {
-        return _cliComponent.getAssemblyIdentity();
+    public AppDomain getAppDomain() {
+        return _domain;
     }
 
     @Override
     public Type findLocalType(String namespace, String name) {
         //Check typeDefs
-        for(CLITypeDefTableRow row : _cliComponent.getTableHeads().getTypeDefTableHead())
+        for(CLITypeDefTableRow row : _cliFile.getTableHeads().getTypeDefTableHead())
         {
-            if(row.getTypeNamespace().read(_cliComponent.getStringHeap()).equals(namespace) && row.getTypeName().read(_cliComponent.getStringHeap()).equals(name))
+            if(row.getTypeNamespace().read(_cliFile.getStringHeap()).equals(namespace) && row.getTypeName().read(_cliFile.getStringHeap()).equals(name))
                 return getLocalType(row);
         }
 
         //Check exported types (II.6.8 Type forwarders)
-        for(CLIExportedTypeTableRow row : _cliComponent.getTableHeads().getExportedTypeTableHead())
+        for(CLIExportedTypeTableRow row : _cliFile.getTableHeads().getExportedTypeTableHead())
         {
-            if(row.getTypeNamespace().read(_cliComponent.getStringHeap()).equals(namespace) && row.getTypeName().read(_cliComponent.getStringHeap()).equals(name))
+            if(row.getTypeNamespace().read(_cliFile.getStringHeap()).equals(namespace) && row.getTypeName().read(_cliFile.getStringHeap()).equals(name))
             {
-                CLIAssemblyRefTableRow assemblyRef = _cliComponent.getTableHeads().getAssemblyRefTableHead().skip(row.getImplementation());
-                Assembly assembly = _domain.getAssembly(AssemblyIdentity.fromAssemblyRefRow(_cliComponent.getStringHeap(), assemblyRef));
+                CLIAssemblyRefTableRow assemblyRef = _cliFile.getTableHeads().getAssemblyRefTableHead().skip(row.getImplementation());
+                Assembly assembly = _domain.getAssembly(AssemblyIdentity.fromAssemblyRefRow(_cliFile.getStringHeap(), assemblyRef));
                 return assembly.findLocalType(namespace, name);
             }
         }
