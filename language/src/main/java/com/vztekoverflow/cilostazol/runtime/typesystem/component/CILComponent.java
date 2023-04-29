@@ -2,7 +2,6 @@ package com.vztekoverflow.cilostazol.runtime.typesystem.component;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.source.Source;
 import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cil.parser.cli.table.generated.*;
@@ -12,7 +11,7 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.Assembly;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.Type;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.TypeFactory;
-import org.graalvm.polyglot.io.ByteSequence;
+import org.graalvm.polyglot.Source;
 
 public class CILComponent extends Component {
     private final CLIFile _cliFile;
@@ -30,7 +29,7 @@ public class CILComponent extends Component {
     }
 
     public static CILComponent parse(Source dllSource, AppDomain domain) {
-        CLIFile component = CLIFile.parseComponent(dllSource.getBytes());
+        CLIFile component = CLIFile.parse(dllSource.getBytes());
 
         return new CILComponent(component, domain);
     }

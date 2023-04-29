@@ -71,7 +71,7 @@ public class CLIFile {
      * @param bytes a {@link ByteSequence} representing the PE bytes
      * @return a {@link CLIFile} representation of the component
      */
-    public static CLIFile parseComponent(ByteSequence bytes) {
+    public static CLIFile parse(ByteSequence bytes) {
         //Noone should load an assembly in compiled code.
         CompilerAsserts.neverPartOfCompilation();
 
