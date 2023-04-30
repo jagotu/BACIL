@@ -46,6 +46,8 @@ public class Assembly {
         return assembly;
     }
 
+    public Component[] getComponents() {return _components;}
+
     public Type findLocalType(String namespace, String name) {
         //TODO
         return null;

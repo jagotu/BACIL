@@ -73,7 +73,7 @@ public class CILComponent extends Component {
         if(_localDefTypes[typeDef.getRowNo()-1] == null)
         {
             CompilerAsserts.neverPartOfCompilation();
-            _localDefTypes[typeDef.getRowNo()-1] = TypeFactory.createType(typeDef);
+            _localDefTypes[typeDef.getRowNo()-1] = TypeFactory.createType(typeDef, this);
         }
         return _localDefTypes[typeDef.getRowNo()-1];
     }
