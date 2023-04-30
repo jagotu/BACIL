@@ -9,15 +9,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-//You have to firstly build C# projects in test resources.
+/**
+ * You have to first build C# projects in test resources: `src/test/resources/TypeParsing`.
+ */
 public class TypeParsingTest extends TestCase {
-    public static final String _directory = "src/test/resources/TypeParsing";
+    private static final String _directory = "src/test/resources/TypeParsing";
 
     private Path getDllPath(String nameOfProj) {
         return Paths.get(_directory, nameOfProj,"bin/Release/net7.0", nameOfProj + ".dll");
     }
 
-    public void testComponentParsing1() throws Exception {
+    public void testComponentParsingGeneral() throws Exception {
         CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
         CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
         Source source = Source.newBuilder(
