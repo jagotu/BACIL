@@ -1,4 +1,5 @@
 # CILOSTAZOL 💊
+![graalVM CE build](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/actions/workflows/build_with_graalEE.yml/badge.svg)
 
 Continuation of BACIL interpreter
 
