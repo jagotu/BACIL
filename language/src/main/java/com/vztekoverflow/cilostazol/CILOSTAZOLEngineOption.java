@@ -16,11 +16,13 @@ public final class CILOSTAZOLEngineOption {
     public static final String OPTION_ARRAY_SEPARATOR = ";";
 
     public static final String LIBRARY_PATH_NAME = "cil.libraryPath";
-    @Option(name = LIBRARY_PATH_NAME,
-            category = OptionCategory.USER,
-            stability = OptionStability.STABLE,
-            help = "A list of paths where BACIL will search for relative libraries. " +
-                    "Paths are delimited by a semicolon \'" + OPTION_ARRAY_SEPARATOR + "\'.")
+
+    //TODO: undo comment when fully ported from BACIL -> now it causes regression
+//    @Option(name = LIBRARY_PATH_NAME,
+//            category = OptionCategory.USER,
+//            stability = OptionStability.STABLE,
+//            help = "A list of paths where BACIL will search for relative libraries. " +
+//                    "Paths are delimited by a semicolon \'" + OPTION_ARRAY_SEPARATOR + "\'.")
     public static final OptionKey<String> LIBRARY_PATH = new OptionKey<>("");
 
     public static Path[] getPolyglotOptionSearchPaths(TruffleLanguage.Env env) {
