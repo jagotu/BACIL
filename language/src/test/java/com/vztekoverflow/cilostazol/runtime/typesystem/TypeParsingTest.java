@@ -30,5 +30,6 @@ public class TypeParsingTest extends TestCase {
 
         AppDomain domain = new AppDomain(ctx);
         Assembly assembly = Assembly.parseAssembly(source, domain);
+        assembly.getComponents()[0].findLocalType("", "Program");
     }
 }
