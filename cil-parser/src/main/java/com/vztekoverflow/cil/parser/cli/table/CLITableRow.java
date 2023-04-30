@@ -5,7 +5,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.vztekoverflow.cil.parser.CILParserException;
 import com.vztekoverflow.cil.parser.ParserBundle;
-import com.vztekoverflow.cil.parser.bytecode.Bytes;
+import com.vztekoverflow.cil.parser.bytecode.ByteUtils;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITableConstants;
 
 import java.util.Iterator;
@@ -75,7 +75,7 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
     public final T next()
     {
         return skip(1);
-    };
+    }
 
     /**
      * Get a (properly typed) pointer to a row that's the specified amount of rows after the current one.
@@ -91,7 +91,7 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
     /**
      * Get a (properly typed) pointer to a row that's the amount of rows specified in the pointer after the current one.
      * Also checks that the {@link CLITablePtr} points to the correct table.
-     *
+     * <p>
      * This operation mainly makes sense when the current row is the first row, therefore "resolving" the CLITablePtr.
      * @param ptr a {@link CLITablePtr} which is used to skip
      * @return a pointer to the row that's {@code ptr.rowNo} rows after the current one
@@ -120,7 +120,7 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
      */
     protected final short getShort(int offset)
     {
-        return Bytes.getShort(tableData, cursor+offset);
+        return ByteUtils.getShort(tableData, cursor+offset);
     }
 
     /**
@@ -128,7 +128,7 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
      */
     protected final int getInt(int offset)
     {
-        return Bytes.getInt(tableData, cursor+offset);
+        return ByteUtils.getInt(tableData, cursor+offset);
     }
 
     /**
@@ -137,7 +137,7 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
      */
     protected final int getUShort(int offset)
     {
-        return Bytes.getUShort(tableData, cursor+offset);
+        return ByteUtils.getUShort(tableData, cursor+offset);
     }
 
     /**
@@ -146,7 +146,7 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
      */
     protected final long getUInt(int offset)
     {
-        return Bytes.getUInt(tableData, cursor+offset);
+        return ByteUtils.getUInt(tableData, cursor+offset);
     }
 
     /**
@@ -154,7 +154,7 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
      */
     protected final long getLong(int offset)
     {
-        return Bytes.getLong(tableData, cursor+offset);
+        return ByteUtils.getLong(tableData, cursor+offset);
     }
 
     /**
@@ -183,7 +183,7 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
     /**
      * Checks whether the specified tables are small enough to use a 2 byte coded index.
      * Coded indices are described II.24.2.6 #~ stream:
-     *
+     * <p>
      * If e is a coded index that points into table ti out of n possible tables t0,...,tn-1, then it
      * is stored as e &lt;&lt; (log n) | tag {t0,...,tn-1}[ti] using 2 bytes if the maximum number
      * of rows of tables t0,...,tn-1, is less than 2^(16 – (log n)), and using 4 bytes otherwise.

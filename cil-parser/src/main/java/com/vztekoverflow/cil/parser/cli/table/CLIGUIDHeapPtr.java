@@ -1,6 +1,6 @@
 package com.vztekoverflow.cil.parser.cli.table;
 
-import com.vztekoverflow.cil.parser.bytecode.Bytes;
+import com.vztekoverflow.cil.parser.bytecode.ByteUtils;
 
 import java.util.UUID;
 
@@ -20,8 +20,8 @@ public class CLIGUIDHeapPtr extends CLIHeapPtr<UUID>{
      */
     @Override
     public UUID read(byte[] heapData) {
-        long leastSig = Bytes.getLong(heapData, offset);
-        long mostSig = Bytes.getLong(heapData, offset+4);
+        long leastSig = ByteUtils.getLong(heapData, offset);
+        long mostSig = ByteUtils.getLong(heapData, offset+4);
         return new UUID(mostSig, leastSig);
     }
 

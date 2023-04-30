@@ -3,7 +3,7 @@ package com.vztekoverflow.cil.parser.bytecode;
 /**
  * A collection of utility methods for reading integers from byte arrays.
  */
-public final class Bytes {
+public final class ByteUtils {
 
     /**
      * Gets a signed 1-byte value.

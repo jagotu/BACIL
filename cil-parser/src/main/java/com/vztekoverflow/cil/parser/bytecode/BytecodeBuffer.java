@@ -8,7 +8,7 @@ import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
  * A class encapsulating raw bytecode bytes with an API to directly read
  * opcodes (with prefixed opcodes support) and operands, and patch the
  * underlying bytecode.
- *
+ * <p>
  * Similar to {@link java.nio.ByteBuffer}, but stateless (not having an internal position stored)
  * and providing only bytecode-specific accessor methods.
  */
@@ -95,7 +95,7 @@ public class BytecodeBuffer {
      */
     public short getImmShort(int position)
     {
-        return Bytes.getShort(bytecode, position+1+prefixedOffset(position));
+        return ByteUtils.getShort(bytecode, position+1+prefixedOffset(position));
     }
 
     /**
@@ -108,7 +108,7 @@ public class BytecodeBuffer {
      */
     public int getImmUShort(int position)
     {
-        return (int)(getImmShort(position) & 0xFFFF);
+        return getImmShort(position) & 0xFFFF;
     }
 
     /**
@@ -120,7 +120,7 @@ public class BytecodeBuffer {
      */
     public int getImmInt(int position)
     {
-        return Bytes.getInt(bytecode, position+1+prefixedOffset(position));
+        return ByteUtils.getInt(bytecode, position+1+prefixedOffset(position));
     }
 
     /**
@@ -145,12 +145,12 @@ public class BytecodeBuffer {
      */
     public long getImmLong(int position)
     {
-        return Bytes.getLong(bytecode, position+1+prefixedOffset(position));
+        return ByteUtils.getLong(bytecode, position+1+prefixedOffset(position));
     }
 
     /**
      * Writes the {@code patch} bytes to the specified position, overwriting the original bytecode.
-     *
+     * <p>
      * It is the caller's responsibility to never call this method in compilation and invalidate
      * all code built from the original bytecode.
      * @param position the index to write the patch to
