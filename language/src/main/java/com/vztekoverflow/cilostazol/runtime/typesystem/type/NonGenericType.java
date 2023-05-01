@@ -1,4 +1,10 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.type;
 
-public class NonGenericType extends Type{
+import com.vztekoverflow.cilostazol.runtime.typesystem.type.generic.TypeRef;
+
+public class NonGenericType extends Type implements TypeRef {
+    @Override
+    public Type getType() {
+        return this;
+    }
 }

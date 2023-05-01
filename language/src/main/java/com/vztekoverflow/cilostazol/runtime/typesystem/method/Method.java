@@ -1,4 +1,5 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.method;
 
-public abstract class Method {
+public class Method {
+    private final ExceptionHandler[] _exceptionHandlers = null;
 }
