@@ -48,6 +48,8 @@ public class Assembly {
 
     public Component[] getComponents() {return _components;}
 
+    public CLIFile getFile() {return _file; }
+
     public Type findLocalType(String namespace, String name) {
         //TODO
         return null;
