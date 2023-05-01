@@ -43,6 +43,6 @@ public class ParamSig {
 
         TypeSig type = TypeSig.read(reader, file);
 
-        return new ParamSig(byRef, (CustomMod[]) mods.toArray(), false, false, type);
+        return new ParamSig(byRef, mods != null ? (CustomMod[]) mods.toArray() : null, false, false, type);
     }
 }

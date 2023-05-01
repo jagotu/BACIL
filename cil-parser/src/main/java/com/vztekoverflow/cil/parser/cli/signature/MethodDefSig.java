@@ -72,4 +72,5 @@ public class MethodDefSig {
     public int getGenParamCount() {
         return genParamCount;
     }
+    public int getParamsCount() {return  params.length ;}
 }

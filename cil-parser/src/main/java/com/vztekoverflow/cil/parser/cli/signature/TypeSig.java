@@ -5,6 +5,8 @@ import com.vztekoverflow.cil.parser.ParserBundle;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
 
+import java.util.List;
+
 public class TypeSig {
     public static final byte ELEMENT_TYPE_END = 0x00;
     public static final byte ELEMENT_TYPE_VOID = 0x01;
@@ -76,9 +78,9 @@ public class TypeSig {
                 return new TypeSig(null, null, null, elementType);
 
             case ELEMENT_TYPE_SZARRAY:
-                CustomMod[] mods = (CustomMod[]) CustomMod.readAll(reader).toArray();
+                List<CustomMod> mods = CustomMod.readAll(reader);
                 TypeSig inner = TypeSig.read(reader, file);
-                return new TypeSig(null, inner, mods, elementType);
+                return new TypeSig(null, inner, mods != null ? (CustomMod[]) mods.toArray() : null, elementType);
 
             case ELEMENT_TYPE_CLASS:
             case ELEMENT_TYPE_VALUETYPE:
