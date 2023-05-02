@@ -9,27 +9,50 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.IAssembly;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 import junit.framework.TestCase;
 import org.graalvm.polyglot.Source;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * You have to first build C# projects in test resources: `src/test/resources/TypeParsing`.
+ * You have to first build C# projects in test resources:  {@value  _directory}.
+ * <p>
+ * Build it with configuration: {@value _configuration} and .NET version: {@value _dotnetVersion}
  */
 public class TypeParsingTest extends TestCase {
-    private static final String _directory = "src/test/resources/TypeParsing";
+    private static final String _directory = "src/test/resources/TypeParsingTestTargets";
+    private static final String _configuration = "Release";
+    private static final String _dotnetVersion = "net7.0";
 
-    private Path getDllPath(String nameOfProj) {
-        return Paths.get(_directory, nameOfProj,"bin/Release/net7.0", nameOfProj + ".dll");
+    private Path getDllPath(String projectName) {
+        return Paths.get(_directory, projectName, String.format("bin/%s/%s", _configuration, _dotnetVersion), projectName + ".dll");
     }
 
     public void testComponentParsingGeneral() throws Exception {
+        final String projectName = "ComponentParsingGeneral";
+
+        CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
+        CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
+        Source source = Source.newBuilder(
+                        CILOSTAZOLLanguage.ID,
+                        org.graalvm.polyglot.io.ByteSequence.create(Files.readAllBytes(getDllPath(projectName))), projectName)
+                .build();
+
+
+        AppDomain domain = new AppDomain(ctx);
+        Assembly assembly = Assembly.parseAssembly(source, domain);
+        assembly.getComponents()[0].findLocalType(projectName, "Class");
+    }
+
+    public void testFindLocalType() throws Exception {
+        final String projectName = "FindLocalType";
+
         CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
         //CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
         Source source = Source.newBuilder(
-                CILOSTAZOLLanguage.ID,
-                org.graalvm.polyglot.io.ByteSequence.create(Files.readAllBytes(getDllPath("ComponentParsing1"))),
-                "ComponentParsing1").build();
+                        CILOSTAZOLLanguage.ID,
+                        org.graalvm.polyglot.io.ByteSequence.create(Files.readAllBytes(getDllPath(projectName))), projectName)
+                .build();
 
 
         IAppDomain domain = new AppDomain();

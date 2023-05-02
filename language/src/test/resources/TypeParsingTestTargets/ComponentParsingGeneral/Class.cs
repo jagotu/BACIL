@@ -1,6 +1,6 @@
-using System;
+﻿namespace ComponentParsingGeneral;
 
-class Program
+public class Class
 {
     static int Main(string[] args)
     { 
