@@ -16,8 +16,8 @@ public interface IMethod extends ISubstitutable<IMethod, IType> {
     public IParameter[] getParameters();
     public IParameter[] getLocals();
     public ITypeParameter[] getTypeParameters();
-    public IParameter[] getReturnType();
-    public IParameter[] getThis();
+    public IParameter getReturnType();
+    public IParameter getThis();
     public IExceptionHandler[] getExceptionHandlers();
     public IComponent getDefiningComponent();
     public IType getDefiningType();
@@ -25,5 +25,5 @@ public interface IMethod extends ISubstitutable<IMethod, IType> {
     public IMethod substitute(ISubstitution<IType> substitution);
     public IMethod getDefinition();
     public IMethod getConstructedFrom();
-    //TODO: attributes
+    //TODO: attributes, ExecuteNode
 }

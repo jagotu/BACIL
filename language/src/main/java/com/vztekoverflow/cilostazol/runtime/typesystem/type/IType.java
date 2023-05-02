@@ -22,5 +22,5 @@ public interface IType extends ISubstitutable<IType, IType> {
     public IType substitute(ISubstitution<IType> substitution);
     public IType getDefinition();
     public IType getConstructedFrom();
-    //TODO: Support for nested classes, events, delegates, attributes, properties
+    //TODO: Support for nested classes, events, delegates, attributes, properties, return  SOM
 }

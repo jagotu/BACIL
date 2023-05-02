@@ -1,13 +1,12 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.type;
 
 import com.vztekoverflow.cil.parser.cli.CLIFile;
-import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.field.IField;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
 
-public class OpenGenericType extends NonGenericType {
+public class OpenGenericType extends TypeBase {
     protected final IType[] _typeParameters;
     public OpenGenericType(CLIFile _definingFile,
                            String _name,
@@ -32,6 +31,11 @@ public class OpenGenericType extends NonGenericType {
     @Override
     public IType substitute(ISubstitution<IType> substitution) {
         return new SubstitutedGenericType(this, this, substitution);
+    }
+
+    @Override
+    public IType getConstructedFrom() {
+        return this;
     }
     //endregion
 }
