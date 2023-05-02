@@ -11,19 +11,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: graalvm/setup-graalvm@v1
-      with:
-        version: 'latest'
-        java-version: '17'
-        components: 'native-image'
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-    - name: Print step
-      run: |
-        echo "GRAALVM_HOME: $GRAALVM_HOME"
-        echo "JAVA_HOME: $JAVA_HOME"
-        java --version
-        gu --version
-        native-image --version
-    - name: Build with Maven
-      run: mvn package
+      - uses: actions/checkout@v3
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          version: 'latest'
+          java-version: '17'
+          components: 'native-image'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build dotnet test targets
+        working-directory: .\language\src\test\resources\TypeParsingTestTargets
+        run: dotnet build --configuration Release
+
+      - name: Build with Maven
+        run: mvn package
