@@ -14,12 +14,12 @@ public class NonGenericType implements IType {
     protected final String _name;
     protected final String _namespace;
     protected final IType _directBaseClass;
-    protected final IType _interfaces;
+    protected final IType[] _interfaces;
     protected final IMethod[] _methods;
     protected final IMethod[] _vMethodTable;
     protected final IField[] _fields;
 
-    public NonGenericType(CLIFile _definingFile, String _name, String _namespace, IType _directBaseClass, IType _interfaces, IMethod[] _methods, IMethod[] _vMethodTable, IField[] _fields, IComponent _definingComponent) {
+    public NonGenericType(CLIFile _definingFile, String _name, String _namespace, IType _directBaseClass, IType[] _interfaces, IMethod[] _methods, IMethod[] _vMethodTable, IField[] _fields, IComponent _definingComponent) {
         this._definingFile = _definingFile;
         this._name = _name;
         this._namespace = _namespace;
@@ -36,55 +36,56 @@ public class NonGenericType implements IType {
     //region IType
     @Override
     public CLIFile getDefiningFile() {
-        throw new NotImplementedException();
+        return _definingFile;
     }
 
     @Override
     public IType[] getTypeParameters() {
-        throw new NotImplementedException();
+        throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.invalidOperation"));
     }
 
     @Override
     public String getName() {
-        throw new NotImplementedException();
+        return _name;
     }
 
     @Override
     public String getNamespace() {
-        throw new NotImplementedException();
+        return _namespace;
     }
 
     @Override
     public IType getDirectBaseClass() {
-        throw new NotImplementedException();
+
+        return _directBaseClass;
     }
 
     @Override
     public IType[] getInterfaces() {
-        throw new NotImplementedException();
+        return _interfaces;
     }
 
     @Override
     public IMethod[] getMethods() {
-        throw new NotImplementedException();
+        return _methods;
     }
 
     @Override
     public IMethod[] getVTable() {
-        throw new NotImplementedException();
+        return _vMethodTable;
     }
 
     @Override
     public IField[] getFields() {
-        throw new NotImplementedException();
+        return _fields;
     }
 
     @Override
     public IComponent getDefiningComponent() {
-        throw new NotImplementedException();
+        return _definingComponent;
     }
     @Override
-    public IType substitute(ISubstitution substitution) {
+    public IType substitute(ISubstitution<IType> substitution) {
         throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.invalidOperation"));
     }
 

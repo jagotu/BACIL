@@ -13,7 +13,7 @@ public class OpenGenericType extends NonGenericType {
                            String _name,
                            String _namespace,
                            IType _directBaseClass,
-                           IType _interfaces,
+                           IType[] _interfaces,
                            IMethod[] _methods,
                            IMethod[] _vMethodTable,
                            IField[] _fields,
@@ -30,7 +30,7 @@ public class OpenGenericType extends NonGenericType {
     }
 
     @Override
-    public IType substitute(ISubstitution substitution) {
+    public IType substitute(ISubstitution<IType> substitution) {
         return new SubstitutedGenericType(this, this, substitution);
     }
     //endregion

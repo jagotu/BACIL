@@ -6,7 +6,7 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitutable;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
-public interface IMethod extends ISubstitutable<IMethod> {
+public interface IMethod extends ISubstitutable<IMethod, IType> {
     public CLIFile getDefiningFile();
     public String getName();
     public boolean hasThis();
@@ -22,7 +22,7 @@ public interface IMethod extends ISubstitutable<IMethod> {
     public IComponent getDefiningComponent();
     public IType getDefiningType();
 
-    public IMethod substitute(ISubstitution substitution);
+    public IMethod substitute(ISubstitution<IType> substitution);
     public IMethod getDefinition();
     public IMethod getConstructedFrom();
     //TODO: attributes

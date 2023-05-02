@@ -7,7 +7,7 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitutable;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
 
-public interface IType extends ISubstitutable<IType> {
+public interface IType extends ISubstitutable<IType, IType> {
     public CLIFile getDefiningFile();
     public IType[] getTypeParameters();
     public String getName();
@@ -19,7 +19,7 @@ public interface IType extends ISubstitutable<IType> {
     public IField[] getFields();
     public IComponent getDefiningComponent();
 
-    public IType substitute(ISubstitution substitution);
+    public IType substitute(ISubstitution<IType> substitution);
     public IType getDefinition();
     public IType getConstructedFrom();
     //TODO: Support for nested classes, events, delegates, attributes, properties

@@ -7,12 +7,14 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.field.IField;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
 
+import java.util.Arrays;
+
 public class SubstitutedGenericType implements IType {
     protected final IType _constructedFrom;
     protected final IType _definition;
-    protected final ISubstitution _substitution;
+    protected final ISubstitution<IType> _substitution;
 
-    public SubstitutedGenericType(IType _constructedFrom, IType _definition, ISubstitution substitution) {
+    public SubstitutedGenericType(IType _constructedFrom, IType _definition, ISubstitution<IType> substitution) {
         this._constructedFrom = _constructedFrom;
         this._definition = _definition;
         this._substitution = substitution;
@@ -26,8 +28,7 @@ public class SubstitutedGenericType implements IType {
 
     @Override
     public IType[] getTypeParameters() {
-
-        throw new NotImplementedException();
+        return (IType[])Arrays.stream(_constructedFrom.getTypeParameters()).map(x -> x.substitute(_substitution)).toArray();
     }
 
     @Override
@@ -42,27 +43,27 @@ public class SubstitutedGenericType implements IType {
 
     @Override
     public IType getDirectBaseClass() {
-        throw new NotImplementedException();
+        return _constructedFrom.getDirectBaseClass().substitute(_substitution);
     }
 
     @Override
     public IType[] getInterfaces() {
-        throw new NotImplementedException();
+        return (IType[]) Arrays.stream(_constructedFrom.getInterfaces()).map(x -> x.substitute(_substitution)).toArray();
     }
 
     @Override
     public IMethod[] getMethods() {
-        throw new NotImplementedException();
+        return (IMethod[])Arrays.stream(_constructedFrom.getMethods()).map(x -> x.substitute(_substitution)).toArray();
     }
 
     @Override
     public IMethod[] getVTable() {
-        throw new NotImplementedException();
+        return (IMethod[])Arrays.stream(_constructedFrom.getVTable()).map(x -> x.substitute(_substitution)).toArray();
     }
 
     @Override
     public IField[] getFields() {
-        throw new NotImplementedException();
+        return (IField[]) Arrays.stream(_constructedFrom.getFields()).map(x -> x.substitute(_substitution)).toArray();
     }
 
     @Override
@@ -71,7 +72,7 @@ public class SubstitutedGenericType implements IType {
     }
 
     @Override
-    public IType substitute(ISubstitution substitution) {
+    public IType substitute(ISubstitution<IType> substitution) {
         return new SubstitutedGenericType(this, _definition, substitution);
     }
 
