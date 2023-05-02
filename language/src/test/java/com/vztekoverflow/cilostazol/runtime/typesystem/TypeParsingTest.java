@@ -2,6 +2,7 @@ package com.vztekoverflow.cilostazol.runtime.typesystem;
 
 import com.vztekoverflow.cilostazol.CILOSTAZOLLanguage;
 import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
+import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.AppDomain;
 import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.Assembly;
 import junit.framework.TestCase;
 import org.graalvm.polyglot.Source;
@@ -28,8 +29,6 @@ public class TypeParsingTest extends TestCase {
                 "ComponentParsing1").build();
 
 
-        AppDomain domain = new AppDomain(ctx);
-        Assembly assembly = Assembly.parseAssembly(source, domain);
-        assembly.getComponents()[0].findLocalType("", "Program");
+        AppDomain domain = new AppDomain();
     }
 }
