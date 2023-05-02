@@ -3,7 +3,10 @@ package com.vztekoverflow.cilostazol.runtime.typesystem;
 import com.vztekoverflow.cilostazol.CILOSTAZOLLanguage;
 import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
 import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.AppDomain;
+import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.IAppDomain;
 import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.Assembly;
+import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.IAssembly;
+import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 import junit.framework.TestCase;
 import org.graalvm.polyglot.Source;
 import java.nio.file.Files;
@@ -22,13 +25,16 @@ public class TypeParsingTest extends TestCase {
 
     public void testComponentParsingGeneral() throws Exception {
         CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
-        CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
+        //CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
         Source source = Source.newBuilder(
                 CILOSTAZOLLanguage.ID,
                 org.graalvm.polyglot.io.ByteSequence.create(Files.readAllBytes(getDllPath("ComponentParsing1"))),
                 "ComponentParsing1").build();
 
 
-        AppDomain domain = new AppDomain();
+        IAppDomain domain = new AppDomain();
+        IAssembly assembly = Assembly.parse(source);
+        domain.loadAssembly(assembly);
+        IType type = assembly.getLocalType("", "Program", domain);
     }
 }
