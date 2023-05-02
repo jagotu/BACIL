@@ -20,7 +20,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build dotnet test targets
-        working-directory: .\language\src\test\resources\TypeParsingTestTargets
+        working-directory: ./language/src/test/resources/TypeParsingTestTargets
         run: dotnet build --configuration Release
 
       - name: Build with Maven
