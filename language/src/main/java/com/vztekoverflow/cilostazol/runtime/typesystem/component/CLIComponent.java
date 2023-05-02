@@ -9,15 +9,18 @@ import com.vztekoverflow.cil.parser.cli.table.generated.CLIExportedTypeTableRow;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITableConstants;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITypeDefTableRow;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
-import com.vztekoverflow.cilostazol.NotImplementedException;
+import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.IAppDomain;
 import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.IAssembly;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
+import com.vztekoverflow.cilostazol.runtime.typesystem.type.ITypeFactory;
+import com.vztekoverflow.cilostazol.runtime.typesystem.type.TypeFactory;
 
 public class CLIComponent implements IComponent {
     private final CLIFile _cliFile;
     private final IType[] _localDefTypes;
+    private final ITypeFactory _typeFactory;
 
     //region IComponent
     @Override
@@ -54,8 +57,7 @@ public class CLIComponent implements IComponent {
         if(_localDefTypes[typeDef.getRowNo()-1] == null)
         {
             CompilerAsserts.neverPartOfCompilation();
-            throw new NotImplementedException();
-            //_localDefTypes[typeDef.getRowNo()-1] = TypeFactory.createType(typeDef, this);
+            _localDefTypes[typeDef.getRowNo()-1] = _typeFactory.create(typeDef);
         }
         return _localDefTypes[typeDef.getRowNo()-1];
     }
@@ -64,6 +66,7 @@ public class CLIComponent implements IComponent {
     private CLIComponent(CLIFile file) {
         _cliFile = file;
         _localDefTypes = new IType[file.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_TYPE_DEF)];
+        _typeFactory = new TypeFactory(file);
     }
 
     public static IComponent parse(CLIFile file) {

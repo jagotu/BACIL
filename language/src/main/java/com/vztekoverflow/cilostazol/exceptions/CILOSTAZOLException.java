@@ -1,4 +1,4 @@
-package com.vztekoverflow.cilostazol;
+package com.vztekoverflow.cilostazol.exceptions;
 
 /**
  * A generic runtime exception for an error that happened in CILOSTAZOL.
