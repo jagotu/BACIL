@@ -5,7 +5,7 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
-public class OpenGenericMethod extends NonGenericMethod{
+public class OpenGenericMethod extends MethodBase{
     protected final ITypeParameter[] _typeParameters;
     public OpenGenericMethod(CLIFile _definingFile,
                              String _name,
@@ -25,7 +25,7 @@ public class OpenGenericMethod extends NonGenericMethod{
         this._typeParameters = _typeParameters;
     }
 
-    //region NonGenericMethod
+    //region MethodBase
     @Override
     public ITypeParameter[] getTypeParameters() {
         return _typeParameters;
@@ -34,6 +34,11 @@ public class OpenGenericMethod extends NonGenericMethod{
     @Override
     public IMethod substitute(ISubstitution<IType> substitution) {
         return new SubstitutedGenericMethod(this, this, substitution);
+    }
+
+    @Override
+    public IMethod getConstructedFrom() {
+        return this;
     }
     //endregion
 }
