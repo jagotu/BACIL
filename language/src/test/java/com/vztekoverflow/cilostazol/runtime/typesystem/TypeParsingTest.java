@@ -1,12 +1,16 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem;
 
+import com.vztekoverflow.cil.parser.cli.table.generated.CLIMethodDefTableRow;
 import com.vztekoverflow.cilostazol.CILOSTAZOLLanguage;
 import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
 import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.AppDomain;
 import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.IAppDomain;
 import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.Assembly;
 import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.IAssembly;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.MethodFactory;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
+import com.vztekoverflow.cilostazol.runtime.typesystem.type.TypeFactory;
 import junit.framework.TestCase;
 import org.graalvm.polyglot.Source;
 
@@ -28,6 +32,23 @@ public class TypeParsingTest extends TestCase {
         return Paths.get(_directory, projectName, String.format("bin/%s/%s", _configuration, _dotnetVersion), projectName + ".dll");
     }
 
+    public void testMethodParsingGeneral() throws Exception {
+        final String projectName = "MethodParsingGeneral";
+
+        CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
+        CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
+        Source source = Source.newBuilder(
+                        CILOSTAZOLLanguage.ID,
+                        org.graalvm.polyglot.io.ByteSequence.create(Files.readAllBytes(getDllPath(projectName))), projectName)
+                .build();
+
+
+        IAppDomain domain = new AppDomain();
+        IAssembly assembly = Assembly.parse(source);
+        CLIMethodDefTableRow Main = assembly.getDefiningFile().getTableHeads().getMethodDefTableHead().skip(5);
+        IMethod m = new MethodFactory(assembly.getDefiningFile(), new TypeFactory(assembly.getDefiningFile())).create(Main, assembly.getComponents()[0], null);
+    }
+
     public void testComponentParsingGeneral() throws Exception {
         final String projectName = "ComponentParsingGeneral";
 
@@ -39,9 +60,8 @@ public class TypeParsingTest extends TestCase {
                 .build();
 
 
-        AppDomain domain = new AppDomain(ctx);
-        Assembly assembly = Assembly.parseAssembly(source, domain);
-        assembly.getComponents()[0].findLocalType(projectName, "Class");
+        IAppDomain domain = new AppDomain();
+        IAssembly assembly = Assembly.parse(source);
     }
 
     public void testFindLocalType() throws Exception {

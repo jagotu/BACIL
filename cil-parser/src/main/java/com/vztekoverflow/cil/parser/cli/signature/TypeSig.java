@@ -8,6 +8,7 @@ import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
 import java.util.List;
 
 public class TypeSig {
+    //region Constants
     public static final byte ELEMENT_TYPE_END = 0x00;
     public static final byte ELEMENT_TYPE_VOID = 0x01;
     public static final byte ELEMENT_TYPE_BOOLEAN = 0x02;
@@ -41,6 +42,7 @@ public class TypeSig {
     public static final byte ELEMENT_TYPE_CMOD_OPT = 0x20;
     public static final byte ELEMENT_TYPE_INTERNAL = 0x21;
     public static final byte ELEMENT_TYPE_PINNED = 0x45;
+    //endregion
 
     public TypeSig(CLITablePtr _type, TypeSig _typeSig, CustomMod[] _mods, int _typeByte) {
         this._type = _type;

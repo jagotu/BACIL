@@ -3,40 +3,40 @@ package com.vztekoverflow.cil.parser.cli.signature;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
 
 public class MethodDefSig {
-    private static final int HASTHIS = 0x20;
-    private static final int EXPLICITTHIS = 0x40;
-    public static final int DEFAULT = 0x0;
-    public static final int VARARG = 0x5;
-    public static final int GENERIC = 0x10;
+    //region Constants
+    private static final int HAS_THIS = 0x20;
+    private static final int EXPLICIT_THIS = 0x40;
+    private static final int DEFAULT = 0x0;
+    private static final int VARARG = 0x5;
+    private static final int GENERIC = 0x10;
+    //endregion
 
-    public MethodDefSig(boolean hasThis, boolean explicitThis, byte callingConvention, int genParamCount, ParamSig retType, ParamSig[] params) {
-        this.hasThis = hasThis;
-        this.explicitThis = explicitThis;
-        this.callingConvention = callingConvention;
-        this.genParamCount = genParamCount;
-        this.retType = retType;
-        this.params = params;
+    private final boolean _hasThis;
+    private final boolean _hasExplicitThis;
+    private final boolean _hasVarArg;
+    private final int _genParamCount;
+    private final ParamSig _retType;
+    private final ParamSig[] _params;
+
+
+    public MethodDefSig(boolean hasThis, boolean hasExplicitThis, boolean hasVarArg, int _genParamCount, ParamSig _retType, ParamSig[] _params) {
+        this._hasThis = hasThis;
+        this._hasExplicitThis = hasExplicitThis;
+        this._hasVarArg = hasVarArg;
+        this._genParamCount = _genParamCount;
+        this._retType = _retType;
+        this._params = _params;
     }
 
     public static MethodDefSig parse(SignatureReader reader, CLIFile file) {
         int callingConvention = reader.getUnsigned();
 
-        boolean hasThis = false;
-        if((callingConvention & HASTHIS) != 0)
-        {
-            hasThis = true;
-        }
-
-        boolean explicitThis = false;
-        if((callingConvention & EXPLICITTHIS) != 0)
-        {
-            explicitThis = true;
-        }
-
-        callingConvention = callingConvention & (~0x60);
+        boolean hasThis = (callingConvention & HAS_THIS) != 0;
+        boolean hasExplicitThis = (callingConvention & EXPLICIT_THIS) != 0;
+        boolean hasVarArg = (callingConvention & VARARG) != 0;
 
         int genParamCount = -1;
-        if(callingConvention == GENERIC)
+        if((callingConvention & GENERIC) != 0)
         {
             genParamCount = reader.getUnsigned();
         }
@@ -49,28 +49,23 @@ public class MethodDefSig {
             paramTypes[i] = ParamSig.parse(reader, file, false);
         }
 
-        return new MethodDefSig(hasThis, explicitThis, (byte)callingConvention, genParamCount, retType, paramTypes);
+        return new MethodDefSig(hasThis, hasExplicitThis, hasVarArg, genParamCount, retType, paramTypes);
     }
 
-    private final boolean hasThis;
-    private final boolean explicitThis;
-    private final byte callingConvention;
-    private final int genParamCount;
-    private final ParamSig retType;
-    private final ParamSig[] params;
-    public boolean isHasThis() {
-        return hasThis;
+
+    public boolean hasThis() {
+        return _hasThis;
     }
 
-    public boolean isExplicitThis() {
-        return explicitThis;
+    public boolean hasExplicitThis() {
+        return _hasExplicitThis;
     }
-    public byte getCallingConvention() {
-        return callingConvention;
-    }
+
+    public boolean hasVararg() { return _hasVarArg;}
 
     public int getGenParamCount() {
-        return genParamCount;
+        return _genParamCount;
     }
-    public int getParamsCount() {return  params.length ;}
+    public ParamSig[] getParams() {return  _params; }
+    public ParamSig getRetType() {return  _retType; }
 }

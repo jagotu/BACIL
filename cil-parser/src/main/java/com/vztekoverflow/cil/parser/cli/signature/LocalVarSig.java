@@ -43,4 +43,8 @@ public class LocalVarSig {
         TypeSig type = TypeSig.read(reader, file);
         return new LocalVarSig(pinned, byRef, mods != null ? (CustomMod[]) mods.toArray() : null, type);
     }
+
+    public boolean isPinned() {return _pinned;}
+    public boolean isByRef() {return _byRef;}
+    public TypeSig getTypeSig() {return _typeSig;}
 }

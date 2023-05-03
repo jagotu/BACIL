@@ -29,4 +29,6 @@ public class LocalVarsSig {
     public int getVarsCount() {
         return _vars.length;
     }
+
+    public LocalVarSig[] getVars() {return _vars;}
 }

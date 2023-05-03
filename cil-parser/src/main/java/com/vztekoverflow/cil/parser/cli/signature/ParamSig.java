@@ -45,4 +45,9 @@ public class ParamSig {
 
         return new ParamSig(byRef, mods != null ? (CustomMod[]) mods.toArray() : null, false, false, type);
     }
+
+    public boolean isByRef() {return _byRef;}
+    public boolean isVoid() {return _void;}
+    public boolean isTypedByRef() {return _typedByRef;}
+    public TypeSig getTypeSig() {return _typeSig;}
 }
