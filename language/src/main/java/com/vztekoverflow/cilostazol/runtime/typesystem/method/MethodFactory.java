@@ -8,12 +8,17 @@ import com.vztekoverflow.cil.parser.cli.signature.MethodDefSig;
 import com.vztekoverflow.cil.parser.cli.signature.ParamSig;
 import com.vztekoverflow.cil.parser.cli.signature.SignatureReader;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
+import com.vztekoverflow.cil.parser.cli.table.generated.CLIGenericParamConstraintTableRow;
+import com.vztekoverflow.cil.parser.cli.table.generated.CLIGenericParamTableRow;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIMethodDefTableRow;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.ITypeFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MethodFactory implements IMethodFactory {
     private final CLIFile _file;
@@ -60,8 +65,20 @@ public class MethodFactory implements IMethodFactory {
                 throw new CILParserException(CILOSTAZOLBundle.message("cilostazol.exception.parser.fatHeader.size"));
             }
 
-            //TODO: type parameters
-            typeParameters = null;
+            if (signature.getGenParamCount() != 0) {
+                typeParameters = new ITypeParameter[signature.getGenParamCount()];
+                int idx = 0;
+                for(CLIGenericParamTableRow row : _file.getTableHeads().getGenericParamTableHead()) {
+                    if (methodDef.getTableId() == row.getOwner().getTableId()
+                    && methodDef.getRowNo() == row.getOwner().getRowNo())
+                    {
+                        typeParameters[idx++] = new TypeParameter(getConstrains(row), _file, definingComponent);
+                    }
+                }
+            }
+            else {
+                typeParameters = null;
+            }
 
             maxStackSize = buf.getShort();
             size = buf.getInt();
@@ -124,6 +141,18 @@ public class MethodFactory implements IMethodFactory {
             return new NonGenericMethod(_file, name, signature.hasThis(), signature.hasExplicitThis(),signature.hasVararg(), isVirtual, parameters, locals, retType, _this, null, definingComponent, definingType);
     }
 
+    private IType[] getConstrains(CLIGenericParamTableRow row) {
+        List<IType> constrains = new ArrayList<IType>();
+        for(CLIGenericParamConstraintTableRow r : _file.getTableHeads().getGenericParamConstraintTableHead()) {
+            if (row.getTableId() == r.getOwner().getTableId()
+                    && row.getRowNo() == r.getOwner().getRowNo())
+            {
+                //constrains.add(_typeFactory.create(r.getConstraint()));
+            }
+        }
+
+        return (IType[])constrains.toArray();
+    }
     private IType getType(ParamSig signature) {
         if (signature.isVoid())
             return _typeFactory.createVoid();
