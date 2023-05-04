@@ -1,6 +1,17 @@
 # JetBrains
 .idea
+*.iml
 
-# Targets
+# Jave
 language/target/**
 launcher/target/**
+cil-parser/target/**
+tests/target/**
+parser/target/**
+
+#CSharp
+BACILHelpersCS/**/bin/**
+BACILHelpersCS/**/obj/**
+language/src/test/resources/**/obj/**
+
+

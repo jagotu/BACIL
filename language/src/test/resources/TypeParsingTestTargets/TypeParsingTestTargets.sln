@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ComponentParsingGeneral", "ComponentParsingGeneral\ComponentParsingGeneral.csproj", "{583751F3-0B52-4DA7-A96B-7723552F6969}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FindLocalType", "FindLocalType\FindLocalType.csproj", "{E0DA7837-386A-4617-BB0C-58E3DA03CD3D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{583751F3-0B52-4DA7-A96B-7723552F6969}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{583751F3-0B52-4DA7-A96B-7723552F6969}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{583751F3-0B52-4DA7-A96B-7723552F6969}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{583751F3-0B52-4DA7-A96B-7723552F6969}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E0DA7837-386A-4617-BB0C-58E3DA03CD3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0DA7837-386A-4617-BB0C-58E3DA03CD3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0DA7837-386A-4617-BB0C-58E3DA03CD3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0DA7837-386A-4617-BB0C-58E3DA03CD3D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

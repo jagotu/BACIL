@@ -7,6 +7,9 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="language" />
+        <module name="tests" />
+        <module name="parser" />
+        <module name="cil-parser" />
         <module name="launcher" />
       </profile>
     </annotationProcessing>
