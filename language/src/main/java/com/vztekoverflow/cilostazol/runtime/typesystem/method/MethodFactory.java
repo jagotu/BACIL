@@ -8,12 +8,11 @@ import com.vztekoverflow.cil.parser.cli.signature.MethodDefSig;
 import com.vztekoverflow.cil.parser.cli.signature.ParamSig;
 import com.vztekoverflow.cil.parser.cli.signature.SignatureReader;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
-import com.vztekoverflow.cil.parser.cli.table.generated.CLIGenericParamConstraintTableRow;
-import com.vztekoverflow.cil.parser.cli.table.generated.CLIGenericParamTableRow;
-import com.vztekoverflow.cil.parser.cli.table.generated.CLIMethodDefTableRow;
+import com.vztekoverflow.cil.parser.cli.table.generated.*;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
+import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ITypeParameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.ITypeFactory;
 
@@ -72,7 +71,7 @@ public class MethodFactory implements IMethodFactory {
                     if (methodDef.getTableId() == row.getOwner().getTableId()
                     && methodDef.getRowNo() == row.getOwner().getRowNo())
                     {
-                        typeParameters[idx++] = new TypeParameter(getConstrains(row), _file, definingComponent);
+                        typeParameters[idx++] = new TypeParameter(getConstrains(row,typeParameters, definingType.getTypeParameters()), _file, definingComponent);
                     }
                 }
             }
@@ -90,7 +89,7 @@ public class MethodFactory implements IMethodFactory {
                 LocalVarsSig sig = LocalVarsSig.read(new SignatureReader(_file.getTableHeads().getStandAloneSigTableHead().skip(CLITablePtr.fromToken(localVarSigTok)).getSignature().read(_file.getBlobHeap())),_file);
                 locals = new IParameter[sig.getVarsCount()];
                 for (int i = 0; i < locals.length; i++) {
-                    locals[i] = new Parameter(sig.getVars()[i].isByRef(), sig.getVars()[i].isPinned(), _typeFactory.create(sig.getVars()[i].getTypeSig()));
+                    locals[i] = new Parameter(sig.getVars()[i].isByRef(), sig.getVars()[i].isPinned(), _typeFactory.create(sig.getVars()[i].getTypeSig(), typeParameters, definingType.getTypeParameters()));
                 }
             }
 
@@ -122,10 +121,10 @@ public class MethodFactory implements IMethodFactory {
         final int argsCount = signature.getParams().length + explicitArgsStart;
         final IParameter[] parameters = new IParameter[argsCount];
         for (int i = 0; i < argsCount; i++) {
-            parameters[i] = new Parameter(signature.getParams()[i].isByRef(), false, getType(signature.getParams()[i]));
+            parameters[i] = new Parameter(signature.getParams()[i].isByRef(), false, getType(signature.getParams()[i], typeParameters, definingType.getTypeParameters()));
         }
 
-        IParameter retType = new Parameter(signature.getRetType().isByRef(), false, getType(signature.getRetType()));
+        IParameter retType = new Parameter(signature.getRetType().isByRef(), false, getType(signature.getRetType(), typeParameters, definingType.getTypeParameters()));
         final IParameter _this;
         if (signature.hasThis() && !signature.hasExplicitThis()) {
             //TODO: isVirtual and value type -> solve later
@@ -141,25 +140,30 @@ public class MethodFactory implements IMethodFactory {
             return new NonGenericMethod(_file, name, signature.hasThis(), signature.hasExplicitThis(),signature.hasVararg(), isVirtual, parameters, locals, retType, _this, null, definingComponent, definingType);
     }
 
-    private IType[] getConstrains(CLIGenericParamTableRow row) {
+    private IType[] getConstrains(CLIGenericParamTableRow row, IType[] mvars, IType[] vars) {
         List<IType> constrains = new ArrayList<IType>();
         for(CLIGenericParamConstraintTableRow r : _file.getTableHeads().getGenericParamConstraintTableHead()) {
             if (row.getTableId() == r.getOwner().getTableId()
                     && row.getRowNo() == r.getOwner().getRowNo())
             {
-                //constrains.add(_typeFactory.create(r.getConstraint()));
+                if (r.getConstraint().getTableId() == CLITableConstants.CLI_TABLE_TYPE_DEF)
+                    constrains.add(_typeFactory.create(_file.getTableHeads().getTypeDefTableHead().skip(r.getConstraint()), mvars, vars));
+                else if (r.getConstraint().getTableId() == CLITableConstants.CLI_TABLE_TYPE_REF)
+                    constrains.add(_typeFactory.create(_file.getTableHeads().getTypeRefTableHead().skip(r.getConstraint()), mvars, vars));
+                else if (r.getConstraint().getTableId() == CLITableConstants.CLI_TABLE_TYPE_SPEC)
+                    constrains.add(_typeFactory.create(_file.getTableHeads().getTypeSpecTableHead().skip(r.getConstraint()), mvars, vars));
             }
         }
 
         return (IType[])constrains.toArray();
     }
-    private IType getType(ParamSig signature) {
+    private IType getType(ParamSig signature, IType[] mvars, IType[] vars) {
         if (signature.isVoid())
             return _typeFactory.createVoid();
         else if (signature.isTypedByRef())
             return _typeFactory.createTypedRef();
         else
-            return _typeFactory.create(signature.getTypeSig());
+            return _typeFactory.create(signature.getTypeSig(), mvars, vars);
     }
     //endregion
 

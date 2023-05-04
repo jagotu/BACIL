@@ -4,6 +4,7 @@ import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
+import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ITypeParameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
 public class SubstitutedGenericMethod implements IMethod {
