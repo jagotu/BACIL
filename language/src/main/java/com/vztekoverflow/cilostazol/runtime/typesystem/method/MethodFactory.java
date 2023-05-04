@@ -10,7 +10,6 @@ import com.vztekoverflow.cil.parser.cli.signature.SignatureReader;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
 import com.vztekoverflow.cil.parser.cli.table.generated.*;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
-import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ITypeParameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
@@ -28,7 +27,11 @@ public class MethodFactory implements IMethodFactory {
     private static final byte CORILMETHOD_FATFORMAT = 3;
     private static final byte CORILMETHOD_INITLOCALS = 0x10;
     private static final byte CORILMETHOD_MORESECTS = 0x8;
-    public static final int METHODATTRIBUTE_VIRTUAL = 0x0040;
+    private static final int METHODATTRIBUTE_VIRTUAL = 0x0040;
+    private static final byte CORILMETHOD_SECT_EHTABLE = 0x1;
+    private static final byte CORILMETHOD_SECT_OPTILTABLE = 0x2;
+    private static final byte CORILMETHOD_SECT_FATFORMAT = 0x40;
+    private static final int CORILMETHOD_SECT_MORESECTS = 0x80;
     //endregion
 
     //region IMethodFactory
@@ -102,10 +105,42 @@ public class MethodFactory implements IMethodFactory {
         //TODO: body
         final byte[] body = buf.subSequence(size).toByteArray();
 
-        //TODO: exceptions
+        final IExceptionHandler[] handlers;
         if((firstByte & 3) == CORILMETHOD_FATFORMAT && (ilFlags & CORILMETHOD_MORESECTS) != 0)
         {
-            throw new NotImplementedException();
+            buf.setPosition(buf.getPosition() + size);
+            final byte kind = buf.getByte();
+            if ((kind & CORILMETHOD_SECT_FATFORMAT) == CORILMETHOD_SECT_FATFORMAT) {
+                final int dataSize = buf.getByte() | buf.getByte() << 8 | buf.getByte() << 16;
+                final int clauses = dataSize - 4 / 12;
+                handlers = new IExceptionHandler[clauses];
+                for (int i = 0; i < clauses; i++) {
+                    final int flags = buf.getInt();
+                    final int tryoffset = buf.getInt();
+                    final int trylength = buf.getInt();
+                    final int handleroffset = buf.getInt();
+                    final int handlerlength = buf.getInt();
+                    final int classToken = buf.getInt();
+                    buf.getInt(); // filterOffset
+                    //handlers[i] = new ExceptionHandler(tryoffset, trylength, handleroffset, handlerlength, CLITablePtr.fromToken(classToken))
+                }
+            }
+            else {
+                final byte dataSize = buf.getByte();
+                buf.getShort();
+                final int clauses = dataSize - 4 / 12;
+                handlers = new IExceptionHandler[clauses];
+                for (int i = 0; i < clauses; i++) {
+                    final short flags = buf.getShort();
+                    final short tryoffset = buf.getShort();
+                    final byte trylength = buf.getByte();
+                    final short handleroffset = buf.getShort();
+                    final byte handlerlength = buf.getByte();
+                    final int classToken = buf.getInt();
+                    buf.getInt(); // filterOffset
+                    //handlers[i] = new ExceptionHandler(tryoffset, trylength, handleroffset, handlerlength, CLITablePtr.fromToken(classToken))
+                }
+            }
         }
 
         int explicitArgsStart = 0;
