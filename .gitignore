@@ -1,5 +1,5 @@
 # JetBrains
-.idea
+.idea/
 *.iml
 
 # Jave
@@ -13,5 +13,3 @@ parser/target/**
 BACILHelpersCS/**/bin/**
 BACILHelpersCS/**/obj/**
 language/src/test/resources/**/obj/**
-
-
