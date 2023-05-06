@@ -57,7 +57,7 @@ public class CLIComponent implements IComponent {
         if(_localDefTypes[typeDef.getRowNo()-1] == null)
         {
             CompilerAsserts.neverPartOfCompilation();
-            _localDefTypes[typeDef.getRowNo()-1] = _typeFactory.create(typeDef);
+            _localDefTypes[typeDef.getRowNo()-1] = _typeFactory.create(typeDef, null, null);
         }
         return _localDefTypes[typeDef.getRowNo()-1];
     }
