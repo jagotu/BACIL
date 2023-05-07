@@ -1,4 +1,4 @@
-name: GraalVM CE build no tests
+name: GraalVM CE build
 
 on:
   push:
