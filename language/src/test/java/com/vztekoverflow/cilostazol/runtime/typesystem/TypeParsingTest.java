@@ -11,6 +11,7 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.factory.MethodFactory;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
+import com.vztekoverflow.cilostazol.runtime.typesystem.type.factory.TypeFactory;
 import junit.framework.TestCase;
 import org.graalvm.polyglot.Source;
 
@@ -84,6 +85,9 @@ public class TypeParsingTest extends TestCase {
         IAssembly assembly = Assembly.parse(source);
         domain.loadAssembly(assembly);
 
-        IType type = assembly.getLocalType("", "Program");
+        IType type = assembly.getLocalType("FindLocalType", "Class");
+
+        assertEquals("FindLocalType", type.getNamespace());
+        assertEquals("Class", type.getName());
     }
 }
