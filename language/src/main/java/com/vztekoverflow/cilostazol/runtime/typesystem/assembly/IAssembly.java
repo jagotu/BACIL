@@ -9,6 +9,9 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 public interface IAssembly {
     public CLIFile getDefiningFile();
     public IComponent[] getComponents();
-    public IType getLocalType(String namespace, String name, IAppDomain appDomain);
     public AssemblyIdentity getIdentity();
+    public void setAppDomain(IAppDomain appdomain);
+    public IAppDomain getAppDomain();
+
+    public IType getLocalType(String namespace, String name);
 }

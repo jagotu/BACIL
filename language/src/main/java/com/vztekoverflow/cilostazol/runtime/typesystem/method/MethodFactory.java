@@ -13,14 +13,13 @@ import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ITypeParameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
-import com.vztekoverflow.cilostazol.runtime.typesystem.type.ITypeFactory;
+import com.vztekoverflow.cilostazol.runtime.typesystem.type.factory.TypeFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MethodFactory implements IMethodFactory {
     private final CLIFile _file;
-    private final ITypeFactory _typeFactory;
 
     //region Constants
     private static final byte CORILMETHOD_TINYFORMAT = 2;
@@ -92,7 +91,7 @@ public class MethodFactory implements IMethodFactory {
                 LocalVarsSig sig = LocalVarsSig.read(new SignatureReader(_file.getTableHeads().getStandAloneSigTableHead().skip(CLITablePtr.fromToken(localVarSigTok)).getSignature().read(_file.getBlobHeap())),_file);
                 locals = new IParameter[sig.getVarsCount()];
                 for (int i = 0; i < locals.length; i++) {
-                    locals[i] = new Parameter(sig.getVars()[i].isByRef(), sig.getVars()[i].isPinned(), _typeFactory.create(sig.getVars()[i].getTypeSig(), typeParameters, definingType.getTypeParameters()));
+                   // locals[i] = new Parameter(sig.getVars()[i].isByRef(), sig.getVars()[i].isPinned(), _typeFactory.create(sig.getVars()[i].getTypeSig(), typeParameters, definingType.getTypeParameters()));
                 }
             }
 
@@ -181,29 +180,29 @@ public class MethodFactory implements IMethodFactory {
             if (row.getTableId() == r.getOwner().getTableId()
                     && row.getRowNo() == r.getOwner().getRowNo())
             {
-                if (r.getConstraint().getTableId() == CLITableConstants.CLI_TABLE_TYPE_DEF)
-                    constrains.add(_typeFactory.create(_file.getTableHeads().getTypeDefTableHead().skip(r.getConstraint()), mvars, vars));
-                else if (r.getConstraint().getTableId() == CLITableConstants.CLI_TABLE_TYPE_REF)
-                    constrains.add(_typeFactory.create(_file.getTableHeads().getTypeRefTableHead().skip(r.getConstraint()), mvars, vars));
-                else if (r.getConstraint().getTableId() == CLITableConstants.CLI_TABLE_TYPE_SPEC)
-                    constrains.add(_typeFactory.create(_file.getTableHeads().getTypeSpecTableHead().skip(r.getConstraint()), mvars, vars));
+//                if (r.getConstraint().getTableId() == CLITableConstants.CLI_TABLE_TYPE_DEF)
+//                    constrains.add(TypeFactory.create(_file.getTableHeads().getTypeDefTableHead().skip(r.getConstraint()), mvars, vars));
+//                else if (r.getConstraint().getTableId() == CLITableConstants.CLI_TABLE_TYPE_REF)
+//                    constrains.add(TypeFactory.create(_file.getTableHeads().getTypeRefTableHead().skip(r.getConstraint()), mvars, vars));
+//                else if (r.getConstraint().getTableId() == CLITableConstants.CLI_TABLE_TYPE_SPEC)
+//                    constrains.add(TypeFactory.create(_file.getTableHeads().getTypeSpecTableHead().skip(r.getConstraint()), mvars, vars));
             }
         }
 
         return (IType[])constrains.toArray();
     }
     private IType getType(ParamSig signature, IType[] mvars, IType[] vars) {
-        if (signature.isVoid())
-            return _typeFactory.createVoid();
-        else if (signature.isTypedByRef())
-            return _typeFactory.createTypedRef();
-        else
-            return _typeFactory.create(signature.getTypeSig(), mvars, vars);
+        return null;
+//        if (signature.isVoid())
+//            return _typeFactory.createVoid();
+//        else if (signature.isTypedByRef())
+//            return _typeFactory.createTypedRef();
+//        else
+//            return _typeFactory.create(signature.getTypeSig(), mvars, vars);
     }
     //endregion
 
-    public MethodFactory(CLIFile file, ITypeFactory factory) {
+    public MethodFactory(CLIFile file) {
         _file = file;
-        _typeFactory = factory;
     }
 }

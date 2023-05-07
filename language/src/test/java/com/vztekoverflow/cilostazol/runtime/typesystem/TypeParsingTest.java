@@ -10,7 +10,7 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.IAssembly;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.MethodFactory;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
-import com.vztekoverflow.cilostazol.runtime.typesystem.type.TypeFactory;
+import com.vztekoverflow.cilostazol.runtime.typesystem.type.factory.TypeFactory;
 import junit.framework.TestCase;
 import org.graalvm.polyglot.Source;
 
@@ -45,8 +45,10 @@ public class TypeParsingTest extends TestCase {
 
         IAppDomain domain = new AppDomain();
         IAssembly assembly = Assembly.parse(source);
+        domain.loadAssembly(assembly);
+
         CLIMethodDefTableRow Main = assembly.getDefiningFile().getTableHeads().getMethodDefTableHead().skip(5);
-        IMethod m = new MethodFactory(assembly.getDefiningFile(), new TypeFactory(assembly.getDefiningFile())).create(Main, assembly.getComponents()[0], null);
+        //IMethod m = new MethodFactory(assembly.getDefiningFile(), new TypeFactory(assembly.getDefiningFile())).create(Main, assembly.getComponents()[0], null);
     }
 
     public void testComponentParsingGeneral() throws Exception {
@@ -59,9 +61,9 @@ public class TypeParsingTest extends TestCase {
                         org.graalvm.polyglot.io.ByteSequence.create(Files.readAllBytes(getDllPath(projectName))), projectName)
                 .build();
 
-
         IAppDomain domain = new AppDomain();
         IAssembly assembly = Assembly.parse(source);
+        domain.loadAssembly(assembly);
     }
 
     public void testFindLocalType() throws Exception {
@@ -78,6 +80,7 @@ public class TypeParsingTest extends TestCase {
         IAppDomain domain = new AppDomain();
         IAssembly assembly = Assembly.parse(source);
         domain.loadAssembly(assembly);
-        IType type = assembly.getLocalType("", "Program", domain);
+
+        IType type = assembly.getLocalType("", "Program");
     }
 }

@@ -34,6 +34,7 @@ public class AppDomain implements IAppDomain {
 
     @Override
     public void loadAssembly(IAssembly assembly) {
+        assembly.setAppDomain(this);
         _assemblies.add(assembly);
     }
     //endregion
