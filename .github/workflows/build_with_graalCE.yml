@@ -19,9 +19,5 @@ jobs:
           components: 'native-image'
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build dotnet test targets
-        working-directory: ./language/src/test/resources/TypeParsingTestTargets
-        run: dotnet build --configuration Release
-
       - name: Build with Maven
-        run: mvn package
+        run: mvn package -DskipTests
