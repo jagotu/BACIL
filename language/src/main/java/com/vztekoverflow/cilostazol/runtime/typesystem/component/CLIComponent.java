@@ -1,13 +1,11 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.component;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
-import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIAssemblyRefTableRow;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIExportedTypeTableRow;
-import com.vztekoverflow.cil.parser.cli.table.generated.CLITableConstants;
+import com.vztekoverflow.cil.parser.cli.table.generated.CLITableHeads;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITypeDefTableRow;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
@@ -45,8 +43,7 @@ public class CLIComponent implements IComponent {
         //Check exported types (II.6.8 Type forwarders)
         for(CLIExportedTypeTableRow row : _cliFile.getTableHeads().getExportedTypeTableHead())
         {
-            if(row.getTypeNamespace().read(_cliFile.getStringHeap()).equals(namespace) && row.getTypeName().read(_cliFile.getStringHeap()).equals(name))
-            {
+            if(row.getTypeNamespace().read(_cliFile.getStringHeap()).equals(namespace) && row.getTypeName().read(_cliFile.getStringHeap()).equals(name)) {
                 CLIAssemblyRefTableRow assemblyRef = _cliFile.getTableHeads().getAssemblyRefTableHead().skip(row.getImplementation());
                 IAssembly assembly = getDefiningAssembly().getAppDomain().getAssembly(AssemblyIdentity.fromAssemblyRefRow(_cliFile.getStringHeap(), assemblyRef));
                 return assembly.getLocalType(namespace, name);
@@ -55,6 +52,16 @@ public class CLIComponent implements IComponent {
 
         CompilerDirectives.transferToInterpreterAndInvalidate();
         throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.typesystem.typeNotFound", namespace, name));
+    }
+
+    @Override
+    public byte[] getStringHeap() {
+        return _cliFile.getStringHeap();
+    }
+
+    @Override
+    public CLITableHeads getTableHeads() {
+        return _cliFile.getTableHeads();
     }
 
     //endregion

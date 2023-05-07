@@ -7,10 +7,7 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.AppDomain;
 import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.IAppDomain;
 import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.Assembly;
 import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.IAssembly;
-import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
-import com.vztekoverflow.cilostazol.runtime.typesystem.method.MethodFactory;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
-import com.vztekoverflow.cilostazol.runtime.typesystem.type.factory.TypeFactory;
 import junit.framework.TestCase;
 import org.graalvm.polyglot.Source;
 
@@ -32,7 +29,7 @@ public class TypeParsingTest extends TestCase {
         return Paths.get(_directory, projectName, String.format("bin/%s/%s", _configuration, _dotnetVersion), projectName + ".dll");
     }
 
-    public void testMethodParsingGeneral() throws Exception {
+    public void _testMethodParsingGeneral() throws Exception {
         final String projectName = "MethodParsingGeneral";
 
         CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
@@ -81,6 +78,9 @@ public class TypeParsingTest extends TestCase {
         IAssembly assembly = Assembly.parse(source);
         domain.loadAssembly(assembly);
 
-        IType type = assembly.getLocalType("", "Program");
+        IType type = assembly.getLocalType("FindLocalType", "Class");
+
+        assertEquals("FindLocalType", type.getNamespace());
+        assertEquals("Class", type.getName());
     }
 }

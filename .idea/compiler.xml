@@ -14,4 +14,9 @@
       </profile>
     </annotationProcessing>
   </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="language" options="--add-exports org.graalvm.truffle/com.oracle.truffle.api=ALL-UNNAMED --add-exports org.graalvm.truffle/com.oracle.truffle.api.source=ALL-UNNAMED" />
+    </option>
+  </component>
 </project>
