@@ -11,12 +11,10 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
 public class TypeParameter implements ITypeParameter {
     protected final IType[] _constrains;
-    protected final CLIFile _file;
     protected final IComponent _component;
 
-    public TypeParameter(IType[] _constrains, CLIFile _file, IComponent _component) {
+    public TypeParameter(IType[] _constrains, IComponent _component) {
         this._constrains = _constrains;
-        this._file = _file;
         this._component = _component;
     }
 
@@ -28,7 +26,7 @@ public class TypeParameter implements ITypeParameter {
 
     @Override
     public CLIFile getDefiningFile() {
-        return _file;
+        return _component.getDefiningFile();
     }
 
     @Override

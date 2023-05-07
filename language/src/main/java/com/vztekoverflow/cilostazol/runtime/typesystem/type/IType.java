@@ -8,6 +8,7 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
 
 public interface IType extends ISubstitutable<IType, IType> {
+    //Note: Maybe unnecesary, because it is bounded to Component, which is bounded to file.
     public CLIFile getDefiningFile();
     public IType[] getTypeParameters();
     public String getName();

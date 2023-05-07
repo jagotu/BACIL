@@ -7,10 +7,10 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.AppDomain;
 import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.IAppDomain;
 import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.Assembly;
 import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.IAssembly;
+import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
-import com.vztekoverflow.cilostazol.runtime.typesystem.method.MethodFactory;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.factory.MethodFactory;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
-import com.vztekoverflow.cilostazol.runtime.typesystem.type.factory.TypeFactory;
 import junit.framework.TestCase;
 import org.graalvm.polyglot.Source;
 
@@ -35,20 +35,23 @@ public class TypeParsingTest extends TestCase {
     public void testMethodParsingGeneral() throws Exception {
         final String projectName = "MethodParsingGeneral";
 
-        CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
-        CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
+        final CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
+//        CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
         Source source = Source.newBuilder(
                         CILOSTAZOLLanguage.ID,
                         org.graalvm.polyglot.io.ByteSequence.create(Files.readAllBytes(getDllPath(projectName))), projectName)
                 .build();
 
 
-        IAppDomain domain = new AppDomain();
-        IAssembly assembly = Assembly.parse(source);
+        final IAppDomain domain = new AppDomain();
+        final IAssembly assembly = Assembly.parse(source);
         domain.loadAssembly(assembly);
 
-        CLIMethodDefTableRow Main = assembly.getDefiningFile().getTableHeads().getMethodDefTableHead().skip(5);
-        //IMethod m = new MethodFactory(assembly.getDefiningFile(), new TypeFactory(assembly.getDefiningFile())).create(Main, assembly.getComponents()[0], null);
+        final IComponent component= assembly.getComponents()[0];
+        final IType program = component.getLocalType("ComponentParsingGeneral","Class");
+
+        final CLIMethodDefTableRow mainDef = assembly.getDefiningFile().getTableHeads().getMethodDefTableHead().skip(5);
+        final IMethod main = MethodFactory.create(mainDef, program);
     }
 
     public void testComponentParsingGeneral() throws Exception {
