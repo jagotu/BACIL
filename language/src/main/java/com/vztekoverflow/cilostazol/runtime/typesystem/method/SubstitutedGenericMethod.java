@@ -94,6 +94,11 @@ public class SubstitutedGenericMethod implements IMethod, ICILBasedMethod {
     }
 
     @Override
+    public int getMaxStack() {
+        return _definition.getMaxStack();
+    }
+
+    @Override
     public IMethod substitute(ISubstitution<IType> substitution) {
         return new SubstitutedGenericMethod(this, _definition, substitution);
     }

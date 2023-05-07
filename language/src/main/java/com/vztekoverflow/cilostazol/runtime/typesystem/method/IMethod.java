@@ -24,10 +24,12 @@ public interface IMethod extends ISubstitutable<IMethod, IType> {
     public IExceptionHandler[] getExceptionHandlers();
     public IComponent getDefiningComponent();
     public IType getDefiningType();
+    public int getMaxStack();
 
     public IMethod substitute(ISubstitution<IType> substitution);
     public IMethod getDefinition();
     public IMethod getConstructedFrom();
+
     public RootNode getNode();
     //TODO: attributes, ExecuteNode
 }

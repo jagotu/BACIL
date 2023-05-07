@@ -19,6 +19,7 @@ public abstract class MethodBase implements IMethod{
     protected final IExceptionHandler[] _exceptionHandlers;
     protected final IComponent _definingComponent;
     protected final IType _definingType;
+    protected final int _maxStack;
     protected RootNode _node;
 
     public MethodBase(CLIFile _definingFile,
@@ -33,7 +34,8 @@ public abstract class MethodBase implements IMethod{
                             IParameter _this,
                             IExceptionHandler[] _exceptionHandlers,
                             IComponent _definingComponent,
-                            IType _definingType) {
+                            IType _definingType,
+                            int maxStack) {
         this._definingFile = _definingFile;
         this._name = _name;
         this._hasThis = _hasThis;
@@ -47,7 +49,8 @@ public abstract class MethodBase implements IMethod{
         this._exceptionHandlers = _exceptionHandlers;
         this._definingComponent = _definingComponent;
         this._definingType = _definingType;
-        _node = null;
+        this._node = null;
+        this._maxStack = maxStack;
     }
 
     //region IMethod
@@ -117,6 +120,12 @@ public abstract class MethodBase implements IMethod{
     @Override
     public IMethod getDefinition() {
         return this;
+    }
+
+    @Override
+    public int getMaxStack()
+    {
+        return _maxStack;
     }
     //endregion
 }

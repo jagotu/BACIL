@@ -25,8 +25,9 @@ public class OpenGenericMethod extends MethodBase implements ICILBasedMethod {
                              IExceptionHandler[] _exceptionHandlers,
                              IComponent _definingComponent,
                              IType _definingType,
-                             byte[] cil) {
-        super(_definingFile, _name, _hasThis, _hasExplicitType, _hasVarArg, _isVirtual, _parameters, _locals, _retType, _this, _exceptionHandlers, _definingComponent, _definingType);
+                             byte[] cil,
+                             int maxStack) {
+        super(_definingFile, _name, _hasThis, _hasExplicitType, _hasVarArg, _isVirtual, _parameters, _locals, _retType, _this, _exceptionHandlers, _definingComponent, _definingType, maxStack);
         this._typeParameters = _typeParameters;
         _cil = cil;
     }
