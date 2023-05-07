@@ -33,6 +33,7 @@
                     <argLine>--add-exports org.graalvm.truffle/com.oracle.truffle.api=ALL-UNNAMED</argLine>
                     <argLine>--add-exports org.graalvm.truffle/com.oracle.truffle.api.nodes=ALL-UNNAMED</argLine>
                     <argLine>--add-exports org.graalvm.truffle/com.oracle.truffle.api.source=ALL-UNNAMED</argLine>
+                    <argLine>--add-exports org.graalvm.truffle/com.oracle.truffle.api.frame=ALL-UNNAMED</argLine>
                 </configuration>
             </plugin>
         </plugins>
