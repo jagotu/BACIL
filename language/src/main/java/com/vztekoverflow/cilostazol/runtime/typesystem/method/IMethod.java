@@ -1,6 +1,8 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.method;
 
+import com.oracle.truffle.api.nodes.RootNode;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
+import com.vztekoverflow.cilostazol.nodes.CILOSTAZOLRootNode;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitutable;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
@@ -26,5 +28,6 @@ public interface IMethod extends ISubstitutable<IMethod, IType> {
     public IMethod substitute(ISubstitution<IType> substitution);
     public IMethod getDefinition();
     public IMethod getConstructedFrom();
+    public RootNode getNode();
     //TODO: attributes, ExecuteNode
 }

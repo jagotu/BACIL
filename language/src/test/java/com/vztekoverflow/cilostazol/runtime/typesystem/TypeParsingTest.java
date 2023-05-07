@@ -1,5 +1,6 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem;
 
+import com.oracle.truffle.api.nodes.RootNode;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIMethodDefTableRow;
 import com.vztekoverflow.cilostazol.CILOSTAZOLLanguage;
 import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
@@ -37,14 +38,14 @@ public class TypeParsingTest extends TestCase {
         final String projectName = "MethodParsingGeneral";
 
         final CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
-//        CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
+        CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
         Source source = Source.newBuilder(
                         CILOSTAZOLLanguage.ID,
                         org.graalvm.polyglot.io.ByteSequence.create(Files.readAllBytes(getDllPath(projectName))), projectName)
                 .build();
 
 
-        final IAppDomain domain = new AppDomain();
+        final IAppDomain domain = new AppDomain(ctx);
         final IAssembly assembly = Assembly.parse(source);
         domain.loadAssembly(assembly);
 
@@ -53,6 +54,7 @@ public class TypeParsingTest extends TestCase {
 
         final CLIMethodDefTableRow mainDef = assembly.getDefiningFile().getTableHeads().getMethodDefTableHead().skip(5);
         final IMethod main = MethodFactory.create(mainDef, program);
+        RootNode node = main.getNode();
     }
 
     public void testComponentParsingGeneral() throws Exception {
@@ -65,7 +67,7 @@ public class TypeParsingTest extends TestCase {
                         org.graalvm.polyglot.io.ByteSequence.create(Files.readAllBytes(getDllPath(projectName))), projectName)
                 .build();
 
-        IAppDomain domain = new AppDomain();
+        IAppDomain domain = new AppDomain(ctx);
         IAssembly assembly = Assembly.parse(source);
         domain.loadAssembly(assembly);
     }
@@ -74,14 +76,14 @@ public class TypeParsingTest extends TestCase {
         final String projectName = "FindLocalType";
 
         CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
-        //CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
+        CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
         Source source = Source.newBuilder(
                         CILOSTAZOLLanguage.ID,
                         org.graalvm.polyglot.io.ByteSequence.create(Files.readAllBytes(getDllPath(projectName))), projectName)
                 .build();
 
 
-        IAppDomain domain = new AppDomain();
+        IAppDomain domain = new AppDomain(ctx);
         IAssembly assembly = Assembly.parse(source);
         domain.loadAssembly(assembly);
 

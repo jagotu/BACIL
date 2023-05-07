@@ -167,9 +167,9 @@ public class MethodFactory {
         }
 
         if (typeParameters != null)
-            return new OpenGenericMethod(file, name, mSignature.hasThis(), mSignature.hasExplicitThis(), mSignature.hasVararg(), isVirtual, parameters, locals, typeParameters, retType, _this, null, definingType.getDefiningComponent(), definingType);
+            return new OpenGenericMethod(file, name, mSignature.hasThis(), mSignature.hasExplicitThis(), mSignature.hasVararg(), isVirtual, parameters, locals, typeParameters, retType, _this, null, definingType.getDefiningComponent(), definingType, body);
         else
-            return new NonGenericMethod(file, name, mSignature.hasThis(), mSignature.hasExplicitThis(),mSignature.hasVararg(), isVirtual, parameters, locals, retType, _this, null, definingType.getDefiningComponent(), definingType);
+            return new NonGenericMethod(file, name, mSignature.hasThis(), mSignature.hasExplicitThis(),mSignature.hasVararg(), isVirtual, parameters, locals, retType, _this, null, definingType.getDefiningComponent(), definingType, body);
     }
 
     public static IMethod create(CLIMethodSpecTableRow mSpec, IComponent component) {

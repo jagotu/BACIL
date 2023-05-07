@@ -1,5 +1,6 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.method;
 
+import com.oracle.truffle.api.nodes.RootNode;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
@@ -18,7 +19,7 @@ public abstract class MethodBase implements IMethod{
     protected final IExceptionHandler[] _exceptionHandlers;
     protected final IComponent _definingComponent;
     protected final IType _definingType;
-
+    protected RootNode _node;
 
     public MethodBase(CLIFile _definingFile,
                             String _name,
@@ -46,6 +47,7 @@ public abstract class MethodBase implements IMethod{
         this._exceptionHandlers = _exceptionHandlers;
         this._definingComponent = _definingComponent;
         this._definingType = _definingType;
+        _node = null;
     }
 
     //region IMethod

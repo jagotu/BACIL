@@ -1,13 +1,16 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.method;
 
 import com.vztekoverflow.cil.parser.cli.CLIFile;
+import com.vztekoverflow.cilostazol.nodes.CILOSTAZOLRootNode;
+import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ITypeParameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
-public class OpenGenericMethod extends MethodBase{
+public class OpenGenericMethod extends MethodBase implements ICILBasedMethod {
     protected final ITypeParameter[] _typeParameters;
+    protected final byte[] _cil;
     public OpenGenericMethod(CLIFile _definingFile,
                              String _name,
                              boolean _hasThis,
@@ -21,9 +24,11 @@ public class OpenGenericMethod extends MethodBase{
                              IParameter _this,
                              IExceptionHandler[] _exceptionHandlers,
                              IComponent _definingComponent,
-                             IType _definingType) {
+                             IType _definingType,
+                             byte[] cil) {
         super(_definingFile, _name, _hasThis, _hasExplicitType, _hasVarArg, _isVirtual, _parameters, _locals, _retType, _this, _exceptionHandlers, _definingComponent, _definingType);
         this._typeParameters = _typeParameters;
+        _cil = cil;
     }
 
     //region MethodBase
@@ -40,6 +45,18 @@ public class OpenGenericMethod extends MethodBase{
     @Override
     public IMethod getConstructedFrom() {
         return this;
+    }
+
+    @Override
+    public CILOSTAZOLRootNode getNode() {
+        throw new TypeSystemException("cilostazol.exception.invalidOperation");
+    }
+    //endregion
+
+    //region ICILBasedMethod
+    @Override
+    public byte[] getCIL() {
+        return _cil;
     }
     //endregion
 }
