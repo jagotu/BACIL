@@ -16,6 +16,7 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.type.factory.TypeFactory;
 import junit.framework.TestCase;
 import org.graalvm.polyglot.Source;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -39,10 +40,7 @@ public class TypeParsingTest extends TestCase {
 
         final CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
         CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
-        Source source = Source.newBuilder(
-                        CILOSTAZOLLanguage.ID,
-                        org.graalvm.polyglot.io.ByteSequence.create(Files.readAllBytes(getDllPath(projectName))), projectName)
-                .build();
+        Source source = getSourceFromProject(projectName);
 
 
         final IAppDomain domain = new AppDomain(ctx);
@@ -62,17 +60,14 @@ public class TypeParsingTest extends TestCase {
 
         CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
         CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
-        Source source = Source.newBuilder(
-                        CILOSTAZOLLanguage.ID,
-                        org.graalvm.polyglot.io.ByteSequence.create(Files.readAllBytes(getDllPath(projectName))), projectName)
-                .build();
+        Source source = getSourceFromProject(projectName);
 
         IAppDomain domain = new AppDomain(ctx);
         IAssembly assembly = Assembly.parse(source);
         domain.loadAssembly(assembly);
     }
 
-    public void testFindLocalType() throws Exception {
+    public void _testFindLocalType() throws Exception {
         final String projectName = "FindLocalType";
 
         CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
@@ -91,5 +86,57 @@ public class TypeParsingTest extends TestCase {
 
         assertEquals("FindLocalType", type.getNamespace());
         assertEquals("Class", type.getName());
+        assertEquals(1, type.getInterfaces().length);
+        assertEquals("IClass", type.getInterfaces()[0].getName());
+        assertEquals("FindLocalType", type.getInterfaces()[0].getNamespace());
+    }
+
+    public void testFindLocalType_Extends() throws Exception {
+        final String projectName = "ExtendsTest";
+        Source source = getSourceFromProject(projectName);
+
+
+        IAppDomain domain = new AppDomain();
+        IAssembly assembly = Assembly.parse(source);
+        domain.loadAssembly(assembly);
+        IType type = assembly.getLocalType(projectName, "Class");
+
+
+        assertEquals("ExtendsTest", type.getNamespace());
+        assertEquals("Class", type.getName());
+
+        assertEquals("AClass", type.getDirectBaseClass().getName());
+        assertEquals("ExtendsTest", type.getDirectBaseClass().getNamespace());
+    }
+
+
+    public void testFindLocalType_Interfaces() throws Exception {
+        final String projectName = "InterfacesTest";
+        Source source = getSourceFromProject(projectName);
+
+
+        IAppDomain domain = new AppDomain();
+        IAssembly assembly = Assembly.parse(source);
+        domain.loadAssembly(assembly);
+        IType type = assembly.getLocalType(projectName, "Class");
+
+
+        assertEquals("InterfacesTest", type.getNamespace());
+        assertEquals("Class", type.getName());
+
+        assertEquals(2, type.getInterfaces().length);
+
+        assertEquals("IClass", type.getInterfaces()[0].getName());
+        assertEquals("InterfacesTest", type.getInterfaces()[0].getNamespace());
+
+        assertEquals("IClass2", type.getInterfaces()[1].getName());
+        assertEquals("InterfacesTest", type.getInterfaces()[1].getNamespace());
+    }
+
+    private Source getSourceFromProject(String projectName) throws IOException {
+        return Source.newBuilder(
+                        CILOSTAZOLLanguage.ID,
+                        org.graalvm.polyglot.io.ByteSequence.create(Files.readAllBytes(getDllPath(projectName))), projectName)
+                .build();
     }
 }

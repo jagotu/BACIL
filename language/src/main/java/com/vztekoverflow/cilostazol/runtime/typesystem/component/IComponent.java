@@ -1,18 +1,23 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.component;
 
 import com.vztekoverflow.cil.parser.cli.CLIFile;
+import com.vztekoverflow.cil.parser.cli.table.CLIStringHeapPtr;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITableHeads;
 import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.IAssembly;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
 public interface IComponent {
-    public CLIFile getDefiningFile();
+    CLIFile getDefiningFile();
 
-    public IAssembly getDefiningAssembly();
+    IAssembly getDefiningAssembly();
 
-    public IType getLocalType(String namespace, String name);
+    IType getLocalType(String namespace, String name);
 
-    byte[] getStringHeap();
+    IType getLocalType(int typeIndex);
+
+    String getTypeName(CLIStringHeapPtr ptr);
+
+    String getTypeNamespace(CLIStringHeapPtr ptr);
 
     CLITableHeads getTableHeads();
 

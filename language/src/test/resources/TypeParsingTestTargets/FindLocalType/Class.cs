@@ -1,6 +1,11 @@
 ﻿namespace FindLocalType;
 
-public class Class
+public class Class : AClass
 {
     
 }
+public abstract class AClass
+{
+    
+}
+

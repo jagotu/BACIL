@@ -3,6 +3,7 @@ package com.vztekoverflow.cilostazol.runtime.typesystem.component;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
+import com.vztekoverflow.cil.parser.cli.table.CLIStringHeapPtr;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIAssemblyRefTableRow;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIExportedTypeTableRow;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITableHeads;
@@ -33,17 +34,25 @@ public class CLIComponent implements IComponent {
 
     @Override
     public IType getLocalType(String namespace, String name) {
+        //PRINT TYPE DEFS
+        for (CLITypeDefTableRow row : _cliFile.getTableHeads().getTypeDefTableHead()) {
+            var rowNamespace = row.getTypeNamespaceStringHeapPtr().read(_cliFile.getStringHeap());
+            var rowName = row.getTypeNameStringHeapPtr().read(_cliFile.getStringHeap());
+            System.out.println(rowNamespace + "." + rowName);
+        }
+
         //Check typeDefs
-        for(CLITypeDefTableRow row : _cliFile.getTableHeads().getTypeDefTableHead())
-        {
-            if(row.getTypeNamespace().read(_cliFile.getStringHeap()).equals(namespace) && row.getTypeName().read(_cliFile.getStringHeap()).equals(name))
-                return TypeFactory.create(row, null, null, this);
+        for (CLITypeDefTableRow row : _cliFile.getTableHeads().getTypeDefTableHead()) {
+            var rowNamespace = row.getTypeNamespaceStringHeapPtr().read(_cliFile.getStringHeap());
+            var rowName = row.getTypeNameStringHeapPtr().read(_cliFile.getStringHeap());
+            if (rowNamespace.equals(namespace) && rowName.equals(name))
+                return TypeFactory.create(row, _cliFile.getTableHeads().getInterfaceImplTableHead(), null, null, this);
         }
 
         //Check exported types (II.6.8 Type forwarders)
         for(CLIExportedTypeTableRow row : _cliFile.getTableHeads().getExportedTypeTableHead())
         {
-            if(row.getTypeNamespace().read(_cliFile.getStringHeap()).equals(namespace) && row.getTypeName().read(_cliFile.getStringHeap()).equals(name)) {
+            if (row.getTypeNamespace().read(_cliFile.getStringHeap()).equals(namespace) && row.getTypeName().read(_cliFile.getStringHeap()).equals(name)) {
                 CLIAssemblyRefTableRow assemblyRef = _cliFile.getTableHeads().getAssemblyRefTableHead().skip(row.getImplementation());
                 IAssembly assembly = getDefiningAssembly().getAppDomain().getAssembly(AssemblyIdentity.fromAssemblyRefRow(_cliFile.getStringHeap(), assemblyRef));
                 return assembly.getLocalType(namespace, name);
@@ -55,8 +64,22 @@ public class CLIComponent implements IComponent {
     }
 
     @Override
-    public byte[] getStringHeap() {
-        return _cliFile.getStringHeap();
+    public IType getLocalType(int typeIndex) {
+        // The first row of the TypeDef table represents the pseudo class that acts as parent for functions and variables defined at module scope.
+        final int pseudoClassOnFirstRowOffset = 1;
+        // Can only be indexed into TypeDef table
+        var typeDefTableRow = _cliFile.getTableHeads().getTypeDefTableHead().skip(typeIndex - pseudoClassOnFirstRowOffset);
+        return TypeFactory.create(typeDefTableRow, _cliFile.getTableHeads().getInterfaceImplTableHead(), null, null, this);
+    }
+
+    @Override
+    public String getTypeName(CLIStringHeapPtr ptr) {
+        return ptr.read(_cliFile.getStringHeap());
+    }
+
+    @Override
+    public String getTypeNamespace(CLIStringHeapPtr ptr) {
+        return ptr.read(_cliFile.getStringHeap());
     }
 
     @Override
