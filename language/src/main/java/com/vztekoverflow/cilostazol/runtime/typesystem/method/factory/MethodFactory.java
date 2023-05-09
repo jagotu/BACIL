@@ -197,14 +197,20 @@ public class MethodFactory {
     }
 
     private static IType getType(CLITablePtr ptr, IType[] mvars, IType[] vars, IComponent component) {
-        if (ptr.getTableId() == CLITableConstants.CLI_TABLE_TYPE_DEF)
-            return TypeFactory.create(component.getDefiningFile().getTableHeads().getTypeDefTableHead().skip(ptr), mvars, vars, component);
-        else if (ptr.getTableId() == CLITableConstants.CLI_TABLE_TYPE_REF)
-            return TypeFactory.create(component.getDefiningFile().getTableHeads().getTypeRefTableHead().skip(ptr), mvars, vars, component);
-        else if (ptr.getTableId() == CLITableConstants.CLI_TABLE_TYPE_SPEC)
-            return TypeFactory.create(component.getDefiningFile().getTableHeads().getTypeSpecTableHead().skip(ptr), mvars, vars, component);
-        else
-            throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.constructor.withoutDefType"));
+        return switch (ptr.getTableId()) {
+            case CLITableConstants.CLI_TABLE_TYPE_DEF -> TypeFactory.create(
+                    component.getDefiningFile().getTableHeads().getTypeDefTableHead().skip(ptr),
+                    component.getDefiningFile().getTableHeads().getInterfaceImplTableHead(),
+                    mvars,
+                    vars,
+                    component);
+            case CLITableConstants.CLI_TABLE_TYPE_REF ->
+                    TypeFactory.create(component.getDefiningFile().getTableHeads().getTypeRefTableHead().skip(ptr), mvars, vars, component);
+            case CLITableConstants.CLI_TABLE_TYPE_SPEC ->
+                    TypeFactory.create(component.getDefiningFile().getTableHeads().getTypeSpecTableHead().skip(ptr), mvars, vars, component);
+            default ->
+                    throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.constructor.withoutDefType"));
+        };
     }
 
     private static IType[] getConstrains(CLIGenericParamTableRow row, IType[] mvars, IType[] vars, IComponent component) {

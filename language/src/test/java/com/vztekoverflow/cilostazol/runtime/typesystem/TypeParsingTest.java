@@ -12,7 +12,6 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.factory.MethodFactory;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
-import com.vztekoverflow.cilostazol.runtime.typesystem.type.factory.TypeFactory;
 import junit.framework.TestCase;
 import org.graalvm.polyglot.Source;
 
@@ -95,8 +94,9 @@ public class TypeParsingTest extends TestCase {
         final String projectName = "ExtendsTest";
         Source source = getSourceFromProject(projectName);
 
-
-        IAppDomain domain = new AppDomain();
+        CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
+        CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
+        IAppDomain domain = new AppDomain(ctx);
         IAssembly assembly = Assembly.parse(source);
         domain.loadAssembly(assembly);
         IType type = assembly.getLocalType(projectName, "Class");
@@ -114,8 +114,9 @@ public class TypeParsingTest extends TestCase {
         final String projectName = "InterfacesTest";
         Source source = getSourceFromProject(projectName);
 
-
-        IAppDomain domain = new AppDomain();
+        CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
+        CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
+        IAppDomain domain = new AppDomain(ctx);
         IAssembly assembly = Assembly.parse(source);
         domain.loadAssembly(assembly);
         IType type = assembly.getLocalType(projectName, "Class");
