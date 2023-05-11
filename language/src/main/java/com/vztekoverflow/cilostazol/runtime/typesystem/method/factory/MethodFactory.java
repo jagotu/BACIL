@@ -34,6 +34,10 @@ public class MethodFactory {
     private static final byte CORILMETHOD_SECT_OPTILTABLE = 0x2;
     private static final byte CORILMETHOD_SECT_FATFORMAT = 0x40;
     private static final int CORILMETHOD_SECT_MORESECTS = 0x80;
+    private static final int COR_ILEXCEPTION_CLAUSE_EXCEPTION = 0x0;
+    private static final int COR_ILEXCEPTION_CLAUSE_FILTER = 0x1;
+    private static final int COR_ILEXCEPTION_CLAUSE_FINALLY = 0x2;
+    private static final int COR_ILEXCEPTION_CLAUSE_FAULT = 0x4;
     //endregion
 
     public static IMethod create(CLIMethodDefTableRow mDef, IType definingType) {
@@ -67,8 +71,6 @@ public class MethodFactory {
         else {
             typeParameters = null;
         }
-
-
 
         if((firstByte & 3) == CORILMETHOD_TINYFORMAT) {
             ilFlags = CORILMETHOD_TINYFORMAT;
@@ -114,38 +116,47 @@ public class MethodFactory {
         if((firstByte & 3) == CORILMETHOD_FATFORMAT && (ilFlags & CORILMETHOD_MORESECTS) != 0)
         {
             buf.setPosition(buf.getPosition() + size);
+            buf.align(4);
             final byte kind = buf.getByte();
             if ((kind & CORILMETHOD_SECT_FATFORMAT) == CORILMETHOD_SECT_FATFORMAT) {
                 final int dataSize = buf.getByte() | buf.getByte() << 8 | buf.getByte() << 16;
-                final int clauses = dataSize - 4 / 12;
+                final int clauses = (dataSize - 4) / 12;
                 handlers = new IExceptionHandler[clauses];
                 for (int i = 0; i < clauses; i++) {
                     final int flags = buf.getInt();
+                    if ((flags & COR_ILEXCEPTION_CLAUSE_FILTER) == COR_ILEXCEPTION_CLAUSE_FILTER)
+                        throw new NotImplementedException();
                     final int tryoffset = buf.getInt();
                     final int trylength = buf.getInt();
                     final int handleroffset = buf.getInt();
                     final int handlerlength = buf.getInt();
-                    final int classToken = buf.getInt();
-                    buf.getInt(); // filterOffset
-                    handlers[i] = new ExceptionHandler(tryoffset, trylength, handleroffset, handlerlength, getType(CLITablePtr.fromToken(classToken), typeParameters, definingTypeParameters, definingType.getDefiningComponent()));
+                    final int classTokenOrFilterOffset = buf.getInt();
+                    final IType klass = (flags == COR_ILEXCEPTION_CLAUSE_EXCEPTION) ? getType(CLITablePtr.fromToken(classTokenOrFilterOffset), typeParameters, definingTypeParameters, definingType.getDefiningComponent()) : null;
+                    handlers[i] = new ExceptionHandler(tryoffset, trylength, handleroffset, handlerlength, klass);
                 }
             }
             else {
                 final byte dataSize = buf.getByte();
                 buf.getShort();
-                final int clauses = dataSize - 4 / 12;
+                final int clauses = (dataSize - 4) / 12;
                 handlers = new IExceptionHandler[clauses];
                 for (int i = 0; i < clauses; i++) {
                     final short flags = buf.getShort();
+                    if ((flags & COR_ILEXCEPTION_CLAUSE_FILTER) == COR_ILEXCEPTION_CLAUSE_FILTER)
+                        throw new NotImplementedException();
                     final short tryoffset = buf.getShort();
                     final byte trylength = buf.getByte();
                     final short handleroffset = buf.getShort();
                     final byte handlerlength = buf.getByte();
-                    final int classToken = buf.getInt();
-                    buf.getInt(); // filterOffset
-                    handlers[i] = new ExceptionHandler(tryoffset, trylength, handleroffset, handlerlength, getType(CLITablePtr.fromToken(classToken), typeParameters, definingTypeParameters, definingType.getDefiningComponent()));
+                    final int classTokenOrFilterOffset = buf.getInt();
+                    final IType klass = (flags == COR_ILEXCEPTION_CLAUSE_EXCEPTION) ? getType(CLITablePtr.fromToken(classTokenOrFilterOffset), typeParameters, definingTypeParameters, definingType.getDefiningComponent()) : null;
+                    handlers[i] = new ExceptionHandler(tryoffset, trylength, handleroffset, handlerlength, klass);
                 }
             }
+        }
+        else
+        {
+            handlers = null;
         }
 
         int explicitArgsStart = 0;
@@ -171,9 +182,9 @@ public class MethodFactory {
         }
 
         if (typeParameters != null)
-            return new OpenGenericMethod(file, name, mSignature.hasThis(), mSignature.hasExplicitThis(), mSignature.hasVararg(), isVirtual, parameters, locals, typeParameters, retType, _this, null, definingType.getDefiningComponent(), definingType, body, maxStackSize);
+            return new OpenGenericMethod(file, name, mSignature.hasThis(), mSignature.hasExplicitThis(), mSignature.hasVararg(), isVirtual, parameters, locals, typeParameters, retType, _this, handlers, definingType.getDefiningComponent(), definingType, body, maxStackSize);
         else
-            return new NonGenericMethod(file, name, mSignature.hasThis(), mSignature.hasExplicitThis(),mSignature.hasVararg(), isVirtual, parameters, locals, retType, _this, null, definingType.getDefiningComponent(), definingType, body, maxStackSize);
+            return new NonGenericMethod(file, name, mSignature.hasThis(), mSignature.hasExplicitThis(),mSignature.hasVararg(), isVirtual, parameters, locals, retType, _this, handlers, definingType.getDefiningComponent(), definingType, body, maxStackSize);
     }
 
     public static IMethod create(CLIMethodSpecTableRow mSpec, IComponent component) {
@@ -203,7 +214,8 @@ public class MethodFactory {
     private static IType getType(CLITablePtr ptr, IType[] mvars, IType[] vars, IComponent component) {
         return switch (ptr.getTableId()) {
             case CLITableConstants.CLI_TABLE_TYPE_DEF -> TypeFactory.create(
-                    component.getDefiningFile().getTableHeads().getTypeDefTableHead().skip(ptr), component);
+                    component.getDefiningFile().getTableHeads().getTypeDefTableHead().skip(ptr),
+                    component);
             case CLITableConstants.CLI_TABLE_TYPE_REF ->
                     TypeFactory.create(component.getDefiningFile().getTableHeads().getTypeRefTableHead().skip(ptr), mvars, vars, component);
             case CLITableConstants.CLI_TABLE_TYPE_SPEC ->
@@ -223,7 +235,7 @@ public class MethodFactory {
             }
         }
 
-        return constrains.toArray(new IType[0]);
+        return constrains.toArray(new IType[constrains.size()]);
     }
     //endregion
 }
