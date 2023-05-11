@@ -203,11 +203,7 @@ public class MethodFactory {
     private static IType getType(CLITablePtr ptr, IType[] mvars, IType[] vars, IComponent component) {
         return switch (ptr.getTableId()) {
             case CLITableConstants.CLI_TABLE_TYPE_DEF -> TypeFactory.create(
-                    component.getDefiningFile().getTableHeads().getTypeDefTableHead().skip(ptr),
-                    component.getDefiningFile().getTableHeads().getInterfaceImplTableHead(),
-                    mvars,
-                    vars,
-                    component);
+                    component.getDefiningFile().getTableHeads().getTypeDefTableHead().skip(ptr), component);
             case CLITableConstants.CLI_TABLE_TYPE_REF ->
                     TypeFactory.create(component.getDefiningFile().getTableHeads().getTypeRefTableHead().skip(ptr), mvars, vars, component);
             case CLITableConstants.CLI_TABLE_TYPE_SPEC ->
@@ -227,7 +223,7 @@ public class MethodFactory {
             }
         }
 
-        return (IType[])constrains.toArray();
+        return constrains.toArray(new IType[0]);
     }
     //endregion
 }

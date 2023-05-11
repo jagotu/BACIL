@@ -93,7 +93,7 @@ public class TypeParsingTest extends TestCase {
         domain.loadAssembly(assembly);
     }
 
-    public void _testFindLocalType() throws Exception {
+    public void testFindLocalType() throws Exception {
         final String projectName = "FindLocalType";
 
         CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
@@ -112,9 +112,6 @@ public class TypeParsingTest extends TestCase {
 
         assertEquals("FindLocalType", type.getNamespace());
         assertEquals("Class", type.getName());
-        assertEquals(1, type.getInterfaces().length);
-        assertEquals("IClass", type.getInterfaces()[0].getName());
-        assertEquals("FindLocalType", type.getInterfaces()[0].getNamespace());
     }
 
     public void testFindLocalType_Extends() throws Exception {
@@ -159,6 +156,22 @@ public class TypeParsingTest extends TestCase {
 
         assertEquals("IClass2", type.getInterfaces()[1].getName());
         assertEquals("InterfacesTest", type.getInterfaces()[1].getNamespace());
+    }
+
+
+    public void testFindLocalType_GenericTypeParams() throws Exception {
+        final String projectName = "GenericTypeParametersTest";
+        Source source = getSourceFromProject(projectName);
+
+        CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
+        CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
+        IAppDomain domain = new AppDomain(ctx);
+        IAssembly assembly = Assembly.parse(source);
+        domain.loadAssembly(assembly);
+        IType type = assembly.getLocalType(projectName, "Class`1");
+
+
+        assertEquals(1, type.getTypeParameters().length);
     }
 
     private Source getSourceFromProject(String projectName) throws IOException {

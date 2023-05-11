@@ -4,6 +4,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cil.parser.cli.table.CLIStringHeapPtr;
+import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIAssemblyRefTableRow;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIExportedTypeTableRow;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITableHeads;
@@ -46,7 +47,7 @@ public class CLIComponent implements IComponent {
             var rowNamespace = row.getTypeNamespaceHeapPtr().read(_cliFile.getStringHeap());
             var rowName = row.getTypeNameHeapPtr().read(_cliFile.getStringHeap());
             if (rowNamespace.equals(namespace) && rowName.equals(name))
-                return TypeFactory.create(row, _cliFile.getTableHeads().getInterfaceImplTableHead(), null, null, this);
+                return TypeFactory.create(row, this);
         }
 
         //Check exported types (II.6.8 Type forwarders)
@@ -64,12 +65,9 @@ public class CLIComponent implements IComponent {
     }
 
     @Override
-    public IType getLocalType(int typeIndex) {
-        // The first row of the TypeDef table represents the pseudo class that acts as parent for functions and variables defined at module scope.
-        final int pseudoClassOnFirstRowOffset = 1;
-        // Can only be indexed into TypeDef table
-        var typeDefTableRow = _cliFile.getTableHeads().getTypeDefTableHead().skip(typeIndex - pseudoClassOnFirstRowOffset);
-        return TypeFactory.create(typeDefTableRow, _cliFile.getTableHeads().getInterfaceImplTableHead(), null, null, this);
+    public IType getLocalType(CLITablePtr tablePtr) {
+        var typeDefTableRow = getTableHeads().getTypeDefTableHead().skip(tablePtr);
+        return TypeFactory.create(typeDefTableRow, this);
     }
 
     @Override
