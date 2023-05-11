@@ -1,8 +1,8 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.component;
 
 import com.vztekoverflow.cil.parser.cli.CLIFile;
-import com.vztekoverflow.cil.parser.cli.table.CLIStringHeapPtr;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
+import com.vztekoverflow.cil.parser.cli.table.CLITableRow;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITableHeads;
 import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.IAssembly;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
@@ -16,9 +16,9 @@ public interface IComponent {
 
     IType getLocalType(CLITablePtr typeIndex);
 
-    String getTypeName(CLIStringHeapPtr ptr);
+    <T extends CLITableRow<T>> String getTypeName(CLITableRow<T> row);
 
-    String getTypeNamespace(CLIStringHeapPtr ptr);
+    <T extends CLITableRow<T>> String getTypeNamespace(CLITableRow<T> row);
 
     CLITableHeads getTableHeads();
 

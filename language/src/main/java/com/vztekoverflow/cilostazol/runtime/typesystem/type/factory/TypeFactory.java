@@ -18,8 +18,8 @@ public final class TypeFactory {
     //region ITypeFactory
     public static IType create(CLITypeDefTableRow typeDefRow, IComponent component) {
         //TODO: method type parameters and class type parameters
-        String name = component.getTypeName(typeDefRow.getTypeNameHeapPtr());
-        String namespace = component.getTypeNamespace(typeDefRow.getTypeNamespaceHeapPtr());
+        String name = component.getTypeName(typeDefRow);
+        String namespace = component.getTypeNamespace(typeDefRow);
         IType directBaseClass = getDirectBaseClass(typeDefRow, component);
         IType[] interfaces = getInterfaces(name, namespace, component);
         IType[] genericParameters = getGenericParameters(typeDefRow, component);
@@ -57,7 +57,7 @@ public final class TypeFactory {
     private static IType[] getGenericParameters(CLITypeDefTableRow typeDefRow, IComponent component) {
         var typeParameters = new ArrayList<IType>();
         for (CLIGenericParamTableRow row : component.getTableHeads().getGenericParamTableHead()) {
-            final var genParRowOwner = row.getOwner();
+            final var genParRowOwner = row.getOwnerTablePtr();
             if (genParRowOwner.getTableId() == CLITableConstants.CLI_TABLE_TYPE_DEF && typeDefRow.getRowNo() == genParRowOwner.getRowNo()) {
                 var constraints = getGenParameterConstraints(genParRowOwner, component);
                 typeParameters.add(new TypeParameter(constraints, component));
@@ -68,10 +68,9 @@ public final class TypeFactory {
 
     private static IType[] getGenParameterConstraints(CLITablePtr genParRowOwner, IComponent component) {
         var constrains = new ArrayList<IType>();
-        for (CLIGenericParamConstraintTableRow constraintRow : component.getTableHeads().getGenericParamConstraintTableHead()) {
-            final var constraintRowOwner = constraintRow.getOwner();
-            if (genParRowOwner.getRowNo() == constraintRowOwner.getRowNo()) {
-                var constraintTablePtr = constraintRow.getConstraint();
+        for (var constraintRow : component.getTableHeads().getGenericParamConstraintTableHead()) {
+            if (pointToSameRow(genParRowOwner, constraintRow.getOwnerTablePtr())) {
+                var constraintTablePtr = constraintRow.getConstraintTablePtr();
                 switch (constraintTablePtr.getTableId()) {
                     //TODO: unify this type of code where creation is done based on tableID and unify its exception as well
                     case CLITableConstants.CLI_TABLE_TYPE_DEF ->
@@ -93,22 +92,30 @@ public final class TypeFactory {
         return constrains.toArray(new IType[0]);
     }
 
+    private static boolean pointToSameRow(CLITablePtr genParRowOwner, CLITablePtr constraintRowOwner) {
+        return genParRowOwner.getRowNo() == constraintRowOwner.getRowNo();
+    }
+
     private static IType[] getInterfaces(String className, String classNamespace, IComponent component) {
         List<IType> interfaces = new ArrayList<>();
         //TODO: implement case for ref and spec table
-        for (var row : component.getTableHeads().getInterfaceImplTableHead()) {
-            //we can not create the whole klass because of circular dependency, we only need the name and namespace
-            var klassTableRow = component.getTableHeads().getTypeDefTableHead().skip(row.getKlassPtr());//TODO: make impl detail - refactor; -1 because of dummy class
-            var klassName = component.getTypeName(klassTableRow.getTypeNameStringHeapPtr());//TODO: make impl detail - refactor
-            //TODO: here it goes out of bounds for string heap for some reason
-            var klassNamespace = component.getTypeNamespace(klassTableRow.getTypeNamespaceHeapPtr());//TODO: make impl detail - refactor
-
-            if (className.equals(klassName) && classNamespace.equals(klassNamespace)) {
-                interfaces.add(getInterface(row, component));
+        for (var interfaceRow : component.getTableHeads().getInterfaceImplTableHead()) {
+            if (interfaceExtendsClass(interfaceRow, className, classNamespace, component)) {
+                interfaces.add(getInterface(interfaceRow, component));
             }
         }
+
         //TODO: filter out nulls -> can be removed when implemented case for ref and spec table
         return interfaces.stream().filter(x -> x != null).toList().toArray(new IType[0]);
+    }
+
+    private static boolean interfaceExtendsClass(CLIInterfaceImplTableRow interfaceRow, String extendingClassName, String extendingClassNamespace, IComponent component) {
+        var potentialExtendingClassRow = component.getTableHeads().getTypeDefTableHead().skip(interfaceRow.getKlassTablePtr());
+        //we can not create the whole klass because of circular dependency, we only need the name and namespace
+        var potentialClassName = component.getTypeName(potentialExtendingClassRow);
+        var potentialClassNamespace = component.getTypeNamespace(potentialExtendingClassRow);
+
+        return extendingClassName.equals(potentialClassName) && extendingClassNamespace.equals(potentialClassNamespace);
     }
 
     private static IType getInterface(CLIInterfaceImplTableRow row, IComponent component) {
@@ -122,7 +129,7 @@ public final class TypeFactory {
     }
 
     private static IType getDirectBaseClass(CLITypeDefTableRow typeDefRow, IComponent component) {
-        var extendsTable = typeDefRow.getExtendsTable();
+        var extendsTable = typeDefRow.getExtendsTablePtr();
         if (extendsTable.isEmpty()) return null;
 
         IType baseClass;

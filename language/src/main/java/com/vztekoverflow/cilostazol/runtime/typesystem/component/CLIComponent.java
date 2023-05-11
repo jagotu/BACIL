@@ -3,12 +3,9 @@ package com.vztekoverflow.cilostazol.runtime.typesystem.component;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
-import com.vztekoverflow.cil.parser.cli.table.CLIStringHeapPtr;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
-import com.vztekoverflow.cil.parser.cli.table.generated.CLIAssemblyRefTableRow;
-import com.vztekoverflow.cil.parser.cli.table.generated.CLIExportedTypeTableRow;
-import com.vztekoverflow.cil.parser.cli.table.generated.CLITableHeads;
-import com.vztekoverflow.cil.parser.cli.table.generated.CLITypeDefTableRow;
+import com.vztekoverflow.cil.parser.cli.table.CLITableRow;
+import com.vztekoverflow.cil.parser.cli.table.generated.*;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.IAssembly;
@@ -35,13 +32,6 @@ public class CLIComponent implements IComponent {
 
     @Override
     public IType getLocalType(String namespace, String name) {
-        //PRINT TYPE DEFS
-        for (CLITypeDefTableRow row : _cliFile.getTableHeads().getTypeDefTableHead()) {
-            var rowNamespace = row.getTypeNamespaceHeapPtr().read(_cliFile.getStringHeap());
-            var rowName = row.getTypeNameHeapPtr().read(_cliFile.getStringHeap());
-            System.out.println(rowNamespace + "." + rowName);
-        }
-
         //Check typeDefs
         for (CLITypeDefTableRow row : _cliFile.getTableHeads().getTypeDefTableHead()) {
             var rowNamespace = row.getTypeNamespaceHeapPtr().read(_cliFile.getStringHeap());
@@ -71,13 +61,27 @@ public class CLIComponent implements IComponent {
     }
 
     @Override
-    public String getTypeName(CLIStringHeapPtr ptr) {
-        return ptr.read(_cliFile.getStringHeap());
+    public <T extends CLITableRow<T>> String getTypeName(CLITableRow<T> row) {
+        return switch (row.getTableId()) {
+            case CLITableConstants.CLI_TABLE_TYPE_DEF ->
+                    ((CLITypeDefTableRow) row).getTypeNameHeapPtr().read(_cliFile.getStringHeap());
+            default -> {
+                CompilerDirectives.transferToInterpreterAndInvalidate();
+                throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.typesystem.unsupportedTable", row.getTableId()));
+            }
+        };
     }
 
     @Override
-    public String getTypeNamespace(CLIStringHeapPtr ptr) {
-        return ptr.read(_cliFile.getStringHeap());
+    public <T extends CLITableRow<T>> String getTypeNamespace(CLITableRow<T> row) {
+        return switch (row.getTableId()) {
+            case CLITableConstants.CLI_TABLE_TYPE_DEF ->
+                    ((CLITypeDefTableRow) row).getTypeNamespaceHeapPtr().read(_cliFile.getStringHeap());
+            default -> {
+                CompilerDirectives.transferToInterpreterAndInvalidate();
+                throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.typesystem.unsupportedTable", row.getTableId()));
+            }
+        };
     }
 
     @Override
