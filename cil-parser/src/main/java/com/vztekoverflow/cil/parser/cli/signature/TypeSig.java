@@ -44,21 +44,43 @@ public class TypeSig {
     public static final byte ELEMENT_TYPE_PINNED = 0x45;
     //endregion
 
-    public TypeSig(CLITablePtr _type, TypeSig _inner, TypeSig[] genericParams, CustomMod[] _mods, int _typeByte, int idx) {
-        this._type = _type;
-        this._inner = _inner;
-        _genericParams = genericParams;
+    //region Constructors
+    public static TypeSig  createARRAY(TypeSig type, ArrayShapeSig arrayShape) { return new TypeSig(ELEMENT_TYPE_ARRAY, 0, null, null, type, null, null, null,  arrayShape);}
+    public static TypeSig  createCLASS(CLITablePtr type) {return new TypeSig(ELEMENT_TYPE_CLASS, 0, type, null, null, null, null, null,  null);}
+    public static TypeSig  createFNPTR(MethodDefSig methodDefSig) {throw new CILParserException(ParserBundle.message("cli.parser.exception.not.implemented"));}
+    public static TypeSig  createFNPTR(MethodRefSig methodRefSig) {throw new CILParserException(ParserBundle.message("cli.parser.exception.not.implemented"));}
+    public static TypeSig  createGENERICINST(byte genericType, CLITablePtr type, TypeSig[] genParams) {return new TypeSig(genericType, 0, type, genParams, null, null, null, null,  null);}
+    public static TypeSig  createMVAR(int idx) {return new TypeSig(ELEMENT_TYPE_MVAR, idx, null, null, null, null, null, null,  null);}
+    public static TypeSig  createOBJECT() {return new TypeSig(ELEMENT_TYPE_OBJECT, 0, null, null, null, null, null, null,  null);}
+    public static TypeSig  createPTR(CustomMod[] mods, TypeSig type) {return new TypeSig(ELEMENT_TYPE_PTR, 0, null, null, type, mods, null, null,  null);}
+    public static TypeSig  createSTR() {return new TypeSig(ELEMENT_TYPE_STRING, 0, null, null, null, null, null, null,  null);}
+    public static TypeSig  createSZARRAY(CustomMod[] mods, TypeSig type) {return new TypeSig(ELEMENT_TYPE_SZARRAY, 0, null, null, type, mods, null, null,  null);}
+    public static TypeSig  createVALUETYPE(CLITablePtr type) {return new TypeSig(ELEMENT_TYPE_VALUETYPE, 0, type, null, null, null, null, null,  null);}
+    public static TypeSig  createVAR(int idx) {return new TypeSig(ELEMENT_TYPE_VAR, idx, null, null, null, null, null, null,  null);}
+    public static TypeSig createSimpleType(byte type) {return new TypeSig(type, 0, null, null, null, null, null, null,  null);}
+
+    public TypeSig(byte _typeType, int _idx, CLITablePtr _tablePtr, TypeSig[] _genericParams, TypeSig _innerType, CustomMod[] _mods, MethodRefSig _refSig, MethodDefSig _defSig, ArrayShapeSig arrayShapeSig) {
+        this._typeType = _typeType;
+        this._idx = _idx;
+        this._tablePtr = _tablePtr;
+        this._genericParams = _genericParams;
+        this._innerType = _innerType;
         this._mods = _mods;
-        this._typeByte = _typeByte;
-        _idx = idx;
+        this._refSig = _refSig;
+        this._defSig = _defSig;
+        _arrayShapeSig = arrayShapeSig;
     }
 
-    private final CLITablePtr _type;
-    private final TypeSig _inner;
-    private final TypeSig[] _genericParams;
-    private final CustomMod[] _mods;
-    private final int _typeByte;
+    //endregion
+    private final byte _typeType;
     private final int _idx;
+    private final CLITablePtr _tablePtr;
+    private final TypeSig[] _genericParams;
+    private final TypeSig _innerType;
+    private final CustomMod[] _mods;
+    private final MethodRefSig _refSig;
+    private final MethodDefSig _defSig;
+    private final ArrayShapeSig _arrayShapeSig;
 
     public static TypeSig read(SignatureReader reader, CLIFile file) {
         int elementType = reader.getUnsigned();
@@ -81,29 +103,47 @@ public class TypeSig {
             case ELEMENT_TYPE_OBJECT:
             case ELEMENT_TYPE_STRING:
             case ELEMENT_TYPE_TYPEDBYREF:
-                return new TypeSig(null, null, null, null, elementType, 0);
+                return createSimpleType((byte)elementType);
+
+            case ELEMENT_TYPE_ARRAY:
+                final TypeSig type = TypeSig.read(reader, file);
+                final ArrayShapeSig arrayShapeSig = null;
+                return createARRAY(type, arrayShapeSig);
 
             case ELEMENT_TYPE_SZARRAY:
                 final List<CustomMod> mods = CustomMod.readAll(reader);
                 final TypeSig inner = TypeSig.read(reader, file);
-                return new TypeSig(null, inner, null, mods != null ? (CustomMod[]) mods.toArray() : null, elementType, 0);
+                return createSZARRAY(mods != null ? (CustomMod[]) mods.toArray() : null, inner);
 
             case ELEMENT_TYPE_CLASS:
+                return createCLASS(CLITablePtr.fromTypeDefOrRefOrSpecEncoded(reader.getUnsigned()));
+
             case ELEMENT_TYPE_VALUETYPE:
-                return new TypeSig(CLITablePtr.fromTypeDefOrRefOrSpecEncoded(reader.getUnsigned()), null, null, null, elementType, 0);
+                return createVALUETYPE(CLITablePtr.fromTypeDefOrRefOrSpecEncoded(reader.getUnsigned()));
+
             case ELEMENT_TYPE_GENERICINST:
-                reader.getUnsigned(); //Class or Value type
-                final CLITablePtr type = CLITablePtr.fromTypeDefOrRefOrSpecEncoded(reader.getUnsigned());
+                final byte typeC = (byte)reader.getUnsigned(); // Class or Value type
+                final CLITablePtr typePtr = CLITablePtr.fromTypeDefOrRefOrSpecEncoded(reader.getUnsigned());
                 final int genArgCount = reader.getUnsigned();
                 final TypeSig[] genParams = new TypeSig[genArgCount];
                 for (int i = 0; i < genArgCount; i++) {
                     genParams[i] = TypeSig.read(reader, file);
                 }
-                return new TypeSig(type, null, genParams, null, elementType, 0);
+                return createGENERICINST(typeC, typePtr, genParams);
+
             case ELEMENT_TYPE_MVAR:
+                return createMVAR(reader.getUnsigned());
+
             case ELEMENT_TYPE_VAR:
-                final int idx = reader.getUnsigned();
-                return new TypeSig(null, null, null, null, elementType, idx);
+                return createVAR(reader.getUnsigned());
+
+            case ELEMENT_TYPE_PTR:
+                final List<CustomMod> modsC = CustomMod.readAll(reader);
+                return createPTR(modsC != null ? (CustomMod[]) modsC.toArray() : null, TypeSig.read(reader, file));
+
+            case ELEMENT_TYPE_FNPTR:
+                throw new CILParserException(ParserBundle.message("cli.parser.exception.not.implemented"));
+
             default:
                 throw new CILParserException(ParserBundle.message("cli.parser.exception.cli.type.unknown", elementType));
         }
