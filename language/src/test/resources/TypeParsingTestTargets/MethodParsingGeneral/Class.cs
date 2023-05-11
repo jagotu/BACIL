@@ -48,10 +48,10 @@ public class Bar1
         {
             Bar1_Foo1();
         }
-//        finally
-//        {
-//            Bar1_Foo1();
-//        }
+        finally
+        {
+            Bar1_Foo1();
+        }
     }
 
     void Bar1_Foo8()
@@ -67,19 +67,19 @@ public class Bar1
             {
                 Bar1_Foo1();
             }
-//            finally
-//            {
-//                Bar1_Foo1();
-//            }
+            finally
+            {
+                Bar1_Foo1();
+            }
         }
         catch
         {
             Bar1_Foo1();
         }
-//        finally
-//        {
-//            Bar1_Foo1();
-//        }
+       finally
+       {
+           Bar1_Foo1();
+       }
 
         Bar1_Foo1();
     }

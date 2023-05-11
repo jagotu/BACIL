@@ -12,6 +12,7 @@ import com.vztekoverflow.cil.parser.cli.table.generated.*;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
+import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ITypeParameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.*;
@@ -46,31 +47,16 @@ public class MethodFactory {
         final MethodDefSig mSignature = MethodDefSig.parse(new SignatureReader(mDef.getSignatureHeapPtr().read(file.getBlobHeap())), file);
         final String name = mDef.getNameHeapPtr().read(file.getStringHeap());
         final boolean isVirtual = (mDef.getFlags() & METHODATTRIBUTE_VIRTUAL) == METHODATTRIBUTE_VIRTUAL;
-
-        final ByteSequenceBuffer buf = file.getBuffer(mDef.getRVA());
-        final byte firstByte = buf.getByte();
+        final ITypeParameter[] typeParameters = FactoryUtils.getTypeParameters(mSignature.getGenParamCount(), mDef.getPtr(), definingTypeParameters, (CLIComponent)definingType.getDefiningComponent());
 
         final int size;
         final short maxStackSize;
         final IParameter[] locals;
         final boolean initLocals;
         final int ilFlags;
-        final ITypeParameter[] typeParameters;
 
-        if (mSignature.getGenParamCount() != 0) {
-            typeParameters = new ITypeParameter[mSignature.getGenParamCount()];
-            int idx = 0;
-            for(CLIGenericParamTableRow row : file.getTableHeads().getGenericParamTableHead()) {
-                if (mDef.getTableId() == row.getOwnerTablePtr().getTableId()
-                        && mDef.getRowNo() == row.getOwnerTablePtr().getRowNo())
-                {
-                    typeParameters[idx++] = new TypeParameter(getConstrains(row,typeParameters, definingTypeParameters, definingType.getDefiningComponent()), definingType.getDefiningComponent());
-                }
-            }
-        }
-        else {
-            typeParameters = null;
-        }
+        final ByteSequenceBuffer buf = file.getBuffer(mDef.getRVA());
+        final byte firstByte = buf.getByte();
 
         if((firstByte & 3) == CORILMETHOD_TINYFORMAT) {
             ilFlags = CORILMETHOD_TINYFORMAT;
@@ -131,8 +117,8 @@ public class MethodFactory {
                     final int handleroffset = buf.getInt();
                     final int handlerlength = buf.getInt();
                     final int classTokenOrFilterOffset = buf.getInt();
-                    final IType klass = (flags == COR_ILEXCEPTION_CLAUSE_EXCEPTION) ? getType(CLITablePtr.fromToken(classTokenOrFilterOffset), typeParameters, definingTypeParameters, definingType.getDefiningComponent()) : null;
-                    handlers[i] = new ExceptionHandler(tryoffset, trylength, handleroffset, handlerlength, klass);
+                    final IType klass = (flags == COR_ILEXCEPTION_CLAUSE_EXCEPTION) ? FactoryUtils.createType(CLITablePtr.fromToken(classTokenOrFilterOffset), typeParameters, definingTypeParameters, definingType.getDefiningComponent()) : null;
+                    handlers[i] = new ExceptionHandler(tryoffset, trylength, handleroffset, handlerlength, klass, (flags == COR_ILEXCEPTION_CLAUSE_EXCEPTION)? ExceptionHandlerType.TypeBased : ExceptionHandlerType.Finally);
                 }
             }
             else {
@@ -149,8 +135,8 @@ public class MethodFactory {
                     final short handleroffset = buf.getShort();
                     final byte handlerlength = buf.getByte();
                     final int classTokenOrFilterOffset = buf.getInt();
-                    final IType klass = (flags == COR_ILEXCEPTION_CLAUSE_EXCEPTION) ? getType(CLITablePtr.fromToken(classTokenOrFilterOffset), typeParameters, definingTypeParameters, definingType.getDefiningComponent()) : null;
-                    handlers[i] = new ExceptionHandler(tryoffset, trylength, handleroffset, handlerlength, klass);
+                    final IType klass = (flags == COR_ILEXCEPTION_CLAUSE_EXCEPTION) ? FactoryUtils.createType(CLITablePtr.fromToken(classTokenOrFilterOffset), typeParameters, definingTypeParameters, definingType.getDefiningComponent()) : null;
+                    handlers[i] = new ExceptionHandler(tryoffset, trylength, handleroffset, handlerlength, klass, (flags == COR_ILEXCEPTION_CLAUSE_EXCEPTION)? ExceptionHandlerType.TypeBased : ExceptionHandlerType.Finally);
                 }
             }
         }
@@ -209,33 +195,6 @@ public class MethodFactory {
             return TypeFactory.createTypedRef(component);
         else
             return FactoryUtils.create(signature.getTypeSig(), mvars, vars, component);
-    }
-
-    private static IType getType(CLITablePtr ptr, IType[] mvars, IType[] vars, IComponent component) {
-        return switch (ptr.getTableId()) {
-            case CLITableConstants.CLI_TABLE_TYPE_DEF -> TypeFactory.create(
-                    component.getDefiningFile().getTableHeads().getTypeDefTableHead().skip(ptr),
-                    component);
-            case CLITableConstants.CLI_TABLE_TYPE_REF ->
-                    TypeFactory.create(component.getDefiningFile().getTableHeads().getTypeRefTableHead().skip(ptr), mvars, vars, component);
-            case CLITableConstants.CLI_TABLE_TYPE_SPEC ->
-                    TypeFactory.create(component.getDefiningFile().getTableHeads().getTypeSpecTableHead().skip(ptr), mvars, vars, component);
-            default ->
-                    throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.constructor.withoutDefType"));
-        };
-    }
-
-    private static IType[] getConstrains(CLIGenericParamTableRow row, IType[] mvars, IType[] vars, IComponent component) {
-        List<IType> constrains = new ArrayList<IType>();
-        for(CLIGenericParamConstraintTableRow r : component.getDefiningFile().getTableHeads().getGenericParamConstraintTableHead()) {
-            if (row.getTableId() == r.getOwnerTablePtr().getTableId()
-                    && row.getRowNo() == r.getOwnerTablePtr().getRowNo())
-            {
-                constrains.add(getType(r.getConstraintTablePtr(), mvars, vars, component));
-            }
-        }
-
-        return constrains.toArray(new IType[constrains.size()]);
     }
     //endregion
 }

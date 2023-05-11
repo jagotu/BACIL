@@ -12,16 +12,44 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 public class TypeParameter implements ITypeParameter {
     protected final IType[] _constrains;
     protected final IComponent _component;
+    protected final boolean _hasNewConstraint;
+    protected final boolean _hasClassConstraint;
+    protected final boolean _hasStructConstraint;
+    protected final VarianceType _varianceType;
 
-    public TypeParameter(IType[] _constrains, IComponent _component) {
+    public TypeParameter(IType[] _constrains, IComponent _component, boolean hasNewConstraint, boolean hasClassConstraint, boolean hasStructConstraint, VarianceType varianceType) {
         this._constrains = _constrains;
         this._component = _component;
+        _hasNewConstraint = hasNewConstraint;
+        _hasClassConstraint = hasClassConstraint;
+        _hasStructConstraint = hasStructConstraint;
+        _varianceType = varianceType;
     }
 
     //region ITypeParameter
     @Override
     public IType[] getConstrains() {
         return _constrains;
+    }
+
+    @Override
+    public boolean hasNewConstraint() {
+        return _hasNewConstraint;
+    }
+
+    @Override
+    public boolean hasClassConstraint() {
+        return _hasClassConstraint;
+    }
+
+    @Override
+    public boolean hasValueTypeConstraint() {
+        return _hasStructConstraint;
+    }
+
+    @Override
+    public VarianceType getVariance() {
+        return _varianceType;
     }
 
     @Override

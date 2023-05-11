@@ -8,4 +8,5 @@ public interface IExceptionHandler {
     public int getHandlerOffset();
     public int getHandlerLength();
     public IType getHandlingException();
+    public ExceptionHandlerType getType();
 }
