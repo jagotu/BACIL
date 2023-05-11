@@ -117,13 +117,10 @@ public class MethodFactory {
             explicitArgsStart = 1;
         }
 
-        final int argsCount = mSignature.getParams().length + explicitArgsStart;
-        final IParameter[] parameters = new IParameter[argsCount];
-        for (int i = 0; i < argsCount; i++) {
-            parameters[i] = new Parameter(mSignature.getParams()[i].isByRef(), false, getType(mSignature.getParams()[i], typeParameters, definingTypeParameters, definingType.getDefiningComponent()));
-        }
+        final IParameter[] parameters = createParameters(mSignature.getParams(), typeParameters, definingTypeParameters, definingType.getDefiningComponent());
 
-        IParameter retType = new Parameter(mSignature.getRetType().isByRef(), false, getType(mSignature.getRetType(), typeParameters, definingTypeParameters, definingType.getDefiningComponent()));
+        IParameter retType = new Parameter(mSignature.getRetType().isByRef(), false, createType(mSignature.getRetType(), typeParameters, definingTypeParameters, definingType.getDefiningComponent()));
+
         final IParameter _this;
         if (mSignature.hasThis() && !mSignature.hasExplicitThis()) {
             //TODO: isVirtual and value type -> solve later
@@ -132,6 +129,8 @@ public class MethodFactory {
         else {
             _this = null;
         }
+
+        //TODO: Parse flags
 
         if (typeParameters.length > 0)
             return new OpenGenericMethod(file, name, mSignature.hasThis(), mSignature.hasExplicitThis(), mSignature.hasVararg(), isVirtual, parameters, locals, typeParameters, retType, _this, handlers, definingType.getDefiningComponent(), definingType, body, maxStackSize);
@@ -229,7 +228,17 @@ public class MethodFactory {
         }
     }
 
-    private static IType getType(ParamSig signature, IType[] mvars, IType[] vars, IComponent component) {
+    private static IParameter[] createParameters(ParamSig[] params, IType[] mvars, IType[] vars, IComponent component)
+    {
+        final IParameter[] parameters = new IParameter[params.length];
+        for (int i = 0; i < params.length; i++) {
+            parameters[i] = new Parameter(params[i].isByRef(), false, createType(params[i], mvars, vars, component));
+        }
+
+        return parameters;
+    }
+
+    private static IType createType(ParamSig signature, IType[] mvars, IType[] vars, IComponent component) {
         if (signature.isVoid())
             return TypeFactory.createVoid(component);
         else if (signature.isTypedByRef())
