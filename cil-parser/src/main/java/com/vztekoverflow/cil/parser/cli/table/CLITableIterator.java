@@ -7,8 +7,6 @@ import java.util.Iterator;
  * @param <T> the {@link CLITableRow} descendant for this specific table
  */
 public class CLITableIterator<T extends CLITableRow<T>> implements Iterator<T> {
-
-    private boolean first = true;
     private T current;
 
     public CLITableIterator(T current) {
@@ -17,22 +15,13 @@ public class CLITableIterator<T extends CLITableRow<T>> implements Iterator<T> {
 
     @Override
     public boolean hasNext() {
-        if(first)
-        {
-            return true;
-        }
         return current.hasNext();
     }
 
     @Override
     public T next() {
-        if(first)
-        {
-            first = false;
-            return current;
-        }
-
+        T tmpCurrent = current;
         current = current.next();
-        return current;
+        return tmpCurrent;
     }
 }

@@ -66,7 +66,7 @@ public abstract class CLITableRow<T extends CLITableRow<T>> implements Iterable<
      * Check whether there's any row in the table after the current one.
      */
     public final boolean hasNext() {
-        return rowIndex < tables.getTablesHeader().getRowCount(getTableId())-1;
+        return rowIndex < tables.getTablesHeader().getRowCount(getTableId());
     }
 
     /**
