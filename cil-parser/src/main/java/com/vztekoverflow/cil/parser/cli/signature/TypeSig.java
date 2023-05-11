@@ -44,12 +44,13 @@ public class TypeSig {
     public static final byte ELEMENT_TYPE_PINNED = 0x45;
     //endregion
 
-    public TypeSig(CLITablePtr _type, TypeSig _inner, TypeSig[] genericParams, CustomMod[] _mods, int _typeByte) {
+    public TypeSig(CLITablePtr _type, TypeSig _inner, TypeSig[] genericParams, CustomMod[] _mods, int _typeByte, int idx) {
         this._type = _type;
         this._inner = _inner;
         _genericParams = genericParams;
         this._mods = _mods;
         this._typeByte = _typeByte;
+        _idx = idx;
     }
 
     private final CLITablePtr _type;
@@ -57,6 +58,7 @@ public class TypeSig {
     private final TypeSig[] _genericParams;
     private final CustomMod[] _mods;
     private final int _typeByte;
+    private final int _idx;
 
     public static TypeSig read(SignatureReader reader, CLIFile file) {
         int elementType = reader.getUnsigned();
@@ -79,16 +81,16 @@ public class TypeSig {
             case ELEMENT_TYPE_OBJECT:
             case ELEMENT_TYPE_STRING:
             case ELEMENT_TYPE_TYPEDBYREF:
-                return new TypeSig(null, null, null, null, elementType);
+                return new TypeSig(null, null, null, null, elementType, 0);
 
             case ELEMENT_TYPE_SZARRAY:
                 final List<CustomMod> mods = CustomMod.readAll(reader);
                 final TypeSig inner = TypeSig.read(reader, file);
-                return new TypeSig(null, inner, null, mods != null ? (CustomMod[]) mods.toArray() : null, elementType);
+                return new TypeSig(null, inner, null, mods != null ? (CustomMod[]) mods.toArray() : null, elementType, 0);
 
             case ELEMENT_TYPE_CLASS:
             case ELEMENT_TYPE_VALUETYPE:
-                return new TypeSig(CLITablePtr.fromTypeDefOrRefOrSpecEncoded(reader.getUnsigned()), null, null, null, elementType);
+                return new TypeSig(CLITablePtr.fromTypeDefOrRefOrSpecEncoded(reader.getUnsigned()), null, null, null, elementType, 0);
             case ELEMENT_TYPE_GENERICINST:
                 reader.getUnsigned(); //Class or Value type
                 final CLITablePtr type = CLITablePtr.fromTypeDefOrRefOrSpecEncoded(reader.getUnsigned());
@@ -97,11 +99,11 @@ public class TypeSig {
                 for (int i = 0; i < genArgCount; i++) {
                     genParams[i] = TypeSig.read(reader, file);
                 }
-                return new TypeSig(type, null, genParams, null, elementType);
+                return new TypeSig(type, null, genParams, null, elementType, 0);
             case ELEMENT_TYPE_MVAR:
             case ELEMENT_TYPE_VAR:
-                reader.getUnsigned();
-                return null;
+                final int idx = reader.getUnsigned();
+                return new TypeSig(null, null, null, null, elementType, idx);
             default:
                 throw new CILParserException(ParserBundle.message("cli.parser.exception.cli.type.unknown", elementType));
         }
