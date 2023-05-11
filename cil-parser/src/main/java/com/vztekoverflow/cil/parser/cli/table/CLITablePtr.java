@@ -28,14 +28,18 @@ public class CLITablePtr {
         return rowNo;
     }
 
+    public boolean isEmpty() {
+        return rowNo == 0;
+    }
+
     /**
      * Create a table pointer from a metadata token (III.1.9 Metadata tokens).
+     *
      * @param token the metadata token
      * @return a table pointer pointer equivalent to the specified token
      */
-    public static CLITablePtr fromToken(int token)
-    {
-        byte table = (byte)(token >> 24);
+    public static CLITablePtr fromToken(int token) {
+        byte table = (byte) (token >> 24);
         int rowNo = token & 0xFFFFFF;
         return new CLITablePtr(table, rowNo);
     }
