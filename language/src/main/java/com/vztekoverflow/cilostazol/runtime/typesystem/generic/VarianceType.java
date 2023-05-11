@@ -1,4 +1,4 @@
-package com.vztekoverflow.cilostazol.runtime.typesystem.method;
+package com.vztekoverflow.cilostazol.runtime.typesystem.generic;
 
 public enum VarianceType {
     Covariant,

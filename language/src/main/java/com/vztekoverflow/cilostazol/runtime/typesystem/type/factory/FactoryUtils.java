@@ -1,6 +1,5 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.type.factory;
 
-import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cil.parser.cli.signature.TypeSig;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIGenericParamConstraintTableRow;
@@ -8,13 +7,12 @@ import com.vztekoverflow.cil.parser.cli.table.generated.CLIGenericParamTableRow;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITableConstants;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITypeDefTableRow;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
-import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ITypeParameter;
-import com.vztekoverflow.cilostazol.runtime.typesystem.method.TypeParameter;
-import com.vztekoverflow.cilostazol.runtime.typesystem.method.VarianceType;
+import com.vztekoverflow.cilostazol.runtime.typesystem.generic.TypeParameter;
+import com.vztekoverflow.cilostazol.runtime.typesystem.generic.VarianceType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
 import java.util.ArrayList;

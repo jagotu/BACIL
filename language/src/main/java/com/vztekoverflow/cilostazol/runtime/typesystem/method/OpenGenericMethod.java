@@ -6,6 +6,8 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ITypeParameter;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.exceptionhandler.IExceptionHandler;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.parameter.IParameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
 public class OpenGenericMethod extends MethodBase implements ICILBasedMethod {

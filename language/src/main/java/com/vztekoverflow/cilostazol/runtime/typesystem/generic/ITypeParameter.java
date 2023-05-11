@@ -1,6 +1,5 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.generic;
 
-import com.vztekoverflow.cilostazol.runtime.typesystem.method.VarianceType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
 public interface ITypeParameter extends IType {

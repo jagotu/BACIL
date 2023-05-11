@@ -1,4 +1,4 @@
-package com.vztekoverflow.cilostazol.runtime.typesystem.method;
+package com.vztekoverflow.cilostazol.runtime.typesystem.generic;
 
 import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
@@ -7,6 +7,8 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.field.IField;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ITypeParameter;
+import com.vztekoverflow.cilostazol.runtime.typesystem.generic.VarianceType;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
 public class TypeParameter implements ITypeParameter {

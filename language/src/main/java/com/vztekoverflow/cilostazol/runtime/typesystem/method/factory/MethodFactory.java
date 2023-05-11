@@ -16,13 +16,15 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ITypeParameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.*;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.exceptionhandler.ExceptionHandler;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.exceptionhandler.ExceptionHandlerType;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.exceptionhandler.IExceptionHandler;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.parameter.IParameter;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.parameter.Parameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.NonGenericType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.factory.FactoryUtils;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.factory.TypeFactory;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class MethodFactory {
     //region Constants
@@ -68,7 +70,7 @@ public class MethodFactory {
         else if((firstByte & 3) == CORILMETHOD_FATFORMAT) {
             final short firstWord = (short)(firstByte | (buf.getByte() << 8));
             ilFlags = firstWord & 0xFFF;
-            byte headerSize = (byte)(firstWord >> 12);
+            final byte headerSize = (byte)(firstWord >> 12);
             if(headerSize != 3)
             {
                 throw new CILParserException(CILOSTAZOLBundle.message("cilostazol.exception.parser.fatHeader.size"));
@@ -76,17 +78,16 @@ public class MethodFactory {
 
             maxStackSize = buf.getShort();
             size = buf.getInt();
-            int localVarSigTok = buf.getInt();
-            if(localVarSigTok == 0){
-                locals = null;
-            }
-            else {
-                LocalVarsSig sig = LocalVarsSig.read(new SignatureReader(file.getTableHeads().getStandAloneSigTableHead().skip(CLITablePtr.fromToken(localVarSigTok)).getSignatureHeapPtr().read(file.getBlobHeap())),file);
-                locals = new IParameter[sig.getVarsCount()];
-                for (int i = 0; i < locals.length; i++) {
-                    locals[i] = new Parameter(sig.getVars()[i].isByRef(), sig.getVars()[i].isPinned(), FactoryUtils.create(sig.getVars()[i].getTypeSig(), typeParameters, definingType.getTypeParameters(), definingType.getDefiningComponent()));
-                }
-            }
+            final int localVarSigTok = buf.getInt();
+
+            locals = (localVarSigTok == 0)
+                    ? new IParameter[0]
+                    : createLocals(
+                        LocalVarsSig.read(new SignatureReader(file.getTableHeads().getStandAloneSigTableHead().skip(CLITablePtr.fromToken(localVarSigTok)).getSignatureHeapPtr().read(file.getBlobHeap())),file),
+                        typeParameters,
+                        definingTypeParameters,
+                        definingType.getDefiningComponent()
+                        );
 
             initLocals = (ilFlags & CORILMETHOD_INITLOCALS) != 0;
         }
@@ -95,7 +96,6 @@ public class MethodFactory {
             throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.parser.method.general"));
         }
 
-        //TODO: body
         final byte[] body = buf.subSequence(size).toByteArray();
 
         final IExceptionHandler[] handlers;
@@ -103,46 +103,12 @@ public class MethodFactory {
         {
             buf.setPosition(buf.getPosition() + size);
             buf.align(4);
-            final byte kind = buf.getByte();
-            if ((kind & CORILMETHOD_SECT_FATFORMAT) == CORILMETHOD_SECT_FATFORMAT) {
-                final int dataSize = buf.getByte() | buf.getByte() << 8 | buf.getByte() << 16;
-                final int clauses = (dataSize - 4) / 12;
-                handlers = new IExceptionHandler[clauses];
-                for (int i = 0; i < clauses; i++) {
-                    final int flags = buf.getInt();
-                    if ((flags & COR_ILEXCEPTION_CLAUSE_FILTER) == COR_ILEXCEPTION_CLAUSE_FILTER)
-                        throw new NotImplementedException();
-                    final int tryoffset = buf.getInt();
-                    final int trylength = buf.getInt();
-                    final int handleroffset = buf.getInt();
-                    final int handlerlength = buf.getInt();
-                    final int classTokenOrFilterOffset = buf.getInt();
-                    final IType klass = (flags == COR_ILEXCEPTION_CLAUSE_EXCEPTION) ? FactoryUtils.createType(CLITablePtr.fromToken(classTokenOrFilterOffset), typeParameters, definingTypeParameters, definingType.getDefiningComponent()) : null;
-                    handlers[i] = new ExceptionHandler(tryoffset, trylength, handleroffset, handlerlength, klass, (flags == COR_ILEXCEPTION_CLAUSE_EXCEPTION)? ExceptionHandlerType.TypeBased : ExceptionHandlerType.Finally);
-                }
-            }
-            else {
-                final byte dataSize = buf.getByte();
-                buf.getShort();
-                final int clauses = (dataSize - 4) / 12;
-                handlers = new IExceptionHandler[clauses];
-                for (int i = 0; i < clauses; i++) {
-                    final short flags = buf.getShort();
-                    if ((flags & COR_ILEXCEPTION_CLAUSE_FILTER) == COR_ILEXCEPTION_CLAUSE_FILTER)
-                        throw new NotImplementedException();
-                    final short tryoffset = buf.getShort();
-                    final byte trylength = buf.getByte();
-                    final short handleroffset = buf.getShort();
-                    final byte handlerlength = buf.getByte();
-                    final int classTokenOrFilterOffset = buf.getInt();
-                    final IType klass = (flags == COR_ILEXCEPTION_CLAUSE_EXCEPTION) ? FactoryUtils.createType(CLITablePtr.fromToken(classTokenOrFilterOffset), typeParameters, definingTypeParameters, definingType.getDefiningComponent()) : null;
-                    handlers[i] = new ExceptionHandler(tryoffset, trylength, handleroffset, handlerlength, klass, (flags == COR_ILEXCEPTION_CLAUSE_EXCEPTION)? ExceptionHandlerType.TypeBased : ExceptionHandlerType.Finally);
-                }
-            }
+
+            handlers = createHandlers(buf, typeParameters, definingTypeParameters, definingType.getDefiningComponent());
         }
         else
         {
-            handlers = null;
+            handlers = new IExceptionHandler[0];
         }
 
         int explicitArgsStart = 0;
@@ -167,7 +133,7 @@ public class MethodFactory {
             _this = null;
         }
 
-        if (typeParameters != null)
+        if (typeParameters.length > 0)
             return new OpenGenericMethod(file, name, mSignature.hasThis(), mSignature.hasExplicitThis(), mSignature.hasVararg(), isVirtual, parameters, locals, typeParameters, retType, _this, handlers, definingType.getDefiningComponent(), definingType, body, maxStackSize);
         else
             return new NonGenericMethod(file, name, mSignature.hasThis(), mSignature.hasExplicitThis(),mSignature.hasVararg(), isVirtual, parameters, locals, retType, _this, handlers, definingType.getDefiningComponent(), definingType, body, maxStackSize);
@@ -188,6 +154,81 @@ public class MethodFactory {
     }
 
     //region Helpers
+    private static IParameter[] createLocals(LocalVarsSig signatures, IType[] mvars, IType[] vars, IComponent component)
+    {
+        IParameter[] locals = new IParameter[signatures.getVarsCount()];
+        for (int i = 0; i < locals.length; i++) {
+            locals[i] = new Parameter(
+                    signatures.getVars()[i].isByRef(),
+                    signatures.getVars()[i].isPinned(),
+                    FactoryUtils.create(signatures.getVars()[i].getTypeSig(), mvars, vars, component)
+            );
+        }
+        return locals;
+    }
+
+    private static IExceptionHandler[] createHandlers(ByteSequenceBuffer buf, IType[] mvars, IType[] vars, IComponent component)
+    {
+        final IExceptionHandler[] handlers;
+        final byte kind = buf.getByte();
+        final boolean fatVersion = (kind & CORILMETHOD_SECT_FATFORMAT) == CORILMETHOD_SECT_FATFORMAT;
+        final int dataSize;
+        final int clauses;
+
+        if (fatVersion)
+        {
+            dataSize = buf.getByte() | buf.getByte() << 8 | buf.getByte() << 16;
+            clauses = (dataSize - 4) / 12;
+            handlers = new IExceptionHandler[clauses];
+        }
+        else
+        {
+            dataSize = buf.getByte();
+            buf.getShort(); // Reserved
+            clauses = (dataSize - 4) / 12;
+            handlers = new IExceptionHandler[clauses];
+        }
+
+        for (int i = 0; i < clauses; i++)
+        {
+            final int flags, tryoffset, trylength, handleroffset, handlerlength, classTokenOrFilterOffset;
+            if (fatVersion)
+            {
+                flags = buf.getInt();
+                tryoffset = buf.getInt();
+                trylength = buf.getInt();
+                handleroffset = buf.getInt();
+                handlerlength = buf.getInt();
+                classTokenOrFilterOffset = buf.getInt();
+            }
+            else
+            {
+                flags = buf.getShort();
+                tryoffset = buf.getShort();
+                trylength = buf.getByte();
+                handleroffset = buf.getShort();
+                handlerlength = buf.getByte();
+                classTokenOrFilterOffset = buf.getInt();
+            }
+            final ExceptionHandlerType type = getExceptionType(flags);
+            final IType klass = (type == ExceptionHandlerType.TypeBased)
+                    ? FactoryUtils.createType(CLITablePtr.fromToken(classTokenOrFilterOffset), mvars, vars, component)
+                    : null;
+            handlers[i] = new ExceptionHandler(tryoffset, trylength, handleroffset, handlerlength, klass, type );
+        }
+        return  handlers;
+    }
+
+    private static ExceptionHandlerType getExceptionType(int flags)
+    {
+        switch (flags)
+        {
+            case COR_ILEXCEPTION_CLAUSE_EXCEPTION:  return ExceptionHandlerType.TypeBased;
+            case COR_ILEXCEPTION_CLAUSE_FINALLY:  return ExceptionHandlerType.Finally;
+            default: throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.parser.exceptionType"));
+        }
+    }
+
     private static IType getType(ParamSig signature, IType[] mvars, IType[] vars, IComponent component) {
         if (signature.isVoid())
             return TypeFactory.createVoid(component);
