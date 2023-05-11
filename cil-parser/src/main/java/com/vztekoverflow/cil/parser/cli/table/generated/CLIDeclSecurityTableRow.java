@@ -15,14 +15,14 @@ public class CLIDeclSecurityTableRow extends CLITableRow<CLIDeclSecurityTableRow
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_PARENT_TABLES = new byte[] { CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_METHOD_DEF, CLITableConstants.CLI_TABLE_ASSEMBLY} ;
-	public final CLITablePtr getParent() { 
+	public final CLITablePtr getParentTablePtr() { 
 		int offset = 2;
 		int codedValue;
 		if (areSmallEnough(MAP_PARENT_TABLES)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
 		return new CLITablePtr(MAP_PARENT_TABLES[codedValue & 3], codedValue >> 2);
 	}
 
-	public final CLIBlobHeapPtr getPermissionSet() {
+	public final CLIBlobHeapPtr getPermissionSetHeapPtr() {
 		int offset = 4;
 		if (!areSmallEnough(MAP_PARENT_TABLES)) offset += 2;
 		int heapOffset=0;

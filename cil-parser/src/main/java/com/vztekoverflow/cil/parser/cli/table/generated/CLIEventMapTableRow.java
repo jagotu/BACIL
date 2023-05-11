@@ -10,7 +10,7 @@ public class CLIEventMapTableRow extends CLITableRow<CLIEventMapTableRow> {
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_PARENT_TABLES = new byte[] {CLITableConstants.CLI_TABLE_TYPE_DEF};
-	public final CLITablePtr getParent() { 
+	public final CLITablePtr getParentTablePtr() { 
 		int offset = 0;
 		final int rowNo;
 		if (areSmallEnough(MAP_PARENT_TABLES)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
@@ -19,7 +19,7 @@ public class CLIEventMapTableRow extends CLITableRow<CLIEventMapTableRow> {
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_EVENT_LIST_TABLES = new byte[] {CLITableConstants.CLI_TABLE_EVENT};
-	public final CLITablePtr getEventList() { 
+	public final CLITablePtr getEventListTablePtr() { 
 		int offset = 2;
 		if (!areSmallEnough(MAP_PARENT_TABLES)) offset += 2;
 		final int rowNo;

@@ -15,7 +15,7 @@ public class CLIMethodSemanticsTableRow extends CLITableRow<CLIMethodSemanticsTa
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_METHOD_TABLES = new byte[] {CLITableConstants.CLI_TABLE_METHOD_DEF};
-	public final CLITablePtr getMethod() { 
+	public final CLITablePtr getMethodTablePtr() { 
 		int offset = 2;
 		final int rowNo;
 		if (areSmallEnough(MAP_METHOD_TABLES)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
@@ -24,7 +24,7 @@ public class CLIMethodSemanticsTableRow extends CLITableRow<CLIMethodSemanticsTa
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_ASSOCIATION_TABLES = new byte[] { CLITableConstants.CLI_TABLE_EVENT, CLITableConstants.CLI_TABLE_PROPERTY} ;
-	public final CLITablePtr getAssociation() { 
+	public final CLITablePtr getAssociationTablePtr() { 
 		int offset = 4;
 		if (!areSmallEnough(MAP_METHOD_TABLES)) offset += 2;
 		int codedValue;

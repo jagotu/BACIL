@@ -1,10 +1,7 @@
 package com.vztekoverflow.cil.parser.cli.table.generated;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.vztekoverflow.cil.parser.cli.table.CLIStringHeapPtr;
-import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
-import com.vztekoverflow.cil.parser.cli.table.CLITableRow;
-import com.vztekoverflow.cil.parser.cli.table.CLITables;
+import com.vztekoverflow.cil.parser.cli.table.*;
 public class CLITypeDefTableRow extends CLITableRow<CLITypeDefTableRow> {
 
 	public CLITypeDefTableRow(CLITables tables, int cursor, int rowIndex) {
@@ -16,47 +13,34 @@ public class CLITypeDefTableRow extends CLITableRow<CLITypeDefTableRow> {
 		return getInt(offset);
 	}
 
-	public final CLIStringHeapPtr getTypeNameStringHeapPtr() {
+	public final CLIStringHeapPtr getTypeNameHeapPtr() {
 		int offset = 4;
-		int heapOffset = 0;
-		if (tables.isStringHeapBig()) {
-			heapOffset = getInt(offset);
-		} else {
-			heapOffset = getUShort(offset);
-		}
+		int heapOffset=0;
+		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
 	}
 
-	public final CLIStringHeapPtr getTypeNamespaceStringHeapPtr() {
+	public final CLIStringHeapPtr getTypeNamespaceHeapPtr() {
 		int offset = 6;
 		if (tables.isStringHeapBig()) offset += 2;
-		int heapOffset = 0;
-		if (tables.isStringHeapBig()) {
-			heapOffset = getInt(offset);
-		} else {
-			heapOffset = getUShort(offset);
-		}
+		int heapOffset=0;
+		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
 	}
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_EXTENDS_TABLES = new byte[] { CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_TYPE_SPEC} ;
-
-	public final CLITablePtr getExtendsTable() {
+	public final CLITablePtr getExtendsTablePtr() { 
 		int offset = 8;
 		if (tables.isStringHeapBig()) offset += 4;
 		int codedValue;
-		if (areSmallEnough(MAP_EXTENDS_TABLES)) {
-			codedValue = getShort(offset);
-		} else {
-			codedValue = getInt(offset);
-		}
+		if (areSmallEnough(MAP_EXTENDS_TABLES)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
 		return new CLITablePtr(MAP_EXTENDS_TABLES[codedValue & 3], codedValue >> 2);
 	}
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_FIELD_LIST_TABLES = new byte[] {CLITableConstants.CLI_TABLE_FIELD};
-	public final CLITablePtr getFieldList() { 
+	public final CLITablePtr getFieldListTablePtr() { 
 		int offset = 10;
 		if (tables.isStringHeapBig()) offset += 4;
 		if (!areSmallEnough(MAP_EXTENDS_TABLES)) offset += 2;
@@ -67,7 +51,7 @@ public class CLITypeDefTableRow extends CLITableRow<CLITypeDefTableRow> {
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_METHOD_LIST_TABLES = new byte[] {CLITableConstants.CLI_TABLE_METHOD_DEF};
-	public final CLITablePtr getMethodList() { 
+	public final CLITablePtr getMethodListTablePtr() { 
 		int offset = 12;
 		if (tables.isStringHeapBig()) offset += 4;
 		if (!areSmallEnough(MAP_EXTENDS_TABLES)) offset += 2;

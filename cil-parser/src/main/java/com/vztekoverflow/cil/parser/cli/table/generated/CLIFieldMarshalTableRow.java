@@ -10,14 +10,14 @@ public class CLIFieldMarshalTableRow extends CLITableRow<CLIFieldMarshalTableRow
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_PARENT_TABLES = new byte[] { CLITableConstants.CLI_TABLE_FIELD, CLITableConstants.CLI_TABLE_PARAM} ;
-	public final CLITablePtr getParent() { 
+	public final CLITablePtr getParentTablePtr() { 
 		int offset = 0;
 		int codedValue;
 		if (areSmallEnough(MAP_PARENT_TABLES)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
 		return new CLITablePtr(MAP_PARENT_TABLES[codedValue & 1], codedValue >> 1);
 	}
 
-	public final CLIBlobHeapPtr getNativeType() {
+	public final CLIBlobHeapPtr getNativeTypeHeapPtr() {
 		int offset = 2;
 		if (!areSmallEnough(MAP_PARENT_TABLES)) offset += 2;
 		int heapOffset=0;

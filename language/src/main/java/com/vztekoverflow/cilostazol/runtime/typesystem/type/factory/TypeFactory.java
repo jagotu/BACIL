@@ -14,10 +14,10 @@ public final class TypeFactory {
     //region ITypeFactory
     public static IType create(CLITypeDefTableRow typeDefRow, CLIInterfaceImplTableRow interfaceImplTableHead, IType[] methodTypeParameters, IType[] classTypeParameters, IComponent component) {
         //TODO: method type parameters and class type parameters
-        String name = component.getTypeName(typeDefRow.getTypeNameStringHeapPtr());
-        String namespace = component.getTypeNamespace(typeDefRow.getTypeNamespaceStringHeapPtr());
+        String name = component.getTypeName(typeDefRow.getTypeNameHeapPtr());
+        String namespace = component.getTypeNamespace(typeDefRow.getTypeNamespaceHeapPtr());
         IType directBaseClass = getDirectBaseClass(typeDefRow, component);
-        IType[] interfaces = getInterfaces(name, namespace, interfaceImplTableHead, component);
+        IType[] interfaces = null;//getInterfaces(name, namespace, interfaceImplTableHead, component);
 
 //        var methods = component.getTableHeads().getMethodDefTableHead().skip(type.getMethodList());
 //        var fieldRows = component.getTableHeads().getFieldTableHead().skip(type.getFieldList());
@@ -40,10 +40,10 @@ public final class TypeFactory {
         //TODO: implement case for ref and spec table
         for (var row : interfaceImplTableHead) {
             //we can not create the whole klass because of circular dependency, we only need the name and namespace
-            var klassTableRow = component.getTableHeads().getTypeDefTableHead().skip(row.getKlassPtr().getRowNo());//TODO: make impl detail - refactor; -1 because of dummy class
-            var klassName = component.getTypeName(klassTableRow.getTypeNameStringHeapPtr());//TODO: make impl detail - refactor
+            var klassTableRow = component.getTableHeads().getTypeDefTableHead().skip(row.getKlassTablePtr().getRowNo());//TODO: make impl detail - refactor; -1 because of dummy class
+            var klassName = component.getTypeName(klassTableRow.getTypeNameHeapPtr());//TODO: make impl detail - refactor
             //TODO: here it goes out of bounds for string heap for some reason
-            var klassNamespace = component.getTypeNamespace(klassTableRow.getTypeNamespaceStringHeapPtr());//TODO: make impl detail - refactor
+            var klassNamespace = component.getTypeNamespace(klassTableRow.getTypeNamespaceHeapPtr());//TODO: make impl detail - refactor
 
             if (className.equals(klassName) && classNamespace.equals(klassNamespace)) {
                 interfaces.add(getInterface(row, component));
@@ -54,7 +54,7 @@ public final class TypeFactory {
     }
 
     private static IType getInterface(CLIInterfaceImplTableRow row, IComponent component) {
-        CLITablePtr tablePtr = row.getInterfacePtr();
+        CLITablePtr tablePtr = row.getInterfaceTablePtr();
         return switch (tablePtr.getTableId()) {
             case CLITableConstants.CLI_TABLE_TYPE_DEF -> component.getLocalType(tablePtr.getRowNo());
             case CLITableConstants.CLI_TABLE_TYPE_REF -> null; //TODO: implement case for ref table
@@ -65,7 +65,7 @@ public final class TypeFactory {
 
     private static IType getDirectBaseClass(CLITypeDefTableRow typeDefRow, IComponent component) {
         IType extendz = null;
-        var extendsTable = typeDefRow.getExtendsTable();
+        var extendsTable = typeDefRow.getExtendsTablePtr();
         if (extendsTable.getRowNo() != 0) {
             switch (extendsTable.getTableId()) {
                 case CLITableConstants.CLI_TABLE_TYPE_DEF -> extendz = component.getLocalType(extendsTable.getRowNo());
@@ -78,19 +78,19 @@ public final class TypeFactory {
     }
 
     public static IType create(CLITypeSpecTableRow type, IType[] methodTypeParameters, IType[] classTypeParameters, IComponent component) {
-        throw new NotImplementedException();
+        return null;
     }
 
     public static IType create(CLITypeRefTableRow type, IType[] methodTypeParameters, IType[] classTypeParameters, IComponent component) {
-        throw new NotImplementedException();
+        return null;
     }
 
     public static IType createVoid(IComponent component) {
-        throw new NotImplementedException();
+        return null;
     }
 
     public static IType createTypedRef(IComponent component) {
-        throw new NotImplementedException();
+        return null;
     }
     //endregion
 }

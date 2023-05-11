@@ -191,7 +191,7 @@ public class CLITableClassesGenerator {
 
             case 'h': {
                 String streamName = fieldType.substring(1);
-                writer.println(String.format("\tpublic final CLI%sHeapPtr get%s() {", streamName, fieldName));
+                writer.println(String.format("\tpublic final CLI%sHeapPtr get%sHeapPtr() {", streamName, fieldName));
                 generatePenaltiesCode(penalties, writer);
                 writer.println("\t\tint heapOffset=0;");
                 writer.println(String.format("\t\tif (tables.is%sHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }", streamName));
@@ -221,7 +221,7 @@ public class CLITableClassesGenerator {
                     writer.println("\t@CompilerDirectives.CompilationFinal(dimensions = 1)");
                     writer.println(String.format("\tprivate static final byte[] MAP%s_TABLES = new byte[] {%s};", nameToConstName(fieldName), tableConstant));
 
-                    writer.println(String.format("\tpublic final CLITablePtr get%s() { ", fieldName));
+                    writer.println(String.format("\tpublic final CLITablePtr get%sTablePtr() { ", fieldName));
 
                     generatePenaltiesCode(penalties, writer);
 
@@ -240,7 +240,7 @@ public class CLITableClassesGenerator {
                     writer.print(tableIndices);
                     writer.println("} ;");
 
-                    writer.println(String.format("\tpublic final CLITablePtr get%s() { ", fieldName));
+                    writer.println(String.format("\tpublic final CLITablePtr get%sTablePtr() { ", fieldName));
                     generatePenaltiesCode(penalties, writer);
                     writer.println("\t\tint codedValue;");
                     writer.println("\t\tif (areSmallEnough(MAP" + nameToConstName(fieldName) + "_TABLES)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}");

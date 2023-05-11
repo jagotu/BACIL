@@ -18,14 +18,14 @@ public class CLIExportedTypeTableRow extends CLITableRow<CLIExportedTypeTableRow
 		return getInt(offset);
 	}
 
-	public final CLIStringHeapPtr getTypeName() {
+	public final CLIStringHeapPtr getTypeNameHeapPtr() {
 		int offset = 8;
 		int heapOffset=0;
 		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
 	}
 
-	public final CLIStringHeapPtr getTypeNamespace() {
+	public final CLIStringHeapPtr getTypeNamespaceHeapPtr() {
 		int offset = 10;
 		if (tables.isStringHeapBig()) offset += 2;
 		int heapOffset=0;
@@ -35,7 +35,7 @@ public class CLIExportedTypeTableRow extends CLITableRow<CLIExportedTypeTableRow
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_IMPLEMENTATION_TABLES = new byte[] { CLITableConstants.CLI_TABLE_FILE, CLITableConstants.CLI_TABLE_ASSEMBLY_REF, CLITableConstants.CLI_TABLE_EXPORTED_TYPE} ;
-	public final CLITablePtr getImplementation() { 
+	public final CLITablePtr getImplementationTablePtr() { 
 		int offset = 12;
 		if (tables.isStringHeapBig()) offset += 4;
 		int codedValue;

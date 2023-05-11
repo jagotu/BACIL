@@ -5,6 +5,8 @@ import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
+import java.util.Arrays;
+
 public abstract class MethodBase implements IMethod{
     protected final CLIFile _definingFile;
     protected final String _name;
@@ -126,6 +128,11 @@ public abstract class MethodBase implements IMethod{
     public int getMaxStack()
     {
         return _maxStack;
+    }
+
+    @Override
+    public String toString() {
+        return "_ " + getName() + "()";
     }
     //endregion
 }

@@ -10,14 +10,14 @@ public class CLIMethodSpecTableRow extends CLITableRow<CLIMethodSpecTableRow> {
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_METHOD_TABLES = new byte[] { CLITableConstants.CLI_TABLE_METHOD_DEF, CLITableConstants.CLI_TABLE_MEMBER_REF} ;
-	public final CLITablePtr getMethod() { 
+	public final CLITablePtr getMethodTablePtr() { 
 		int offset = 0;
 		int codedValue;
 		if (areSmallEnough(MAP_METHOD_TABLES)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
 		return new CLITablePtr(MAP_METHOD_TABLES[codedValue & 1], codedValue >> 1);
 	}
 
-	public final CLIBlobHeapPtr getInstantiation() {
+	public final CLIBlobHeapPtr getInstantiationHeapPtr() {
 		int offset = 2;
 		if (!areSmallEnough(MAP_METHOD_TABLES)) offset += 2;
 		int heapOffset=0;

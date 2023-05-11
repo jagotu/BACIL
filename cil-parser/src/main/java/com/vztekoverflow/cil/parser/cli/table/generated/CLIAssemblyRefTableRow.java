@@ -33,14 +33,14 @@ public class CLIAssemblyRefTableRow extends CLITableRow<CLIAssemblyRefTableRow> 
 		return getInt(offset);
 	}
 
-	public final CLIBlobHeapPtr getPublicKeyOrToken() {
+	public final CLIBlobHeapPtr getPublicKeyOrTokenHeapPtr() {
 		int offset = 12;
 		int heapOffset=0;
 		if (tables.isBlobHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIBlobHeapPtr(heapOffset);
 	}
 
-	public final CLIStringHeapPtr getName() {
+	public final CLIStringHeapPtr getNameHeapPtr() {
 		int offset = 14;
 		if (tables.isBlobHeapBig()) offset += 2;
 		int heapOffset=0;
@@ -48,7 +48,7 @@ public class CLIAssemblyRefTableRow extends CLITableRow<CLIAssemblyRefTableRow> 
 		return new CLIStringHeapPtr(heapOffset);
 	}
 
-	public final CLIStringHeapPtr getCulture() {
+	public final CLIStringHeapPtr getCultureHeapPtr() {
 		int offset = 16;
 		if (tables.isStringHeapBig()) offset += 2;
 		if (tables.isBlobHeapBig()) offset += 2;
@@ -57,7 +57,7 @@ public class CLIAssemblyRefTableRow extends CLITableRow<CLIAssemblyRefTableRow> 
 		return new CLIStringHeapPtr(heapOffset);
 	}
 
-	public final CLIStringHeapPtr getHashValue() {
+	public final CLIStringHeapPtr getHashValueHeapPtr() {
 		int offset = 18;
 		if (tables.isStringHeapBig()) offset += 4;
 		if (tables.isBlobHeapBig()) offset += 2;

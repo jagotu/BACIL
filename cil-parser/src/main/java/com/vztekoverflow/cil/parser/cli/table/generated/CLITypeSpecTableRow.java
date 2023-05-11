@@ -8,7 +8,7 @@ public class CLITypeSpecTableRow extends CLITableRow<CLITypeSpecTableRow> {
 		super(tables, cursor, rowIndex);
 	}
 
-	public final CLIBlobHeapPtr getSignature() {
+	public final CLIBlobHeapPtr getSignatureHeapPtr() {
 		int offset = 0;
 		int heapOffset=0;
 		if (tables.isBlobHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }

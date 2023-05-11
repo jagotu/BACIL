@@ -15,7 +15,7 @@ public class CLIFieldRVATableRow extends CLITableRow<CLIFieldRVATableRow> {
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_FIELD_TABLES = new byte[] {CLITableConstants.CLI_TABLE_FIELD};
-	public final CLITablePtr getField() { 
+	public final CLITablePtr getFieldTablePtr() { 
 		int offset = 4;
 		final int rowNo;
 		if (areSmallEnough(MAP_FIELD_TABLES)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}

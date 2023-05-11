@@ -10,7 +10,7 @@ public class CLIGenericParamConstraintTableRow extends CLITableRow<CLIGenericPar
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_OWNER_TABLES = new byte[] {CLITableConstants.CLI_TABLE_GENERIC_PARAM};
-	public final CLITablePtr getOwner() { 
+	public final CLITablePtr getOwnerTablePtr() { 
 		int offset = 0;
 		final int rowNo;
 		if (areSmallEnough(MAP_OWNER_TABLES)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
@@ -19,7 +19,7 @@ public class CLIGenericParamConstraintTableRow extends CLITableRow<CLIGenericPar
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_CONSTRAINT_TABLES = new byte[] { CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_TYPE_SPEC} ;
-	public final CLITablePtr getConstraint() { 
+	public final CLITablePtr getConstraintTablePtr() { 
 		int offset = 2;
 		if (!areSmallEnough(MAP_OWNER_TABLES)) offset += 2;
 		int codedValue;

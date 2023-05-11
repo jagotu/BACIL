@@ -35,7 +35,7 @@ public class MethodDefSig {
         boolean hasExplicitThis = (callingConvention & EXPLICIT_THIS) != 0;
         boolean hasVarArg = (callingConvention & VARARG) != 0;
 
-        int genParamCount = -1;
+        int genParamCount = 0;
         if((callingConvention & GENERIC) != 0)
         {
             genParamCount = reader.getUnsigned();

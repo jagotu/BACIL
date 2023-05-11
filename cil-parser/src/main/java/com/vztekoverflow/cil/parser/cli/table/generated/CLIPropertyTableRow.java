@@ -13,14 +13,14 @@ public class CLIPropertyTableRow extends CLITableRow<CLIPropertyTableRow> {
 		return getShort(offset);
 	}
 
-	public final CLIStringHeapPtr getName() {
+	public final CLIStringHeapPtr getNameHeapPtr() {
 		int offset = 2;
 		int heapOffset=0;
 		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
 	}
 
-	public final CLIBlobHeapPtr getType() {
+	public final CLIBlobHeapPtr getTypeHeapPtr() {
 		int offset = 4;
 		if (tables.isStringHeapBig()) offset += 2;
 		int heapOffset=0;

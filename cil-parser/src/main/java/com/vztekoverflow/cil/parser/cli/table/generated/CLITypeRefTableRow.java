@@ -10,14 +10,14 @@ public class CLITypeRefTableRow extends CLITableRow<CLITypeRefTableRow> {
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_RESOLUTION_SCOPE_TABLES = new byte[] { CLITableConstants.CLI_TABLE_MODULE, CLITableConstants.CLI_TABLE_MODULE_REF, CLITableConstants.CLI_TABLE_ASSEMBLY_REF, CLITableConstants.CLI_TABLE_TYPE_REF} ;
-	public final CLITablePtr getResolutionScope() { 
+	public final CLITablePtr getResolutionScopeTablePtr() { 
 		int offset = 0;
 		int codedValue;
 		if (areSmallEnough(MAP_RESOLUTION_SCOPE_TABLES)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
 		return new CLITablePtr(MAP_RESOLUTION_SCOPE_TABLES[codedValue & 3], codedValue >> 2);
 	}
 
-	public final CLIStringHeapPtr getTypeName() {
+	public final CLIStringHeapPtr getTypeNameHeapPtr() {
 		int offset = 2;
 		if (!areSmallEnough(MAP_RESOLUTION_SCOPE_TABLES)) offset += 2;
 		int heapOffset=0;
@@ -25,7 +25,7 @@ public class CLITypeRefTableRow extends CLITableRow<CLITypeRefTableRow> {
 		return new CLIStringHeapPtr(heapOffset);
 	}
 
-	public final CLIStringHeapPtr getTypeNamespace() {
+	public final CLIStringHeapPtr getTypeNamespaceHeapPtr() {
 		int offset = 4;
 		if (tables.isStringHeapBig()) offset += 2;
 		if (!areSmallEnough(MAP_RESOLUTION_SCOPE_TABLES)) offset += 2;

@@ -25,7 +25,7 @@ public class CLIAssemblyRefOSTableRow extends CLITableRow<CLIAssemblyRefOSTableR
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_ASSEMBLY_REF_TABLES = new byte[] {CLITableConstants.CLI_TABLE_ASSEMBLY_REF};
-	public final CLITablePtr getAssemblyRef() { 
+	public final CLITablePtr getAssemblyRefTablePtr() { 
 		int offset = 12;
 		final int rowNo;
 		if (areSmallEnough(MAP_ASSEMBLY_REF_TABLES)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}

@@ -10,7 +10,7 @@ public class CLIPropertyMapTableRow extends CLITableRow<CLIPropertyMapTableRow> 
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_PARENT_TABLES = new byte[] {CLITableConstants.CLI_TABLE_TYPE_DEF};
-	public final CLITablePtr getParent() { 
+	public final CLITablePtr getParentTablePtr() { 
 		int offset = 0;
 		final int rowNo;
 		if (areSmallEnough(MAP_PARENT_TABLES)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}
@@ -19,7 +19,7 @@ public class CLIPropertyMapTableRow extends CLITableRow<CLIPropertyMapTableRow> 
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_PROPERTY_LIST_TABLES = new byte[] {CLITableConstants.CLI_TABLE_PROPERTY};
-	public final CLITablePtr getPropertyList() { 
+	public final CLITablePtr getPropertyListTablePtr() { 
 		int offset = 2;
 		if (!areSmallEnough(MAP_PARENT_TABLES)) offset += 2;
 		final int rowNo;

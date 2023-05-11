@@ -36,15 +36,15 @@ public class CLIComponent implements IComponent {
     public IType getLocalType(String namespace, String name) {
         //PRINT TYPE DEFS
         for (CLITypeDefTableRow row : _cliFile.getTableHeads().getTypeDefTableHead()) {
-            var rowNamespace = row.getTypeNamespaceStringHeapPtr().read(_cliFile.getStringHeap());
-            var rowName = row.getTypeNameStringHeapPtr().read(_cliFile.getStringHeap());
+            var rowNamespace = row.getTypeNamespaceHeapPtr().read(_cliFile.getStringHeap());
+            var rowName = row.getTypeNameHeapPtr().read(_cliFile.getStringHeap());
             System.out.println(rowNamespace + "." + rowName);
         }
 
         //Check typeDefs
         for (CLITypeDefTableRow row : _cliFile.getTableHeads().getTypeDefTableHead()) {
-            var rowNamespace = row.getTypeNamespaceStringHeapPtr().read(_cliFile.getStringHeap());
-            var rowName = row.getTypeNameStringHeapPtr().read(_cliFile.getStringHeap());
+            var rowNamespace = row.getTypeNamespaceHeapPtr().read(_cliFile.getStringHeap());
+            var rowName = row.getTypeNameHeapPtr().read(_cliFile.getStringHeap());
             if (rowNamespace.equals(namespace) && rowName.equals(name))
                 return TypeFactory.create(row, _cliFile.getTableHeads().getInterfaceImplTableHead(), null, null, this);
         }
@@ -52,8 +52,8 @@ public class CLIComponent implements IComponent {
         //Check exported types (II.6.8 Type forwarders)
         for(CLIExportedTypeTableRow row : _cliFile.getTableHeads().getExportedTypeTableHead())
         {
-            if (row.getTypeNamespace().read(_cliFile.getStringHeap()).equals(namespace) && row.getTypeName().read(_cliFile.getStringHeap()).equals(name)) {
-                CLIAssemblyRefTableRow assemblyRef = _cliFile.getTableHeads().getAssemblyRefTableHead().skip(row.getImplementation());
+            if (row.getTypeNamespaceHeapPtr().read(_cliFile.getStringHeap()).equals(namespace) && row.getTypeNameHeapPtr().read(_cliFile.getStringHeap()).equals(name)) {
+                CLIAssemblyRefTableRow assemblyRef = _cliFile.getTableHeads().getAssemblyRefTableHead().skip(row.getImplementationTablePtr());
                 IAssembly assembly = getDefiningAssembly().getAppDomain().getAssembly(AssemblyIdentity.fromAssemblyRefRow(_cliFile.getStringHeap(), assemblyRef));
                 return assembly.getLocalType(namespace, name);
             }

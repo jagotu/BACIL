@@ -29,7 +29,7 @@ public final class AssemblyIdentity {
      */
     public static AssemblyIdentity fromAssemblyRow(byte[] stringHeap, CLIAssemblyTableRow row)
     {
-        return new AssemblyIdentity(row.getMajorVersion(), row.getMinorVersion(), row.getBuildNumber(), row.getRevisionNumber(), row.getName().read(stringHeap));
+        return new AssemblyIdentity(row.getMajorVersion(), row.getMinorVersion(), row.getBuildNumber(), row.getRevisionNumber(), row.getNameHeapPtr().read(stringHeap));
     }
 
     /**
@@ -40,7 +40,7 @@ public final class AssemblyIdentity {
      */
     public static AssemblyIdentity fromAssemblyRefRow(byte[] stringHeap, CLIAssemblyRefTableRow row)
     {
-        return new AssemblyIdentity(row.getMajorVersion(), row.getMinorVersion(), row.getBuildNumber(), row.getRevisionNumber(), row.getName().read(stringHeap));
+        return new AssemblyIdentity(row.getMajorVersion(), row.getMinorVersion(), row.getBuildNumber(), row.getRevisionNumber(), row.getNameHeapPtr().read(stringHeap));
     }
 
     /**

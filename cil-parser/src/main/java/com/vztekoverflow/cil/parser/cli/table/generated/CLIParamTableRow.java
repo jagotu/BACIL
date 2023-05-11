@@ -18,7 +18,7 @@ public class CLIParamTableRow extends CLITableRow<CLIParamTableRow> {
 		return getShort(offset);
 	}
 
-	public final CLIStringHeapPtr getName() {
+	public final CLIStringHeapPtr getNameHeapPtr() {
 		int offset = 4;
 		int heapOffset=0;
 		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }

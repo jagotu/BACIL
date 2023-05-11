@@ -1,6 +1,7 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem;
 
 import com.oracle.truffle.api.nodes.RootNode;
+import com.vztekoverflow.cil.parser.cli.CLIFileUtils;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIMethodDefTableRow;
 import com.vztekoverflow.cilostazol.CILOSTAZOLLanguage;
 import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
@@ -47,11 +48,37 @@ public class TypeParsingTest extends TestCase {
         domain.loadAssembly(assembly);
 
         final IComponent component= assembly.getComponents()[0];
-        final IType program = component.getLocalType("ComponentParsingGeneral","Class");
+        //Classes
+        final IType classA= component.getLocalType("ComponentParsingGeneral","A");
+        final IType classG_T= component.getLocalType("ComponentParsingGeneral","G`1");
+        final IType classBar1= component.getLocalType("ComponentParsingGeneral","Bar1");
+        final IType classBar2= component.getLocalType("ComponentParsingGeneral","Bar2`1");
 
-        final CLIMethodDefTableRow mainDef = assembly.getDefiningFile().getTableHeads().getMethodDefTableHead().skip(5);
-        final IMethod main = MethodFactory.create(mainDef, program);
-        RootNode node = main.getNode();
+        final CLIMethodDefTableRow method_def_Bar1_Foo1 = CLIFileUtils.getMethodByName("Bar1_Foo1", component.getDefiningFile())[0];
+        final CLIMethodDefTableRow method_def_Bar1_Foo2 = CLIFileUtils.getMethodByName("Bar1_Foo2", component.getDefiningFile())[0];
+        final CLIMethodDefTableRow method_def_Bar1_Foo3 = CLIFileUtils.getMethodByName("Bar1_Foo3", component.getDefiningFile())[0];
+        final CLIMethodDefTableRow method_def_Bar1_Foo4 = CLIFileUtils.getMethodByName("Bar1_Foo4", component.getDefiningFile())[0];
+        final CLIMethodDefTableRow method_def_Bar1_Foo5 = CLIFileUtils.getMethodByName("Bar1_Foo5", component.getDefiningFile())[0];
+        final CLIMethodDefTableRow method_def_Bar1_Foo6 = CLIFileUtils.getMethodByName("Bar1_Foo6", component.getDefiningFile())[0];
+        final CLIMethodDefTableRow method_def_Bar1_Foo7 = CLIFileUtils.getMethodByName("Bar1_Foo7", component.getDefiningFile())[0];
+        final CLIMethodDefTableRow method_def_Bar1_Foo8 = CLIFileUtils.getMethodByName("Bar1_Foo8", component.getDefiningFile())[0];
+        final CLIMethodDefTableRow method_def_Bar1_Foo9 = CLIFileUtils.getMethodByName("Bar1_Foo9", component.getDefiningFile())[0];
+        final CLIMethodDefTableRow method_def_Bar2_Foo1 = CLIFileUtils.getMethodByName("Bar2_Foo1", component.getDefiningFile())[0];
+
+        final IMethod method_Bar1_Foo1 = MethodFactory.create(method_def_Bar1_Foo1, classBar1);
+        final IMethod method_Bar1_Foo2 = MethodFactory.create(method_def_Bar1_Foo2, classBar1);
+        final IMethod method_Bar1_Foo3 = MethodFactory.create(method_def_Bar1_Foo3, classBar1);
+        final IMethod method_Bar1_Foo4 = MethodFactory.create(method_def_Bar1_Foo4, classBar1);
+        final IMethod method_Bar1_Foo5 = MethodFactory.create(method_def_Bar1_Foo5, classBar1);
+        final IMethod method_Bar1_Foo6 = MethodFactory.create(method_def_Bar1_Foo6, classBar1);
+        final IMethod method_Bar1_Foo7 = MethodFactory.create(method_def_Bar1_Foo7, classBar1);
+        final IMethod method_Bar1_Foo8 = MethodFactory.create(method_def_Bar1_Foo8, classBar1);
+        final IMethod method_Bar1_Foo9 = MethodFactory.create(method_def_Bar1_Foo9, classBar1);
+        final IMethod method_Bar2_Foo1 = MethodFactory.create(method_def_Bar2_Foo1, classBar2);
+
+
+        //final IMethod main = MethodFactory.create(mainDef, program);
+        //RootNode node = main.getNode();
     }
 
     public void testComponentParsingGeneral() throws Exception {

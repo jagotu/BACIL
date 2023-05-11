@@ -20,7 +20,7 @@ public class CLIKlassLayoutTableRow extends CLITableRow<CLIKlassLayoutTableRow> 
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_PARENT_TABLES = new byte[] {CLITableConstants.CLI_TABLE_TYPE_DEF};
-	public final CLITablePtr getParent() { 
+	public final CLITablePtr getParentTablePtr() { 
 		int offset = 6;
 		final int rowNo;
 		if (areSmallEnough(MAP_PARENT_TABLES)) {rowNo = getShort(offset);} else {rowNo = getInt(offset);}

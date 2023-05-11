@@ -100,7 +100,8 @@ File:26
 GenericParam:2A
 -Number:c2
 -Flags:c2
--Owner:iTypeDef|TypeRef|TypeSpec
+-Owner:iTypeDef|MethodDef
+-Name:hString
 
 GenericParamConstraint:2C
 -Owner:iGenericParam

@@ -15,14 +15,14 @@ public class CLIImplMapTableRow extends CLITableRow<CLIImplMapTableRow> {
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_MEMBER_FORWARDED_TABLES = new byte[] { CLITableConstants.CLI_TABLE_FIELD, CLITableConstants.CLI_TABLE_METHOD_DEF} ;
-	public final CLITablePtr getMemberForwarded() { 
+	public final CLITablePtr getMemberForwardedTablePtr() { 
 		int offset = 2;
 		int codedValue;
 		if (areSmallEnough(MAP_MEMBER_FORWARDED_TABLES)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
 		return new CLITablePtr(MAP_MEMBER_FORWARDED_TABLES[codedValue & 1], codedValue >> 1);
 	}
 
-	public final CLIStringHeapPtr getImportName() {
+	public final CLIStringHeapPtr getImportNameHeapPtr() {
 		int offset = 4;
 		if (!areSmallEnough(MAP_MEMBER_FORWARDED_TABLES)) offset += 2;
 		int heapOffset=0;
@@ -32,7 +32,7 @@ public class CLIImplMapTableRow extends CLITableRow<CLIImplMapTableRow> {
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_IMPORT_SCOPE_TABLES = new byte[] {CLITableConstants.CLI_TABLE_MODULE_REF};
-	public final CLITablePtr getImportScope() { 
+	public final CLITablePtr getImportScopeTablePtr() { 
 		int offset = 6;
 		if (tables.isStringHeapBig()) offset += 2;
 		if (!areSmallEnough(MAP_MEMBER_FORWARDED_TABLES)) offset += 2;

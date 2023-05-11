@@ -13,14 +13,14 @@ public class CLIModuleTableRow extends CLITableRow<CLIModuleTableRow> {
 		return getShort(offset);
 	}
 
-	public final CLIStringHeapPtr getName() {
+	public final CLIStringHeapPtr getNameHeapPtr() {
 		int offset = 2;
 		int heapOffset=0;
 		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
 	}
 
-	public final CLIGUIDHeapPtr getMvid() {
+	public final CLIGUIDHeapPtr getMvidHeapPtr() {
 		int offset = 4;
 		if (tables.isStringHeapBig()) offset += 2;
 		int heapOffset=0;
@@ -28,7 +28,7 @@ public class CLIModuleTableRow extends CLITableRow<CLIModuleTableRow> {
 		return new CLIGUIDHeapPtr(heapOffset);
 	}
 
-	public final CLIGUIDHeapPtr getEncId() {
+	public final CLIGUIDHeapPtr getEncIdHeapPtr() {
 		int offset = 6;
 		if (tables.isStringHeapBig()) offset += 2;
 		if (tables.isGUIDHeapBig()) offset += 2;
@@ -37,7 +37,7 @@ public class CLIModuleTableRow extends CLITableRow<CLIModuleTableRow> {
 		return new CLIGUIDHeapPtr(heapOffset);
 	}
 
-	public final CLIGUIDHeapPtr getEncBaseId() {
+	public final CLIGUIDHeapPtr getEncBaseIdHeapPtr() {
 		int offset = 8;
 		if (tables.isStringHeapBig()) offset += 2;
 		if (tables.isGUIDHeapBig()) offset += 4;

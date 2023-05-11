@@ -13,7 +13,7 @@ public class CLIEventTableRow extends CLITableRow<CLIEventTableRow> {
 		return getShort(offset);
 	}
 
-	public final CLIStringHeapPtr getName() {
+	public final CLIStringHeapPtr getNameHeapPtr() {
 		int offset = 2;
 		int heapOffset=0;
 		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
@@ -22,7 +22,7 @@ public class CLIEventTableRow extends CLITableRow<CLIEventTableRow> {
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_EVENT_TYPE_TABLES = new byte[] { CLITableConstants.CLI_TABLE_TYPE_DEF, CLITableConstants.CLI_TABLE_TYPE_REF, CLITableConstants.CLI_TABLE_TYPE_SPEC} ;
-	public final CLITablePtr getEventType() { 
+	public final CLITablePtr getEventTypeTablePtr() { 
 		int offset = 4;
 		if (tables.isStringHeapBig()) offset += 2;
 		int codedValue;

@@ -8,6 +8,6 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 public class FactoryUtils {
     public static IType create(TypeSig tSig, IType[] mvars, IType[] vars, IComponent definingComponent)
     {
-        throw new NotImplementedException();
+        return null;
     }
 }

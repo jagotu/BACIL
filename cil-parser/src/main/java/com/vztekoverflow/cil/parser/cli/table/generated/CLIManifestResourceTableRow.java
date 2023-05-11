@@ -18,7 +18,7 @@ public class CLIManifestResourceTableRow extends CLITableRow<CLIManifestResource
 		return getInt(offset);
 	}
 
-	public final CLIStringHeapPtr getName() {
+	public final CLIStringHeapPtr getNameHeapPtr() {
 		int offset = 8;
 		int heapOffset=0;
 		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
@@ -27,7 +27,7 @@ public class CLIManifestResourceTableRow extends CLITableRow<CLIManifestResource
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_IMPLEMENTATION_TABLES = new byte[] { CLITableConstants.CLI_TABLE_FILE, CLITableConstants.CLI_TABLE_ASSEMBLY_REF, CLITableConstants.CLI_TABLE_EXPORTED_TYPE} ;
-	public final CLITablePtr getImplementation() { 
+	public final CLITablePtr getImplementationTablePtr() { 
 		int offset = 10;
 		if (tables.isStringHeapBig()) offset += 2;
 		int codedValue;

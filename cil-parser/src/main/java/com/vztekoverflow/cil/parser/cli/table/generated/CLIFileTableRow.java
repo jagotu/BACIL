@@ -13,14 +13,14 @@ public class CLIFileTableRow extends CLITableRow<CLIFileTableRow> {
 		return getInt(offset);
 	}
 
-	public final CLIStringHeapPtr getName() {
+	public final CLIStringHeapPtr getNameHeapPtr() {
 		int offset = 4;
 		int heapOffset=0;
 		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
 	}
 
-	public final CLIBlobHeapPtr getHashValue() {
+	public final CLIBlobHeapPtr getHashValueHeapPtr() {
 		int offset = 6;
 		if (tables.isStringHeapBig()) offset += 2;
 		int heapOffset=0;

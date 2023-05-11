@@ -23,14 +23,14 @@ public class CLIMethodDefTableRow extends CLITableRow<CLIMethodDefTableRow> {
 		return getShort(offset);
 	}
 
-	public final CLIStringHeapPtr getName() {
+	public final CLIStringHeapPtr getNameHeapPtr() {
 		int offset = 8;
 		int heapOffset=0;
 		if (tables.isStringHeapBig()) { heapOffset = getInt(offset); } else { heapOffset = getUShort(offset); }
 		return new CLIStringHeapPtr(heapOffset);
 	}
 
-	public final CLIBlobHeapPtr getSignature() {
+	public final CLIBlobHeapPtr getSignatureHeapPtr() {
 		int offset = 10;
 		if (tables.isStringHeapBig()) offset += 2;
 		int heapOffset=0;
@@ -40,7 +40,7 @@ public class CLIMethodDefTableRow extends CLITableRow<CLIMethodDefTableRow> {
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_PARAM_LIST_TABLES = new byte[] {CLITableConstants.CLI_TABLE_PARAM};
-	public final CLITablePtr getParamList() { 
+	public final CLITablePtr getParamListTablePtr() { 
 		int offset = 12;
 		if (tables.isStringHeapBig()) offset += 2;
 		if (tables.isBlobHeapBig()) offset += 2;

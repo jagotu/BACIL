@@ -16,6 +16,7 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ITypeParameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.*;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
+import com.vztekoverflow.cilostazol.runtime.typesystem.type.NonGenericType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.factory.FactoryUtils;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.factory.TypeFactory;
 
@@ -36,9 +37,10 @@ public class MethodFactory {
     //endregion
 
     public static IMethod create(CLIMethodDefTableRow mDef, IType definingType) {
+        final IType[] definingTypeParameters = (definingType instanceof NonGenericType) ? new IType[0] : definingType.getTypeParameters();
         final CLIFile file = definingType.getDefiningFile();
-        final MethodDefSig mSignature = MethodDefSig.parse(new SignatureReader(mDef.getSignature().read(file.getBlobHeap())), file);
-        final String name = mDef.getName().read(file.getStringHeap());
+        final MethodDefSig mSignature = MethodDefSig.parse(new SignatureReader(mDef.getSignatureHeapPtr().read(file.getBlobHeap())), file);
+        final String name = mDef.getNameHeapPtr().read(file.getStringHeap());
         final boolean isVirtual = (mDef.getFlags() & METHODATTRIBUTE_VIRTUAL) == METHODATTRIBUTE_VIRTUAL;
 
         final ByteSequenceBuffer buf = file.getBuffer(mDef.getRVA());
@@ -50,12 +52,29 @@ public class MethodFactory {
         final boolean initLocals;
         final int ilFlags;
         final ITypeParameter[] typeParameters;
+
+        if (mSignature.getGenParamCount() != 0) {
+            typeParameters = new ITypeParameter[mSignature.getGenParamCount()];
+            int idx = 0;
+            for(CLIGenericParamTableRow row : file.getTableHeads().getGenericParamTableHead()) {
+                if (mDef.getTableId() == row.getOwnerTablePtr().getTableId()
+                        && mDef.getRowNo() == row.getOwnerTablePtr().getRowNo())
+                {
+                    typeParameters[idx++] = new TypeParameter(getConstrains(row,typeParameters, definingTypeParameters, definingType.getDefiningComponent()), definingType.getDefiningComponent());
+                }
+            }
+        }
+        else {
+            typeParameters = null;
+        }
+
+
+
         if((firstByte & 3) == CORILMETHOD_TINYFORMAT) {
             ilFlags = CORILMETHOD_TINYFORMAT;
             maxStackSize = 8;
             locals = null;
             initLocals = false;
-            typeParameters = null;
             size = (firstByte >> 2) & 0xFF;
         }
         else if((firstByte & 3) == CORILMETHOD_FATFORMAT) {
@@ -67,21 +86,6 @@ public class MethodFactory {
                 throw new CILParserException(CILOSTAZOLBundle.message("cilostazol.exception.parser.fatHeader.size"));
             }
 
-            if (mSignature.getGenParamCount() != 0) {
-                typeParameters = new ITypeParameter[mSignature.getGenParamCount()];
-                int idx = 0;
-                for(CLIGenericParamTableRow row : file.getTableHeads().getGenericParamTableHead()) {
-                    if (mDef.getTableId() == row.getOwner().getTableId()
-                            && mDef.getRowNo() == row.getOwner().getRowNo())
-                    {
-                        typeParameters[idx++] = new TypeParameter(getConstrains(row,typeParameters, definingType.getTypeParameters(), definingType.getDefiningComponent()), definingType.getDefiningComponent());
-                    }
-                }
-            }
-            else {
-                typeParameters = null;
-            }
-
             maxStackSize = buf.getShort();
             size = buf.getInt();
             int localVarSigTok = buf.getInt();
@@ -89,7 +93,7 @@ public class MethodFactory {
                 locals = null;
             }
             else {
-                LocalVarsSig sig = LocalVarsSig.read(new SignatureReader(file.getTableHeads().getStandAloneSigTableHead().skip(CLITablePtr.fromToken(localVarSigTok)).getSignature().read(file.getBlobHeap())),file);
+                LocalVarsSig sig = LocalVarsSig.read(new SignatureReader(file.getTableHeads().getStandAloneSigTableHead().skip(CLITablePtr.fromToken(localVarSigTok)).getSignatureHeapPtr().read(file.getBlobHeap())),file);
                 locals = new IParameter[sig.getVarsCount()];
                 for (int i = 0; i < locals.length; i++) {
                     locals[i] = new Parameter(sig.getVars()[i].isByRef(), sig.getVars()[i].isPinned(), FactoryUtils.create(sig.getVars()[i].getTypeSig(), typeParameters, definingType.getTypeParameters(), definingType.getDefiningComponent()));
@@ -123,7 +127,7 @@ public class MethodFactory {
                     final int handlerlength = buf.getInt();
                     final int classToken = buf.getInt();
                     buf.getInt(); // filterOffset
-                    handlers[i] = new ExceptionHandler(tryoffset, trylength, handleroffset, handlerlength, getType(CLITablePtr.fromToken(classToken), typeParameters, definingType.getTypeParameters(), definingType.getDefiningComponent()));
+                    handlers[i] = new ExceptionHandler(tryoffset, trylength, handleroffset, handlerlength, getType(CLITablePtr.fromToken(classToken), typeParameters, definingTypeParameters, definingType.getDefiningComponent()));
                 }
             }
             else {
@@ -139,13 +143,13 @@ public class MethodFactory {
                     final byte handlerlength = buf.getByte();
                     final int classToken = buf.getInt();
                     buf.getInt(); // filterOffset
-                    handlers[i] = new ExceptionHandler(tryoffset, trylength, handleroffset, handlerlength, getType(CLITablePtr.fromToken(classToken), typeParameters, definingType.getTypeParameters(), definingType.getDefiningComponent()));
+                    handlers[i] = new ExceptionHandler(tryoffset, trylength, handleroffset, handlerlength, getType(CLITablePtr.fromToken(classToken), typeParameters, definingTypeParameters, definingType.getDefiningComponent()));
                 }
             }
         }
 
         int explicitArgsStart = 0;
-        if (mSignature.hasThis() && !mSignature.hasExplicitThis())
+        if (mSignature.hasThis() && mSignature.hasExplicitThis())
         {
             explicitArgsStart = 1;
         }
@@ -153,10 +157,10 @@ public class MethodFactory {
         final int argsCount = mSignature.getParams().length + explicitArgsStart;
         final IParameter[] parameters = new IParameter[argsCount];
         for (int i = 0; i < argsCount; i++) {
-            parameters[i] = new Parameter(mSignature.getParams()[i].isByRef(), false, getType(mSignature.getParams()[i], typeParameters, definingType.getTypeParameters(), definingType.getDefiningComponent()));
+            parameters[i] = new Parameter(mSignature.getParams()[i].isByRef(), false, getType(mSignature.getParams()[i], typeParameters, definingTypeParameters, definingType.getDefiningComponent()));
         }
 
-        IParameter retType = new Parameter(mSignature.getRetType().isByRef(), false, getType(mSignature.getRetType(), typeParameters, definingType.getTypeParameters(), definingType.getDefiningComponent()));
+        IParameter retType = new Parameter(mSignature.getRetType().isByRef(), false, getType(mSignature.getRetType(), typeParameters, definingTypeParameters, definingType.getDefiningComponent()));
         final IParameter _this;
         if (mSignature.hasThis() && !mSignature.hasExplicitThis()) {
             //TODO: isVirtual and value type -> solve later
@@ -216,10 +220,10 @@ public class MethodFactory {
     private static IType[] getConstrains(CLIGenericParamTableRow row, IType[] mvars, IType[] vars, IComponent component) {
         List<IType> constrains = new ArrayList<IType>();
         for(CLIGenericParamConstraintTableRow r : component.getDefiningFile().getTableHeads().getGenericParamConstraintTableHead()) {
-            if (row.getTableId() == r.getOwner().getTableId()
-                    && row.getRowNo() == r.getOwner().getRowNo())
+            if (row.getTableId() == r.getOwnerTablePtr().getTableId()
+                    && row.getRowNo() == r.getOwnerTablePtr().getRowNo())
             {
-                constrains.add(getType(r.getConstraint(), mvars, vars, component));
+                constrains.add(getType(r.getConstraintTablePtr(), mvars, vars, component));
             }
         }
 
