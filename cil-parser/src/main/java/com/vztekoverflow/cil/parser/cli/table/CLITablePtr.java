@@ -51,8 +51,9 @@ public class CLITablePtr {
     /**
      * Translate a TypeDefOrRefOrSpecEncoded value (as specified in II.23.2.8 TypeDefOrRefOrSpecEncoded) to
      * a table pointer.
+     *
      * @param typeDefOrRefOrSpecEncoded source value
-     * @return a table pointer pointer equivalent to the specified TypeDefOrRefOrSpecEncoded value
+     * @return a table pointer equivalent to the specified TypeDefOrRefOrSpecEncoded value
      */
     public static CLITablePtr fromTypeDefOrRefOrSpecEncoded(int typeDefOrRefOrSpecEncoded)
     {

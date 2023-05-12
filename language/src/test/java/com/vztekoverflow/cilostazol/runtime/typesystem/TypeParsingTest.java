@@ -1,6 +1,5 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem;
 
-import com.oracle.truffle.api.nodes.RootNode;
 import com.vztekoverflow.cil.parser.cli.CLIFileUtils;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIMethodDefTableRow;
 import com.vztekoverflow.cilostazol.CILOSTAZOLLanguage;
@@ -21,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 /**
  * You have to first build C# projects in test resources:  {@value  _directory}.
@@ -173,6 +173,32 @@ public class TypeParsingTest extends TestCase {
 
 
         assertEquals(1, type.getTypeParameters().length);
+    }
+
+    public void testFindLocalType_Fields() throws Exception {
+        final String projectName = "FieldTest";
+        Source source = getSourceFromProject(projectName);
+
+        CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
+        CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
+        IAppDomain domain = new AppDomain(ctx);
+        IAssembly assembly = Assembly.parse(source);
+        domain.loadAssembly(assembly);
+        IType type = assembly.getLocalType(projectName, "Class");
+
+        //TODO: test field types
+        assertEquals(7, type.getFields().length);
+        assertTrue(Arrays.stream(type.getFields()).anyMatch(f -> f.getName().equals("fieldPrivate")));
+        assertTrue(Arrays.stream(type.getFields()).anyMatch(f -> f.getName().equals("fieldPublic")));
+        assertTrue(Arrays.stream(type.getFields()).anyMatch(f -> f.getName().equals("fieldInternal")));
+        assertTrue(Arrays.stream(type.getFields()).anyMatch(f -> f.getName().equals("fieldProtected")));
+        assertTrue(Arrays.stream(type.getFields()).anyMatch(f -> f.getName().equals("fieldSelf")));
+        assertTrue(Arrays.stream(type.getFields()).anyMatch(f -> f.getName().equals("fieldClass2")));
+        assertFalse(Arrays.stream(type.getFields()).filter(f -> f.getName().equals("fieldClass2")).findFirst().get().isStatic());
+        assertTrue(Arrays.stream(type.getFields()).anyMatch(f -> f.getName().equals("fieldStatic")));
+        assertTrue(Arrays.stream(type.getFields()).filter(f -> f.getName().equals("fieldStatic")).findFirst().get().isStatic());
+
+
     }
 
     private Source getSourceFromProject(String projectName) throws IOException {

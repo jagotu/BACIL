@@ -16,9 +16,9 @@ public interface IComponent {
 
     IType getLocalType(CLITablePtr typeIndex);
 
-    <T extends CLITableRow<T>> String getTypeName(CLITableRow<T> row);
+    <T extends CLITableRow<T>> String getNameFrom(CLITableRow<T> row);
 
-    <T extends CLITableRow<T>> String getTypeNamespace(CLITableRow<T> row);
+    <T extends CLITableRow<T>> String getNamespaceFrom(CLITableRow<T> row);
 
     CLITableHeads getTableHeads();
 

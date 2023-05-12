@@ -5,6 +5,9 @@ import com.vztekoverflow.cil.parser.cli.table.generated.*;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
+import com.vztekoverflow.cilostazol.runtime.typesystem.field.IField;
+import com.vztekoverflow.cilostazol.runtime.typesystem.field.factory.FieldFactory;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.TypeParameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.NonGenericType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.OpenGenericType;
@@ -16,13 +19,14 @@ public final class TypeFactory {
     //region ITypeFactory
     public static IType create(CLITypeDefTableRow typeDefRow, IComponent component) {
         //TODO: method type parameters and class type parameters
-        String name = component.getTypeName(typeDefRow);
-        String namespace = component.getTypeNamespace(typeDefRow);
+        String name = component.getNameFrom(typeDefRow);
+        String namespace = component.getNamespaceFrom(typeDefRow);
         IType directBaseClass = getDirectBaseClass(typeDefRow, component);
         IType[] interfaces = getInterfaces(name, namespace, component);
         IType[] genericParameters = FactoryUtils.getTypeParameters(typeDefRow, (CLIComponent)component);
+        IField[] fields = getFields(typeDefRow, component);
+//                component.getTableHeads().getFieldTableHead().skip(type.getFieldList());
 //        var methods = component.getTableHeads().getMethodDefTableHead().skip(type.getMethodList());
-//        var fieldRows = component.getTableHeads().getFieldTableHead().skip(type.getFieldList());
 
 
         if (genericParameters.length == 0) {
@@ -34,7 +38,7 @@ public final class TypeFactory {
                     interfaces,
                     null,
                     null,
-                    null,
+                    fields,
                     component);
         } else {
             return new OpenGenericType(
@@ -45,14 +49,26 @@ public final class TypeFactory {
                     interfaces,
                     null,
                     null,
-                    null,
+                    fields,
                     component,
                     genericParameters);
         }
     }
 
-    private static boolean pointToSameRow(CLITablePtr genParRowOwner, CLITablePtr constraintRowOwner) {
-        return genParRowOwner.getRowNo() == constraintRowOwner.getRowNo();
+    private static IField[] getFields(CLITypeDefTableRow typeDefRow, IComponent component) {
+        var fieldTablePtr = typeDefRow.getFieldListTablePtr();
+        var fieldListEndPtr = typeDefRow.skip(1).getFieldListTablePtr();
+
+        var fieldRow = component.getTableHeads().getFieldTableHead().skip(fieldTablePtr);
+
+        var fields = new ArrayList<IField>();
+        while (fieldRow.getRowNo() < fieldListEndPtr.getRowNo() && fieldRow.hasNext()) {
+            var field = FieldFactory.create(fieldRow, component);
+            fields.add(field);
+            fieldRow = fieldRow.next();
+        }
+
+        return fields.toArray(new IField[0]);
     }
 
     private static IType[] getInterfaces(String className, String classNamespace, IComponent component) {
@@ -71,8 +87,8 @@ public final class TypeFactory {
     private static boolean interfaceExtendsClass(CLIInterfaceImplTableRow interfaceRow, String extendingClassName, String extendingClassNamespace, IComponent component) {
         var potentialExtendingClassRow = component.getTableHeads().getTypeDefTableHead().skip(interfaceRow.getKlassTablePtr());
         //we can not create the whole klass because of circular dependency, we only need the name and namespace
-        var potentialClassName = component.getTypeName(potentialExtendingClassRow);
-        var potentialClassNamespace = component.getTypeNamespace(potentialExtendingClassRow);
+        var potentialClassName = component.getNameFrom(potentialExtendingClassRow);
+        var potentialClassNamespace = component.getNamespaceFrom(potentialExtendingClassRow);
 
         return extendingClassName.equals(potentialClassName) && extendingClassNamespace.equals(potentialClassNamespace);
     }
@@ -88,12 +104,12 @@ public final class TypeFactory {
     }
 
     private static IType getDirectBaseClass(CLITypeDefTableRow typeDefRow, IComponent component) {
-        var extendsTable = typeDefRow.getExtendsTablePtr();
-        if (extendsTable.isEmpty()) return null;
+        CLITablePtr tablePtr = typeDefRow.getExtendsTablePtr();
+        if (tablePtr.isEmpty()) return null;
 
         IType baseClass;
-        switch (extendsTable.getTableId()) {
-            case CLITableConstants.CLI_TABLE_TYPE_DEF -> baseClass = component.getLocalType(extendsTable);
+        switch (tablePtr.getTableId()) {
+            case CLITableConstants.CLI_TABLE_TYPE_DEF -> baseClass = component.getLocalType(tablePtr);
             case CLITableConstants.CLI_TABLE_TYPE_REF -> baseClass = null; //TODO: implement case for ref table
             case CLITableConstants.CLI_TABLE_TYPE_SPEC -> baseClass = null; //TODO: implement case for spec table
             default -> throw new NotImplementedException();

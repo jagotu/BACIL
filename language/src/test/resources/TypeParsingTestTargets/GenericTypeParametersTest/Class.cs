@@ -2,4 +2,4 @@
 
 public class Class<T>
 {
-}
+} 

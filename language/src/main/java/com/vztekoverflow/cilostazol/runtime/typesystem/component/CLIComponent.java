@@ -32,10 +32,18 @@ public class CLIComponent implements IComponent {
 
     @Override
     public IType getLocalType(String namespace, String name) {
+        //print typeDefs
+        for (CLITypeDefTableRow row : _cliFile.getTableHeads().getTypeDefTableHead()) {
+            var rowName = getNameFrom(row);
+            var rowNamespace = getNamespaceFrom(row);
+            if (rowNamespace.equals(namespace) && rowName.equals(name))
+                return TypeFactory.create(row, this);
+        }
+
         //Check typeDefs
         for (CLITypeDefTableRow row : _cliFile.getTableHeads().getTypeDefTableHead()) {
-            var rowNamespace = row.getTypeNamespaceHeapPtr().read(_cliFile.getStringHeap());
-            var rowName = row.getTypeNameHeapPtr().read(_cliFile.getStringHeap());
+            var rowName = getNameFrom(row);
+            var rowNamespace = getNamespaceFrom(row);
             if (rowNamespace.equals(namespace) && rowName.equals(name))
                 return TypeFactory.create(row, this);
         }
@@ -61,10 +69,12 @@ public class CLIComponent implements IComponent {
     }
 
     @Override
-    public <T extends CLITableRow<T>> String getTypeName(CLITableRow<T> row) {
+    public <T extends CLITableRow<T>> String getNameFrom(CLITableRow<T> row) {
         return switch (row.getTableId()) {
             case CLITableConstants.CLI_TABLE_TYPE_DEF ->
                     ((CLITypeDefTableRow) row).getTypeNameHeapPtr().read(_cliFile.getStringHeap());
+            case CLITableConstants.CLI_TABLE_FIELD ->
+                    ((CLIFieldTableRow) row).getNameHeapPtr().read(_cliFile.getStringHeap());
             default -> {
                 CompilerDirectives.transferToInterpreterAndInvalidate();
                 throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.typesystem.unsupportedTable", row.getTableId()));
@@ -73,7 +83,7 @@ public class CLIComponent implements IComponent {
     }
 
     @Override
-    public <T extends CLITableRow<T>> String getTypeNamespace(CLITableRow<T> row) {
+    public <T extends CLITableRow<T>> String getNamespaceFrom(CLITableRow<T> row) {
         return switch (row.getTableId()) {
             case CLITableConstants.CLI_TABLE_TYPE_DEF ->
                     ((CLITypeDefTableRow) row).getTypeNamespaceHeapPtr().read(_cliFile.getStringHeap());
