@@ -8,14 +8,19 @@ import com.vztekoverflow.cil.parser.cli.signature.MethodDefSig;
 import com.vztekoverflow.cil.parser.cli.signature.ParamSig;
 import com.vztekoverflow.cil.parser.cli.signature.SignatureReader;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
-import com.vztekoverflow.cil.parser.cli.table.generated.*;
+import com.vztekoverflow.cil.parser.cli.table.generated.CLIMethodDefTableRow;
+import com.vztekoverflow.cil.parser.cli.table.generated.CLIMethodImplTableRow;
+import com.vztekoverflow.cil.parser.cli.table.generated.CLIMethodSemanticsTableRow;
+import com.vztekoverflow.cil.parser.cli.table.generated.CLIMethodSpecTableRow;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ITypeParameter;
-import com.vztekoverflow.cilostazol.runtime.typesystem.method.*;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.NonGenericMethod;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.OpenGenericMethod;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.exceptionhandler.ExceptionHandler;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.exceptionhandler.ExceptionHandlerType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.exceptionhandler.IExceptionHandler;
@@ -23,10 +28,9 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.method.parameter.IParamet
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.parameter.Parameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.NonGenericType;
-import com.vztekoverflow.cilostazol.runtime.typesystem.type.factory.FactoryUtils;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.factory.TypeFactory;
 
-public class MethodFactory {
+public final class MethodFactory {
     //region Constants
     private static final byte CORILMETHOD_TINYFORMAT = 2;
     private static final byte CORILMETHOD_FATFORMAT = 3;
@@ -160,7 +164,7 @@ public class MethodFactory {
             locals[i] = new Parameter(
                     signatures.getVars()[i].isByRef(),
                     signatures.getVars()[i].isPinned(),
-                    FactoryUtils.create(signatures.getVars()[i].getTypeSig(), mvars, vars, component)
+                    TypeFactory.create(signatures.getVars()[i].getTypeSig(), mvars, vars, component)
             );
         }
         return locals;
@@ -211,7 +215,7 @@ public class MethodFactory {
             }
             final ExceptionHandlerType type = getExceptionType(flags);
             final IType klass = (type == ExceptionHandlerType.TypeBased)
-                    ? FactoryUtils.createType(CLITablePtr.fromToken(classTokenOrFilterOffset), mvars, vars, component)
+                    ? TypeFactory.create(CLITablePtr.fromToken(classTokenOrFilterOffset), mvars, vars, component)
                     : null;
             handlers[i] = new ExceptionHandler(tryoffset, trylength, handleroffset, handlerlength, klass, type );
         }
@@ -244,7 +248,7 @@ public class MethodFactory {
         else if (signature.isTypedByRef())
             return TypeFactory.createTypedRef(component);
         else
-            return FactoryUtils.create(signature.getTypeSig(), mvars, vars, component);
+            return TypeFactory.create(signature.getTypeSig(), mvars, vars, component);
     }
     //endregion
 }

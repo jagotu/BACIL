@@ -1,120 +1,64 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.type.factory;
 
+import com.vztekoverflow.cil.parser.cli.signature.TypeSig;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
-import com.vztekoverflow.cil.parser.cli.table.generated.*;
-import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
+import com.vztekoverflow.cil.parser.cli.table.generated.CLITableConstants;
+import com.vztekoverflow.cil.parser.cli.table.generated.CLITypeDefTableRow;
+import com.vztekoverflow.cil.parser.cli.table.generated.CLITypeRefTableRow;
+import com.vztekoverflow.cil.parser.cli.table.generated.CLITypeSpecTableRow;
+import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
+import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
-import com.vztekoverflow.cilostazol.runtime.typesystem.field.IField;
-import com.vztekoverflow.cilostazol.runtime.typesystem.field.factory.FieldFactory;
-import com.vztekoverflow.cilostazol.runtime.typesystem.method.TypeParameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.NonGenericType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.OpenGenericType;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public final class TypeFactory {
-    //region ITypeFactory
+    public static IType create(CLITablePtr ptr, IType[] mvars, IType[] vars, IComponent component) {
+        return switch (ptr.getTableId()) {
+            case CLITableConstants.CLI_TABLE_TYPE_DEF ->
+                    TypeFactory.create(component.getDefiningFile().getTableHeads().getTypeDefTableHead().skip(ptr), component);
+            case CLITableConstants.CLI_TABLE_TYPE_REF ->
+                    TypeFactory.create(component.getDefiningFile().getTableHeads().getTypeRefTableHead().skip(ptr), component);
+            case CLITableConstants.CLI_TABLE_TYPE_SPEC ->
+                    TypeFactory.create(component.getDefiningFile().getTableHeads().getTypeSpecTableHead().skip(ptr), mvars, vars, component);
+            default ->
+                    throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.constructor.withoutDefType"));
+        };
+    }
+
     public static IType create(CLITypeDefTableRow typeDefRow, IComponent component) {
         //TODO: method type parameters and class type parameters
         String name = component.getNameFrom(typeDefRow);
         String namespace = component.getNamespaceFrom(typeDefRow);
-        IType directBaseClass = getDirectBaseClass(typeDefRow, component);
-        IType[] interfaces = getInterfaces(name, namespace, component);
-        IType[] genericParameters = FactoryUtils.getTypeParameters(typeDefRow, (CLIComponent)component);
-        IField[] fields = getFields(typeDefRow, component);
+        IType directBaseClass = FactoryUtils.getDirectBaseClass(typeDefRow, component);
+        IType[] interfaces = FactoryUtils.getInterfaces(name, namespace, component);
+        IType[] genericParameters = FactoryUtils.getTypeParameters(typeDefRow, (CLIComponent) component);
 //                component.getTableHeads().getFieldTableHead().skip(type.getFieldList());
 //        var methods = component.getTableHeads().getMethodDefTableHead().skip(type.getMethodList());
 
 
         if (genericParameters.length == 0) {
-            return new NonGenericType(
+            return new NonGenericType<>(
+                    typeDefRow,
                     component.getDefiningFile(),
                     name,
                     namespace,
                     directBaseClass,
                     interfaces,
-                    null,
-                    null,
-                    fields,
                     component);
         } else {
-            return new OpenGenericType(
+            return new OpenGenericType<>(
+                    typeDefRow,
                     component.getDefiningFile(),
                     name,
                     namespace,
                     directBaseClass,
                     interfaces,
-                    null,
-                    null,
-                    fields,
                     component,
                     genericParameters);
         }
-    }
-
-    private static IField[] getFields(CLITypeDefTableRow typeDefRow, IComponent component) {
-        var fieldTablePtr = typeDefRow.getFieldListTablePtr();
-        var fieldListEndPtr = typeDefRow.skip(1).getFieldListTablePtr();
-
-        var fieldRow = component.getTableHeads().getFieldTableHead().skip(fieldTablePtr);
-
-        var fields = new ArrayList<IField>();
-        while (fieldRow.getRowNo() < fieldListEndPtr.getRowNo() && fieldRow.hasNext()) {
-            var field = FieldFactory.create(fieldRow, component);
-            fields.add(field);
-            fieldRow = fieldRow.next();
-        }
-
-        return fields.toArray(new IField[0]);
-    }
-
-    private static IType[] getInterfaces(String className, String classNamespace, IComponent component) {
-        List<IType> interfaces = new ArrayList<>();
-        //TODO: implement case for ref and spec table
-        for (var interfaceRow : component.getTableHeads().getInterfaceImplTableHead()) {
-            if (interfaceExtendsClass(interfaceRow, className, classNamespace, component)) {
-                interfaces.add(getInterface(interfaceRow, component));
-            }
-        }
-
-        //TODO: filter out nulls -> can be removed when implemented case for ref and spec table
-        return interfaces.stream().filter(x -> x != null).toList().toArray(new IType[0]);
-    }
-
-    private static boolean interfaceExtendsClass(CLIInterfaceImplTableRow interfaceRow, String extendingClassName, String extendingClassNamespace, IComponent component) {
-        var potentialExtendingClassRow = component.getTableHeads().getTypeDefTableHead().skip(interfaceRow.getKlassTablePtr());
-        //we can not create the whole klass because of circular dependency, we only need the name and namespace
-        var potentialClassName = component.getNameFrom(potentialExtendingClassRow);
-        var potentialClassNamespace = component.getNamespaceFrom(potentialExtendingClassRow);
-
-        return extendingClassName.equals(potentialClassName) && extendingClassNamespace.equals(potentialClassNamespace);
-    }
-
-    private static IType getInterface(CLIInterfaceImplTableRow row, IComponent component) {
-        CLITablePtr tablePtr = row.getInterfaceTablePtr();
-        return switch (tablePtr.getTableId()) {
-            case CLITableConstants.CLI_TABLE_TYPE_DEF -> component.getLocalType(tablePtr);
-            case CLITableConstants.CLI_TABLE_TYPE_REF -> null; //TODO: implement case for ref table
-            case CLITableConstants.CLI_TABLE_TYPE_SPEC -> null; //TODO: implement case for spec table
-            default -> throw new NotImplementedException();
-        };
-    }
-
-    private static IType getDirectBaseClass(CLITypeDefTableRow typeDefRow, IComponent component) {
-        CLITablePtr tablePtr = typeDefRow.getExtendsTablePtr();
-        if (tablePtr.isEmpty()) return null;
-
-        IType baseClass;
-        switch (tablePtr.getTableId()) {
-            case CLITableConstants.CLI_TABLE_TYPE_DEF -> baseClass = component.getLocalType(tablePtr);
-            case CLITableConstants.CLI_TABLE_TYPE_REF -> baseClass = null; //TODO: implement case for ref table
-            case CLITableConstants.CLI_TABLE_TYPE_SPEC -> baseClass = null; //TODO: implement case for spec table
-            default -> throw new NotImplementedException();
-        }
-        return baseClass;
     }
 
     public static IType create(CLITypeSpecTableRow type, IType[] methodTypeParameters, IType[] classTypeParameters, IComponent component) {
@@ -132,5 +76,8 @@ public final class TypeFactory {
     public static IType createTypedRef(IComponent component) {
         return null;
     }
-    //endregion
+
+    public static IType create(TypeSig tSig, IType[] mvars, IType[] vars, IComponent definingComponent) {
+        return null;
+    }
 }

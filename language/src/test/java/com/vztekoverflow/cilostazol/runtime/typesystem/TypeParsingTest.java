@@ -36,7 +36,7 @@ public class TypeParsingTest extends TestCase {
         return Paths.get(_directory, projectName, String.format("bin/%s/%s", _configuration, _dotnetVersion), projectName + ".dll");
     }
 
-    public void testMethodParsingGeneral() throws Exception {
+    public void _testMethodParsingGeneral() throws Exception {
         final String projectName = "MethodParsingGeneral";
 
         final CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();

@@ -7,7 +7,7 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.field.Field;
 import com.vztekoverflow.cilostazol.runtime.typesystem.field.IField;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
-import com.vztekoverflow.cilostazol.runtime.typesystem.type.factory.FactoryUtils;
+import com.vztekoverflow.cilostazol.runtime.typesystem.type.factory.TypeFactory;
 
 public final class FieldFactory {
     public static IField create(CLIFieldTableRow fieldRow, IComponent component) {
@@ -15,7 +15,7 @@ public final class FieldFactory {
         final var signature = fieldRow.getSignatureHeapPtr().read(component.getDefiningFile().getBlobHeap());
 
         final FieldSig fieldSig = FieldSig.parse(new SignatureReader(signature));
-        final IType type = FactoryUtils.create(fieldSig.getType(), null, null, component);
+        final IType type = TypeFactory.create(fieldSig.getType(), null, null, component);
         boolean isStatic = getStaticness(fieldRow.getFlags());
 
         return new Field(name, type, isStatic, component.getDefiningFile());

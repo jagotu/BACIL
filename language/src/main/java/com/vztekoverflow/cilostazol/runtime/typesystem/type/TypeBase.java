@@ -1,39 +1,47 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.type;
 
 import com.vztekoverflow.cil.parser.cli.CLIFile;
+import com.vztekoverflow.cil.parser.cli.table.CLITableRow;
+import com.vztekoverflow.cil.parser.cli.table.generated.CLITableConstants;
+import com.vztekoverflow.cil.parser.cli.table.generated.CLITypeDefTableRow;
+import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.field.IField;
+import com.vztekoverflow.cilostazol.runtime.typesystem.field.factory.FieldFactory;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
 
-public abstract class TypeBase implements IType {
+import java.util.ArrayList;
+
+public abstract class TypeBase<T extends CLITableRow<T>> implements IType {
     protected final CLIFile _definingFile;
     protected final String _name;
     protected final String _namespace;
     protected final IType _directBaseClass;
     protected final IType[] _interfaces;
-    protected final IMethod[] _methods;
-    protected final IMethod[] _vMethodTable;
-    protected final IField[] _fields;
+    protected IMethod[] _methods;
+    protected IMethod[] _vMethodTable;
+    protected IField[] _fields;
     protected final IComponent _definingComponent;
 
-    public TypeBase(CLIFile _definingFile,
+    protected final T _row;
+
+    public TypeBase(T row,
+                    CLIFile _definingFile,
                     String _name,
                     String _namespace,
                     IType _directBaseClass,
                     IType[] _interfaces,
-                    IMethod[] _methods,
-                    IMethod[] _vMethodTable,
-                    IField[] _fields,
                     IComponent _definingComponent) {
+        _row = row;
         this._definingFile = _definingFile;
         this._name = _name;
         this._namespace = _namespace;
         this._directBaseClass = _directBaseClass;
         this._interfaces = _interfaces;
-        this._methods = _methods;
-        this._vMethodTable = _vMethodTable;
-        this._fields = _fields;
         this._definingComponent = _definingComponent;
+        this._fields = null;
+        this._methods = null;
+        this._vMethodTable = null;
     }
 
     //region IType
@@ -64,17 +72,51 @@ public abstract class TypeBase implements IType {
 
     @Override
     public IMethod[] getMethods() {
+        if (_methods == null) {
+            //TODO: create on demand
+            _methods = new IMethod[0];
+        }
+
         return _methods;
     }
 
     @Override
     public IMethod[] getVTable() {
+        if (_vMethodTable == null) {
+            //TODO: create on demand
+            _vMethodTable = new IMethod[0];
+        }
+
         return _vMethodTable;
     }
 
     @Override
     public IField[] getFields() {
+        if (_fields == null) {
+            _fields = switch (_row.getTableId()) {
+                case CLITableConstants.CLI_TABLE_TYPE_DEF -> createFields((CLITypeDefTableRow) _row);
+                case CLITableConstants.CLI_TABLE_TYPE_REF -> null; //TODO: implement case for ref table
+                case CLITableConstants.CLI_TABLE_TYPE_SPEC -> null; //TODO: implement case for spec table
+                default -> throw new NotImplementedException();
+            };
+        }
         return _fields;
+    }
+
+    private IField[] createFields(CLITypeDefTableRow row) {
+        var fieldTablePtr = row.getFieldListTablePtr();
+        var fieldListEndPtr = row.skip(1).getFieldListTablePtr();
+
+        var fieldRow = _definingComponent.getTableHeads().getFieldTableHead().skip(fieldTablePtr);
+
+        var fields = new ArrayList<IField>();
+        while (fieldRow.getRowNo() < fieldListEndPtr.getRowNo() && fieldRow.hasNext()) {
+            var field = FieldFactory.create(fieldRow, _definingComponent);
+            fields.add(field);
+            fieldRow = fieldRow.next();
+        }
+
+        return fields.toArray(new IField[0]);
     }
 
     @Override

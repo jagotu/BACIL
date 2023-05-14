@@ -36,8 +36,7 @@ public class CLIComponent implements IComponent {
         for (CLITypeDefTableRow row : _cliFile.getTableHeads().getTypeDefTableHead()) {
             var rowName = getNameFrom(row);
             var rowNamespace = getNamespaceFrom(row);
-            if (rowNamespace.equals(namespace) && rowName.equals(name))
-                return TypeFactory.create(row, this);
+            System.out.println(rowNamespace + "::" + rowName);
         }
 
         //Check typeDefs
