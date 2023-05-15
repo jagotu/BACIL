@@ -15,8 +15,9 @@ public class OpenGenericType<T extends CLITableRow<T>> extends TypeBase<T> {
                            IType _directBaseClass,
                            IType[] _interfaces,
                            IComponent _definingComponent,
-                           IType[] _typeParameters) {
-        super(row, _definingFile, _name, _namespace, _directBaseClass, _interfaces, _definingComponent);
+                           IType[] _typeParameters,
+                           int flags) {
+        super(row, _definingFile, _name, _namespace, _directBaseClass, _interfaces, _definingComponent, flags);
         this._typeParameters = _typeParameters;
     }
 

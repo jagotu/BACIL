@@ -9,8 +9,15 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
 
 public class NonGenericType<T extends CLITableRow<T>> extends TypeBase<T> {
 
-    public NonGenericType(T row, CLIFile _definingFile, String _name, String _namespace, IType _directBaseClass, IType[] _interfaces, IComponent _definingComponent) {
-        super(row, _definingFile, _name, _namespace, _directBaseClass, _interfaces, _definingComponent);
+    public NonGenericType(T row,
+                          CLIFile _definingFile,
+                          String _name,
+                          String _namespace,
+                          IType _directBaseClass,
+                          IType[] _interfaces,
+                          IComponent _definingComponent,
+                          int flags) {
+        super(row, _definingFile, _name, _namespace, _directBaseClass, _interfaces, _definingComponent, flags);
     }
 
     //region TypeBase

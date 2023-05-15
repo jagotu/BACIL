@@ -7,6 +7,7 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.IAppDomain;
 import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.Assembly;
 import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.IAssembly;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
+import com.vztekoverflow.cilostazol.runtime.typesystem.type.TypeBase;
 import org.graalvm.polyglot.Source;
 
 import java.nio.file.Files;
@@ -90,11 +91,17 @@ public class TypeParsingTest extends TestBase {
 
         assertEquals(2, type.getInterfaces().length);
 
-        assertEquals("IClass", type.getInterfaces()[0].getName());
-        assertEquals("InterfacesTest", type.getInterfaces()[0].getNamespace());
+        var interface1 = (TypeBase) type.getInterfaces()[0];
+        assertEquals("IClass", interface1.getName());
+        assertEquals("InterfacesTest", interface1.getNamespace());
+        assertTrue(interface1.isInterface());
+        assertFalse(interface1.isClass());
 
-        assertEquals("IClass2", type.getInterfaces()[1].getName());
-        assertEquals("InterfacesTest", type.getInterfaces()[1].getNamespace());
+        var interface2 = (TypeBase) type.getInterfaces()[1];
+        assertEquals("IClass2", interface2.getName());
+        assertEquals("InterfacesTest", interface2.getNamespace());
+        assertTrue(interface2.isInterface());
+        assertFalse(interface2.isClass());
     }
 
     public void testFindLocalType_GenericTypeParams() throws Exception {

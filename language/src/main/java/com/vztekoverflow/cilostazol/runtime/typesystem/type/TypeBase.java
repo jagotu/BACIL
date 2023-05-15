@@ -15,6 +15,18 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.method.factory.MethodFact
 import java.util.ArrayList;
 
 public abstract class TypeBase<T extends CLITableRow<T>> implements IType {
+
+    private final static int ABSTRACT_FLAG_MASK = 0x80;
+    private final static int SEALED_FLAG_MASK = 0x100;
+    private final static int SPECIAL_NAME_FLAG_MASK = 0x400;
+    private final static int IMPORT_FLAG_MASK = 0x1000;
+    private final static int SERIALIZABLE_FLAG_MASK = 0x2000;
+    private final static int BEFORE_FIELD_INIT_FLAG_MASK = 0x100000;
+    private final static int RT_SPECIAL_NAME_FLAG_MASK = 0x800;
+    private final static int HAS_SECURITY_FLAG_MASK = 0x40000;
+    private final static int IS_TYPE_FORWARDER_FLAG_MASK = 0x200000;
+
+    protected final int _flags;
     protected final CLIFile _definingFile;
     protected final String _name;
     protected final String _namespace;
@@ -33,7 +45,8 @@ public abstract class TypeBase<T extends CLITableRow<T>> implements IType {
                     String _namespace,
                     IType _directBaseClass,
                     IType[] _interfaces,
-                    IComponent _definingComponent) {
+                    IComponent _definingComponent,
+                    int flags) {
         _row = row;
         this._definingFile = _definingFile;
         this._name = _name;
@@ -41,12 +54,12 @@ public abstract class TypeBase<T extends CLITableRow<T>> implements IType {
         this._directBaseClass = _directBaseClass;
         this._interfaces = _interfaces;
         this._definingComponent = _definingComponent;
+        this._flags = flags;
         this._fields = null;
         this._methods = null;
         this._vMethodTable = null;
     }
 
-    //region IType
     @Override
     public String getName() {
         return _name;
@@ -115,6 +128,72 @@ public abstract class TypeBase<T extends CLITableRow<T>> implements IType {
         return _fields;
     }
 
+    @Override
+    public IComponent getDefiningComponent() {
+        return _definingComponent;
+    }
+
+    @Override
+    public IType getDefinition() {
+        return this;
+    }
+
+    public TypeVisibility getVisibility() {
+        return TypeVisibility.fromFlags(_flags & TypeVisibility.MASK);
+    }
+
+    public TypeLayout getLayout() {
+        return TypeLayout.fromFlags(_flags & TypeLayout.MASK);
+    }
+
+    public TypeSemantics getSemantics() {
+        return TypeSemantics.fromFlags(_flags & TypeSemantics.MASK);
+    }
+
+    public boolean isClass() {
+        return !isInterface();
+    }
+
+    public boolean isInterface() {
+        return getSemantics() == TypeSemantics.Interface;
+    }
+
+    public boolean isAbstract() {
+        return (_flags & ABSTRACT_FLAG_MASK) != 0;
+    }
+
+    public boolean isSealed() {
+        return (_flags & SEALED_FLAG_MASK) != 0;
+    }
+
+    public boolean isSpecialName() {
+        return (_flags & SPECIAL_NAME_FLAG_MASK) != 0;
+    }
+
+    public boolean isImport() {
+        return (_flags & IMPORT_FLAG_MASK) != 0;
+    }
+
+    public boolean isSerializable() {
+        return (_flags & SERIALIZABLE_FLAG_MASK) != 0;
+    }
+
+    public boolean isBeforeFieldInit() {
+        return (_flags & BEFORE_FIELD_INIT_FLAG_MASK) != 0;
+    }
+
+    public boolean isRTSpecialName() {
+        return (_flags & RT_SPECIAL_NAME_FLAG_MASK) != 0;
+    }
+
+    public boolean hasSecurity() {
+        return (_flags & HAS_SECURITY_FLAG_MASK) != 0;
+    }
+
+    public boolean isTypeForwarder() {
+        return (_flags & IS_TYPE_FORWARDER_FLAG_MASK) != 0;
+    }
+
     private IField[] createFields(CLITypeDefTableRow row) {
         var fieldTablePtr = row.getFieldListTablePtr();
         var fieldListEndPtr = row.skip(1).getFieldListTablePtr();
@@ -148,14 +227,4 @@ public abstract class TypeBase<T extends CLITableRow<T>> implements IType {
         return methods.toArray(new IMethod[0]);
     }
 
-    @Override
-    public IComponent getDefiningComponent() {
-        return _definingComponent;
-    }
-
-    @Override
-    public IType getDefinition() {
-        return this;
-    }
-    //endregion
 }

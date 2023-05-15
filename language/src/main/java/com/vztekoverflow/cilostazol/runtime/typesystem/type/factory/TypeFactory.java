@@ -34,7 +34,7 @@ public final class TypeFactory {
         IType directBaseClass = FactoryUtils.getDirectBaseClass(typeDefRow, component);
         IType[] interfaces = FactoryUtils.getInterfaces(name, namespace, component);
         IType[] genericParameters = FactoryUtils.getTypeParameters(typeDefRow, (CLIComponent) component);
-
+        int flags = typeDefRow.getFlags();
         if (genericParameters.length == 0) {
             return new NonGenericType<>(
                     typeDefRow,
@@ -43,7 +43,8 @@ public final class TypeFactory {
                     namespace,
                     directBaseClass,
                     interfaces,
-                    component);
+                    component,
+                    flags);
         } else {
             return new OpenGenericType<>(
                     typeDefRow,
@@ -53,7 +54,8 @@ public final class TypeFactory {
                     directBaseClass,
                     interfaces,
                     component,
-                    genericParameters);
+                    genericParameters,
+                    flags);
         }
     }
 
