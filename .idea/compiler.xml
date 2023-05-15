@@ -17,7 +17,7 @@
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="cil-parser" options="" />
-      <module name="language" options="" />
+      <module name="language" options="--add-exports org.graalvm.truffle/com.oracle.truffle.api=ALL-UNNAMED" />
       <module name="launcher" options="" />
       <module name="tests" options="" />
     </option>

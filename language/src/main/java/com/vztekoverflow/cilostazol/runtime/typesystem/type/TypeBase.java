@@ -4,11 +4,13 @@ import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cil.parser.cli.table.CLITableRow;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITableConstants;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITypeDefTableRow;
-import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
+import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
+import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.field.IField;
 import com.vztekoverflow.cilostazol.runtime.typesystem.field.factory.FieldFactory;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.factory.MethodFactory;
 
 import java.util.ArrayList;
 
@@ -74,7 +76,12 @@ public abstract class TypeBase<T extends CLITableRow<T>> implements IType {
     public IMethod[] getMethods() {
         if (_methods == null) {
             //TODO: create on demand
-            _methods = new IMethod[0];
+            _methods = switch (_row.getTableId()) {
+                case CLITableConstants.CLI_TABLE_TYPE_DEF -> createMethods((CLITypeDefTableRow) _row);
+                case CLITableConstants.CLI_TABLE_TYPE_REF -> null; //TODO: implement case for ref table
+                case CLITableConstants.CLI_TABLE_TYPE_SPEC -> null; //TODO: implement case for spec table
+                default -> throw new TypeSystemException(CILOSTAZOLBundle.message("typeSystem.unknownTableType"));
+            };
         }
 
         return _methods;
@@ -84,7 +91,12 @@ public abstract class TypeBase<T extends CLITableRow<T>> implements IType {
     public IMethod[] getVTable() {
         if (_vMethodTable == null) {
             //TODO: create on demand
-            _vMethodTable = new IMethod[0];
+            _vMethodTable = switch (_row.getTableId()) {
+                case CLITableConstants.CLI_TABLE_TYPE_DEF -> null; //TODO: implement case for def table
+                case CLITableConstants.CLI_TABLE_TYPE_REF -> null; //TODO: implement case for ref table
+                case CLITableConstants.CLI_TABLE_TYPE_SPEC -> null; //TODO: implement case for spec table
+                default -> throw new TypeSystemException(CILOSTAZOLBundle.message("typeSystem.unknownTableType"));
+            };
         }
 
         return _vMethodTable;
@@ -97,7 +109,7 @@ public abstract class TypeBase<T extends CLITableRow<T>> implements IType {
                 case CLITableConstants.CLI_TABLE_TYPE_DEF -> createFields((CLITypeDefTableRow) _row);
                 case CLITableConstants.CLI_TABLE_TYPE_REF -> null; //TODO: implement case for ref table
                 case CLITableConstants.CLI_TABLE_TYPE_SPEC -> null; //TODO: implement case for spec table
-                default -> throw new NotImplementedException();
+                default -> throw new TypeSystemException(CILOSTAZOLBundle.message("typeSystem.unknownTableType"));
             };
         }
         return _fields;
@@ -117,6 +129,23 @@ public abstract class TypeBase<T extends CLITableRow<T>> implements IType {
         }
 
         return fields.toArray(new IField[0]);
+    }
+
+
+    private IMethod[] createMethods(CLITypeDefTableRow row) {
+        var methodTablePtr = row.getMethodListTablePtr();
+        var methodListEndPtr = row.skip(1).getMethodListTablePtr();
+
+        var methodRow = _definingComponent.getTableHeads().getMethodDefTableHead().skip(methodTablePtr);
+
+        var methods = new ArrayList<IMethod>();
+        while (methodRow.getRowNo() < methodListEndPtr.getRowNo() && methodRow.hasNext()) {
+            var method = MethodFactory.create(methodRow, this);
+            methods.add(method);
+            methodRow = methodRow.next();
+        }
+
+        return methods.toArray(new IMethod[0]);
     }
 
     @Override

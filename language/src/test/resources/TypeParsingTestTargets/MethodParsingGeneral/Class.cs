@@ -1,9 +1,30 @@
 using System;
 
-namespace ComponentParsingGeneral;
+namespace MethodParsingGeneral;
 
 public interface AI {}
-public class A {}
+
+public class A
+{
+    private void fooPrivate(){}
+    public void fooPublic(){}
+    protected void fooProtected(){}
+    void fooDefault(){}
+    private void fooWithArg(string first){}
+    private void fooWithArgs(string first, int second){}
+
+    int fooWithReturnType()
+    {
+        return 42;
+    }
+    
+    A fooWithReturnTypeSelf()
+    {
+        return this;
+    }
+
+    int fooWithExpressionBody() => 42;
+}
 
 public class G<T> {}
 

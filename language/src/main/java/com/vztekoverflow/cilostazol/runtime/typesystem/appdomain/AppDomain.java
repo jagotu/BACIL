@@ -18,7 +18,7 @@ public class AppDomain implements IAppDomain {
     //region IAppDomain
     @Override
     public IAssembly[] getAssemblies() {
-        return (IAssembly[]) _assemblies.toArray();
+        return _assemblies.toArray(new IAssembly[0]);
     }
 
     @Override

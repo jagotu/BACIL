@@ -29,15 +29,11 @@ public final class TypeFactory {
     }
 
     public static IType create(CLITypeDefTableRow typeDefRow, IComponent component) {
-        //TODO: method type parameters and class type parameters
         String name = component.getNameFrom(typeDefRow);
         String namespace = component.getNamespaceFrom(typeDefRow);
         IType directBaseClass = FactoryUtils.getDirectBaseClass(typeDefRow, component);
         IType[] interfaces = FactoryUtils.getInterfaces(name, namespace, component);
         IType[] genericParameters = FactoryUtils.getTypeParameters(typeDefRow, (CLIComponent) component);
-//                component.getTableHeads().getFieldTableHead().skip(type.getFieldList());
-//        var methods = component.getTableHeads().getMethodDefTableHead().skip(type.getMethodList());
-
 
         if (genericParameters.length == 0) {
             return new NonGenericType<>(
