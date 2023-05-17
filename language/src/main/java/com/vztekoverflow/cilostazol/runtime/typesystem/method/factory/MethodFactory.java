@@ -3,15 +3,9 @@ package com.vztekoverflow.cilostazol.runtime.typesystem.method.factory;
 import com.vztekoverflow.cil.parser.ByteSequenceBuffer;
 import com.vztekoverflow.cil.parser.CILParserException;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
-import com.vztekoverflow.cil.parser.cli.signature.LocalVarsSig;
-import com.vztekoverflow.cil.parser.cli.signature.MethodDefSig;
-import com.vztekoverflow.cil.parser.cli.signature.ParamSig;
-import com.vztekoverflow.cil.parser.cli.signature.SignatureReader;
+import com.vztekoverflow.cil.parser.cli.signature.*;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
-import com.vztekoverflow.cil.parser.cli.table.generated.CLIMethodDefTableRow;
-import com.vztekoverflow.cil.parser.cli.table.generated.CLIMethodImplTableRow;
-import com.vztekoverflow.cil.parser.cli.table.generated.CLIMethodSemanticsTableRow;
-import com.vztekoverflow.cil.parser.cli.table.generated.CLIMethodSpecTableRow;
+import com.vztekoverflow.cil.parser.cli.table.generated.*;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
@@ -21,91 +15,86 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ITypeParameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.NonGenericMethod;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.OpenGenericMethod;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.exceptionhandler.ExceptionClauseFlags;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.exceptionhandler.ExceptionHandler;
-import com.vztekoverflow.cilostazol.runtime.typesystem.method.exceptionhandler.ExceptionHandlerType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.exceptionhandler.IExceptionHandler;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.flags.MethodFlags;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.flags.MethodHeaderFlags;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.flags.MethodImplFlags;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.flags.MethodSectionFlags;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.local.ILocal;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.local.Local;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.parameter.IParameter;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.parameter.ParamFlags;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.parameter.Parameter;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.returnType.IReturnType;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.returnType.ReturnType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.NonGenericType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.factory.TypeFactory;
 
-public final class MethodFactory {
-    //region Constants
-    private static final byte CORILMETHOD_TINYFORMAT = 2;
-    private static final byte CORILMETHOD_FATFORMAT = 3;
-    private static final byte CORILMETHOD_INITLOCALS = 0x10;
-    private static final byte CORILMETHOD_MORESECTS = 0x8;
-    private static final int METHODATTRIBUTE_VIRTUAL = 0x0040;
-    private static final byte CORILMETHOD_SECT_EHTABLE = 0x1;
-    private static final byte CORILMETHOD_SECT_OPTILTABLE = 0x2;
-    private static final byte CORILMETHOD_SECT_FATFORMAT = 0x40;
-    private static final int CORILMETHOD_SECT_MORESECTS = 0x80;
-    private static final int COR_ILEXCEPTION_CLAUSE_EXCEPTION = 0x0;
-    private static final int COR_ILEXCEPTION_CLAUSE_FILTER = 0x1;
-    private static final int COR_ILEXCEPTION_CLAUSE_FINALLY = 0x2;
-    private static final int COR_ILEXCEPTION_CLAUSE_FAULT = 0x4;
-    //endregion
+import javax.swing.*;
 
+public final class MethodFactory {
     public static IMethod create(CLIMethodDefTableRow mDef, IType definingType) {
         final IType[] definingTypeParameters = (definingType instanceof NonGenericType) ? new IType[0] : definingType.getTypeParameters();
         final CLIFile file = definingType.getDefiningFile();
         final MethodDefSig mSignature = MethodDefSig.parse(new SignatureReader(mDef.getSignatureHeapPtr().read(file.getBlobHeap())), file);
         final String name = mDef.getNameHeapPtr().read(file.getStringHeap());
-        final boolean isVirtual = (mDef.getFlags() & METHODATTRIBUTE_VIRTUAL) == METHODATTRIBUTE_VIRTUAL;
+
+        // Type parameters parsing
         final ITypeParameter[] typeParameters = FactoryUtils.getTypeParameters(mSignature.getGenParamCount(), mDef.getPtr(), definingTypeParameters, (CLIComponent)definingType.getDefiningComponent());
 
-        final int size;
-        final short maxStackSize;
-        final IParameter[] locals;
-        final boolean initLocals;
-        final int ilFlags;
-
         final ByteSequenceBuffer buf = file.getBuffer(mDef.getRVA());
-        final byte firstByte = buf.getByte();
 
-        if((firstByte & 3) == CORILMETHOD_TINYFORMAT) {
-            ilFlags = CORILMETHOD_TINYFORMAT;
+        //Method header parsing
+        final int codeSize;
+        final short maxStackSize;
+        final ILocal[] locals;
+        final int ilFlags;
+        final MethodHeaderFlags methodHeaderFlags;
+        final int headerSize;
+
+        final byte firstByte = buf.getByte();
+        final MethodHeaderFlags pom = new MethodHeaderFlags(firstByte);
+        if (pom.hasFlag(MethodHeaderFlags.Flag.CORILMETHOD_TINYFORMAT))
+        {
             maxStackSize = 8;
-            locals = null;
-            initLocals = false;
-            size = (firstByte >> 2) & 0xFF;
+            locals = new ILocal[0];
+            methodHeaderFlags = new MethodHeaderFlags(MethodHeaderFlags.Flag.CORILMETHOD_TINYFORMAT.code);
+            headerSize = 1;
+            codeSize = (firstByte >> 2) & 0xFF;
         }
-        else if((firstByte & 3) == CORILMETHOD_FATFORMAT) {
+        else if (pom.hasFlag(MethodHeaderFlags.Flag.CORILMETHOD_FATFORMAT))
+        {
             final short firstWord = (short)(firstByte | (buf.getByte() << 8));
-            ilFlags = firstWord & 0xFFF;
-            final byte headerSize = (byte)(firstWord >> 12);
+            methodHeaderFlags = new MethodHeaderFlags(firstWord & 0xFFF);
+            headerSize = (firstWord >> 12);
+            maxStackSize= buf.getShort();
+            codeSize = buf.getInt();
+            // Locals parsing
+            locals = createLocals(
+                    LocalVarsSig.read(new SignatureReader(file.getTableHeads().getStandAloneSigTableHead().skip(CLITablePtr.fromToken(buf.getInt())).getSignatureHeapPtr().read(file.getBlobHeap())),file),
+                    typeParameters,
+                    definingTypeParameters,
+                    definingType.getDefiningComponent());
             if(headerSize != 3)
             {
                 throw new CILParserException(CILOSTAZOLBundle.message("cilostazol.exception.parser.fatHeader.size"));
             }
-
-            maxStackSize = buf.getShort();
-            size = buf.getInt();
-            final int localVarSigTok = buf.getInt();
-
-            locals = (localVarSigTok == 0)
-                    ? new IParameter[0]
-                    : createLocals(
-                        LocalVarsSig.read(new SignatureReader(file.getTableHeads().getStandAloneSigTableHead().skip(CLITablePtr.fromToken(localVarSigTok)).getSignatureHeapPtr().read(file.getBlobHeap())),file),
-                        typeParameters,
-                        definingTypeParameters,
-                        definingType.getDefiningComponent()
-                        );
-
-            initLocals = (ilFlags & CORILMETHOD_INITLOCALS) != 0;
         }
         else
         {
             throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.parser.method.general"));
         }
 
-        final byte[] body = buf.subSequence(size).toByteArray();
+        final byte[] _cil = buf.subSequence(codeSize).toByteArray();
 
+        //Exception handlers parsing
         final IExceptionHandler[] handlers;
-        if((firstByte & 3) == CORILMETHOD_FATFORMAT && (ilFlags & CORILMETHOD_MORESECTS) != 0)
+        if (methodHeaderFlags.hasFlag(MethodHeaderFlags.Flag.CORILMETHOD_FATFORMAT) && methodHeaderFlags.hasFlag(MethodHeaderFlags.Flag.CORILMETHOD_MORESECTS))
         {
-            buf.setPosition(buf.getPosition() + size);
+            buf.setPosition(buf.getPosition() + codeSize);
             buf.align(4);
 
             handlers = createHandlers(buf, typeParameters, definingTypeParameters, definingType.getDefiningComponent());
@@ -115,31 +104,47 @@ public final class MethodFactory {
             handlers = new IExceptionHandler[0];
         }
 
-        int explicitArgsStart = 0;
-        if (mSignature.hasThis() && mSignature.hasExplicitThis())
-        {
-            explicitArgsStart = 1;
-        }
+        //Return type parsing
+        CLIParamTableRow paramRow = file.getTableHeads().getParamTableHead().skip(mDef.getParamListTablePtr());
+        IReturnType retType = new ReturnType(mSignature.getRetType().isByRef(), TypeFactory.create(mSignature.getRetType().getTypeSig(), typeParameters, definingTypeParameters, definingType.getDefiningComponent()), new ParamFlags(paramRow.getFlags()));
+        paramRow = paramRow.next();
 
-        final IParameter[] parameters = createParameters(mSignature.getParams(), typeParameters, definingTypeParameters, definingType.getDefiningComponent());
+        //Parameters parsing
+        final IParameter[] parameters = createParameters(mSignature.getParams(), paramRow, typeParameters, definingTypeParameters, definingType.getDefiningComponent(), file);
 
-        IParameter retType = new Parameter(mSignature.getRetType().isByRef(), false, createType(mSignature.getRetType(), typeParameters, definingTypeParameters, definingType.getDefiningComponent()));
-
-        final IParameter _this;
-        if (mSignature.hasThis() && !mSignature.hasExplicitThis()) {
-            //TODO: isVirtual and value type -> solve later
-            _this = new Parameter(false, false, definingType);
-        }
-        else {
-            _this = null;
-        }
-
-        //TODO: Parse flags
-
-        if (typeParameters.length > 0)
-            return new OpenGenericMethod(file, name, mSignature.hasThis(), mSignature.hasExplicitThis(), mSignature.hasVararg(), isVirtual, parameters, locals, typeParameters, retType, _this, handlers, definingType.getDefiningComponent(), definingType, body, maxStackSize);
+        if (mSignature.getMethodDefFlags().hasFlag(MethodDefFlags.Flag.GENERIC))
+            return new OpenGenericMethod(
+                    file,
+                    name,
+                    definingType.getDefiningComponent(),
+                    definingType,
+                    mSignature.getMethodDefFlags(),
+                    new MethodFlags(mDef.getFlags()),
+                    new MethodImplFlags(mDef.getImplFlags()),
+                    methodHeaderFlags,
+                    parameters,
+                    locals,
+                    retType,
+                    handlers,
+                    _cil,
+                    maxStackSize,
+                    typeParameters);
         else
-            return new NonGenericMethod(file, name, mSignature.hasThis(), mSignature.hasExplicitThis(),mSignature.hasVararg(), isVirtual, parameters, locals, retType, _this, handlers, definingType.getDefiningComponent(), definingType, body, maxStackSize);
+            return new NonGenericMethod(
+                    file,
+                    name,
+                    definingType.getDefiningComponent(),
+                    definingType,
+                    mSignature.getMethodDefFlags(),
+                    new MethodFlags(mDef.getFlags()),
+                    new MethodImplFlags(mDef.getImplFlags()),
+                    methodHeaderFlags,
+                    parameters,
+                    locals,
+                    retType,
+                    handlers,
+                    _cil,
+                    maxStackSize);
     }
 
     public static IMethod create(CLIMethodSpecTableRow mSpec, IComponent component) {
@@ -157,11 +162,11 @@ public final class MethodFactory {
     }
 
     //region Helpers
-    private static IParameter[] createLocals(LocalVarsSig signatures, IType[] mvars, IType[] vars, IComponent component)
+    private static ILocal[] createLocals(LocalVarsSig signatures, IType[] mvars, IType[] vars, IComponent component)
     {
-        IParameter[] locals = new IParameter[signatures.getVarsCount()];
+        ILocal[] locals = new ILocal[signatures.getVarsCount()];
         for (int i = 0; i < locals.length; i++) {
-            locals[i] = new Parameter(
+            locals[i] = new Local(
                     signatures.getVars()[i].isByRef(),
                     signatures.getVars()[i].isPinned(),
                     TypeFactory.create(signatures.getVars()[i].getTypeSig(), mvars, vars, component)
@@ -174,11 +179,15 @@ public final class MethodFactory {
     {
         final IExceptionHandler[] handlers;
         final byte kind = buf.getByte();
-        final boolean fatVersion = (kind & CORILMETHOD_SECT_FATFORMAT) == CORILMETHOD_SECT_FATFORMAT;
+
+        final MethodSectionFlags sectionFlags = new MethodSectionFlags(kind);
         final int dataSize;
         final int clauses;
 
-        if (fatVersion)
+        if (!sectionFlags.hasFlag(MethodSectionFlags.Flag.CORILMETHOD_SECT_EHTABLE))
+            return new IExceptionHandler[0];
+
+        if (sectionFlags.hasFlag(MethodSectionFlags.Flag.CORILMETHOD_SECT_FATFORMAT))
         {
             dataSize = buf.getByte() | buf.getByte() << 8 | buf.getByte() << 16;
             clauses = (dataSize - 4) / 12;
@@ -194,10 +203,11 @@ public final class MethodFactory {
 
         for (int i = 0; i < clauses; i++)
         {
-            final int flags, tryoffset, trylength, handleroffset, handlerlength, classTokenOrFilterOffset;
-            if (fatVersion)
+            final ExceptionClauseFlags flags;
+            final int tryoffset, trylength, handleroffset, handlerlength, classTokenOrFilterOffset;
+            if (sectionFlags.hasFlag(MethodSectionFlags.Flag.CORILMETHOD_SECT_FATFORMAT))
             {
-                flags = buf.getInt();
+                flags = new ExceptionClauseFlags(buf.getInt());
                 tryoffset = buf.getInt();
                 trylength = buf.getInt();
                 handleroffset = buf.getInt();
@@ -206,49 +216,29 @@ public final class MethodFactory {
             }
             else
             {
-                flags = buf.getShort();
+                flags = new ExceptionClauseFlags(buf.getShort());
                 tryoffset = buf.getShort();
                 trylength = buf.getByte();
                 handleroffset = buf.getShort();
                 handlerlength = buf.getByte();
                 classTokenOrFilterOffset = buf.getInt();
             }
-            final ExceptionHandlerType type = getExceptionType(flags);
-            final IType klass = (type == ExceptionHandlerType.TypeBased)
+            final IType klass = (flags.hasFlag(ExceptionClauseFlags.Flag.COR_ILEXCEPTION_CLAUSE_EXCEPTION))
                     ? TypeFactory.create(CLITablePtr.fromToken(classTokenOrFilterOffset), mvars, vars, component)
                     : null;
-            handlers[i] = new ExceptionHandler(tryoffset, trylength, handleroffset, handlerlength, klass, type );
+            handlers[i] = new ExceptionHandler(tryoffset, trylength, handleroffset, handlerlength, klass, flags);
         }
         return  handlers;
     }
 
-    private static ExceptionHandlerType getExceptionType(int flags)
-    {
-        switch (flags)
-        {
-            case COR_ILEXCEPTION_CLAUSE_EXCEPTION:  return ExceptionHandlerType.TypeBased;
-            case COR_ILEXCEPTION_CLAUSE_FINALLY:  return ExceptionHandlerType.Finally;
-            default: throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.parser.exceptionType"));
-        }
-    }
-
-    private static IParameter[] createParameters(ParamSig[] params, IType[] mvars, IType[] vars, IComponent component)
+    private static IParameter[] createParameters(ParamSig[] params, CLIParamTableRow row, IType[] mvars, IType[] vars, IComponent component, CLIFile file)
     {
         final IParameter[] parameters = new IParameter[params.length];
         for (int i = 0; i < params.length; i++) {
-            parameters[i] = new Parameter(params[i].isByRef(), false, createType(params[i], mvars, vars, component));
+            parameters[i] = new Parameter(params[i].isByRef(), TypeFactory.create(params[i].getTypeSig(), mvars, vars, component), row.getNameHeapPtr().read(file.getStringHeap()), row.getSequence(), new ParamFlags(row.getFlags()));
         }
 
         return parameters;
-    }
-
-    private static IType createType(ParamSig signature, IType[] mvars, IType[] vars, IComponent component) {
-        if (signature.isVoid())
-            return TypeFactory.createVoid(component);
-        else if (signature.isTypedByRef())
-            return TypeFactory.createTypedRef(component);
-        else
-            return TypeFactory.create(signature.getTypeSig(), mvars, vars, component);
     }
     //endregion
 }

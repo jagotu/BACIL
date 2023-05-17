@@ -1,5 +1,7 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.method.exceptionhandler;
 
+import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
+import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
 public class ExceptionHandler implements IExceptionHandler {
@@ -8,15 +10,15 @@ public class ExceptionHandler implements IExceptionHandler {
     private final int _handlerOffset;
     private final int _handlerLength;
     private final IType _handlerException;
-    private final ExceptionHandlerType _type;
+    private final ExceptionClauseFlags _flags;
 
-    public ExceptionHandler(int _tryOffset, int _tryLength, int _handlerOffset, int _handlerLength, IType _handlerException, ExceptionHandlerType type) {
+    public ExceptionHandler(int _tryOffset, int _tryLength, int _handlerOffset, int _handlerLength, IType _handlerException, ExceptionClauseFlags flags) {
         this._tryOffset = _tryOffset;
         this._tryLength = _tryLength;
         this._handlerOffset = _handlerOffset;
         this._handlerLength = _handlerLength;
         this._handlerException = _handlerException;
-        _type = type;
+        _flags = flags;
     }
 
     @Override
@@ -45,7 +47,22 @@ public class ExceptionHandler implements IExceptionHandler {
     }
 
     @Override
-    public ExceptionHandlerType getType() {
-        return null;
+    public ExceptionClauseFlags getFlags() {
+        return _flags;
+    }
+
+    @Override
+    public IExceptionHandler substitute(ISubstitution<IType> substitution) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public IExceptionHandler getDefinition() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public IExceptionHandler getConstructedFrom() {
+        throw new NotImplementedException();
     }
 }

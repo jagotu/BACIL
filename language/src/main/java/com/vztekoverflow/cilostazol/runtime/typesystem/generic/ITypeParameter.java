@@ -3,9 +3,8 @@ package com.vztekoverflow.cilostazol.runtime.typesystem.generic;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
 public interface ITypeParameter extends IType {
-    public IType[] getConstrains();
-    public boolean hasNewConstraint();
-    public boolean hasClassConstraint();
-    public boolean hasValueTypeConstraint();
-    public VarianceType getVariance();
+    public String getName();
+    public GenericParameterFlags getFlags();
+    public int getIndex();
+    public IType[] getTypeConstrains();
 }

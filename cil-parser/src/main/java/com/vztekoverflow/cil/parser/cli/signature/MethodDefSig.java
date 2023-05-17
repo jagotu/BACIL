@@ -3,69 +3,44 @@ package com.vztekoverflow.cil.parser.cli.signature;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
 
 public class MethodDefSig {
-    //region Constants
-    private static final int HAS_THIS = 0x20;
-    private static final int EXPLICIT_THIS = 0x40;
-    private static final int DEFAULT = 0x0;
-    private static final int VARARG = 0x5;
-    private static final int GENERIC = 0x10;
-    //endregion
-
-    private final boolean _hasThis;
-    private final boolean _hasExplicitThis;
-    private final boolean _hasVarArg;
+    private final MethodDefFlags _flags;
     private final int _genParamCount;
-    private final ParamSig _retType;
+    private final RetTypeSig _retType;
     private final ParamSig[] _params;
 
 
-    public MethodDefSig(boolean hasThis, boolean hasExplicitThis, boolean hasVarArg, int _genParamCount, ParamSig _retType, ParamSig[] _params) {
-        this._hasThis = hasThis;
-        this._hasExplicitThis = hasExplicitThis;
-        this._hasVarArg = hasVarArg;
+    public MethodDefSig(MethodDefFlags flags, int _genParamCount, RetTypeSig _retType, ParamSig[] _params) {
+        _flags = flags;
         this._genParamCount = _genParamCount;
         this._retType = _retType;
         this._params = _params;
     }
 
     public static MethodDefSig parse(SignatureReader reader, CLIFile file) {
-        int callingConvention = reader.getUnsigned();
-
-        boolean hasThis = (callingConvention & HAS_THIS) != 0;
-        boolean hasExplicitThis = (callingConvention & EXPLICIT_THIS) != 0;
-        boolean hasVarArg = (callingConvention & VARARG) != 0;
+        MethodDefFlags flags = new MethodDefFlags(reader.getUnsigned());
 
         int genParamCount = 0;
-        if((callingConvention & GENERIC) != 0)
+        if (flags.hasFlag(MethodDefFlags.Flag.GENERIC))
         {
             genParamCount = reader.getUnsigned();
         }
 
         final int count = reader.getUnsigned();
-        final ParamSig retType = ParamSig.parse(reader, file, true);
+        final RetTypeSig retType = RetTypeSig.parse(reader, file);
         final ParamSig[] paramTypes = new ParamSig[count];
         for(int i = 0; i < count; i++)
         {
             paramTypes[i] = ParamSig.parse(reader, file, false);
         }
 
-        return new MethodDefSig(hasThis, hasExplicitThis, hasVarArg, genParamCount, retType, paramTypes);
+        return new MethodDefSig(flags, genParamCount, retType, paramTypes);
     }
 
-
-    public boolean hasThis() {
-        return _hasThis;
-    }
-
-    public boolean hasExplicitThis() {
-        return _hasExplicitThis;
-    }
-
-    public boolean hasVararg() { return _hasVarArg;}
+    public MethodDefFlags getMethodDefFlags() {return _flags;}
 
     public int getGenParamCount() {
         return _genParamCount;
     }
     public ParamSig[] getParams() {return  _params; }
-    public ParamSig getRetType() {return  _retType; }
+    public RetTypeSig getRetType() {return  _retType; }
 }

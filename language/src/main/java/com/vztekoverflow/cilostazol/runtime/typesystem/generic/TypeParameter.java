@@ -5,58 +5,44 @@ import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.field.IField;
-import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
-import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ITypeParameter;
-import com.vztekoverflow.cilostazol.runtime.typesystem.generic.VarianceType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
 public class TypeParameter implements ITypeParameter {
-    protected final IType[] _constrains;
-    protected final IComponent _component;
-    protected final boolean _hasNewConstraint;
-    protected final boolean _hasClassConstraint;
-    protected final boolean _hasStructConstraint;
-    protected final VarianceType _varianceType;
+    protected final IType[] _typeConstrains;
+    protected final GenericParameterFlags _flags;
+    protected final int _idx;
+    protected final String _name;
 
-    public TypeParameter(IType[] _constrains, IComponent _component, boolean hasNewConstraint, boolean hasClassConstraint, boolean hasStructConstraint, VarianceType varianceType) {
-        this._constrains = _constrains;
-        this._component = _component;
-        _hasNewConstraint = hasNewConstraint;
-        _hasClassConstraint = hasClassConstraint;
-        _hasStructConstraint = hasStructConstraint;
-        _varianceType = varianceType;
+    public TypeParameter(IType[] typeConstrains, GenericParameterFlags flags, int idx, String name) {
+        _typeConstrains = typeConstrains;
+        _flags = flags;
+        _idx = idx;
+        _name = name;
     }
+
 
     //region ITypeParameter
+
     @Override
-    public IType[] getConstrains() {
-        return _constrains;
+    public IType substitute(ISubstitution<IType> substitution) {
+        //TODO: check constrains
+        return substitution.substitute(this);
     }
 
     @Override
-    public boolean hasNewConstraint() {
-        return _hasNewConstraint;
+    public IType getDefinition() {
+        return this;
     }
 
     @Override
-    public boolean hasClassConstraint() {
-        return _hasClassConstraint;
-    }
-
-    @Override
-    public boolean hasValueTypeConstraint() {
-        return _hasStructConstraint;
-    }
-
-    @Override
-    public VarianceType getVariance() {
-        return _varianceType;
+    public IType getConstructedFrom() {
+        throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.invalidOperation"));
     }
 
     @Override
     public CLIFile getDefiningFile() {
-        return _component.getDefiningFile();
+        throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.invalidOperation"));
     }
 
     @Override
@@ -66,7 +52,7 @@ public class TypeParameter implements ITypeParameter {
 
     @Override
     public String getName() {
-        throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.invalidOperation"));
+        return _name;
     }
 
     @Override
@@ -101,23 +87,22 @@ public class TypeParameter implements ITypeParameter {
 
     @Override
     public IComponent getDefiningComponent() {
-        return _component;
-    }
-
-    @Override
-    public IType substitute(ISubstitution<IType> substitution) {
-        //TODO: check constrains
-        return substitution.substitute(this);
-    }
-
-    @Override
-    public IType getDefinition() {
-        return this;
-    }
-
-    @Override
-    public IType getConstructedFrom() {
         throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.invalidOperation"));
+    }
+
+    @Override
+    public GenericParameterFlags getFlags() {
+        return _flags;
+    }
+
+    @Override
+    public int getIndex() {
+        return _idx;
+    }
+
+    @Override
+    public IType[] getTypeConstrains() {
+        return _typeConstrains;
     }
     //endregion
 }

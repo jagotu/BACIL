@@ -44,7 +44,7 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
     private void initializeFrame(VirtualFrame frame) {
         frame.isInt(1);
         Object[] args = frame.getArguments();
-        IType[] argTypes = _method.getParameters();
+        IType[] argTypes = null;//_method.getParameters();
         int topStack = CILOSTAZOLFrame.getStartStackOffset(_method) - 1;
 
         for(int i = 0; i < _method.getParameters().length; i++) {

@@ -2,10 +2,9 @@ package com.vztekoverflow.cil.parser.cli.signature;
 
 import com.vztekoverflow.cil.parser.cli.CLIFile;
 
-import java.lang.reflect.Type;
 import java.util.List;
 
-public class ParamSig {
+public class RetTypeSig {
     //region Constants
     private static final byte ELEMENT_TYPE_BYREF = 0x10;
     //endregion
@@ -14,13 +13,14 @@ public class ParamSig {
     private final TypeSig _typeSig;
     private final boolean _byRef;
 
-    public ParamSig(CustomMod[] mods, TypeSig typeSig, boolean byRef) {
+    public RetTypeSig(CustomMod[] mods, TypeSig typeSig, boolean byRef) {
         _mods = mods;
         _typeSig = typeSig;
         _byRef = byRef;
     }
 
-    public static ParamSig parse(SignatureReader reader, CLIFile file, boolean allowVoid) {
+    public static RetTypeSig parse(SignatureReader reader, CLIFile file)
+    {
         boolean byRef = false;
         final CustomMod[] mods;
         final List<CustomMod> modsL = CustomMod.readAll(reader);
@@ -33,8 +33,7 @@ public class ParamSig {
         }
 
         final TypeSig type = TypeSig.read(reader, file);
-
-        return new ParamSig(mods, type, byRef);
+        return new RetTypeSig(mods, type, byRef);
     }
 
     public boolean isByRef() {return _byRef;}

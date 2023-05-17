@@ -14,11 +14,14 @@ public final class FactoryUtils {
         while (count-- > 0) {
             for (CLIGenericParamTableRow row : component.getDefiningFile().getTableHeads().getGenericParamTableHead()) {
                 if (ptr.getTableId() == row.getOwnerTablePtr().getTableId() && ptr.getRowNo() == row.getOwnerTablePtr().getRowNo()) {
-                    result[row.getNumber()] = TypeParameterFactory.create(row, result, vars, component);
+                    result[row.getNumber()] = TypeParameterFactory.create(row, result, vars, component, component.getDefiningFile());
                 }
             }
         }
 
         return result;
     }
+
+    //region MethodDefFlags
+    //endregion
 }

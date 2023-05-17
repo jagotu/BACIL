@@ -8,7 +8,9 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ITypeParameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.exceptionhandler.IExceptionHandler;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.local.ILocal;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.parameter.IParameter;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.returnType.IReturnType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
 public class SubstitutedGenericMethod implements IMethod, ICILBasedMethod {
@@ -26,33 +28,13 @@ public class SubstitutedGenericMethod implements IMethod, ICILBasedMethod {
 
     //region IMethod
     @Override
-    public CLIFile getDefiningFile() {
-        return _constructedFrom.getDefiningFile();
-    }
-
-    @Override
     public String getName() {
         return _definition.getName();
     }
 
     @Override
-    public boolean hasThis() {
-        return _definition.hasThis();
-    }
-
-    @Override
-    public boolean hasExplicitThis() {
-        return _definition.hasExplicitThis();
-    }
-
-    @Override
-    public boolean hasVarArg() {
-        return _definition.hasVarArg();
-    }
-
-    @Override
-    public boolean isVirtual() {
-        return _definition.isVirtual();
+    public CLIFile getFile() {
+        return _constructedFrom.getFile();
     }
 
     @Override
@@ -61,7 +43,7 @@ public class SubstitutedGenericMethod implements IMethod, ICILBasedMethod {
     }
 
     @Override
-    public IParameter[] getLocals() {
+    public ILocal[] getLocals() {
         throw new NotImplementedException();
     }
 
@@ -71,12 +53,7 @@ public class SubstitutedGenericMethod implements IMethod, ICILBasedMethod {
     }
 
     @Override
-    public IParameter getReturnType() {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public IParameter getThis() {
+    public IReturnType getReturnType() {
         throw new NotImplementedException();
     }
 

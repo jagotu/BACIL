@@ -7,30 +7,36 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitutable;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ITypeParameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.exceptionhandler.IExceptionHandler;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.local.ILocal;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.parameter.IParameter;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.returnType.IReturnType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
 public interface IMethod extends ISubstitutable<IMethod, IType> {
-    public CLIFile getDefiningFile();
-    public String getName();
-    public boolean hasThis();
-    public boolean hasExplicitThis();
-    public boolean hasVarArg();
-    public boolean isVirtual();
-    public IParameter[] getParameters();
-    public IParameter[] getLocals();
-    public ITypeParameter[] getTypeParameters();
-    public IParameter getReturnType();
-    public IParameter getThis();
-    public IExceptionHandler[] getExceptionHandlers();
+    //Containing definition
     public IComponent getDefiningComponent();
     public IType getDefiningType();
+    public String getName();
+    public CLIFile getFile();
+
+    //Signature
+    public ITypeParameter[] getTypeParameters();
+    public IParameter[] getParameters();
+    public ILocal[] getLocals();
+    public IReturnType getReturnType();
+
+    //Flags
+    //TODO: Fill needed flags
+
+    //Body
+    public IExceptionHandler[] getExceptionHandlers();
     public int getMaxStack();
 
+    //Truffle execution
+    public RootNode getNode();
+
+    //Substitution
     public IMethod substitute(ISubstitution<IType> substitution);
     public IMethod getDefinition();
     public IMethod getConstructedFrom();
-
-    public RootNode getNode();
-    //TODO: attributes, ExecuteNode
 }

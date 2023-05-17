@@ -29,7 +29,7 @@ public final class FactoryUtils {
 
         ITypeParameter[] result = new TypeParameter[typeParameters.size()];
         for (CLIGenericParamTableRow row : typeParameters) {
-            result[row.getNumber()] = TypeParameterFactory.create(row, null, result, component);
+            result[row.getNumber()] = TypeParameterFactory.create(row, null, result, component, component.getDefiningFile());
         }
 
         return result;

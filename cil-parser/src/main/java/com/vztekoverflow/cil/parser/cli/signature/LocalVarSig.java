@@ -5,6 +5,12 @@ import com.vztekoverflow.cil.parser.cli.CLIFile;
 import java.util.List;
 
 public class LocalVarSig {
+    //region Constants
+    private static final byte ELEMENT_TYPE_BYREF = 0x10;
+    public static final byte ELEMENT_TYPE_TYPEDBYREF = 0x16;
+    public static final byte ELEMENT_TYPE_PINNED = 0x45;
+    //endregion
+
     private final boolean _pinned;
     private final boolean _byRef;
     private final CustomMod[] _mods;
@@ -18,30 +24,31 @@ public class LocalVarSig {
     }
 
     public static LocalVarSig parse(SignatureReader reader, CLIFile file) {
-        if (reader.peekUnsigned() == TypeSig.ELEMENT_TYPE_TYPEDBYREF) {
+        if (reader.peekUnsigned() == ELEMENT_TYPE_TYPEDBYREF) {
             return new LocalVarSig(false, false, null, TypeSig.read(reader, file));
         }
-
 
         boolean pinned = false;
         boolean byRef = false;
 
-        List<CustomMod> mods = CustomMod.readAll(reader);
+        final CustomMod[] mods;
+        final List<CustomMod> modsL = CustomMod.readAll(reader);
+        mods = (modsL != null) ? (CustomMod[]) modsL.toArray(new CustomMod[0]) : null;
 
-        if (reader.peekUnsigned() == TypeSig.ELEMENT_TYPE_PINNED)
+        if (reader.peekUnsigned() == ELEMENT_TYPE_PINNED)
         {
             pinned = true;
             reader.getUnsigned();
         }
 
-        if (reader.peekUnsigned() == TypeSig.ELEMENT_TYPE_BYREF)
+        if (reader.peekUnsigned() == ELEMENT_TYPE_BYREF)
         {
             byRef = true;
             reader.getUnsigned();
         }
 
         TypeSig type = TypeSig.read(reader, file);
-        return new LocalVarSig(pinned, byRef, mods != null ? (CustomMod[]) mods.toArray() : null, type);
+        return new LocalVarSig(pinned, byRef, mods, type);
     }
 
     public boolean isPinned() {return _pinned;}
