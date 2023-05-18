@@ -90,6 +90,26 @@ public abstract class MethodBase implements IMethod, ICILBasedMethod{
     }
 
     @Override
+    public MethodDefFlags getMethodDefFlags() {
+        return _methodDefFlags;
+    }
+
+    @Override
+    public MethodFlags getMethodFlags() {
+        return _methodFlags;
+    }
+
+    @Override
+    public MethodImplFlags getMethodImplFlags() {
+        return _methodImplFlags;
+    }
+
+    @Override
+    public MethodHeaderFlags getMethodHeaderFlags() {
+        return _methodHeaderFlags;
+    }
+
+    @Override
     public IExceptionHandler[] getExceptionHandlers() {
         return _exceptionHandlers;
     }

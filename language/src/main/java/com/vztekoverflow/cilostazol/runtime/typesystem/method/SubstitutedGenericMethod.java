@@ -2,12 +2,16 @@ package com.vztekoverflow.cilostazol.runtime.typesystem.method;
 
 import com.oracle.truffle.api.nodes.RootNode;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
+import com.vztekoverflow.cil.parser.cli.signature.MethodDefFlags;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.nodes.CILOSTAZOLRootNode;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ITypeParameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.exceptionhandler.IExceptionHandler;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.flags.MethodFlags;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.flags.MethodHeaderFlags;
+import com.vztekoverflow.cilostazol.runtime.typesystem.method.flags.MethodImplFlags;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.local.ILocal;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.parameter.IParameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.returnType.IReturnType;
@@ -55,6 +59,26 @@ public class SubstitutedGenericMethod implements IMethod, ICILBasedMethod {
     @Override
     public IReturnType getReturnType() {
         throw new NotImplementedException();
+    }
+
+    @Override
+    public MethodDefFlags getMethodDefFlags() {
+        return _definition.getMethodDefFlags();
+    }
+
+    @Override
+    public MethodFlags getMethodFlags() {
+        return _definition.getMethodFlags();
+    }
+
+    @Override
+    public MethodImplFlags getMethodImplFlags() {
+        return _definition.getMethodImplFlags();
+    }
+
+    @Override
+    public MethodHeaderFlags getMethodHeaderFlags() {
+        return _definition.getMethodHeaderFlags();
     }
 
     @Override
