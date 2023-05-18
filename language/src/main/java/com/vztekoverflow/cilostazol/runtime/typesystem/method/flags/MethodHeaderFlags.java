@@ -15,9 +15,20 @@ public class MethodHeaderFlags {
         }
     }
 
+    //region Masks
+    private final static int F_CORILMETHOD_FORMAT_MASK = 0x3;
+    //endregion
+
     public boolean hasFlag(Flag flag)
     {
-        return (_flags & flag.code) == flag.code;
+        switch (flag)
+        {
+            case CORILMETHOD_TINYFORMAT:
+            case CORILMETHOD_FATFORMAT:
+                return (_flags & F_CORILMETHOD_FORMAT_MASK) == flag.code;
+            default:
+                return (_flags & flag.code) == flag.code;
+        }
     }
 
     public final int _flags;

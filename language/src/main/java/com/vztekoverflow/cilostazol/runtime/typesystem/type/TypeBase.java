@@ -210,15 +210,18 @@ public abstract class TypeBase<T extends CLITableRow<T>> implements IType {
         return fields.toArray(new IField[0]);
     }
 
-
     private IMethod[] createMethods(CLITypeDefTableRow row) {
         var methodTablePtr = row.getMethodListTablePtr();
-        var methodListEndPtr = row.skip(1).getMethodListTablePtr();
+
+        final boolean isLastType = row.getRowNo() == getDefiningFile().getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_TYPE_DEF);
+        final int lastIdx = isLastType ?
+                getDefiningFile().getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_METHOD_DEF)
+                : row.skip(1).getMethodListTablePtr().getRowNo();
 
         var methodRow = _definingComponent.getTableHeads().getMethodDefTableHead().skip(methodTablePtr);
 
         var methods = new ArrayList<IMethod>();
-        while (methodRow.getRowNo() < methodListEndPtr.getRowNo() && methodRow.hasNext()) {
+        while (methodRow.getRowNo() < lastIdx) {
             var method = MethodFactory.create(methodRow, this);
             methods.add(method);
             methodRow = methodRow.next();

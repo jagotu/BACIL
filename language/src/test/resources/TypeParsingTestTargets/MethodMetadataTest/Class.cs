@@ -15,6 +15,7 @@ class Virtual1
     public virtual void Foo1() {}
     public void Foo3(){}
     public virtual void Foo4() {}
+    public virtual void Foo5() {}
 }
 
 class Virtual2 : Virtual1
@@ -79,6 +80,7 @@ public class Parameters
     {
         throw new NotImplementedException();
     }
+    public void Foo5(Param1 p1 = null) {}
 }
 
 public static class Extensions
@@ -170,6 +172,18 @@ public class TryBlocks
             }
         }
     }
+
+    public void Foo6()
+    {
+        try
+        {
+            Bar();
+        }
+        finally
+        {
+            Bar();
+        }
+    }
 }
 
 class Param3<T1, T2> {}
@@ -198,7 +212,7 @@ class Generics<G1>
         throw new NotImplementedException();
     }
 
-    public void Foo5<T1, T2>() where T1 : Param3<T1, T2> {}
+    public void Foo5<T1, T2>() where T2 : new() where T1 : Param3<T1, T2> {}
 
     public void Foo6<T1>() where T1 : Exception
     {
@@ -238,4 +252,28 @@ class Properties
     public Prop1 prop1 {get;set;}
     public Prop1 prop2 {get;}
     public Prop1 prop3 {get;init;}
+}
+
+class Temp1 {}
+
+class Overload
+{
+    public void Foo(Temp1 t) {}
+    public void Foo() {}
+}
+
+class Locals
+{
+    public bool Bar(int a) {return false;}
+    public bool Bar(bool a) {return false;}
+    public void Foo()
+    {
+        int a = 1;
+        if (Bar(a))
+        {
+            bool b = Bar(3);
+            Bar(b);
+            Bar(b);
+        }
+    }
 }

@@ -34,6 +34,9 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.type.NonGenericType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.factory.TypeFactory;
 
 import javax.swing.*;
+import java.awt.color.ICC_ColorSpace;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public final class MethodFactory {
     public static IMethod create(CLIMethodDefTableRow mDef, IType definingType) {
@@ -41,76 +44,97 @@ public final class MethodFactory {
         final CLIFile file = definingType.getDefiningFile();
         final MethodDefSig mSignature = MethodDefSig.parse(new SignatureReader(mDef.getSignatureHeapPtr().read(file.getBlobHeap())), file);
         final String name = mDef.getNameHeapPtr().read(file.getStringHeap());
+        final MethodFlags flags = new MethodFlags(mDef.getFlags());
+
 
         // Type parameters parsing
         final ITypeParameter[] typeParameters = FactoryUtils.getTypeParameters(mSignature.getGenParamCount(), mDef.getPtr(), definingTypeParameters, (CLIComponent)definingType.getDefiningComponent());
 
-        final ByteSequenceBuffer buf = file.getBuffer(mDef.getRVA());
-
-        //Method header parsing
         final int codeSize;
         final short maxStackSize;
         final ILocal[] locals;
         final int ilFlags;
         final MethodHeaderFlags methodHeaderFlags;
         final int headerSize;
+        final byte[] _cil;
+        final IExceptionHandler[] handlers;
 
-        final byte firstByte = buf.getByte();
-        final MethodHeaderFlags pom = new MethodHeaderFlags(firstByte);
-        if (pom.hasFlag(MethodHeaderFlags.Flag.CORILMETHOD_TINYFORMAT))
-        {
-            maxStackSize = 8;
-            locals = new ILocal[0];
-            methodHeaderFlags = new MethodHeaderFlags(MethodHeaderFlags.Flag.CORILMETHOD_TINYFORMAT.code);
-            headerSize = 1;
-            codeSize = (firstByte >> 2) & 0xFF;
-        }
-        else if (pom.hasFlag(MethodHeaderFlags.Flag.CORILMETHOD_FATFORMAT))
-        {
-            final short firstWord = (short)(firstByte | (buf.getByte() << 8));
-            methodHeaderFlags = new MethodHeaderFlags(firstWord & 0xFFF);
-            headerSize = (firstWord >> 12);
-            maxStackSize= buf.getShort();
-            codeSize = buf.getInt();
-            // Locals parsing
-            locals = createLocals(
-                    LocalVarsSig.read(new SignatureReader(file.getTableHeads().getStandAloneSigTableHead().skip(CLITablePtr.fromToken(buf.getInt())).getSignatureHeapPtr().read(file.getBlobHeap())),file),
-                    typeParameters,
-                    definingTypeParameters,
-                    definingType.getDefiningComponent());
-            if(headerSize != 3)
-            {
-                throw new CILParserException(CILOSTAZOLBundle.message("cilostazol.exception.parser.fatHeader.size"));
+        //Method header parsing
+        if (!flags.hasFlag(MethodFlags.Flag.ABSTRACT)) {
+            final ByteSequenceBuffer buf = file.getBuffer(mDef.getRVA());
+
+            final byte firstByte = buf.getByte();
+            final MethodHeaderFlags pom = new MethodHeaderFlags(firstByte);
+            if (pom.hasFlag(MethodHeaderFlags.Flag.CORILMETHOD_TINYFORMAT)) {
+                maxStackSize = 8;
+                locals = new ILocal[0];
+                methodHeaderFlags = new MethodHeaderFlags(firstByte & 0x3);
+                headerSize = 1;
+                codeSize = (firstByte >> 2) & 0xFF;
+            } else if (pom.hasFlag(MethodHeaderFlags.Flag.CORILMETHOD_FATFORMAT)) {
+                final short firstWord = (short) (firstByte | (buf.getByte() << 8));
+                methodHeaderFlags = new MethodHeaderFlags(firstWord & 0xFFF);
+                headerSize = (firstWord >> 12);
+                maxStackSize = buf.getShort();
+                codeSize = buf.getInt();
+                final int localTok = buf.getInt();
+                // Locals parsing
+                if (localTok == 0)
+                {
+                    locals = new ILocal[0];
+                }
+                else
+                {
+                    locals = createLocals(
+                            LocalVarsSig.read(new SignatureReader(file.getTableHeads().getStandAloneSigTableHead().skip(CLITablePtr.fromToken(localTok)).getSignatureHeapPtr().read(file.getBlobHeap())), file),
+                            typeParameters,
+                            definingTypeParameters,
+                            definingType.getDefiningComponent());
+                }
+                if (headerSize != 3) {
+                    throw new CILParserException(CILOSTAZOLBundle.message("cilostazol.exception.parser.fatHeader.size"));
+                }
+            } else {
+                throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.parser.method.general"));
+            }
+
+             _cil = buf.subSequence(codeSize).toByteArray();
+
+            //Exception handlers parsing
+            if (methodHeaderFlags.hasFlag(MethodHeaderFlags.Flag.CORILMETHOD_FATFORMAT) && methodHeaderFlags.hasFlag(MethodHeaderFlags.Flag.CORILMETHOD_MORESECTS)) {
+                buf.setPosition(buf.getPosition() + codeSize);
+                buf.align(4);
+
+                handlers = createHandlers(buf, typeParameters, definingTypeParameters, definingType.getDefiningComponent());
+            } else {
+                handlers = new IExceptionHandler[0];
             }
         }
         else
         {
-            throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.parser.method.general"));
-        }
-
-        final byte[] _cil = buf.subSequence(codeSize).toByteArray();
-
-        //Exception handlers parsing
-        final IExceptionHandler[] handlers;
-        if (methodHeaderFlags.hasFlag(MethodHeaderFlags.Flag.CORILMETHOD_FATFORMAT) && methodHeaderFlags.hasFlag(MethodHeaderFlags.Flag.CORILMETHOD_MORESECTS))
-        {
-            buf.setPosition(buf.getPosition() + codeSize);
-            buf.align(4);
-
-            handlers = createHandlers(buf, typeParameters, definingTypeParameters, definingType.getDefiningComponent());
-        }
-        else
-        {
+            codeSize = 0;
+            maxStackSize = 0;
+            locals = new ILocal[0];
+            ilFlags = 0;
+            methodHeaderFlags = null;
+            headerSize = 0;
+            _cil = new byte[0];
             handlers = new IExceptionHandler[0];
         }
 
-        //Return type parsing
+        //Sort params
+        CLIParamTableRow[] params = new CLIParamTableRow[mSignature.getParams().length];
         CLIParamTableRow paramRow = file.getTableHeads().getParamTableHead().skip(mDef.getParamListTablePtr());
-        IReturnType retType = new ReturnType(mSignature.getRetType().isByRef(), TypeFactory.create(mSignature.getRetType().getTypeSig(), typeParameters, definingTypeParameters, definingType.getDefiningComponent()), new ParamFlags(paramRow.getFlags()));
-        paramRow = paramRow.next();
+        for (int i = 0; i < params.length; i++) {
+            params[paramRow.getSequence()-1] = paramRow;
+            paramRow = paramRow.next();
+        }
+
+        //Return type parsing
+        IReturnType retType = new ReturnType(mSignature.getRetType().isByRef(), TypeFactory.create(mSignature.getRetType().getTypeSig(), typeParameters, definingTypeParameters, definingType.getDefiningComponent()));
 
         //Parameters parsing
-        final IParameter[] parameters = createParameters(mSignature.getParams(), paramRow, typeParameters, definingTypeParameters, definingType.getDefiningComponent(), file);
+        final IParameter[] parameters = createParameters(mSignature.getParams(), params, typeParameters, definingTypeParameters, definingType.getDefiningComponent(), file);
 
         if (mSignature.getMethodDefFlags().hasFlag(MethodDefFlags.Flag.GENERIC))
             return new OpenGenericMethod(
@@ -119,7 +143,7 @@ public final class MethodFactory {
                     definingType.getDefiningComponent(),
                     definingType,
                     mSignature.getMethodDefFlags(),
-                    new MethodFlags(mDef.getFlags()),
+                    flags,
                     new MethodImplFlags(mDef.getImplFlags()),
                     methodHeaderFlags,
                     parameters,
@@ -136,7 +160,7 @@ public final class MethodFactory {
                     definingType.getDefiningComponent(),
                     definingType,
                     mSignature.getMethodDefFlags(),
-                    new MethodFlags(mDef.getFlags()),
+                    flags ,
                     new MethodImplFlags(mDef.getImplFlags()),
                     methodHeaderFlags,
                     parameters,
@@ -231,11 +255,11 @@ public final class MethodFactory {
         return  handlers;
     }
 
-    private static IParameter[] createParameters(ParamSig[] params, CLIParamTableRow row, IType[] mvars, IType[] vars, IComponent component, CLIFile file)
+    private static IParameter[] createParameters(ParamSig[] params, CLIParamTableRow[] rows, IType[] mvars, IType[] vars, IComponent component, CLIFile file)
     {
         final IParameter[] parameters = new IParameter[params.length];
         for (int i = 0; i < params.length; i++) {
-            parameters[i] = new Parameter(params[i].isByRef(), TypeFactory.create(params[i].getTypeSig(), mvars, vars, component), row.getNameHeapPtr().read(file.getStringHeap()), row.getSequence(), new ParamFlags(row.getFlags()));
+            parameters[i] = new Parameter(params[i].isByRef(), TypeFactory.create(params[i].getTypeSig(), mvars, vars, component), rows[i].getNameHeapPtr().read(file.getStringHeap()), rows[i].getSequence(), new ParamFlags(rows[i].getFlags()));
         }
 
         return parameters;

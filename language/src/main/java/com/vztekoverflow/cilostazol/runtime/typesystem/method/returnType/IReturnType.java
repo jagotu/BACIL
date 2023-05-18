@@ -5,7 +5,6 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.method.parameter.ParamFla
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
 public interface IReturnType extends ISubstitutable<IReturnType, IType> {
-    ParamFlags getFlags();
     boolean isByRef();
     IType getType();
 }

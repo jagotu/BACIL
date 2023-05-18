@@ -3,7 +3,7 @@ package com.vztekoverflow.cilostazol.runtime.typesystem.generic;
 public class GenericParameterFlags {
     public enum Flag
     {
-        NODE(0x0000),
+        NONE(0x0000),
         COVARIANT(0x0001),
         CONTRAVARIANT(0x0002),
         REFERENCE_TYPE_CONSTRAINT(0x0004),
@@ -26,17 +26,17 @@ public class GenericParameterFlags {
     {
         switch (flag)
         {
-            case NODE:
+            case NONE:
                 return ((_flags & F_VARIANCE_MASK) == flag.code);
             case COVARIANT:
             case CONTRAVARIANT:
-                return !hasFlag(Flag.NODE) && ((_flags & F_VARIANCE_MASK) == flag.code);
+                return !hasFlag(Flag.NONE) && ((_flags & F_VARIANCE_MASK) == flag.code);
             case REFERENCE_TYPE_CONSTRAINT:
             case NOT_NULLABLE_VALUE_TYPE_CONSTRAINT:
             case DEFAULT_CONSTRUCTOR_CONSTRAINT:
                 return (_flags & F_SPECIAL_CONSTRAINT_MASK) == flag.code;
             default:
-                return !hasFlag(Flag.NODE) && (_flags & flag.code) == flag.code;
+                return !hasFlag(Flag.NONE) && (_flags & flag.code) == flag.code;
         }
     }
 

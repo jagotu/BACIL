@@ -17,7 +17,7 @@ public class ExceptionClauseFlags {
 
     public boolean hasFlag(Flag flag)
     {
-        return (_flags & flag.code) == flag.code;
+        return _flags == flag.code;
     }
 
     public final int _flags;
