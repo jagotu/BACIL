@@ -167,16 +167,16 @@ public final class MethodFactory {
                     maxStackSize);
     }
 
-    public static IMethod create(CLIMethodSpecTableRow mSpec, IComponent component) {
+    public static IMethod create(CLIMethodSpecTableRow mSpec, CLIComponent component) {
         // A.m<T>()
         throw new NotImplementedException();
     }
-    public static IMethod create(CLIMethodImplTableRow mImpl, IType definingType) {
+    public static IMethod create(CLIMethodImplTableRow mImpl, CLIType definingType) {
         // I1.m(), I2.m()
         throw new NotImplementedException();
     }
 
-    public static IMethod create(CLIMethodSemanticsTableRow mSem, IType definingType) {
+    public static IMethod create(CLIMethodSemanticsTableRow mSem, CLIType definingType) {
         // getters, setters, etc...
         throw new NotImplementedException();
     }
