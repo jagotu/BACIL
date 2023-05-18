@@ -7,7 +7,6 @@ import com.vztekoverflow.cil.parser.cli.table.generated.CLITableConstants;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITypeDefTableRow;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
-import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ITypeParameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.TypeParameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
@@ -35,7 +34,7 @@ public final class FactoryUtils {
         return result;
     }
 
-    static IType[] getInterfaces(String className, String classNamespace, IComponent component) {
+    static IType[] getInterfaces(String className, String classNamespace, CLIComponent component) {
         List<IType> interfaces = new ArrayList<>();
         //TODO: implement case for ref and spec table
         for (var interfaceRow : component.getTableHeads().getInterfaceImplTableHead()) {
@@ -48,7 +47,7 @@ public final class FactoryUtils {
         return interfaces.stream().filter(Objects::nonNull).toList().toArray(new IType[0]);
     }
 
-    static boolean interfaceExtendsClass(CLIInterfaceImplTableRow interfaceRow, String extendingClassName, String extendingClassNamespace, IComponent component) {
+    static boolean interfaceExtendsClass(CLIInterfaceImplTableRow interfaceRow, String extendingClassName, String extendingClassNamespace, CLIComponent component) {
         var potentialExtendingClassRow = component.getTableHeads().getTypeDefTableHead().skip(interfaceRow.getKlassTablePtr());
         //we can not create the whole klass because of circular dependency, we only need the name and namespace
         var potentialClassName = component.getNameFrom(potentialExtendingClassRow);
@@ -57,7 +56,7 @@ public final class FactoryUtils {
         return extendingClassName.equals(potentialClassName) && extendingClassNamespace.equals(potentialClassNamespace);
     }
 
-    static IType getInterface(CLIInterfaceImplTableRow row, IComponent component) {
+    static IType getInterface(CLIInterfaceImplTableRow row, CLIComponent component) {
         CLITablePtr tablePtr = row.getInterfaceTablePtr();
         return switch (tablePtr.getTableId()) {
             case CLITableConstants.CLI_TABLE_TYPE_DEF -> component.getLocalType(tablePtr);
@@ -67,7 +66,7 @@ public final class FactoryUtils {
         };
     }
 
-    static IType getDirectBaseClass(CLITypeDefTableRow typeDefRow, IComponent component) {
+    static IType getDirectBaseClass(CLITypeDefTableRow typeDefRow, CLIComponent component) {
         CLITablePtr tablePtr = typeDefRow.getExtendsTablePtr();
         if (tablePtr.isEmpty()) return null;
 

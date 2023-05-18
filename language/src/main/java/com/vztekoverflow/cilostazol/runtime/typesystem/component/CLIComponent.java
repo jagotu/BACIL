@@ -67,7 +67,6 @@ public class CLIComponent implements IComponent {
         return TypeFactory.create(typeDefTableRow, this);
     }
 
-    @Override
     public <T extends CLITableRow<T>> String getNameFrom(CLITableRow<T> row) {
         return switch (row.getTableId()) {
             case CLITableConstants.CLI_TABLE_TYPE_DEF ->
@@ -81,7 +80,6 @@ public class CLIComponent implements IComponent {
         };
     }
 
-    @Override
     public <T extends CLITableRow<T>> String getNamespaceFrom(CLITableRow<T> row) {
         return switch (row.getTableId()) {
             case CLITableConstants.CLI_TABLE_TYPE_DEF ->
