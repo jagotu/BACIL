@@ -130,7 +130,7 @@ public final class MethodFactory {
         IReturnType retType = new ReturnType(mSignature.getRetType().isByRef(), TypeFactory.create(mSignature.getRetType().getTypeSig(), typeParameters, definingTypeParameters, definingType.getCLIComponent()));
 
         //Parameters parsing
-        final IParameter[] parameters = createParameters(mSignature.getParams(), params, typeParameters, definingTypeParameters, definingType.getCLIComponent(), file);
+        final IParameter[] parameters = createParameters(mSignature.getParams(), params, typeParameters, definingTypeParameters, definingType.getCLIComponent());
 
         if (mSignature.getMethodDefFlags().hasFlag(MethodDefFlags.Flag.GENERIC))
             return new OpenGenericMethod(
@@ -251,11 +251,11 @@ public final class MethodFactory {
         return  handlers;
     }
 
-    private static IParameter[] createParameters(ParamSig[] params, CLIParamTableRow[] rows, IType[] mvars, IType[] vars, CLIComponent component, CLIFile file)
+    private static IParameter[] createParameters(ParamSig[] params, CLIParamTableRow[] rows, IType[] mvars, IType[] vars, CLIComponent component)
     {
         final IParameter[] parameters = new IParameter[params.length];
         for (int i = 0; i < params.length; i++) {
-            parameters[i] = new Parameter(params[i].isByRef(), TypeFactory.create(params[i].getTypeSig(), mvars, vars, component), rows[i].getNameHeapPtr().read(file.getStringHeap()), rows[i].getSequence(), new ParamFlags(rows[i].getFlags()));
+            parameters[i] = new Parameter(params[i].isByRef(), TypeFactory.create(params[i].getTypeSig(), mvars, vars, component), rows[i].getNameHeapPtr().read(component.getDefiningFile().getStringHeap()), rows[i].getSequence(), new ParamFlags(rows[i].getFlags()));
         }
 
         return parameters;
