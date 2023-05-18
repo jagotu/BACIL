@@ -37,11 +37,6 @@ public class SubstitutedGenericMethod implements IMethod, ICILBasedMethod {
     }
 
     @Override
-    public CLIFile getFile() {
-        return _constructedFrom.getFile();
-    }
-
-    @Override
     public IParameter[] getParameters() {
         throw new NotImplementedException();
     }

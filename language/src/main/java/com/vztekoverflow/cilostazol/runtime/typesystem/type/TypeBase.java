@@ -6,6 +6,7 @@ import com.vztekoverflow.cil.parser.cli.table.generated.CLITableConstants;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITypeDefTableRow;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
+import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.field.IField;
 import com.vztekoverflow.cilostazol.runtime.typesystem.field.factory.FieldFactory;
@@ -14,7 +15,7 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.method.factory.MethodFact
 
 import java.util.ArrayList;
 
-public abstract class TypeBase<T extends CLITableRow<T>> implements IType {
+public abstract class TypeBase<T extends CLITableRow<T>> extends CLIType implements IType {
 
     private final static int ABSTRACT_FLAG_MASK = 0x80;
     private final static int SEALED_FLAG_MASK = 0x100;
@@ -35,7 +36,7 @@ public abstract class TypeBase<T extends CLITableRow<T>> implements IType {
     protected IMethod[] _methods;
     protected IMethod[] _vMethodTable;
     protected IField[] _fields;
-    protected final IComponent _definingComponent;
+    protected final CLIComponent _definingComponent;
 
     protected final T _row;
 
@@ -45,7 +46,7 @@ public abstract class TypeBase<T extends CLITableRow<T>> implements IType {
                     String _namespace,
                     IType _directBaseClass,
                     IType[] _interfaces,
-                    IComponent _definingComponent,
+                    CLIComponent _definingComponent,
                     int flags) {
         _row = row;
         this._definingFile = _definingFile;
@@ -68,6 +69,11 @@ public abstract class TypeBase<T extends CLITableRow<T>> implements IType {
     @Override
     public String getNamespace() {
         return _namespace;
+    }
+
+    @Override
+    public CLIComponent getCLIComponent() {
+        return _definingComponent;
     }
 
     @Override

@@ -41,11 +41,6 @@ public class TypeParameter implements ITypeParameter {
     }
 
     @Override
-    public CLIFile getDefiningFile() {
-        throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.invalidOperation"));
-    }
-
-    @Override
     public IType[] getTypeParameters() {
         throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.invalidOperation"));
     }

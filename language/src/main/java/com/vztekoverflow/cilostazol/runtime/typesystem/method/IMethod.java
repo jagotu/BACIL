@@ -21,7 +21,6 @@ public interface IMethod extends ISubstitutable<IMethod, IType> {
     public IComponent getDefiningComponent();
     public IType getDefiningType();
     public String getName();
-    public CLIFile getFile();
 
     //Signature
     public ITypeParameter[] getTypeParameters();

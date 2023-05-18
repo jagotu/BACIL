@@ -4,6 +4,7 @@ import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cil.parser.cli.signature.MethodDefFlags;
 import com.vztekoverflow.cilostazol.nodes.CILOSTAZOLRootNode;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
+import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ITypeParameter;
@@ -22,7 +23,7 @@ public class OpenGenericMethod extends MethodBase implements ICILBasedMethod {
     public OpenGenericMethod(
             CLIFile definingFile,
             String name,
-            IComponent definingComponent,
+            CLIComponent definingComponent,
             IType definingType,
             MethodDefFlags methodDefFlags,
             MethodFlags methodFlags,

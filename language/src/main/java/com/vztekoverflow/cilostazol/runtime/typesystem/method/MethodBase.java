@@ -3,6 +3,7 @@ package com.vztekoverflow.cilostazol.runtime.typesystem.method;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cil.parser.cli.signature.MethodDefFlags;
+import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.exceptionhandler.IExceptionHandler;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.flags.MethodFlags;
@@ -13,10 +14,10 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.method.parameter.IParamet
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.returnType.IReturnType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
-public abstract class MethodBase implements IMethod, ICILBasedMethod{
+public abstract class MethodBase extends CLIMethod implements IMethod, ICILBasedMethod{
     protected final CLIFile _definingFile;
     protected final String _name;
-    protected final IComponent _definingComponent;
+    protected final CLIComponent _definingComponent;
     protected final IType _definingType;
 
     //Flags
@@ -36,7 +37,7 @@ public abstract class MethodBase implements IMethod, ICILBasedMethod{
     protected final int _maxStack;
     protected RootNode _node;
 
-    protected MethodBase(CLIFile definingFile, String name, IComponent definingComponent, IType definingType, MethodDefFlags methodDefFlags, MethodFlags methodFlags, MethodImplFlags methodImplFlags, MethodHeaderFlags methodHeaderFlags, IParameter[] parameters, ILocal[] locals, IReturnType retType, IExceptionHandler[] exceptionHandlers, byte[] cil, int maxStack) {
+    protected MethodBase(CLIFile definingFile, String name, CLIComponent definingComponent, IType definingType, MethodDefFlags methodDefFlags, MethodFlags methodFlags, MethodImplFlags methodImplFlags, MethodHeaderFlags methodHeaderFlags, IParameter[] parameters, ILocal[] locals, IReturnType retType, IExceptionHandler[] exceptionHandlers, byte[] cil, int maxStack) {
         _definingFile = definingFile;
         _name = name;
         _definingComponent = definingComponent;
@@ -54,16 +55,6 @@ public abstract class MethodBase implements IMethod, ICILBasedMethod{
     }
 
     //region IMethod
-    @Override
-    public CLIFile getFile() {
-        return _definingFile;
-    }
-
-    @Override
-    public IComponent getDefiningComponent() {
-        return _definingComponent;
-    }
-
     @Override
     public IType getDefiningType() {
         return _definingType;
@@ -133,5 +124,11 @@ public abstract class MethodBase implements IMethod, ICILBasedMethod{
     public String toString() {
         return "_ " + getName() + "()";
     }
+
+    @Override
+    public CLIComponent getCLIComponent() {
+        return _definingComponent;
+    }
+
     //endregion
 }

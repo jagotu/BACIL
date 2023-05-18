@@ -21,14 +21,10 @@ public class SubstitutedGenericType implements IType {
     }
 
     //region IType
-    @Override
-    public CLIFile getDefiningFile() {
-        return _constructedFrom.getDefiningFile();
-    }
 
     @Override
     public IType[] getTypeParameters() {
-        return (IType[])Arrays.stream(_constructedFrom.getTypeParameters()).map(x -> x.substitute(_substitution)).toArray();
+        return Arrays.stream(_constructedFrom.getTypeParameters()).map(x -> x.substitute(_substitution)).toArray(IType[]::new);
     }
 
     @Override
@@ -48,22 +44,22 @@ public class SubstitutedGenericType implements IType {
 
     @Override
     public IType[] getInterfaces() {
-        return (IType[]) Arrays.stream(_constructedFrom.getInterfaces()).map(x -> x.substitute(_substitution)).toArray();
+        return Arrays.stream(_constructedFrom.getInterfaces()).map(x -> x.substitute(_substitution)).toArray(IType[]::new);
     }
 
     @Override
     public IMethod[] getMethods() {
-        return (IMethod[])Arrays.stream(_constructedFrom.getMethods()).map(x -> x.substitute(_substitution)).toArray();
+        return Arrays.stream(_constructedFrom.getMethods()).map(x -> x.substitute(_substitution)).toArray(IMethod[]::new);
     }
 
     @Override
     public IMethod[] getVTable() {
-        return (IMethod[])Arrays.stream(_constructedFrom.getVTable()).map(x -> x.substitute(_substitution)).toArray();
+        return Arrays.stream(_constructedFrom.getVTable()).map(x -> x.substitute(_substitution)).toArray(IMethod[]::new);
     }
 
     @Override
     public IField[] getFields() {
-        return (IField[]) Arrays.stream(_constructedFrom.getFields()).map(x -> x.substitute(_substitution)).toArray();
+        return Arrays.stream(_constructedFrom.getFields()).map(x -> x.substitute(_substitution)).toArray(IField[]::new);
     }
 
     @Override

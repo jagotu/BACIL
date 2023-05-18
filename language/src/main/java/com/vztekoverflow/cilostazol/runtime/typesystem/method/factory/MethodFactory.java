@@ -29,17 +29,13 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.method.parameter.ParamFla
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.parameter.Parameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.returnType.IReturnType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.returnType.ReturnType;
+import com.vztekoverflow.cilostazol.runtime.typesystem.type.CLIType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.NonGenericType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.factory.TypeFactory;
 
-import javax.swing.*;
-import java.awt.color.ICC_ColorSpace;
-import java.util.ArrayList;
-import java.util.Arrays;
-
 public final class MethodFactory {
-    public static IMethod create(CLIMethodDefTableRow mDef, IType definingType) {
+    public static IMethod create(CLIMethodDefTableRow mDef, CLIType definingType) {
         final IType[] definingTypeParameters = (definingType instanceof NonGenericType) ? new IType[0] : definingType.getTypeParameters();
         final CLIFile file = definingType.getDefiningFile();
         final MethodDefSig mSignature = MethodDefSig.parse(new SignatureReader(mDef.getSignatureHeapPtr().read(file.getBlobHeap())), file);
@@ -48,7 +44,7 @@ public final class MethodFactory {
 
 
         // Type parameters parsing
-        final ITypeParameter[] typeParameters = FactoryUtils.getTypeParameters(mSignature.getGenParamCount(), mDef.getPtr(), definingTypeParameters, (CLIComponent)definingType.getDefiningComponent());
+        final ITypeParameter[] typeParameters = FactoryUtils.getTypeParameters(mSignature.getGenParamCount(), mDef.getPtr(), definingTypeParameters, definingType.getCLIComponent());
 
         final int codeSize;
         final short maxStackSize;
@@ -89,7 +85,7 @@ public final class MethodFactory {
                             LocalVarsSig.read(new SignatureReader(file.getTableHeads().getStandAloneSigTableHead().skip(CLITablePtr.fromToken(localTok)).getSignatureHeapPtr().read(file.getBlobHeap())), file),
                             typeParameters,
                             definingTypeParameters,
-                            definingType.getDefiningComponent());
+                            definingType.getCLIComponent());
                 }
                 if (headerSize != 3) {
                     throw new CILParserException(CILOSTAZOLBundle.message("cilostazol.exception.parser.fatHeader.size"));
@@ -105,7 +101,7 @@ public final class MethodFactory {
                 buf.setPosition(buf.getPosition() + codeSize);
                 buf.align(4);
 
-                handlers = createHandlers(buf, typeParameters, definingTypeParameters, definingType.getDefiningComponent());
+                handlers = createHandlers(buf, typeParameters, definingTypeParameters, definingType.getCLIComponent());
             } else {
                 handlers = new IExceptionHandler[0];
             }
@@ -131,16 +127,16 @@ public final class MethodFactory {
         }
 
         //Return type parsing
-        IReturnType retType = new ReturnType(mSignature.getRetType().isByRef(), TypeFactory.create(mSignature.getRetType().getTypeSig(), typeParameters, definingTypeParameters, definingType.getDefiningComponent()));
+        IReturnType retType = new ReturnType(mSignature.getRetType().isByRef(), TypeFactory.create(mSignature.getRetType().getTypeSig(), typeParameters, definingTypeParameters, definingType.getCLIComponent()));
 
         //Parameters parsing
-        final IParameter[] parameters = createParameters(mSignature.getParams(), params, typeParameters, definingTypeParameters, definingType.getDefiningComponent(), file);
+        final IParameter[] parameters = createParameters(mSignature.getParams(), params, typeParameters, definingTypeParameters, definingType.getCLIComponent(), file);
 
         if (mSignature.getMethodDefFlags().hasFlag(MethodDefFlags.Flag.GENERIC))
             return new OpenGenericMethod(
                     file,
                     name,
-                    definingType.getDefiningComponent(),
+                    definingType.getCLIComponent(),
                     definingType,
                     mSignature.getMethodDefFlags(),
                     flags,
@@ -157,7 +153,7 @@ public final class MethodFactory {
             return new NonGenericMethod(
                     file,
                     name,
-                    definingType.getDefiningComponent(),
+                    definingType.getCLIComponent(),
                     definingType,
                     mSignature.getMethodDefFlags(),
                     flags ,
@@ -186,7 +182,7 @@ public final class MethodFactory {
     }
 
     //region Helpers
-    private static ILocal[] createLocals(LocalVarsSig signatures, IType[] mvars, IType[] vars, IComponent component)
+    private static ILocal[] createLocals(LocalVarsSig signatures, IType[] mvars, IType[] vars, CLIComponent component)
     {
         ILocal[] locals = new ILocal[signatures.getVarsCount()];
         for (int i = 0; i < locals.length; i++) {
@@ -199,7 +195,7 @@ public final class MethodFactory {
         return locals;
     }
 
-    private static IExceptionHandler[] createHandlers(ByteSequenceBuffer buf, IType[] mvars, IType[] vars, IComponent component)
+    private static IExceptionHandler[] createHandlers(ByteSequenceBuffer buf, IType[] mvars, IType[] vars, CLIComponent component)
     {
         final IExceptionHandler[] handlers;
         final byte kind = buf.getByte();
@@ -255,7 +251,7 @@ public final class MethodFactory {
         return  handlers;
     }
 
-    private static IParameter[] createParameters(ParamSig[] params, CLIParamTableRow[] rows, IType[] mvars, IType[] vars, IComponent component, CLIFile file)
+    private static IParameter[] createParameters(ParamSig[] params, CLIParamTableRow[] rows, IType[] mvars, IType[] vars, CLIComponent component, CLIFile file)
     {
         final IParameter[] parameters = new IParameter[params.length];
         for (int i = 0; i < params.length; i++) {

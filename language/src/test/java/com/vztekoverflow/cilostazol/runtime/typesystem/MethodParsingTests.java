@@ -8,9 +8,11 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.AppDomain;
 import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.IAppDomain;
 import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.Assembly;
 import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.IAssembly;
+import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.factory.MethodFactory;
+import com.vztekoverflow.cilostazol.runtime.typesystem.type.CLIType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 import org.graalvm.polyglot.Source;
 import org.junit.Assert;
@@ -32,13 +34,13 @@ public class MethodParsingTests extends TestBase {
         final IAssembly assembly = Assembly.parse(source);
         domain.loadAssembly(assembly);
 
-        final IComponent component = assembly.getComponents()[0];
+        final CLIComponent component = (CLIComponent) assembly.getComponents()[0];
         //Classes
-        final IType classA = component.getLocalType("MethodParsingGeneral", "A");
+        final CLIType classA = (CLIType)component.getLocalType("MethodParsingGeneral", "A");
         //final IType interfaceAI= component.getLocalType("MethodParsingGeneral","AI");
-        final IType classG_T = component.getLocalType("MethodParsingGeneral", "G`1");
-        final IType classBar1 = component.getLocalType("MethodParsingGeneral", "Bar1");
-        final IType classBar2 = component.getLocalType("MethodParsingGeneral", "Bar2`1");
+        final CLIType classG_T = (CLIType)component.getLocalType("MethodParsingGeneral", "G`1");
+        final CLIType classBar1 = (CLIType)component.getLocalType("MethodParsingGeneral", "Bar1");
+        final CLIType classBar2 = (CLIType)component.getLocalType("MethodParsingGeneral", "Bar2`1");
 
         final CLIMethodDefTableRow method_def_Bar1_Foo1 = CLIFileUtils.getMethodByName("Bar1_Foo1", component.getDefiningFile())[0];
         final CLIMethodDefTableRow method_def_Bar1_Foo2 = CLIFileUtils.getMethodByName("Bar1_Foo2", component.getDefiningFile())[0];
