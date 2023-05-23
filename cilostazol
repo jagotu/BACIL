@@ -3,7 +3,7 @@
 # If you update this number make sure the graalvm.version value in ./pom.xml matches
 VERSION="22.2.0"
 
-MAIN_CLASS="com.vztekoverflow.bacil.launcher.BACILLauncher"
+MAIN_CLASS="com.vztekoverflow.cilostazol.launcher.CILOSTAZOLLauncher"
 SCRIPT_HOME="$(cd "$(dirname "$0")" && pwd -P)"
 
 MACOS_CIL_PATH="--cil.libraryPath=/usr/local/share/dotnet/shared/Microsoft.NETCore.App/7.0.3"
