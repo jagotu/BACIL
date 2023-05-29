@@ -9,4 +9,7 @@ public interface IField extends ISubstitutable<IField, IType> {
     public IType getType();
     public String getName();
     public boolean isStatic();
+
+    public Class<?> getPropertyType();
+    public boolean isFinal();
 }

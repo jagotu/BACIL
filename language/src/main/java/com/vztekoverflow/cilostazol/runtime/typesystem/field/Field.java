@@ -1,6 +1,8 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.field;
 
 import com.vztekoverflow.cil.parser.cli.CLIFile;
+import com.vztekoverflow.cilostazol.meta.SystemTypes;
+import com.vztekoverflow.cilostazol.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
@@ -51,5 +53,23 @@ public class Field implements IField {
     @Override
     public IField getConstructedFrom() {
         throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
+    public Class<?> getPropertyType() {
+        return switch (type.getKind()) {
+            case Boolean -> boolean.class;
+            case Char -> char.class;
+            case Float -> float.class;
+            case Double -> double.class;
+            case Int -> int.class;
+            case Long -> long.class;
+            default -> StaticObject.class;
+        };
+    }
+
+    @Override
+    public boolean isFinal() {
+        return false;
     }
 }
