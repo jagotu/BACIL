@@ -18,9 +18,9 @@ public interface IType extends ISubstitutable<IType, IType> {
     public IField[] getFields();
     public IComponent getDefiningComponent();
     public SystemTypes getKind();
-
     public IType substitute(ISubstitution<IType> substitution);
     public IType getDefinition();
     public IType getConstructedFrom();
+    public boolean isArray();
     //TODO: Support for nested classes, events, delegates, attributes, properties, return  SOM
 }
