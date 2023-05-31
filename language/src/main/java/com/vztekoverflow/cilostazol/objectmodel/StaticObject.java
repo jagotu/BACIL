@@ -38,8 +38,6 @@ public class StaticObject implements TruffleObject, Cloneable {
     }
 
     public interface StaticObjectFactory {
-        StaticObject create(Klass klass);
-
-        StaticObject create(Klass klass, boolean isForeign);
+        StaticObject create(IType type);
     }
 }

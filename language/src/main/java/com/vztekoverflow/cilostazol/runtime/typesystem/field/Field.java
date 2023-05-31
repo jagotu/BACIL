@@ -1,23 +1,28 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.field;
 
+import com.oracle.truffle.api.staticobject.StaticProperty;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cilostazol.meta.SystemTypes;
 import com.vztekoverflow.cilostazol.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
-public class Field implements IField {
+public class Field extends StaticProperty implements IField {
 
     private final String name;
     private final IType type;
     private final boolean isStatic;
     private final CLIFile definingFile;
+    private final int slot;
 
     public Field(String name, IType type, boolean isStatic, CLIFile definingFile) {
         this.name = name;
         this.type = type;
         this.isStatic = isStatic;
         this.definingFile = definingFile;
+
+        // TODO:
+        this.slot = -1;
     }
 
     @Override
@@ -53,6 +58,11 @@ public class Field implements IField {
     @Override
     public IField getConstructedFrom() {
         throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
+    protected String getId() {
+        return getName();
     }
 
     @Override

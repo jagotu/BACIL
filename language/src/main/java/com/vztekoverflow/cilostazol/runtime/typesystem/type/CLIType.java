@@ -8,17 +8,22 @@ import com.vztekoverflow.cilostazol.objectmodel.LinkedField;
 import com.vztekoverflow.cilostazol.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
+import com.vztekoverflow.cilostazol.runtime.typesystem.field.Field;
 
 public abstract class CLIType implements IType {
+
+    // TODO: Consider moving shapes and fields to something like a StructType and ObjectType,
+    // so that primitive types don't have to have them.
+
     private final StaticShape<StaticObject.StaticObjectFactory> instanceShape;
 
     private final StaticShape<StaticObject.StaticObjectFactory> staticShape;
 
     @CompilerDirectives.CompilationFinal(dimensions = 1)
-    final LinkedField[] instanceFields;
+    final Field[] instanceFields;
 
     @CompilerDirectives.CompilationFinal(dimensions = 1)
-    final LinkedField[] staticFields;
+    final Field[] staticFields;
 
     private SystemTypes kind;
 
@@ -42,11 +47,16 @@ public abstract class CLIType implements IType {
         return isStatic ? staticShape : instanceShape;
     }
 
-    public LinkedField[] getInstanceFields() {
+    public Field[] getInstanceFields() {
         return instanceFields;
     }
 
-    public LinkedField[] getStaticFields() {
+    public Field[] getStaticFields() {
         return staticFields;
+    }
+
+    @Override
+    public boolean isArray() {
+        return false;
     }
 }
