@@ -1,11 +1,14 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.type.factory;
 
+import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIGenericParamTableRow;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIInterfaceImplTableRow;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITableConstants;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITypeDefTableRow;
+import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
+import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ITypeParameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.TypeParameter;
@@ -13,6 +16,7 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.typeparameters.factory.TypeParameterFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -78,5 +82,23 @@ public final class FactoryUtils {
             default -> throw new NotImplementedException();
         }
         return baseClass;
+    }
+
+    static IType getTypeFromDifferentModule(CLIComponent component, String name, String namespace, CLITablePtr resolutionScopeTablePtr) {
+        //TODO: I feel like getting tables should be done via something else that component -> some assembly appDomain/Assembly singleton maybe?
+        var moduleRefName = component.getNameFrom(component.getTableHeads().getModuleRefTableHead().skip(resolutionScopeTablePtr));
+
+        //We can omit looking for file since we know that it is in the same assembly as this
+        var definingComponent = Arrays.stream(component.getDefiningAssembly().getComponents())
+                .filter(c -> c.getDefiningFile().getName().equals(moduleRefName))
+                .findFirst()
+                .orElseThrow(() -> new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.moduleRefNotFound", moduleRefName)));
+        return definingComponent.getLocalType(name, namespace);
+    }
+
+    static IType getTypeFromDifferentAssembly(CLIComponent component, String name, String namespace, CLITablePtr resolutionScopeTablePtr) {
+        var referencedAssemblyIdentity = AssemblyIdentity.fromAssemblyRefRow(component.getDefiningFile().getStringHeap(), component.getTableHeads().getAssemblyRefTableHead().skip(resolutionScopeTablePtr));
+        var referencedAssembly = component.getDefiningAssembly().getAppDomain().getAssembly(referencedAssemblyIdentity);
+        return referencedAssembly.getLocalType(namespace, name);
     }
 }
