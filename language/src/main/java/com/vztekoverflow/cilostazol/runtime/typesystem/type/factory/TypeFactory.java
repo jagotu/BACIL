@@ -87,7 +87,10 @@ public final class TypeFactory {
         };
     }
 
-    public static IType create(TypeSig tSig, IType[] mvars, IType[] vars, CLIComponent definingComponent) {
-        return null;
+    public static IType create(TypeSig typeSig, IType[] mvars, IType[] vars, CLIComponent definingComponent) {
+        //TODO: null reference exception might have occured here if TypeSig is not created from CLASS
+        //TODO: resolve for other types (SZARRAY, GENERICINST, ...)
+        if (typeSig.getCliTablePtr() == null) return null;
+        return create(typeSig.getCliTablePtr(), mvars, vars, definingComponent);
     }
 }
