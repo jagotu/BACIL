@@ -1,13 +1,17 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.type;
 
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.staticobject.StaticShape;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cil.parser.cli.table.CLITableRow;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITableConstants;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITypeDefTableRow;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
+import com.vztekoverflow.cilostazol.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
+import com.vztekoverflow.cilostazol.runtime.typesystem.field.Field;
 import com.vztekoverflow.cilostazol.runtime.typesystem.field.IField;
 import com.vztekoverflow.cilostazol.runtime.typesystem.field.factory.FieldFactory;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
@@ -26,6 +30,12 @@ public abstract class TypeBase<T extends CLITableRow<T>> extends CLIType impleme
     private final static int RT_SPECIAL_NAME_FLAG_MASK = 0x800;
     private final static int HAS_SECURITY_FLAG_MASK = 0x40000;
     private final static int IS_TYPE_FORWARDER_FLAG_MASK = 0x200000;
+    private final StaticShape<StaticObject.StaticObjectFactory> instanceShape;
+    private final StaticShape<StaticObject.StaticObjectFactory> staticShape;
+    @CompilerDirectives.CompilationFinal(dimensions = 1)
+    private final Field[] instanceFields;
+    @CompilerDirectives.CompilationFinal(dimensions = 1)
+    private final Field[] staticFields;
 
     protected final int _flags;
     protected final CLIFile _definingFile;
@@ -40,14 +50,7 @@ public abstract class TypeBase<T extends CLITableRow<T>> extends CLIType impleme
 
     protected final T _row;
 
-    public TypeBase(T row,
-                    CLIFile _definingFile,
-                    String _name,
-                    String _namespace,
-                    IType _directBaseClass,
-                    IType[] _interfaces,
-                    CLIComponent _definingComponent,
-                    int flags) {
+    public TypeBase(T row, CLIFile _definingFile, String _name, String _namespace, IType _directBaseClass, IType[] _interfaces, CLIComponent _definingComponent, int flags) {
         _row = row;
         this._definingFile = _definingFile;
         this._name = _name;
@@ -80,6 +83,7 @@ public abstract class TypeBase<T extends CLITableRow<T>> extends CLIType impleme
     public CLIFile getDefiningFile() {
         return _definingFile;
     }
+
     @Override
     public IType getDirectBaseClass() {
 
@@ -160,10 +164,12 @@ public abstract class TypeBase<T extends CLITableRow<T>> extends CLIType impleme
         return !isInterface();
     }
 
+    @Override
     public boolean isInterface() {
         return getSemantics() == TypeSemantics.Interface;
     }
 
+    @Override
     public boolean isAbstract() {
         return (_flags & ABSTRACT_FLAG_MASK) != 0;
     }
@@ -200,6 +206,22 @@ public abstract class TypeBase<T extends CLITableRow<T>> extends CLIType impleme
         return (_flags & IS_TYPE_FORWARDER_FLAG_MASK) != 0;
     }
 
+    public StaticShape<StaticObject.StaticObjectFactory> getShape(boolean isStatic) {
+        return isStatic ? staticShape : instanceShape;
+    }
+
+    public Field[] getInstanceFields() {
+        return instanceFields;
+    }
+
+    public Field[] getStaticFields() {
+        return staticFields;
+    }
+
+    public void safelyInitialize() {
+
+    }
+
     private IField[] createFields(CLITypeDefTableRow row) {
         var fieldTablePtr = row.getFieldListTablePtr();
         var fieldListEndPtr = row.skip(1).getFieldListTablePtr();
@@ -220,9 +242,7 @@ public abstract class TypeBase<T extends CLITableRow<T>> extends CLIType impleme
         var methodTablePtr = row.getMethodListTablePtr();
 
         final boolean isLastType = row.getRowNo() == getDefiningFile().getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_TYPE_DEF);
-        final int lastIdx = isLastType ?
-                getDefiningFile().getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_METHOD_DEF)
-                : row.skip(1).getMethodListTablePtr().getRowNo();
+        final int lastIdx = isLastType ? getDefiningFile().getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_METHOD_DEF) : row.skip(1).getMethodListTablePtr().getRowNo();
 
         var methodRow = _definingComponent.getTableHeads().getMethodDefTableHead().skip(methodTablePtr);
 
