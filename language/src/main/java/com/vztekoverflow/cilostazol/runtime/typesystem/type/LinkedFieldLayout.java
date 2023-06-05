@@ -1,10 +1,11 @@
-package com.vztekoverflow.cilostazol.objectmodel;
+package com.vztekoverflow.cilostazol.runtime.typesystem.type;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.staticobject.StaticShape;
+import com.vztekoverflow.cilostazol.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
+import com.vztekoverflow.cilostazol.runtime.typesystem.field.Field;
 import com.vztekoverflow.cilostazol.runtime.typesystem.field.IField;
-import com.vztekoverflow.cilostazol.runtime.typesystem.type.CLIType;
 
 public final class LinkedFieldLayout {
     final StaticShape<StaticObject.StaticObjectFactory> instanceShape;
@@ -12,14 +13,14 @@ public final class LinkedFieldLayout {
 
     // instance fields declared in the corresponding LinkedKlass (includes hidden fields)
     @CompilerDirectives.CompilationFinal(dimensions = 1) //
-    final LinkedField[] instanceFields;
+    final Field[] instanceFields;
     // static fields declared in the corresponding LinkedKlass (no hidden fields)
     @CompilerDirectives.CompilationFinal(dimensions = 1) //
-    final LinkedField[] staticFields;
+    final Field[] staticFields;
 
     final int fieldTableLength;
 
-    LinkedFieldLayout(CILOSTAZOLContext description, CLIType parserKlass, CLIType superKlass) {
+    LinkedFieldLayout(CILOSTAZOLContext description, CLIType parserKlass, TypeBase<?> superKlass) {
         StaticShape.Builder instanceBuilder = StaticShape.newBuilder(description.getLanguage());
         StaticShape.Builder staticBuilder = StaticShape.newBuilder(description.getLanguage());
 
@@ -29,14 +30,14 @@ public final class LinkedFieldLayout {
         int nextInstanceFieldSlot = superKlass == null ? 0 : superKlass.getFields().length;
         int nextStaticFieldSlot = 0;
 
-        staticFields = new LinkedField[fieldCounter.staticFields];
-        instanceFields = new LinkedField[fieldCounter.instanceFields];
+        staticFields = new Field[fieldCounter.staticFields];
+        instanceFields = new Field[fieldCounter.instanceFields];
 
         for (IField parserField : parserKlass.getFields()) {
             if (parserField.isStatic()) {
-                createAndRegisterLinkedField(parserKlass, parserField, nextStaticFieldSlot++, nextStaticFieldIndex++, staticBuilder, staticFields);
+                createAndRegisterLinkedField(parserField, nextStaticFieldSlot++, nextStaticFieldIndex++, staticBuilder, staticFields);
             } else {
-                createAndRegisterLinkedField(parserKlass, parserField, nextInstanceFieldSlot++, nextInstanceFieldIndex++, instanceBuilder, instanceFields);
+                createAndRegisterLinkedField(parserField, nextInstanceFieldSlot++, nextInstanceFieldIndex++, instanceBuilder, instanceFields);
             }
         }
 
@@ -49,10 +50,9 @@ public final class LinkedFieldLayout {
         fieldTableLength = nextInstanceFieldSlot;
     }
 
-    private static void createAndRegisterLinkedField(CLIType parserKlass, IField parserField, int slot, int index, StaticShape.Builder builder, LinkedField[] linkedFields) {
-        LinkedField field = new LinkedField(parserField, slot);
-        builder.property(field, parserField.getPropertyType(), storeAsFinal(parserField));
-        linkedFields[index] = field;
+    private static void createAndRegisterLinkedField(IField parserField, int slot, int index, StaticShape.Builder builder, Field[] linkedFields) {
+        builder.property((Field) parserField, parserField.getPropertyType(), storeAsFinal(parserField));
+        linkedFields[index] = (Field) parserField;
     }
 
     private static boolean storeAsFinal(IField field) {
