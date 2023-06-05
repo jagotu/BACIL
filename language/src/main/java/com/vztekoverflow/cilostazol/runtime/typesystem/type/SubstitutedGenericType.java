@@ -2,6 +2,9 @@ package com.vztekoverflow.cilostazol.runtime.typesystem.type;
 
 import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
+import com.vztekoverflow.cilostazol.meta.SystemTypes;
+import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
+import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.field.IField;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
@@ -9,12 +12,13 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
 
 import java.util.Arrays;
 
-public class SubstitutedGenericType implements IType {
+public class SubstitutedGenericType extends CLIType {
     protected final IType _constructedFrom;
     protected final IType _definition;
     protected final ISubstitution<IType> _substitution;
 
-    public SubstitutedGenericType(IType _constructedFrom, IType _definition, ISubstitution<IType> substitution) {
+    public SubstitutedGenericType(CILOSTAZOLContext context, IType _constructedFrom, IType _definition, ISubstitution<IType> substitution) {
+        super(context);
         this._constructedFrom = _constructedFrom;
         this._definition = _definition;
         this._substitution = substitution;
@@ -63,13 +67,28 @@ public class SubstitutedGenericType implements IType {
     }
 
     @Override
+    public CLIComponent getCLIComponent() {
+        return null;
+    }
+
+    @Override
+    protected int getHierarchyDepth() {
+        return 0;
+    }
+
+    @Override
+    protected CLIType[] getSuperTypes() {
+        return new CLIType[0];
+    }
+
+    @Override
     public IComponent getDefiningComponent() {
         return _constructedFrom.getDefiningComponent();
     }
 
     @Override
     public IType substitute(ISubstitution<IType> substitution) {
-        return new SubstitutedGenericType(this, _definition, substitution);
+        return new SubstitutedGenericType(getContext(), this, _definition, substitution);
     }
 
     @Override
@@ -81,5 +100,16 @@ public class SubstitutedGenericType implements IType {
     public IType getConstructedFrom() {
         return _constructedFrom;
     }
+
+    @Override
+    public boolean isInterface() {
+        return super.isInterface();
+    }
+
+    @Override
+    public boolean isAbstract() {
+        return super.isAbstract();
+    }
+
     //endregion
 }

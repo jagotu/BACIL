@@ -75,7 +75,7 @@ public final class GuestAllocator implements LanguageAccess {
         for (IField f : type.getFields()) {
             assert !f.isStatic();
             if (f.getKind() == SystemTypes.Object) {
-                f.setObject(obj, StaticObject.NULL);
+                f.setObjectValue(obj, StaticObject.NULL);
             }
         }
     }
@@ -84,7 +84,7 @@ public final class GuestAllocator implements LanguageAccess {
         for (IField f : type.getFields()) {
             assert !f.isStatic();
             if (f.getKind() == SystemTypes.Object) {
-                f.setObject(obj, StaticObject.NULL);
+                f.setObjectValue(obj, StaticObject.NULL);
             }
         }
     }

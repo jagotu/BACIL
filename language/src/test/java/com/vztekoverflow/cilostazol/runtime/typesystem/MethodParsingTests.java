@@ -36,11 +36,11 @@ public class MethodParsingTests extends TestBase {
 
         final CLIComponent component = (CLIComponent) assembly.getComponents()[0];
         //Classes
-        final CLIType classA = (CLIType)component.getLocalType("MethodParsingGeneral", "A");
+        final CLIType classA = (CLIType)component.getLocalType(ctx, "MethodParsingGeneral", "A");
         //final IType interfaceAI= component.getLocalType("MethodParsingGeneral","AI");
-        final CLIType classG_T = (CLIType)component.getLocalType("MethodParsingGeneral", "G`1");
-        final CLIType classBar1 = (CLIType)component.getLocalType("MethodParsingGeneral", "Bar1");
-        final CLIType classBar2 = (CLIType)component.getLocalType("MethodParsingGeneral", "Bar2`1");
+        final CLIType classG_T = (CLIType)component.getLocalType(ctx, "MethodParsingGeneral", "G`1");
+        final CLIType classBar1 = (CLIType)component.getLocalType(ctx, "MethodParsingGeneral", "Bar1");
+        final CLIType classBar2 = (CLIType)component.getLocalType(ctx,"MethodParsingGeneral", "Bar2`1");
 
         final CLIMethodDefTableRow method_def_Bar1_Foo1 = CLIFileUtils.getMethodByName("Bar1_Foo1", component.getDefiningFile())[0];
         final CLIMethodDefTableRow method_def_Bar1_Foo2 = CLIFileUtils.getMethodByName("Bar1_Foo2", component.getDefiningFile())[0];
@@ -54,18 +54,18 @@ public class MethodParsingTests extends TestBase {
         final CLIMethodDefTableRow method_def_Bar1_Foo10 = CLIFileUtils.getMethodByName("Bar1_Foo10", component.getDefiningFile())[0];
         final CLIMethodDefTableRow method_def_Bar2_Foo1 = CLIFileUtils.getMethodByName("Bar2_Foo1", component.getDefiningFile())[0];
 
-        final IMethod method_Bar1_Foo1 = MethodFactory.create(method_def_Bar1_Foo1, classBar1);
+        final IMethod method_Bar1_Foo1 = MethodFactory.create(ctx, method_def_Bar1_Foo1, classBar1);
         Assert.assertEquals(method_Bar1_Foo1.getName(), "Bar1_Foo1");
-        final IMethod method_Bar1_Foo2 = MethodFactory.create(method_def_Bar1_Foo2, classBar1);
-        final IMethod method_Bar1_Foo3 = MethodFactory.create(method_def_Bar1_Foo3, classBar1);
-        final IMethod method_Bar1_Foo4 = MethodFactory.create(method_def_Bar1_Foo4, classBar1);
-        final IMethod method_Bar1_Foo5 = MethodFactory.create(method_def_Bar1_Foo5, classBar1);
-        final IMethod method_Bar1_Foo6 = MethodFactory.create(method_def_Bar1_Foo6, classBar1);
-        final IMethod method_Bar1_Foo7 = MethodFactory.create(method_def_Bar1_Foo7, classBar1);
-        final IMethod method_Bar1_Foo8 = MethodFactory.create(method_def_Bar1_Foo8, classBar1);
-        final IMethod method_Bar1_Foo9 = MethodFactory.create(method_def_Bar1_Foo9, classBar1);
-        final IMethod method_Bar1_Foo10 = MethodFactory.create(method_def_Bar1_Foo10, classBar1);
-        final IMethod method_Bar2_Foo1 = MethodFactory.create(method_def_Bar2_Foo1, classBar2);
+        final IMethod method_Bar1_Foo2 = MethodFactory.create(ctx, method_def_Bar1_Foo2, classBar1);
+        final IMethod method_Bar1_Foo3 = MethodFactory.create(ctx, method_def_Bar1_Foo3, classBar1);
+        final IMethod method_Bar1_Foo4 = MethodFactory.create(ctx, method_def_Bar1_Foo4, classBar1);
+        final IMethod method_Bar1_Foo5 = MethodFactory.create(ctx, method_def_Bar1_Foo5, classBar1);
+        final IMethod method_Bar1_Foo6 = MethodFactory.create(ctx, method_def_Bar1_Foo6, classBar1);
+        final IMethod method_Bar1_Foo7 = MethodFactory.create(ctx, method_def_Bar1_Foo7, classBar1);
+        final IMethod method_Bar1_Foo8 = MethodFactory.create(ctx, method_def_Bar1_Foo8, classBar1);
+        final IMethod method_Bar1_Foo9 = MethodFactory.create(ctx, method_def_Bar1_Foo9, classBar1);
+        final IMethod method_Bar1_Foo10 = MethodFactory.create(ctx, method_def_Bar1_Foo10, classBar1);
+        final IMethod method_Bar2_Foo1 = MethodFactory.create(ctx, method_def_Bar2_Foo1, classBar2);
     }
 
     public void testMethodParsing_MethodExistence() throws IOException {

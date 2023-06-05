@@ -7,6 +7,7 @@ import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
 import com.vztekoverflow.cil.parser.cli.table.CLITableRow;
 import com.vztekoverflow.cil.parser.cli.table.generated.*;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
+import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.IAssembly;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
@@ -31,7 +32,7 @@ public class CLIComponent implements IComponent {
     //TODO: gettype -> if local defined then call getLocalType, if not, get the reference and call in on assembly or different module
 
     @Override
-    public IType getLocalType(String namespace, String name) {
+    public IType getLocalType(CILOSTAZOLContext context, String namespace, String name) {
         //print typeDefs
         for (CLITypeDefTableRow row : _cliFile.getTableHeads().getTypeDefTableHead()) {
             var rowName = getNameFrom(row);
@@ -44,7 +45,7 @@ public class CLIComponent implements IComponent {
             var rowName = getNameFrom(row);
             var rowNamespace = getNamespaceFrom(row);
             if (rowNamespace.equals(namespace) && rowName.equals(name))
-                return TypeFactory.create(row, this);
+                return TypeFactory.create(context, row, this);
         }
 
         //Check exported types (II.6.8 Type forwarders)
@@ -62,9 +63,9 @@ public class CLIComponent implements IComponent {
     }
 
     @Override
-    public IType getLocalType(CLITablePtr tablePtr) {
+    public IType getLocalType(CILOSTAZOLContext context, CLITablePtr tablePtr) {
         var typeDefTableRow = getTableHeads().getTypeDefTableHead().skip(tablePtr);
-        return TypeFactory.create(typeDefTableRow, this);
+        return TypeFactory.create(context, typeDefTableRow, this);
     }
 
     public <T extends CLITableRow<T>> String getNameFrom(CLITableRow<T> row) {

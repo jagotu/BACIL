@@ -2,6 +2,7 @@ package com.vztekoverflow.cilostazol.runtime.typesystem.generic;
 
 import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
+import com.vztekoverflow.cilostazol.meta.SystemTypes;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.field.IField;
@@ -38,6 +39,24 @@ public class TypeParameter implements ITypeParameter {
     @Override
     public IType getConstructedFrom() {
         throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.invalidOperation"));
+    }
+
+    // TODO
+    @Override
+    public SystemTypes getKind() {
+        return null;
+    }
+
+    // TODO
+    @Override
+    public boolean isArray() {
+        return false;
+    }
+
+    // TODO
+    @Override
+    public IType getType() {
+        return null;
     }
 
     @Override

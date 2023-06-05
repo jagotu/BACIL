@@ -7,6 +7,7 @@ import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cilostazol.context.ContextAccessImpl;
 import com.vztekoverflow.cilostazol.meta.ModifiersProvider;
 import com.vztekoverflow.cilostazol.meta.SystemTypes;
+import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 
@@ -20,6 +21,10 @@ public abstract class CLIType extends ContextAccessImpl implements IType, Modifi
 
     // index 0 is Object, index hierarchyDepth is this
     protected abstract CLIType[] getSuperTypes();
+
+    public CLIType(CILOSTAZOLContext context) {
+        super(context);
+    }
 
     public CLIFile getDefiningFile() {
         return getCLIComponent().getDefiningFile();
@@ -107,5 +112,29 @@ public abstract class CLIType extends ContextAccessImpl implements IType, Modifi
     @CompilerDirectives.TruffleBoundary(allowInlining = true)
     protected static int fastLookupBoundary(CLIType target, IType[] types) {
         return fastLookupImpl(target, types);
+    }
+
+    // TODO
+    @Override
+    public boolean isStatic() {
+        return false;
+    }
+
+    // TODO
+    @Override
+    public boolean isPublic() {
+        return false;
+    }
+
+    // TODO
+    @Override
+    public boolean isPrivate() {
+        return false;
+    }
+
+    // TODO
+    @Override
+    public boolean isProtected() {
+        return false;
     }
 }

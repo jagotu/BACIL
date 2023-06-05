@@ -8,6 +8,7 @@ import com.vztekoverflow.cil.parser.cli.table.generated.CLITableConstants;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITypeDefTableRow;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.objectmodel.StaticObject;
+import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
@@ -50,7 +51,8 @@ public abstract class TypeBase<T extends CLITableRow<T>> extends CLIType impleme
 
     protected final T _row;
 
-    public TypeBase(T row, CLIFile _definingFile, String _name, String _namespace, IType _directBaseClass, IType[] _interfaces, CLIComponent _definingComponent, int flags) {
+    public TypeBase(CILOSTAZOLContext context, T row, CLIFile _definingFile, String _name, String _namespace, IType _directBaseClass, IType[] _interfaces, CLIComponent _definingComponent, int flags) {
+        super(context);
         _row = row;
         this._definingFile = _definingFile;
         this._name = _name;
@@ -62,6 +64,13 @@ public abstract class TypeBase<T extends CLITableRow<T>> extends CLIType impleme
         this._fields = null;
         this._methods = null;
         this._vMethodTable = null;
+
+        // TODO: Use the superclass in the future
+        LinkedFieldLayout layout = new LinkedFieldLayout(context, this, null);
+        instanceShape = layout.instanceShape;
+        staticShape = layout.staticShape;
+        instanceFields = layout.instanceFields;
+        staticFields = layout.staticFields;
     }
 
     @Override
@@ -174,6 +183,18 @@ public abstract class TypeBase<T extends CLITableRow<T>> extends CLIType impleme
         return (_flags & ABSTRACT_FLAG_MASK) != 0;
     }
 
+    // TODO
+    @Override
+    protected int getHierarchyDepth() {
+        return 0;
+    }
+
+    // TODO
+    @Override
+    protected CLIType[] getSuperTypes() {
+        return new CLIType[0];
+    }
+
     public boolean isSealed() {
         return (_flags & SEALED_FLAG_MASK) != 0;
     }
@@ -230,7 +251,7 @@ public abstract class TypeBase<T extends CLITableRow<T>> extends CLIType impleme
 
         var fields = new ArrayList<IField>();
         while (fieldRow.getRowNo() < fieldListEndPtr.getRowNo() && fieldRow.hasNext()) {
-            var field = FieldFactory.create(fieldRow, _definingComponent);
+            var field = FieldFactory.create(getContext(), fieldRow, _definingComponent);
             fields.add(field);
             fieldRow = fieldRow.next();
         }
@@ -248,7 +269,7 @@ public abstract class TypeBase<T extends CLITableRow<T>> extends CLIType impleme
 
         var methods = new ArrayList<IMethod>();
         while (methodRow.getRowNo() < lastIdx) {
-            var method = MethodFactory.create(methodRow, this);
+            var method = MethodFactory.create(getContext(), methodRow, this);
             methods.add(method);
             methodRow = methodRow.next();
         }

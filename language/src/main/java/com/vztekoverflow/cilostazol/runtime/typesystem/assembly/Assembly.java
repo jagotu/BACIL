@@ -28,7 +28,7 @@ public class Assembly implements IAssembly {
     public IType getLocalType(String namespace, String name) {
         IType result = null;
         for (int i = 0; i < _components.length && result == null; i++) {
-            result = _components[i].getLocalType(namespace, name);
+            result = _components[i].getLocalType(_appdomain.getContext(), namespace, name);
         }
 
         return result;
