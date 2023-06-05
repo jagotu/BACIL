@@ -100,6 +100,7 @@ public final class FactoryUtils {
         var referencedAssemblyIdentity = AssemblyIdentity.fromAssemblyRefRow(component.getDefiningFile().getStringHeap(), component.getTableHeads().getAssemblyRefTableHead().skip(resolutionScopeTablePtr));
         var referencedAssembly = component.getDefiningAssembly().getAppDomain().getAssembly(referencedAssemblyIdentity);
         if (referencedAssembly == null) {
+            //TODO: log CILOSTAZOLBundle.message("cilostazol.warning.referencedAssemblyNotFound", referencedAssemblyIdentity.toString())
             return null;
         }
         return referencedAssembly.getLocalType(namespace, name);
