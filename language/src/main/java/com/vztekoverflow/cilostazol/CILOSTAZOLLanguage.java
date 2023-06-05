@@ -19,8 +19,7 @@ public class CILOSTAZOLLanguage extends TruffleLanguage<CILOSTAZOLContext> {
     private GuestAllocator allocator;
 
     @CompilerDirectives.CompilationFinal
-    private final Assumption noAllocationTracking = Assumption.create("Espresso no allocation tracking assumption");
-
+    private final Assumption noAllocationTracking = Assumption.create("No allocation tracking assumption");
 
     public static final String ID = "cil";
     public static final String NAME = "CIL";
@@ -35,7 +34,7 @@ public class CILOSTAZOLLanguage extends TruffleLanguage<CILOSTAZOLContext> {
 
     @Override
     protected CILOSTAZOLContext createContext(Env env) {
-        return null;
+        return new CILOSTAZOLContext(this, env);
     }
 
     public boolean isAllocationTrackingDisabled() {

@@ -3,6 +3,7 @@ package com.vztekoverflow.cilostazol.runtime;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleFile;
 import com.oracle.truffle.api.TruffleLanguage;
+import com.oracle.truffle.api.nodes.Node;
 import com.vztekoverflow.cilostazol.CILOSTAZOLEngineOption;
 import com.vztekoverflow.cilostazol.CILOSTAZOLLanguage;
 import com.vztekoverflow.cilostazol.meta.Meta;
@@ -15,12 +16,15 @@ public class CILOSTAZOLContext {
     private final CILOSTAZOLLanguage _language;
     private final TruffleLanguage.Env _env;
 
+    public static final TruffleLanguage.ContextReference<CILOSTAZOLContext> CONTEXT_REF = TruffleLanguage.ContextReference.create(CILOSTAZOLLanguage.class);
+
     @CompilerDirectives.CompilationFinal
     private Meta meta;
 
     public CILOSTAZOLContext(CILOSTAZOLLanguage lang, TruffleLanguage.Env env) {
         _language = lang;
         _env = env;
+        getLanguage().initializeGuestAllocator(env);
         _libraryPaths = (Path[]) Arrays.stream(CILOSTAZOLEngineOption.getPolyglotOptionSearchPaths(env)).filter(p -> {
             TruffleFile file = getEnv().getInternalTruffleFile(p.toString());
             return file.isDirectory();
@@ -56,5 +60,9 @@ public class CILOSTAZOLContext {
 
     public void setBootstrapMeta(Meta meta) {
         this.meta = meta;
+    }
+
+    public static CILOSTAZOLContext get(Node node) {
+        return CONTEXT_REF.get(node);
     }
 }
