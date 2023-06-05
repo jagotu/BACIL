@@ -118,4 +118,43 @@ public class TypeParsingTest extends TestBase {
 
         assertEquals(1, type.getTypeParameters().length);
     }
+
+    public void testFindNonLocalType_OtherModule() throws Exception {
+        final String projectName = "FindNonLocalType";
+        Source source = getSourceFromProject(projectName);
+        Source[] sources = getSourcesFromProjects();
+
+        CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
+        CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
+        IAppDomain domain = new AppDomain(ctx);
+        IAssembly assembly = Assembly.parse(source);
+        domain.loadAssembly(assembly);
+        IType localType = assembly.getLocalType(projectName, "Class1");
+
+        assertEquals(2, localType.getFields().length);
+        assertEquals("Class2", localType.getFields()[1].getType().getName());
+        assertEquals("FindNonLocalType", localType.getFields()[1].getType().getNamespace());
+    }
+
+    public void testFindNonLocalType_OtherAssembly() throws Exception {
+        final String projectName = "FindNonLocalType";
+        final String otherProjectName = "FindLocalType";
+        Source[] sources = getSourcesFromProjects(projectName, otherProjectName);
+
+        CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
+        CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
+        IAppDomain domain = new AppDomain(ctx);
+        IAssembly assembly = Assembly.parse(sources[0]);
+        domain.loadAssembly(assembly);
+        //foreign assembly
+        //TODO: this should be done by assembly loader?
+        IAssembly otherAssembly = Assembly.parse(sources[1]);
+        domain.loadAssembly(otherAssembly);
+
+        IType localType = assembly.getLocalType(projectName, "Class1");
+
+        assertEquals(2, localType.getFields().length);
+        assertEquals("Class", localType.getFields()[0].getType().getName());
+        assertEquals("FindLocalType", localType.getFields()[0].getType().getNamespace());
+    }
 }

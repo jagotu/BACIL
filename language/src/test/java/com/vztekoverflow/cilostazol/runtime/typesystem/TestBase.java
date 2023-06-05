@@ -29,4 +29,12 @@ public abstract class TestBase extends TestCase {
                         org.graalvm.polyglot.io.ByteSequence.create(Files.readAllBytes(getDllPath(projectName))), projectName)
                 .build();
     }
+
+    protected Source[] getSourcesFromProjects(String... projectNames) throws IOException {
+        Source[] sources = new Source[projectNames.length];
+        for (int i = 0; i < projectNames.length; i++) {
+            sources[i] = getSourceFromProject(projectNames[i]);
+        }
+        return sources;
+    }
 }
