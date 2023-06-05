@@ -99,6 +99,9 @@ public final class FactoryUtils {
     static IType getTypeFromDifferentAssembly(CLIComponent component, String name, String namespace, CLITablePtr resolutionScopeTablePtr) {
         var referencedAssemblyIdentity = AssemblyIdentity.fromAssemblyRefRow(component.getDefiningFile().getStringHeap(), component.getTableHeads().getAssemblyRefTableHead().skip(resolutionScopeTablePtr));
         var referencedAssembly = component.getDefiningAssembly().getAppDomain().getAssembly(referencedAssemblyIdentity);
+        if (referencedAssembly == null) {
+            return null;
+        }
         return referencedAssembly.getLocalType(namespace, name);
     }
 }
