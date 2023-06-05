@@ -11,7 +11,6 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.IAssembly;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.factory.TypeFactory;
-import com.vztekoverflow.cilostazol.utils.Wrapper;
 
 public class CLIComponent implements IComponent {
     private final CLIFile _cliFile;
@@ -62,19 +61,6 @@ public class CLIComponent implements IComponent {
         //TODO: make this truffle boundary and refactor to calling something that's marked as truffle boundary and then calls the exception
         CompilerDirectives.transferToInterpreterAndInvalidate();
         throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.typesystem.typeNotFound", namespace, name));
-    }
-
-    public boolean tryGetLocalType(String namespace, String name, Wrapper<IType> result) {
-        //Check typeDefs
-        for (CLITypeDefTableRow row : _cliFile.getTableHeads().getTypeDefTableHead()) {
-            var rowName = getNameFrom(row);
-            var rowNamespace = getNamespaceFrom(row);
-            if (rowNamespace.equals(namespace) && rowName.equals(name)) {
-                result.set(TypeFactory.create(row, this));
-                return true;
-            }
-        }
-        return false;
     }
 
     @Override
