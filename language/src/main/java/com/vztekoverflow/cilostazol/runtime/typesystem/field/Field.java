@@ -5,6 +5,7 @@ import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cilostazol.meta.SystemTypes;
 import com.vztekoverflow.cilostazol.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
+import com.vztekoverflow.cilostazol.runtime.typesystem.type.CLIType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.TypeBase;
 
@@ -70,6 +71,11 @@ public class Field extends StaticProperty implements IField {
 
     @Override
     public Class<?> getPropertyType() {
+        // TODO: Remove
+        if (type == null) {
+            return int.class;
+        }
+
         return switch (type.getKind()) {
             case Boolean -> boolean.class;
             case Char -> char.class;
@@ -92,17 +98,11 @@ public class Field extends StaticProperty implements IField {
     }
 
     @Override
-    public final void setObject(StaticObject obj, Object value) {
-        assert getDeclaringType().isAssignableFrom(obj.getKlass()) : this + " does not exist in " + obj.getKlass();
+    public final void setObjectValue(StaticObject obj, Object value) {
+        assert getDeclaringType().isAssignableFrom((CLIType) obj.getType()) : this + " does not exist in " + obj.getType();
 
-        if (getDeclaringType().getContext().anyHierarchyChanged()) {
-            checkSetValueValifity(value);
-        }
-        if (isVolatile() || forceVolatile) {
-            linkedField.setObjectVolatile(obj, value);
-        } else {
-            linkedField.setObject(obj, value);
-        }
+        // Call to StaticProperty!
+        setObject(obj, value);
     }
 
     public final TypeBase<?> getDeclaringType() {

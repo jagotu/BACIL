@@ -21,5 +21,5 @@ public interface IField extends ISubstitutable<IField, IType> {
 
     SystemTypes getKind();
 
-    void setObject(StaticObject obj, Object value);
+    void setObjectValue(StaticObject obj, Object value);
 }
