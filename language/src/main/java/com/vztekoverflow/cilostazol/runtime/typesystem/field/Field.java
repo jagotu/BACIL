@@ -6,6 +6,7 @@ import com.vztekoverflow.cilostazol.meta.SystemTypes;
 import com.vztekoverflow.cilostazol.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
+import com.vztekoverflow.cilostazol.runtime.typesystem.type.TypeBase;
 
 public class Field extends StaticProperty implements IField {
 
@@ -13,6 +14,7 @@ public class Field extends StaticProperty implements IField {
     private final IType type;
     private final boolean isStatic;
     private final CLIFile definingFile;
+    private final TypeBase<?> declaringType;
     private final int slot;
 
     public Field(String name, IType type, boolean isStatic, CLIFile definingFile) {
@@ -22,6 +24,7 @@ public class Field extends StaticProperty implements IField {
         this.definingFile = definingFile;
 
         // TODO:
+        declaringType = null;
         this.slot = -1;
     }
 
@@ -81,5 +84,28 @@ public class Field extends StaticProperty implements IField {
     @Override
     public boolean isFinal() {
         return false;
+    }
+
+    @Override
+    public SystemTypes getKind() {
+        return type.getKind();
+    }
+
+    @Override
+    public final void setObject(StaticObject obj, Object value) {
+        assert getDeclaringType().isAssignableFrom(obj.getKlass()) : this + " does not exist in " + obj.getKlass();
+
+        if (getDeclaringType().getContext().anyHierarchyChanged()) {
+            checkSetValueValifity(value);
+        }
+        if (isVolatile() || forceVolatile) {
+            linkedField.setObjectVolatile(obj, value);
+        } else {
+            linkedField.setObject(obj, value);
+        }
+    }
+
+    public final TypeBase<?> getDeclaringType() {
+        return declaringType;
     }
 }
