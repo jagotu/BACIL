@@ -19,8 +19,12 @@ jobs:
           components: 'native-image'
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build dotnet test targets
+      - name: Build parser test targets
         working-directory: ./language/src/test/resources/TypeParsingTestTargets
+        run: ./build.sh
+
+      - name: Build SOM test targets
+        working-directory: ./language/src/test/resources/StaticObjectModelTestTargets
         run: ./build.sh
 
       - name: Build with Maven
