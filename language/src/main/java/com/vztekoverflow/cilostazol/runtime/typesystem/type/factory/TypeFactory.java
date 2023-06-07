@@ -94,6 +94,6 @@ public final class TypeFactory {
         //TODO: null reference exception might have occured here if TypeSig is not created from CLASS
         //TODO: resolve for other types (SZARRAY, GENERICINST, ...)
         if (typeSig.getCliTablePtr() == null) return null;
-        return create(typeSig.getCliTablePtr(), mvars, vars, definingComponent);
+        return create(context, typeSig.getCliTablePtr(), mvars, vars, definingComponent);
     }
 }
