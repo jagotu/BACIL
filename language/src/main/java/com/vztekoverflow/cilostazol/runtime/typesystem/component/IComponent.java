@@ -7,6 +7,7 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.IAssembly;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
 public interface IComponent {
+    //TODO: CLIFile in IComponent ... get rid of it, or abandon IComponent completely?
     CLIFile getDefiningFile();
 
     IAssembly getDefiningAssembly();
@@ -15,6 +16,7 @@ public interface IComponent {
 
     IType getLocalType(CLITablePtr typeIndex);
 
+    //TODO: CLITableHeads in IComponent ... get rid of it, or abandon IComponent completely?
     CLITableHeads getTableHeads();
 
     //Note: CIL modules also have identity which can be used in TypeRef table.

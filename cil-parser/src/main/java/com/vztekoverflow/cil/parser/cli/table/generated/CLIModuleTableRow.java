@@ -1,7 +1,9 @@
 package com.vztekoverflow.cil.parser.cli.table.generated;
 
-import com.oracle.truffle.api.CompilerDirectives;
-import com.vztekoverflow.cil.parser.cli.table.*;
+import com.vztekoverflow.cil.parser.cli.table.CLIGUIDHeapPtr;
+import com.vztekoverflow.cil.parser.cli.table.CLIStringHeapPtr;
+import com.vztekoverflow.cil.parser.cli.table.CLITableRow;
+import com.vztekoverflow.cil.parser.cli.table.CLITables;
 public class CLIModuleTableRow extends CLITableRow<CLIModuleTableRow> {
 
 	public CLIModuleTableRow(CLITables tables, int cursor, int rowIndex) {

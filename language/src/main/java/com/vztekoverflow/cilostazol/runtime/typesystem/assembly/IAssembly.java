@@ -7,6 +7,7 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
 public interface IAssembly {
+    //TODO: CLIFIle in IAssembly ... get rid of it, or abandon IAssembly completely?
     public CLIFile getDefiningFile();
     public IComponent[] getComponents();
     public AssemblyIdentity getIdentity();

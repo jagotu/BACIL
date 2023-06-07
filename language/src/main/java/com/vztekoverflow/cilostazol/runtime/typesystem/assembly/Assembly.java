@@ -12,23 +12,25 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 import org.graalvm.polyglot.Source;
 
 public class Assembly implements IAssembly {
-    private final IComponent[] _components;
-    private final CLIFile _file;
-    private IAppDomain _appdomain;
+    private final IComponent[] components;
+    private final CLIFile file;
+    private IAppDomain appDomain;
 
     //region IAssembly
     @Override
     public CLIFile getDefiningFile() {
-        return _file;
+        return file;
     }
 
-    public IComponent[] getComponents() {return _components;}
+    public IComponent[] getComponents() {
+        return components;
+    }
 
     @Override
     public IType getLocalType(String namespace, String name) {
         IType result = null;
-        for (int i = 0; i < _components.length && result == null; i++) {
-            result = _components[i].getLocalType(namespace, name);
+        for (int i = 0; i < components.length && result == null; i++) {
+            result = components[i].getLocalType(namespace, name);
         }
 
         return result;
@@ -36,28 +38,28 @@ public class Assembly implements IAssembly {
 
     @Override
     public AssemblyIdentity getIdentity() {
-        return _file.getAssemblyIdentity();
+        return file.getAssemblyIdentity();
     }
 
     @Override
     public void setAppDomain(IAppDomain appdomain) {
-        _appdomain = appdomain;
+        appDomain = appdomain;
     }
 
     @Override
     public IAppDomain getAppDomain() {
-        return _appdomain;
+        return appDomain;
     }
     //endregion
 
     private Assembly(CLIFile file, IComponent[] components) {
-        _file = file;
-        _components = components;
-        _appdomain = null;
+        this.file = file;
+        this.components = components;
+        appDomain = null;
     }
 
     public static IAssembly parse(Source dllSource) {
-        CLIFile file = CLIFile.parse(dllSource.getBytes());
+        CLIFile file = CLIFile.parse(dllSource.getName(), dllSource.getPath(), dllSource.getBytes());
 
         if (file.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_MODULE) != 1)
             throw new CILParserException(CILOSTAZOLBundle.message("cilostazol.exception.module"));
@@ -66,7 +68,7 @@ public class Assembly implements IAssembly {
             throw new CILParserException(CILOSTAZOLBundle.message("cilostazol.exception.multimoduleAssembly"));
 
         Assembly assembly = new Assembly(file, new IComponent[1]);
-        assembly._components[0] = CLIComponent.parse(file, assembly);
+        assembly.components[0] = CLIComponent.parse(file, assembly);
 
         return assembly;
     }

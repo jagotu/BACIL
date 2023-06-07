@@ -62,7 +62,7 @@ public class TypeSig {
     public TypeSig(byte _typeType, int _idx, CLITablePtr _tablePtr, TypeSig[] _genericParams, TypeSig _innerType, CustomMod[] _mods, MethodRefSig _refSig, MethodDefSig _defSig, ArrayShapeSig arrayShapeSig) {
         this._typeType = _typeType;
         this._idx = _idx;
-        this._tablePtr = _tablePtr;
+        this.cliTablePtr = _tablePtr;
         this._genericParams = _genericParams;
         this._innerType = _innerType;
         this._mods = _mods;
@@ -70,11 +70,10 @@ public class TypeSig {
         this._defSig = _defSig;
         _arrayShapeSig = arrayShapeSig;
     }
-
     //endregion
     private final byte _typeType;
     private final int _idx;
-    private final CLITablePtr _tablePtr;
+    private final CLITablePtr cliTablePtr;
     private final TypeSig[] _genericParams;
     private final TypeSig _innerType;
     private final CustomMod[] _mods;
@@ -147,5 +146,9 @@ public class TypeSig {
             default:
                 throw new CILParserException(ParserBundle.message("cli.parser.exception.cli.type.unknown", elementType));
         }
+    }
+
+    public CLITablePtr getCliTablePtr() {
+        return cliTablePtr;
     }
 }

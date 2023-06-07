@@ -1,7 +1,10 @@
 package com.vztekoverflow.cil.parser.cli.table.generated;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.vztekoverflow.cil.parser.cli.table.*;
+import com.vztekoverflow.cil.parser.cli.table.CLIStringHeapPtr;
+import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
+import com.vztekoverflow.cil.parser.cli.table.CLITableRow;
+import com.vztekoverflow.cil.parser.cli.table.CLITables;
 public class CLIImplMapTableRow extends CLITableRow<CLIImplMapTableRow> {
 
 	public CLIImplMapTableRow(CLITables tables, int cursor, int rowIndex) {
@@ -15,12 +18,19 @@ public class CLIImplMapTableRow extends CLITableRow<CLIImplMapTableRow> {
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_MEMBER_FORWARDED_TABLES = new byte[] { CLITableConstants.CLI_TABLE_FIELD, CLITableConstants.CLI_TABLE_METHOD_DEF} ;
-	public final CLITablePtr getMemberForwardedTablePtr() { 
-		int offset = 2;
-		int codedValue;
-		if (areSmallEnough(MAP_MEMBER_FORWARDED_TABLES)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
-		return new CLITablePtr(MAP_MEMBER_FORWARDED_TABLES[codedValue & 1], codedValue >> 1);
-	}
+	public final CLITablePtr getMemberForwardedTablePtr() {
+        int offset = 2;
+        int codedValue;
+        var isSmall = areSmallEnough(MAP_MEMBER_FORWARDED_TABLES);
+        if (isSmall) {
+            codedValue = getShort(offset);
+        } else {
+            codedValue = getInt(offset);
+        }
+        if ((isSmall && (codedValue & 0xffff) == 0xffff) || (!isSmall && (codedValue & 0xffffffff) == 0xffffffff))
+            return null;
+        return new CLITablePtr(MAP_MEMBER_FORWARDED_TABLES[codedValue & 1], codedValue >> 1);
+    }
 
 	public final CLIStringHeapPtr getImportNameHeapPtr() {
 		int offset = 4;
