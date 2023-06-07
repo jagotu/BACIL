@@ -17,8 +17,7 @@ import java.io.File;
 /**
  * The BACIL language class implementing TruffleLanguage.
  */
-@TruffleLanguage.Registration(id = BACILLanguage.ID, name = BACILLanguage.NAME, interactive = false, defaultMimeType = BACILLanguage.CIL_PE_MIME_TYPE,
-byteMimeTypes = {BACILLanguage.CIL_PE_MIME_TYPE})
+//@TruffleLanguage.Registration(id = BACILLanguage.ID, name = BACILLanguage.NAME, interactive = false, defaultMimeType = BACILLanguage.CIL_PE_MIME_TYPE, byteMimeTypes = {BACILLanguage.CIL_PE_MIME_TYPE})
 public class BACILLanguage extends TruffleLanguage<BACILContext> {
 
     public static final String ID = "cil";

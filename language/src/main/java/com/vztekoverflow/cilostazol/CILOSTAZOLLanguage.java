@@ -1,5 +1,6 @@
 package com.vztekoverflow.cilostazol;
 
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.nodes.Node;
 import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
@@ -7,8 +8,7 @@ import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
 /**
  * The BACIL language class implementing TruffleLanguage.
  */
-@TruffleLanguage.Registration(id = CILOSTAZOLLanguage.ID, name = CILOSTAZOLLanguage.NAME, interactive = false, defaultMimeType = CILOSTAZOLLanguage.CIL_PE_MIME_TYPE,
-byteMimeTypes = {CILOSTAZOLLanguage.CIL_PE_MIME_TYPE})
+@TruffleLanguage.Registration(id = CILOSTAZOLLanguage.ID, name = CILOSTAZOLLanguage.NAME, interactive = false, defaultMimeType = CILOSTAZOLLanguage.CIL_PE_MIME_TYPE, byteMimeTypes = {CILOSTAZOLLanguage.CIL_PE_MIME_TYPE})
 public class CILOSTAZOLLanguage extends TruffleLanguage<CILOSTAZOLContext> {
 
     public static final String ID = "cil";
@@ -24,6 +24,6 @@ public class CILOSTAZOLLanguage extends TruffleLanguage<CILOSTAZOLContext> {
 
     @Override
     protected CILOSTAZOLContext createContext(Env env) {
-        return null;
+        return new CILOSTAZOLContext(this, env);
     }
 }

@@ -17,11 +17,11 @@ public final class BACILEngineOption {
     public static final String OPTION_ARRAY_SEPARATOR = ";";
 
     public static final String LIBRARY_PATH_NAME = "cil.libraryPath";
-    @Option(name = LIBRARY_PATH_NAME,
-            category = OptionCategory.USER,
-            stability = OptionStability.STABLE,
-            help = "A list of paths where BACIL will search for relative libraries. " +
-                    "Paths are delimited by a semicolon \'" + OPTION_ARRAY_SEPARATOR + "\'.")
+//    @Option(name = LIBRARY_PATH_NAME,
+//            category = OptionCategory.USER,
+//            stability = OptionStability.STABLE,
+//            help = "A list of paths where BACIL will search for relative libraries. " +
+//                    "Paths are delimited by a semicolon \'" + OPTION_ARRAY_SEPARATOR + "\'.")
     public static final OptionKey<String> LIBRARY_PATH = new OptionKey<>("");
 
     public static final String STUBBED_METHODS_NAME = "cil.stubMethods";
