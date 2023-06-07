@@ -11,7 +11,7 @@ import com.vztekoverflow.cilostazol.exceptions.InstantiationError;
 import com.vztekoverflow.cilostazol.exceptions.InstantiationException;
 import com.vztekoverflow.cilostazol.exceptions.NegativeArraySizeException;
 import com.vztekoverflow.cilostazol.meta.SystemTypes;
-import com.vztekoverflow.cilostazol.objectmodel.StaticObject;
+import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.typesystem.field.IField;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.CLIType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.TypeBase;

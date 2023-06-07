@@ -2,7 +2,7 @@ package com.vztekoverflow.cilostazol.runtime.typesystem.type;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.staticobject.StaticShape;
-import com.vztekoverflow.cilostazol.objectmodel.StaticObject;
+import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
 import com.vztekoverflow.cilostazol.runtime.typesystem.field.Field;
 import com.vztekoverflow.cilostazol.runtime.typesystem.field.IField;

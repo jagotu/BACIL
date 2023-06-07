@@ -1,4 +1,4 @@
-package com.vztekoverflow.cilostazol.objectmodel;
+package com.vztekoverflow.cilostazol.runtime.objectmodel;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.interop.TruffleObject;
