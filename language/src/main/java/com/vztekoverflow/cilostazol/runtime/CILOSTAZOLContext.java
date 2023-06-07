@@ -25,10 +25,10 @@ public class CILOSTAZOLContext {
         _language = lang;
         _env = env;
         getLanguage().initializeGuestAllocator(env);
-        _libraryPaths = (Path[]) Arrays.stream(CILOSTAZOLEngineOption.getPolyglotOptionSearchPaths(env)).filter(p -> {
+        _libraryPaths = Arrays.stream(CILOSTAZOLEngineOption.getPolyglotOptionSearchPaths(env)).filter(p -> {
             TruffleFile file = getEnv().getInternalTruffleFile(p.toString());
             return file.isDirectory();
-        }).distinct().toArray();
+        }).distinct().toArray(Path[]::new);
     }
 
     //For test propose only

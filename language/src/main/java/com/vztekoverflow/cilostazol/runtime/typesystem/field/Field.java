@@ -14,14 +14,24 @@ public class Field extends StaticProperty implements IField {
     private final String name;
     private final IType type;
     private final boolean isStatic;
+    private final boolean isInitOnly;
+    private final boolean isLiteral;
+    private final boolean isNotSerialized;
+    private final boolean isSpecialName;
+    private final int flags;
     private final CLIFile definingFile;
     private final TypeBase<?> declaringType;
     private final int slot;
 
-    public Field(String name, IType type, boolean isStatic, CLIFile definingFile) {
+    public Field(String name, IType type, boolean isStatic, boolean isInitOnly, boolean isLiteral, boolean isNotSerialized, boolean isSpecialName, int flags, CLIFile definingFile) {
         this.name = name;
         this.type = type;
         this.isStatic = isStatic;
+        this.isInitOnly = isInitOnly;
+        this.isLiteral = isLiteral;
+        this.isNotSerialized = isNotSerialized;
+        this.isSpecialName = isSpecialName;
+        this.flags = flags;
         this.definingFile = definingFile;
 
         // TODO:
@@ -45,11 +55,6 @@ public class Field extends StaticProperty implements IField {
     }
 
     @Override
-    public boolean isStatic() {
-        return isStatic;
-    }
-
-    @Override
     public IField substitute(ISubstitution<IType> substitution) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
@@ -62,6 +67,36 @@ public class Field extends StaticProperty implements IField {
     @Override
     public IField getConstructedFrom() {
         throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
+    public FieldVisibility getVisibility() {
+        return FieldVisibility.fromFlags(flags);
+    }
+
+    @Override
+    public boolean isInitOnly() {
+        return isInitOnly;
+    }
+
+    @Override
+    public boolean isSpecialName() {
+        return isSpecialName;
+    }
+
+    @Override
+    public boolean isNotSerialized() {
+        return isNotSerialized;
+    }
+
+    @Override
+    public boolean isLiteral() {
+        return isLiteral;
+    }
+
+    @Override
+    public boolean isStatic() {
+        return isStatic;
     }
 
     @Override

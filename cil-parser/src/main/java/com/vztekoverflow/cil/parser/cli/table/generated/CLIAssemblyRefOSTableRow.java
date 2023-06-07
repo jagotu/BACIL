@@ -1,7 +1,9 @@
 package com.vztekoverflow.cil.parser.cli.table.generated;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.vztekoverflow.cil.parser.cli.table.*;
+import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
+import com.vztekoverflow.cil.parser.cli.table.CLITableRow;
+import com.vztekoverflow.cil.parser.cli.table.CLITables;
 public class CLIAssemblyRefOSTableRow extends CLITableRow<CLIAssemblyRefOSTableRow> {
 
 	public CLIAssemblyRefOSTableRow(CLITables tables, int cursor, int rowIndex) {

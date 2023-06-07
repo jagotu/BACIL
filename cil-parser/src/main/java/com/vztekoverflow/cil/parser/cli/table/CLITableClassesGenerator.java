@@ -243,7 +243,8 @@ public class CLITableClassesGenerator {
                     writer.println(String.format("\tpublic final CLITablePtr get%sTablePtr() { ", fieldName));
                     generatePenaltiesCode(penalties, writer);
                     writer.println("\t\tint codedValue;");
-                    writer.println("\t\tif (areSmallEnough(MAP" + nameToConstName(fieldName) + "_TABLES)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}");
+                    writer.println("\t\tvar isSmall = areSmallEnough(MAP" + nameToConstName(fieldName) + "_TABLES);");
+                    writer.println("\t\tif (isSmall) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}");
                     penalties.tablePenalties.add("if (!areSmallEnough(MAP" + nameToConstName(fieldName) + "_TABLES)) offset += 2;");
 
 
@@ -266,6 +267,7 @@ public class CLITableClassesGenerator {
                         shift = 5;
                     }
 
+                    writer.println(String.format("\t\tif((isSmall && (codedValue & 0xffff) == 0xffff) || (!isSmall && (codedValue & 0xffffffff) == 0xffffffff)) return null;"));
                     writer.println(String.format("\t\treturn new CLITablePtr(MAP%s_TABLES[codedValue & %d], codedValue >> %d);", nameToConstName(fieldName), mask, shift));
 
 

@@ -1,7 +1,10 @@
 package com.vztekoverflow.cil.parser.cli.table.generated;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.vztekoverflow.cil.parser.cli.table.*;
+import com.vztekoverflow.cil.parser.cli.table.CLIBlobHeapPtr;
+import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
+import com.vztekoverflow.cil.parser.cli.table.CLITableRow;
+import com.vztekoverflow.cil.parser.cli.table.CLITables;
 public class CLIMethodSpecTableRow extends CLITableRow<CLIMethodSpecTableRow> {
 
 	public CLIMethodSpecTableRow(CLITables tables, int cursor, int rowIndex) {
@@ -10,12 +13,19 @@ public class CLIMethodSpecTableRow extends CLITableRow<CLIMethodSpecTableRow> {
 
 	@CompilerDirectives.CompilationFinal(dimensions = 1)
 	private static final byte[] MAP_METHOD_TABLES = new byte[] { CLITableConstants.CLI_TABLE_METHOD_DEF, CLITableConstants.CLI_TABLE_MEMBER_REF} ;
-	public final CLITablePtr getMethodTablePtr() { 
-		int offset = 0;
-		int codedValue;
-		if (areSmallEnough(MAP_METHOD_TABLES)) {codedValue = getShort(offset);} else {codedValue = getInt(offset);}
-		return new CLITablePtr(MAP_METHOD_TABLES[codedValue & 1], codedValue >> 1);
-	}
+	public final CLITablePtr getMethodTablePtr() {
+        int offset = 0;
+        int codedValue;
+        var isSmall = areSmallEnough(MAP_METHOD_TABLES);
+        if (isSmall) {
+            codedValue = getShort(offset);
+        } else {
+            codedValue = getInt(offset);
+        }
+        if ((isSmall && (codedValue & 0xffff) == 0xffff) || (!isSmall && (codedValue & 0xffffffff) == 0xffffffff))
+            return null;
+        return new CLITablePtr(MAP_METHOD_TABLES[codedValue & 1], codedValue >> 1);
+    }
 
 	public final CLIBlobHeapPtr getInstantiationHeapPtr() {
 		int offset = 2;

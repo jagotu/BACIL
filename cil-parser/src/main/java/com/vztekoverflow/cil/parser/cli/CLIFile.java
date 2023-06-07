@@ -20,6 +20,11 @@ public class CLIFile {
     private final CLIHeader cliHeader;
     private final CLIMetadata cliMetadata;
     private final AssemblyIdentity assemblyIdentity;
+    private final String name;
+    private final String path;
+    private final PEFile pe;
+    private final CLITables tables;
+
 
     @CompilationFinal(dimensions = 1)
     private final byte[] blobHeap;
@@ -30,20 +35,9 @@ public class CLIFile {
     @CompilationFinal(dimensions = 1)
     private final byte[] USHeap;
 
-    private final PEFile pe;
-
-    /**
-     * Get a {@link ByteSequenceBuffer} representing the data of this component starting at the specified RVA.
-     * @param RVA the RVA position to start at
-     * @return a {@link ByteSequenceBuffer} starting at the specified RVA
-     */
-    public ByteSequenceBuffer getBuffer(int RVA) {
-        ByteSequenceBuffer buf = new ByteSequenceBuffer(pe.getBytes());
-        buf.setPosition(pe.getFileOffsetForRVA(RVA));
-        return buf;
-    }
-
-    public CLIFile(CLIHeader cliHeader, CLIMetadata cliMetadata, byte[] blobHeap, byte[] stringHeap, byte[] guidHeap, byte[] USHeap, CLITables tables, PEFile pe) {
+    public CLIFile(String name, String path, CLIHeader cliHeader, CLIMetadata cliMetadata, byte[] blobHeap, byte[] stringHeap, byte[] guidHeap, byte[] USHeap, CLITables tables, PEFile pe) {
+        this.name = name;
+        this.path = path;
         this.cliHeader = cliHeader;
         this.cliMetadata = cliMetadata;
         this.blobHeap = blobHeap;
@@ -68,10 +62,11 @@ public class CLIFile {
 
     /**
      * Parse component metadata from a PE file.
+     *
      * @param bytes a {@link ByteSequence} representing the PE bytes
      * @return a {@link CLIFile} representation of the component
      */
-    public static CLIFile parse(ByteSequence bytes) {
+    public static CLIFile parse(String name, String path, ByteSequence bytes) {
         //Noone should load an assembly in compiled code.
         CompilerAsserts.neverPartOfCompilation();
 
@@ -109,16 +104,27 @@ public class CLIFile {
         final byte[] USHeap = cliMetadata.getStreamBytes("#US", bytes);
 
 
-        return new CLIFile(cliHeader, cliMetadata, blobHeap, stringHeap, guidHeap, USHeap, tables, peFile);
+        return new CLIFile(name, path, cliHeader, cliMetadata, blobHeap, stringHeap, guidHeap, USHeap, tables, peFile);
     }
 
-    public CLITableHeads getTableHeads()
-    {
+
+    /**
+     * Get a {@link ByteSequenceBuffer} representing the data of this component starting at the specified RVA.
+     *
+     * @param RVA the RVA position to start at
+     * @return a {@link ByteSequenceBuffer} starting at the specified RVA
+     */
+    public ByteSequenceBuffer getBuffer(int RVA) {
+        ByteSequenceBuffer buf = new ByteSequenceBuffer(pe.getBytes());
+        buf.setPosition(pe.getFileOffsetForRVA(RVA));
+        return buf;
+    }
+
+    public CLITableHeads getTableHeads() {
         return tables.getTableHeads();
     }
 
-    public CLITablesHeader getTablesHeader()
-    {
+    public CLITablesHeader getTablesHeader() {
         return tables.getTablesHeader();
     }
 
@@ -130,7 +136,13 @@ public class CLIFile {
         return cliMetadata;
     }
 
-    private final CLITables tables;
+    public String getName() {
+        return name;
+    }
+
+    public String getPath() {
+        return path;
+    }
 
     public byte[] getBlobHeap() {
         return blobHeap;

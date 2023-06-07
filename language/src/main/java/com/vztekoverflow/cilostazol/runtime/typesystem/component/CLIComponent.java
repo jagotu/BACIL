@@ -48,6 +48,7 @@ public class CLIComponent implements IComponent {
                 return TypeFactory.create(context, row, this);
         }
 
+        //TODO: delete and handle elsewhere due to other TypeTables looking for types, we dont want to traverse everything
         //Check exported types (II.6.8 Type forwarders)
         for(CLIExportedTypeTableRow row : _cliFile.getTableHeads().getExportedTypeTableHead())
         {
@@ -58,6 +59,7 @@ public class CLIComponent implements IComponent {
             }
         }
 
+        //TODO: make this truffle boundary and refactor to calling something that's marked as truffle boundary and then calls the exception
         CompilerDirectives.transferToInterpreterAndInvalidate();
         throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.typesystem.typeNotFound", namespace, name));
     }
@@ -74,6 +76,12 @@ public class CLIComponent implements IComponent {
                     ((CLITypeDefTableRow) row).getTypeNameHeapPtr().read(_cliFile.getStringHeap());
             case CLITableConstants.CLI_TABLE_FIELD ->
                     ((CLIFieldTableRow) row).getNameHeapPtr().read(_cliFile.getStringHeap());
+            case CLITableConstants.CLI_TABLE_TYPE_REF ->
+                    ((CLITypeRefTableRow) row).getTypeNameHeapPtr().read(_cliFile.getStringHeap());
+            case CLITableConstants.CLI_TABLE_FILE ->
+                    ((CLIFileTableRow) row).getNameHeapPtr().read(_cliFile.getStringHeap());
+            case CLITableConstants.CLI_TABLE_MODULE_REF ->
+                    ((CLIModuleRefTableRow) row).getNameHeapPtr().read(_cliFile.getStringHeap());
             default -> {
                 CompilerDirectives.transferToInterpreterAndInvalidate();
                 throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.typesystem.unsupportedTable", row.getTableId()));
@@ -85,6 +93,8 @@ public class CLIComponent implements IComponent {
         return switch (row.getTableId()) {
             case CLITableConstants.CLI_TABLE_TYPE_DEF ->
                     ((CLITypeDefTableRow) row).getTypeNamespaceHeapPtr().read(_cliFile.getStringHeap());
+            case CLITableConstants.CLI_TABLE_TYPE_REF ->
+                    ((CLITypeRefTableRow) row).getTypeNamespaceHeapPtr().read(_cliFile.getStringHeap());
             default -> {
                 CompilerDirectives.transferToInterpreterAndInvalidate();
                 throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.typesystem.unsupportedTable", row.getTableId()));

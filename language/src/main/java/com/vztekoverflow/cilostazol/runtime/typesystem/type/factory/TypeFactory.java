@@ -10,6 +10,8 @@ import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.CILOSTAZOLLanguage;
 import com.vztekoverflow.cilostazol.context.ContextAccess;
 import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
+import com.vztekoverflow.cilostazol.exceptions.InvalidCLIException;
+import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
@@ -45,7 +47,8 @@ public final class TypeFactory {
                     namespace,
                     directBaseClass,
                     interfaces,
-                    component, flags);
+                    component,
+                    flags);
         } else {
             return new OpenGenericType<>(context,
                     typeDefRow,
@@ -55,7 +58,8 @@ public final class TypeFactory {
                     directBaseClass,
                     interfaces,
                     component,
-                    genericParameters, flags);
+                    genericParameters,
+                    flags);
         }
     }
 
@@ -64,10 +68,32 @@ public final class TypeFactory {
     }
 
     public static IType create(CILOSTAZOLContext context,CLITypeRefTableRow type, CLIComponent component) {
-        return null;
+        var name = component.getNameFrom(type);
+        var namespace = component.getNamespaceFrom(type);
+
+        var resolutionScopeTablePtr = type.getResolutionScopeTablePtr();
+        if (resolutionScopeTablePtr == null) {
+            //TODO: find in ExportedType table
+            throw new NotImplementedException();
+        }
+
+        return switch (resolutionScopeTablePtr.getTableId()) {
+            case CLITableConstants.CLI_TABLE_TYPE_REF ->
+                    throw new UnsupportedOperationException(CILOSTAZOLBundle.message("cilostazol.exception.typeRefResolutionScope"));
+            case CLITableConstants.CLI_TABLE_MODULE_REF ->
+                    FactoryUtils.getTypeFromDifferentModule(context, component, name, namespace, resolutionScopeTablePtr);
+            case CLITableConstants.CLI_TABLE_MODULE -> throw new InvalidCLIException();
+            case CLITableConstants.CLI_TABLE_ASSEMBLY_REF ->
+                    FactoryUtils.getTypeFromDifferentAssembly(component, name, namespace, resolutionScopeTablePtr);
+            default ->
+                    throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.unknownResolutionScope", namespace, name, resolutionScopeTablePtr.getTableId()));
+        };
     }
 
-    public static IType create(CILOSTAZOLContext context, TypeSig tSig, IType[] mvars, IType[] vars, CLIComponent definingComponent) {
-        return null;
+    public static IType create(CILOSTAZOLContext context, TypeSig typeSig, IType[] mvars, IType[] vars, CLIComponent definingComponent) {
+        //TODO: null reference exception might have occured here if TypeSig is not created from CLASS
+        //TODO: resolve for other types (SZARRAY, GENERICINST, ...)
+        if (typeSig.getCliTablePtr() == null) return null;
+        return create(typeSig.getCliTablePtr(), mvars, vars, definingComponent);
     }
 }

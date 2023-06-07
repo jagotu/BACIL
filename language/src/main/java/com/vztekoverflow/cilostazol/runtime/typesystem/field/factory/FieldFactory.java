@@ -5,7 +5,6 @@ import com.vztekoverflow.cil.parser.cli.signature.SignatureReader;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIFieldTableRow;
 import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
-import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.field.Field;
 import com.vztekoverflow.cilostazol.runtime.typesystem.field.IField;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
@@ -18,9 +17,14 @@ public final class FieldFactory {
 
         final FieldSig fieldSig = FieldSig.parse(new SignatureReader(signature));
         final IType type = TypeFactory.create(context, fieldSig.getType(), null, null, component);
-        boolean isStatic = getStaticness(fieldRow.getFlags());
+        boolean isStatic = (fieldRow.getFlags() & 0x0010) != 0;
+        boolean isInitOnly = (fieldRow.getFlags() & 0x0010) != 0;
+        boolean isLiteral = (fieldRow.getFlags() & 0x0040) != 0;
+        boolean isNotSerialized = (fieldRow.getFlags() & 0x0080) != 0;
+        boolean isSpecialName = (fieldRow.getFlags() & 0x0200) != 0;
+        int visibilityFlags = fieldRow.getFlags() & 0x0007;
 
-        return new Field(name, type, isStatic, component.getDefiningFile());
+        return new Field(name, type, isStatic, isInitOnly, isLiteral, isNotSerialized, isSpecialName, visibilityFlags, component.getDefiningFile());
     }
 
     private static boolean getStaticness(short flags) {
