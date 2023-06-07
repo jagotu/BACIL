@@ -1,5 +1,6 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.type;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.staticobject.StaticShape;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
@@ -31,12 +32,17 @@ public abstract class TypeBase<T extends CLITableRow<T>> extends CLIType impleme
     private final static int RT_SPECIAL_NAME_FLAG_MASK = 0x800;
     private final static int HAS_SECURITY_FLAG_MASK = 0x40000;
     private final static int IS_TYPE_FORWARDER_FLAG_MASK = 0x200000;
-    private final StaticShape<StaticObject.StaticObjectFactory> instanceShape;
-    private final StaticShape<StaticObject.StaticObjectFactory> staticShape;
+
+    @CompilerDirectives.CompilationFinal
+    private StaticShape<StaticObject.StaticObjectFactory> instanceShape;
+    @CompilerDirectives.CompilationFinal
+    private StaticShape<StaticObject.StaticObjectFactory> staticShape;
     @CompilerDirectives.CompilationFinal(dimensions = 1)
-    private final Field[] instanceFields;
+    private Field[] instanceFields;
     @CompilerDirectives.CompilationFinal(dimensions = 1)
-    private final Field[] staticFields;
+    private Field[] staticFields;
+    @CompilerDirectives.CompilationFinal
+    private TypeBase<?> superClass;
 
     protected final int _flags;
     protected final CLIFile _definingFile;
@@ -48,7 +54,6 @@ public abstract class TypeBase<T extends CLITableRow<T>> extends CLIType impleme
     protected IMethod[] _vMethodTable;
     protected IField[] _fields;
     protected final CLIComponent _definingComponent;
-
     protected final T _row;
 
     public TypeBase(CILOSTAZOLContext context, T row, CLIFile _definingFile, String _name, String _namespace, IType _directBaseClass, IType[] _interfaces, CLIComponent _definingComponent, int flags) {
@@ -65,12 +70,8 @@ public abstract class TypeBase<T extends CLITableRow<T>> extends CLIType impleme
         this._methods = null;
         this._vMethodTable = null;
 
-        // TODO: Use the superclass in the future
-        LinkedFieldLayout layout = new LinkedFieldLayout(context, this, null);
-        instanceShape = layout.instanceShape;
-        staticShape = layout.staticShape;
-        instanceFields = layout.instanceFields;
-        staticFields = layout.staticFields;
+        // TODO
+        this.superClass = null;
     }
 
     @Override
@@ -228,19 +229,31 @@ public abstract class TypeBase<T extends CLITableRow<T>> extends CLIType impleme
     }
 
     public StaticShape<StaticObject.StaticObjectFactory> getShape(boolean isStatic) {
+        if (isStatic && staticShape == null || !isStatic && instanceShape == null) {
+            createShapes();
+        }
+
         return isStatic ? staticShape : instanceShape;
     }
 
     public Field[] getInstanceFields() {
+        if (instanceShape == null) {
+            createShapes();
+        }
+
         return instanceFields;
     }
 
     public Field[] getStaticFields() {
+        if (staticFields == null) {
+            createShapes();
+        }
+
         return staticFields;
     }
 
+    // TODO
     public void safelyInitialize() {
-
     }
 
     private IField[] createFields(CLITypeDefTableRow row) {
@@ -277,4 +290,14 @@ public abstract class TypeBase<T extends CLITableRow<T>> extends CLIType impleme
         return methods.toArray(new IMethod[0]);
     }
 
+    private void createShapes() {
+        // TODO: Is this invalidation necessary when initializing CompilationFinal fields?
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+
+        LinkedFieldLayout layout = new LinkedFieldLayout(getContext(), this, superClass);
+        instanceShape = layout.instanceShape;
+        staticShape = layout.staticShape;
+        instanceFields = layout.instanceFields;
+        staticFields = layout.staticFields;
+    }
 }

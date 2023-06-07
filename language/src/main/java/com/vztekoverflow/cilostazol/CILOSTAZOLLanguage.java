@@ -11,8 +11,10 @@ import com.vztekoverflow.cilostazol.runtime.GuestAllocator;
 /**
  * The BACIL language class implementing TruffleLanguage.
  */
-@TruffleLanguage.Registration(id = CILOSTAZOLLanguage.ID, name = CILOSTAZOLLanguage.NAME, interactive = false, defaultMimeType = CILOSTAZOLLanguage.CIL_PE_MIME_TYPE,
-byteMimeTypes = {CILOSTAZOLLanguage.CIL_PE_MIME_TYPE})
+@TruffleLanguage.Registration(id = CILOSTAZOLLanguage.ID, name = CILOSTAZOLLanguage.NAME,
+        contextPolicy = TruffleLanguage.ContextPolicy.SHARED, interactive = false,
+        defaultMimeType = CILOSTAZOLLanguage.CIL_PE_MIME_TYPE,
+        byteMimeTypes = {CILOSTAZOLLanguage.CIL_PE_MIME_TYPE})
 public class CILOSTAZOLLanguage extends TruffleLanguage<CILOSTAZOLContext> {
 
     @CompilerDirectives.CompilationFinal
