@@ -281,7 +281,7 @@ public abstract class TypeBase<T extends CLITableRow<T>> extends CLIType impleme
 
         var methods = new ArrayList<IMethod>();
         while (methodRow.getRowNo() < lastIdx) {
-            var method = MethodFactory.create(getContext(), methodRow, this);
+            var method = MethodFactory.create(methodRow, this);
             methods.add(method);
             methodRow = methodRow.next();
         }
