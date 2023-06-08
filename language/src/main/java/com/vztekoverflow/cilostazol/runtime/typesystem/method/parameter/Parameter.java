@@ -54,5 +54,10 @@ public class Parameter implements IParameter {
     public String getName() {
         return _name;
     }
+
+    @Override
+    public IType getType() {
+        return _type;
+    }
     //endregion
 }

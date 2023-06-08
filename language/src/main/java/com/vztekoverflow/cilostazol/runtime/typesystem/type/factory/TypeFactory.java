@@ -22,7 +22,7 @@ public final class TypeFactory {
     public static IType create(CILOSTAZOLContext context, CLITablePtr ptr, IType[] mvars, IType[] vars, CLIComponent component) {
         return switch (ptr.getTableId()) {
             case CLITableConstants.CLI_TABLE_TYPE_DEF ->
-                    TypeFactory.create(context, component.getDefiningFile().getTableHeads().getTypeDefTableHead().skip(ptr), component);
+                    component.getLocalType(context, ptr);
             case CLITableConstants.CLI_TABLE_TYPE_REF ->
                     TypeFactory.create(context, component.getDefiningFile().getTableHeads().getTypeRefTableHead().skip(ptr), component);
             case CLITableConstants.CLI_TABLE_TYPE_SPEC ->
