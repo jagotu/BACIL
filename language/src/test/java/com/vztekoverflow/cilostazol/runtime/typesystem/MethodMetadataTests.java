@@ -33,7 +33,7 @@ public class MethodMetadataTests  extends TestBase {
         Source source = getSourceFromProject(projectName);
 
         IAppDomain domain = new AppDomain(ctx);
-        IAssembly assembly = Assembly.parse(source);
+        IAssembly assembly = Assembly.parse(domain, source);
         domain.loadAssembly(assembly);
         return assembly;
     }

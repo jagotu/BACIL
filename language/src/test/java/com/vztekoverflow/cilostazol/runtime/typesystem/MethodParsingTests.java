@@ -31,8 +31,7 @@ public class MethodParsingTests extends TestBase {
 
 
         final IAppDomain domain = new AppDomain(ctx);
-        final IAssembly assembly = Assembly.parse(source);
-        domain.loadAssembly(assembly);
+        final IAssembly assembly = Assembly.parse(domain, source);
 
         final CLIComponent component = (CLIComponent) assembly.getComponents()[0];
         //Classes
@@ -75,8 +74,7 @@ public class MethodParsingTests extends TestBase {
         CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
         Source source = getSourceFromProject(projectName);
         final IAppDomain domain = new AppDomain(ctx);
-        final IAssembly assembly = Assembly.parse(source);
-        domain.loadAssembly(assembly);
+        final IAssembly assembly = Assembly.parse(domain, source);
         IType type = assembly.getLocalType(projectName, "A");
 
 

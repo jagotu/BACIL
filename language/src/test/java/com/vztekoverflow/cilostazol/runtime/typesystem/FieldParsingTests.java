@@ -23,8 +23,7 @@ public class FieldParsingTests extends TestBase {
         CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
         CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
         IAppDomain domain = new AppDomain(ctx);
-        IAssembly assembly = Assembly.parse(source);
-        domain.loadAssembly(assembly);
+        IAssembly assembly = Assembly.parse(domain, source);
         IType type = assembly.getLocalType(projectName, "Class");
 
         assertEquals(9, type.getFields().length);
@@ -38,8 +37,7 @@ public class FieldParsingTests extends TestBase {
         CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
         CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
         IAppDomain domain = new AppDomain(ctx);
-        IAssembly assembly = Assembly.parse(source);
-        domain.loadAssembly(assembly);
+        IAssembly assembly = Assembly.parse(domain, source);
         IType type = assembly.getLocalType(projectName, "Class");
 
         assertTrue(Arrays.stream(type.getFields()).anyMatch(f -> f.getName().equals("fieldClass2")));
@@ -55,8 +53,7 @@ public class FieldParsingTests extends TestBase {
         CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
         CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
         IAppDomain domain = new AppDomain(ctx);
-        IAssembly assembly = Assembly.parse(source);
-        domain.loadAssembly(assembly);
+        IAssembly assembly = Assembly.parse(domain, source);
         IType type = assembly.getLocalType(projectName, "Class");
 
         assertFalse(Arrays.stream(type.getFields()).filter(f -> f.getName().equals("fieldClass2")).findFirst().get().isStatic());
@@ -71,8 +68,7 @@ public class FieldParsingTests extends TestBase {
         CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
         CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
         IAppDomain domain = new AppDomain(ctx);
-        IAssembly assembly = Assembly.parse(source);
-        domain.loadAssembly(assembly);
+        IAssembly assembly = Assembly.parse(domain, source);
         IType type = assembly.getLocalType(projectName, "Class");
 
         assertTrue(Arrays.stream(type.getFields()).anyMatch(f -> f.getName().equals("fieldPrivate")));
@@ -108,8 +104,7 @@ public class FieldParsingTests extends TestBase {
         CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
         CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
         IAppDomain domain = new AppDomain(ctx);
-        IAssembly assembly = Assembly.parse(source);
-        domain.loadAssembly(assembly);
+        IAssembly assembly = Assembly.parse(domain, source);
         IType type = assembly.getLocalType(projectName, "Class");
 
         assertTrue(Arrays.stream(type.getFields()).anyMatch(f -> f.getName().equals("fieldSelf")));

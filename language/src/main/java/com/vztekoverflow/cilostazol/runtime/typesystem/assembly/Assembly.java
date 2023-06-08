@@ -5,6 +5,7 @@ import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITableConstants;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
+import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.AppDomain;
 import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.IAppDomain;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
@@ -58,7 +59,7 @@ public class Assembly implements IAssembly {
         appDomain = null;
     }
 
-    public static IAssembly parse(Source dllSource) {
+    public static IAssembly parse(IAppDomain domain, Source dllSource) {
         CLIFile file = CLIFile.parse(dllSource.getName(), dllSource.getPath(), dllSource.getBytes());
 
         if (file.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_MODULE) != 1)
@@ -68,6 +69,7 @@ public class Assembly implements IAssembly {
             throw new CILParserException(CILOSTAZOLBundle.message("cilostazol.exception.multimoduleAssembly"));
 
         Assembly assembly = new Assembly(file, new IComponent[1]);
+        domain.loadAssembly(assembly);
         assembly.components[0] = CLIComponent.parse(file, assembly);
 
         return assembly;
