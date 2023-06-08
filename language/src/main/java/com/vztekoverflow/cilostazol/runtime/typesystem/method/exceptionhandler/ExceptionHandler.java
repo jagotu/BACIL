@@ -43,7 +43,7 @@ public class ExceptionHandler implements IExceptionHandler {
 
     @Override
     public IType getHandlingException() {
-        return null;
+        return _handlerException;
     }
 
     @Override
@@ -53,7 +53,7 @@ public class ExceptionHandler implements IExceptionHandler {
 
     @Override
     public IExceptionHandler substitute(ISubstitution<IType> substitution) {
-        throw new NotImplementedException();
+        return new ExceptionHandler(_tryOffset, _tryLength, _handlerOffset, _handlerLength, _handlerException.substitute(substitution), _flags);
     }
 
     @Override

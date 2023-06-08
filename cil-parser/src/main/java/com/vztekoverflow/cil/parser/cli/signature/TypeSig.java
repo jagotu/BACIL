@@ -49,7 +49,7 @@ public class TypeSig {
     public static TypeSig  createCLASS(CLITablePtr type) {return new TypeSig(ELEMENT_TYPE_CLASS, 0, type, null, null, null, null, null,  null);}
     public static TypeSig  createFNPTR(MethodDefSig methodDefSig) {throw new CILParserException(ParserBundle.message("cli.parser.exception.not.implemented"));}
     public static TypeSig  createFNPTR(MethodRefSig methodRefSig) {throw new CILParserException(ParserBundle.message("cli.parser.exception.not.implemented"));}
-    public static TypeSig  createGENERICINST(byte genericType, CLITablePtr type, TypeSig[] genParams) {return new TypeSig(genericType, 0, type, genParams, null, null, null, null,  null);}
+    public static TypeSig  createGENERICINST(byte genericType, CLITablePtr type, TypeSig[] genParams) {return new TypeSig(ELEMENT_TYPE_GENERICINST, 0, type, genParams, null, null, null, null,  null);}
     public static TypeSig  createMVAR(int idx) {return new TypeSig(ELEMENT_TYPE_MVAR, idx, null, null, null, null, null, null,  null);}
     public static TypeSig  createOBJECT() {return new TypeSig(ELEMENT_TYPE_OBJECT, 0, null, null, null, null, null, null,  null);}
     public static TypeSig  createPTR(CustomMod[] mods, TypeSig type) {return new TypeSig(ELEMENT_TYPE_PTR, 0, null, null, type, mods, null, null,  null);}
@@ -151,4 +151,7 @@ public class TypeSig {
     public CLITablePtr getCliTablePtr() {
         return cliTablePtr;
     }
+    public byte getElementType() {return  _typeType; }
+    public int getIndex() {return _idx;}
+    public TypeSig[] getTypeArgs() {return _genericParams; }
 }

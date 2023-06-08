@@ -56,7 +56,7 @@ public class Field extends StaticProperty implements IField {
 
     @Override
     public IField substitute(ISubstitution<IType> substitution) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return new Field(name, substitution.substitute(type), isStatic, isInitOnly, isLiteral, isNotSerialized, isSpecialName, flags, definingFile);
     }
 
     @Override

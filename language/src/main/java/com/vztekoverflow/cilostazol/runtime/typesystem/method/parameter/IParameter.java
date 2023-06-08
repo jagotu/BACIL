@@ -8,4 +8,5 @@ public interface IParameter extends ISubstitutable<IParameter, IType> {
     ParamFlags getFlags();
     int getIndex();
     public String getName();
+    IType getType();
 }

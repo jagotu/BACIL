@@ -71,15 +71,15 @@ public final class FactoryUtils {
         };
     }
 
-    static IType getDirectBaseClass(CILOSTAZOLContext context, CLITypeDefTableRow typeDefRow, CLIComponent component) {
+    static IType getDirectBaseClass(CILOSTAZOLContext context, CLITypeDefTableRow typeDefRow, IType[] mvars, IType[] vars,CLIComponent component) {
         CLITablePtr tablePtr = typeDefRow.getExtendsTablePtr();
         if (tablePtr.isEmpty()) return null;
 
         IType baseClass;
         switch (tablePtr.getTableId()) {
             case CLITableConstants.CLI_TABLE_TYPE_DEF -> baseClass = component.getLocalType(context, tablePtr);
-            case CLITableConstants.CLI_TABLE_TYPE_REF -> baseClass = null; //TODO: implement case for ref table
-            case CLITableConstants.CLI_TABLE_TYPE_SPEC -> baseClass = null; //TODO: implement case for spec table
+            case CLITableConstants.CLI_TABLE_TYPE_REF -> baseClass = TypeFactory.create(context, component.getDefiningFile().getTableHeads().getTypeRefTableHead().skip(tablePtr), component);
+            case CLITableConstants.CLI_TABLE_TYPE_SPEC -> baseClass = TypeFactory.create(context, component.getDefiningFile().getTableHeads().getTypeSpecTableHead().skip(tablePtr), mvars, vars, component);
             default -> throw new NotImplementedException();
         }
         return baseClass;

@@ -28,8 +28,7 @@ public class TypeParsingTest extends TestBase {
         Source source = getSourceFromProject(projectName);
 
         IAppDomain domain = new AppDomain(ctx);
-        IAssembly assembly = Assembly.parse(source);
-        domain.loadAssembly(assembly);
+        IAssembly assembly = Assembly.parse(domain, source);
 
         assertFalse(domain.getAssemblies().length == 0);
     }
@@ -46,8 +45,7 @@ public class TypeParsingTest extends TestBase {
 
 
         IAppDomain domain = new AppDomain(ctx);
-        IAssembly assembly = Assembly.parse(source);
-        domain.loadAssembly(assembly);
+        IAssembly assembly = Assembly.parse(domain, source);
 
         IType type = assembly.getLocalType("FindLocalType", "Class");
 
@@ -62,8 +60,7 @@ public class TypeParsingTest extends TestBase {
         CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
         CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
         IAppDomain domain = new AppDomain(ctx);
-        IAssembly assembly = Assembly.parse(source);
-        domain.loadAssembly(assembly);
+        IAssembly assembly = Assembly.parse(domain, source);
         IType type = assembly.getLocalType(projectName, "Class");
 
 
@@ -81,8 +78,7 @@ public class TypeParsingTest extends TestBase {
         CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
         CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
         IAppDomain domain = new AppDomain(ctx);
-        IAssembly assembly = Assembly.parse(source);
-        domain.loadAssembly(assembly);
+        IAssembly assembly = Assembly.parse(domain, source);
         IType type = assembly.getLocalType(projectName, "Class");
 
 
@@ -111,8 +107,7 @@ public class TypeParsingTest extends TestBase {
         CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
         CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
         IAppDomain domain = new AppDomain(ctx);
-        IAssembly assembly = Assembly.parse(source);
-        domain.loadAssembly(assembly);
+        IAssembly assembly = Assembly.parse(domain, source);
         IType type = assembly.getLocalType(projectName, "Class`1");
 
 
@@ -127,8 +122,7 @@ public class TypeParsingTest extends TestBase {
         CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
         CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
         IAppDomain domain = new AppDomain(ctx);
-        IAssembly assembly = Assembly.parse(source);
-        domain.loadAssembly(assembly);
+        IAssembly assembly = Assembly.parse(domain, source);
         IType localType = assembly.getLocalType(projectName, "Class1");
 
         assertEquals(2, localType.getFields().length);
@@ -144,12 +138,10 @@ public class TypeParsingTest extends TestBase {
         CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
         CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
         IAppDomain domain = new AppDomain(ctx);
-        IAssembly assembly = Assembly.parse(sources[0]);
-        domain.loadAssembly(assembly);
+        IAssembly assembly = Assembly.parse(domain, sources[0]);
         //foreign assembly
         //TODO: this should be done by assembly loader?
-        IAssembly otherAssembly = Assembly.parse(sources[1]);
-        domain.loadAssembly(otherAssembly);
+        IAssembly otherAssembly = Assembly.parse(domain, sources[1]);
 
         IType localType = assembly.getLocalType(projectName, "Class1");
 

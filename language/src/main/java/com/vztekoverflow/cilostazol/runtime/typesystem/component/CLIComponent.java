@@ -16,7 +16,8 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.type.factory.TypeFactory;
 public class CLIComponent implements IComponent {
     private final CLIFile _cliFile;
     private final IAssembly _definingAssembly;
-    //TODO: caching
+
+    private IType[] typeCache;
 
     //region IComponent
     @Override
@@ -31,21 +32,32 @@ public class CLIComponent implements IComponent {
 
     //TODO: gettype -> if local defined then call getLocalType, if not, get the reference and call in on assembly or different module
 
-    @Override
-    public IType getLocalType(CILOSTAZOLContext context, String namespace, String name) {
-        //print typeDefs
+    private void printAllTypesFile()
+    {
         for (CLITypeDefTableRow row : _cliFile.getTableHeads().getTypeDefTableHead()) {
             var rowName = getNameFrom(row);
             var rowNamespace = getNamespaceFrom(row);
             System.out.println(rowNamespace + "::" + rowName);
         }
+    }
+
+    private void printAllTypesCache()
+    {
+        for (IType type : typeCache) {
+            System.out.println(type.getNamespace() + "::" + type.getName());
+        }
+    }
+
+    @Override
+    public IType getLocalType(CILOSTAZOLContext context, String namespace, String name) {
+        //printAllTypesFile();
 
         //Check typeDefs
         for (CLITypeDefTableRow row : _cliFile.getTableHeads().getTypeDefTableHead()) {
             var rowName = getNameFrom(row);
             var rowNamespace = getNamespaceFrom(row);
             if (rowNamespace.equals(namespace) && rowName.equals(name))
-                return TypeFactory.create(context, row, this);
+                return typeCache[row.getPtr().getRowNo()-1];
         }
 
         //TODO: delete and handle elsewhere due to other TypeTables looking for types, we dont want to traverse everything
@@ -67,7 +79,7 @@ public class CLIComponent implements IComponent {
     @Override
     public IType getLocalType(CILOSTAZOLContext context, CLITablePtr tablePtr) {
         var typeDefTableRow = getTableHeads().getTypeDefTableHead().skip(tablePtr);
-        return TypeFactory.create(context, typeDefTableRow, this);
+        return typeCache[typeDefTableRow.getPtr().getRowNo()-1];
     }
 
     public <T extends CLITableRow<T>> String getNameFrom(CLITableRow<T> row) {
@@ -112,6 +124,16 @@ public class CLIComponent implements IComponent {
     private CLIComponent(CLIFile file, IAssembly assembly) {
         _cliFile = file;
         _definingAssembly = assembly;
+        initializeTypeCache();
+    }
+
+    private void initializeTypeCache()
+    {
+        final int typesCount = _cliFile.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_TYPE_DEF);
+        typeCache = new IType[typesCount];
+        for (int i = 0; i < typesCount; i++) {
+            typeCache[i] = TypeFactory.create(_definingAssembly.getAppDomain().getContext(), _cliFile.getTableHeads().getTypeDefTableHead().skip(i), this);
+        }
     }
 
     public static IComponent parse(CLIFile file, IAssembly assembly) {
