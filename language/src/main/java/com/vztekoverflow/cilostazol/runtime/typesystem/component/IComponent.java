@@ -3,19 +3,19 @@ package com.vztekoverflow.cilostazol.runtime.typesystem.component;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITableHeads;
-import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
+import com.vztekoverflow.cilostazol.context.ContextAccess;
 import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.IAssembly;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
-public interface IComponent {
+public interface IComponent extends ContextAccess {
     //TODO: CLIFile in IComponent ... get rid of it, or abandon IComponent completely?
     CLIFile getDefiningFile();
 
     IAssembly getDefiningAssembly();
 
-    IType getLocalType(CILOSTAZOLContext context, String namespace, String name);
+    IType getLocalType(String namespace, String name);
 
-    IType getLocalType(CILOSTAZOLContext context, CLITablePtr typeIndex);
+    IType getLocalType(CLITablePtr typeIndex);
 
     //TODO: CLITableHeads in IComponent ... get rid of it, or abandon IComponent completely?
     CLITableHeads getTableHeads();
