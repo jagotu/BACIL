@@ -22,7 +22,7 @@ public class Parameter implements IParameter {
     //region IParameter
     @Override
     public IParameter substitute(ISubstitution<IType> substitution) {
-        throw new NotImplementedException();
+        return new Parameter(_isByRef, _type.substitute(substitution),_name, _idx, _flags );
     }
 
     @Override

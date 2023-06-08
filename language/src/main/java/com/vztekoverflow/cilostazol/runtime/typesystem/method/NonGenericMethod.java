@@ -62,7 +62,7 @@ public class NonGenericMethod extends MethodBase{
 
     @Override
     public IMethod substitute(ISubstitution<IType> substitution) {
-        throw new TypeSystemException(CILOSTAZOLBundle.message("cilostazol.exception.invalidOperation"));
+        return new SubstitutedGenericMethod(this, getDefinition(), substitution);
     }
 
     @Override

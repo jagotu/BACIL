@@ -8,6 +8,7 @@ import com.vztekoverflow.cilostazol.nodes.CILOSTAZOLRootNode;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ITypeParameter;
+import com.vztekoverflow.cilostazol.runtime.typesystem.generic.TypeParameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.exceptionhandler.IExceptionHandler;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.flags.MethodFlags;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.flags.MethodHeaderFlags;
@@ -16,6 +17,8 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.method.local.ILocal;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.parameter.IParameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.returnType.IReturnType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
+
+import java.util.Arrays;
 
 public class SubstitutedGenericMethod implements IMethod, ICILBasedMethod {
     protected final IMethod _definition;
@@ -38,22 +41,22 @@ public class SubstitutedGenericMethod implements IMethod, ICILBasedMethod {
 
     @Override
     public IParameter[] getParameters() {
-        throw new NotImplementedException();
+        return Arrays.stream(_constructedFrom.getParameters()).map(x -> x.substitute(_substitution)).toArray(IParameter[]::new);
     }
 
     @Override
     public ILocal[] getLocals() {
-        throw new NotImplementedException();
+        return Arrays.stream(_constructedFrom.getLocals()).map(x -> x.substitute(_substitution)).toArray(ILocal[]::new);
     }
 
     @Override
     public ITypeParameter[] getTypeParameters() {
-        throw new NotImplementedException();
+        return Arrays.stream(_constructedFrom.getTypeParameters()).map(x -> x.substitute(_substitution)).toArray(ITypeParameter[]::new);
     }
 
     @Override
     public IReturnType getReturnType() {
-        throw new NotImplementedException();
+        return _constructedFrom.getReturnType().substitute(_substitution);
     }
 
     @Override
@@ -78,7 +81,7 @@ public class SubstitutedGenericMethod implements IMethod, ICILBasedMethod {
 
     @Override
     public IExceptionHandler[] getExceptionHandlers() {
-        throw new NotImplementedException();
+        return Arrays.stream(_constructedFrom.getExceptionHandlers()).map(x -> x.substitute(_substitution)).toArray(IExceptionHandler[]::new);
     }
 
     @Override

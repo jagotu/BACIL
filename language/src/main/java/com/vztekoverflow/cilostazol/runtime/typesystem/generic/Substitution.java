@@ -12,8 +12,16 @@ public class Substitution<TItem> implements ISubstitution<TItem>{
         _map = map;
     }
 
+    public Substitution(TItem[] from, TItem[] to)
+    {
+        _map = new HashMap<TItem, TItem>(from.length);
+        for (int i = 0; i < from.length; i++) {
+            _map.put(from[i], to[i]);
+        }
+    }
+
     @Override
     public TItem substitute(TItem type) {
-        return _map.getOrDefault(type, null);
+        return _map.getOrDefault(type, type);
     }
 }

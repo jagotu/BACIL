@@ -39,7 +39,7 @@ public class Local implements ILocal{
 
     @Override
     public ILocal substitute(ISubstitution<IType> substitution) {
-        throw new NotImplementedException();
+        return new Local(_pinned, _byRef, _type.substitute(substitution));
     }
 
     @Override

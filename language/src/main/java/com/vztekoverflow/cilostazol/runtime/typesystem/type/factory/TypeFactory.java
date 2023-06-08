@@ -1,6 +1,9 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.type.factory;
 
+import com.vztekoverflow.cil.parser.cli.signature.ElementTypeFlag;
+import com.vztekoverflow.cil.parser.cli.signature.SignatureReader;
 import com.vztekoverflow.cil.parser.cli.signature.TypeSig;
+import com.vztekoverflow.cil.parser.cli.signature.TypeSpecSig;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITableConstants;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITypeDefTableRow;
@@ -14,6 +17,7 @@ import com.vztekoverflow.cilostazol.exceptions.InvalidCLIException;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
+import com.vztekoverflow.cilostazol.runtime.typesystem.generic.Substitution;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.NonGenericType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.OpenGenericType;
@@ -35,9 +39,9 @@ public final class TypeFactory {
     public static IType create(CILOSTAZOLContext context, CLITypeDefTableRow typeDefRow, CLIComponent component) {
         String name = component.getNameFrom(typeDefRow);
         String namespace = component.getNamespaceFrom(typeDefRow);
-        IType directBaseClass = FactoryUtils.getDirectBaseClass(context, typeDefRow, component);
         IType[] interfaces = FactoryUtils.getInterfaces(context, name, namespace, component);
         IType[] genericParameters = FactoryUtils.getTypeParameters(context, typeDefRow, component);
+        IType directBaseClass = FactoryUtils.getDirectBaseClass(context, typeDefRow, new IType[0], genericParameters,component);
         int flags = typeDefRow.getFlags();
         if (genericParameters.length == 0) {
             return new NonGenericType<>(context,
@@ -64,7 +68,8 @@ public final class TypeFactory {
     }
 
     public static IType create(CILOSTAZOLContext context, CLITypeSpecTableRow type, IType[] methodTypeParameters, IType[] classTypeParameters, CLIComponent component) {
-        return null;
+        TypeSig signature = TypeSig.read(new SignatureReader(type.getSignatureHeapPtr().read(component.getDefiningFile().getBlobHeap())), component.getDefiningFile());
+        return create(context, signature, methodTypeParameters, classTypeParameters, component);
     }
 
     public static IType create(CILOSTAZOLContext context,CLITypeRefTableRow type, CLIComponent component) {
@@ -90,10 +95,58 @@ public final class TypeFactory {
         };
     }
 
+    public static IType create(CILOSTAZOLContext context, TypeSpecSig typeSig, IType[] mvars, IType[] vars, CLIComponent definingComponent) {
+        //TODO: null reference exception might have occured here if TypeSig is not created from CLASS
+        //TODO: resolve for other types (SZARRAY, GENERICINST, ...)
+        if (typeSig.getFlag().getFlag() == ElementTypeFlag.Flag.ELEMENT_TYPE_GENERICINST)
+        {
+            IType genType = TypeFactory.create(context, typeSig.getGenType(), mvars, vars, definingComponent);
+            IType[] typeArgs = new IType[typeSig.getTypeArgs().length];
+            for (int i = 0; i < typeArgs.length; i++) {
+                typeArgs[i] = TypeFactory.create(context, typeSig.getTypeArgs()[i], mvars, vars, definingComponent);
+            }
+            return genType.substitute(new Substitution<>(genType.getTypeParameters(), typeArgs));
+        }
+        else if (typeSig.getFlag().getFlag() == ElementTypeFlag.Flag.ELEMENT_TYPE_MVAR)
+        {
+            return null;
+        }
+        else if (typeSig.getFlag().getFlag() == ElementTypeFlag.Flag.ELEMENT_TYPE_VAR)
+        {
+            return null;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
     public static IType create(CILOSTAZOLContext context, TypeSig typeSig, IType[] mvars, IType[] vars, CLIComponent definingComponent) {
         //TODO: null reference exception might have occured here if TypeSig is not created from CLASS
         //TODO: resolve for other types (SZARRAY, GENERICINST, ...)
-        if (typeSig.getCliTablePtr() == null) return null;
-        return create(context, typeSig.getCliTablePtr(), mvars, vars, definingComponent);
+        if (typeSig.getElementType() == TypeSig.ELEMENT_TYPE_VALUETYPE
+            || typeSig.getElementType() == TypeSig.ELEMENT_TYPE_CLASS)
+            return create(context, typeSig.getCliTablePtr(), mvars, vars, definingComponent);
+        else if (typeSig.getElementType() == TypeSig.ELEMENT_TYPE_VAR)
+        {
+            return vars[typeSig.getIndex()];
+        }
+        else if (typeSig.getElementType() == TypeSig.ELEMENT_TYPE_MVAR)
+        {
+            return mvars[typeSig.getIndex()];
+        }
+        else if (typeSig.getElementType() == TypeSig.ELEMENT_TYPE_GENERICINST)
+        {
+            IType genType = TypeFactory.create(context, typeSig.getCliTablePtr(), mvars, vars, definingComponent);
+            IType[] typeArgs = new IType[typeSig.getTypeArgs().length];
+            for (int i = 0; i < typeArgs.length; i++) {
+                typeArgs[i] = TypeFactory.create(context, typeSig.getTypeArgs()[i], mvars, vars, definingComponent);
+            }
+            return genType.substitute(new Substitution<>(genType.getTypeParameters(), typeArgs));
+        }
+        else
+        {
+            return null;
+        }
     }
 }

@@ -27,7 +27,7 @@ public class ReturnType implements IReturnType {
 
     @Override
     public IReturnType substitute(ISubstitution<IType> substitution) {
-        throw new NotImplementedException();
+        return new ReturnType(_byRef, _type.substitute(substitution));
     }
 
     @Override

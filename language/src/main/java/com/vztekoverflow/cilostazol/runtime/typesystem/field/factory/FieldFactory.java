@@ -11,12 +11,12 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.factory.TypeFactory;
 
 public final class FieldFactory {
-    public static IField create(CILOSTAZOLContext context, CLIFieldTableRow fieldRow, CLIComponent component) {
+    public static IField create(CILOSTAZOLContext context, CLIFieldTableRow fieldRow, IType[] mvars, IType[] vars, CLIComponent component) {
         final String name = component.getNameFrom(fieldRow);
         final var signature = fieldRow.getSignatureHeapPtr().read(component.getDefiningFile().getBlobHeap());
 
         final FieldSig fieldSig = FieldSig.parse(new SignatureReader(signature));
-        final IType type = TypeFactory.create(context, fieldSig.getType(), null, null, component);
+        final IType type = TypeFactory.create(context, fieldSig.getType(), mvars, vars, component);
         boolean isStatic = (fieldRow.getFlags() & 0x0010) != 0;
         boolean isInitOnly = (fieldRow.getFlags() & 0x0010) != 0;
         boolean isLiteral = (fieldRow.getFlags() & 0x0040) != 0;

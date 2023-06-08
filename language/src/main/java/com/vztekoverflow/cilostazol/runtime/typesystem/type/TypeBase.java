@@ -263,7 +263,7 @@ public abstract class TypeBase<T extends CLITableRow<T>> extends CLIType impleme
 
         var fields = new ArrayList<IField>();
         while (fieldRow.getRowNo() < fieldListEndPtr.getRowNo() && fieldRow.hasNext()) {
-            var field = FieldFactory.create(getContext(), fieldRow, _definingComponent);
+            var field = FieldFactory.create(getContext(), fieldRow, new IType[0], getTypeParameters(), _definingComponent);
             fields.add(field);
             fieldRow = fieldRow.next();
         }
