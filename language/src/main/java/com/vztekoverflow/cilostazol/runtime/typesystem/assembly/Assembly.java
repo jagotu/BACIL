@@ -5,6 +5,7 @@ import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITableConstants;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
+import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
 import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.AppDomain;
 import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.IAppDomain;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
@@ -31,7 +32,7 @@ public class Assembly implements IAssembly {
     public IType getLocalType(String namespace, String name) {
         IType result = null;
         for (int i = 0; i < components.length && result == null; i++) {
-            result = components[i].getLocalType(appDomain.getContext(), namespace, name);
+            result = components[i].getLocalType(namespace, name);
         }
 
         return result;
@@ -51,6 +52,15 @@ public class Assembly implements IAssembly {
     public IAppDomain getAppDomain() {
         return appDomain;
     }
+
+    @Override
+    public CILOSTAZOLContext getContext() {
+        if (appDomain == null)
+            throw new CILParserException(CILOSTAZOLBundle.message("cilostazol.exception.noAppDomain"));
+
+        return appDomain.getContext();
+    }
+
     //endregion
 
     private Assembly(CLIFile file, IComponent[] components) {
