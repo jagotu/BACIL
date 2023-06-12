@@ -4,28 +4,23 @@ import java.util.ResourceBundle;
 
 public class LauncherBundle {
 
-    //region Singleton
-    private static LauncherBundle instance = null;
+  // region Singleton
+  private static LauncherBundle instance = null;
+  final ResourceBundle bundle;
+  // endregion
+  private final String bundleName = "LauncherBundle";
 
-    private static LauncherBundle getInstance()
-    {
-        if (instance == null)
-            instance = new LauncherBundle();
+  private LauncherBundle() {
+    bundle = ResourceBundle.getBundle(bundleName);
+  }
 
-        return instance;
-    }
-    //endregion
+  private static LauncherBundle getInstance() {
+    if (instance == null) instance = new LauncherBundle();
 
-    private final String bundleName = "LauncherBundle";
-    final ResourceBundle bundle;
+    return instance;
+  }
 
-    private LauncherBundle()
-    {
-        bundle = ResourceBundle.getBundle(bundleName);
-    }
-
-    public static String message(String name, Object... args) {
-        return String.format(getInstance().bundle.getString(name), args);
-    }
-
+  public static String message(String name, Object... args) {
+    return String.format(getInstance().bundle.getString(name), args);
+  }
 }
