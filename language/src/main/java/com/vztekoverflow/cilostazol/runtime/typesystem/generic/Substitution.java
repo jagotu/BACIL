@@ -1,6 +1,5 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.generic;
 
-
 import java.util.HashMap;
 
 public class Substitution<TItem> implements ISubstitution<TItem> {

@@ -1,11 +1,14 @@
-name: PR Dependency Check
+name: PR Dependency
 
-on: [ pull_request ]
+on:
+  push:
+    paths:
+      - '**.java'
 
 jobs:
-  check_dependencies:
+  check-dependencies:
     runs-on: ubuntu-latest
-    name: Check Dependencies
+    name: Check dependencies
     steps:
       - uses: gregsdennis/dependencies-action@main
         env:
