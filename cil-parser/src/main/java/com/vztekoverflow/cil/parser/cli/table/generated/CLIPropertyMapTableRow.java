@@ -9,6 +9,7 @@ public class CLIPropertyMapTableRow extends CLITableRow<CLIPropertyMapTableRow> 
 
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private static final byte[] MAP_PARENT_TABLES = new byte[] {CLITableConstants.CLI_TABLE_TYPE_DEF};
+
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private static final byte[] MAP_PROPERTY_LIST_TABLES =
       new byte[] {CLITableConstants.CLI_TABLE_PROPERTY};

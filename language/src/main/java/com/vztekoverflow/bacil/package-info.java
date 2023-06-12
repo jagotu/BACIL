@@ -1,4 +1,2 @@
-/**
- * Root package of the BACIL project.
- */
+/** Root package of the BACIL project. */
 package com.vztekoverflow.bacil;

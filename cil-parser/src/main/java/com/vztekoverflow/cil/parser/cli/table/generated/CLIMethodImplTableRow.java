@@ -9,9 +9,11 @@ public class CLIMethodImplTableRow extends CLITableRow<CLIMethodImplTableRow> {
 
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private static final byte[] MAP_KLASS_TABLES = new byte[] {CLITableConstants.CLI_TABLE_TYPE_DEF};
+
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private static final byte[] MAP_METHOD_BODY_TABLES =
       new byte[] {CLITableConstants.CLI_TABLE_METHOD_DEF, CLITableConstants.CLI_TABLE_MEMBER_REF};
+
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private static final byte[] MAP_METHOD_DECLARATION_TABLES =
       new byte[] {CLITableConstants.CLI_TABLE_METHOD_DEF, CLITableConstants.CLI_TABLE_MEMBER_REF};

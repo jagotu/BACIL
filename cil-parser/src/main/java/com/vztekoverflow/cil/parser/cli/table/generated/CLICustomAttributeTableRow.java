@@ -34,6 +34,7 @@ public class CLICustomAttributeTableRow extends CLITableRow<CLICustomAttributeTa
         CLITableConstants.CLI_TABLE_GENERIC_PARAM_CONSTRAINT,
         CLITableConstants.CLI_TABLE_METHOD_SPEC
       };
+
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private static final byte[] MAP_TYPE_TABLES =
       new byte[] {

@@ -10,6 +10,7 @@ public class CLIMethodSemanticsTableRow extends CLITableRow<CLIMethodSemanticsTa
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private static final byte[] MAP_METHOD_TABLES =
       new byte[] {CLITableConstants.CLI_TABLE_METHOD_DEF};
+
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private static final byte[] MAP_ASSOCIATION_TABLES =
       new byte[] {CLITableConstants.CLI_TABLE_EVENT, CLITableConstants.CLI_TABLE_PROPERTY};

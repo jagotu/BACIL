@@ -9,6 +9,7 @@ public class ParserBundle {
   final ResourceBundle bundle;
   // endregion
   private final String bundleName = "ParserBundle";
+
   private ParserBundle() {
     bundle = ResourceBundle.getBundle(bundleName);
   }

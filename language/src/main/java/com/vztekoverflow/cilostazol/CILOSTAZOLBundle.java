@@ -3,28 +3,23 @@ package com.vztekoverflow.cilostazol;
 import java.util.ResourceBundle;
 
 public class CILOSTAZOLBundle {
-    //region Singleton
-    private static CILOSTAZOLBundle instance = null;
+  // region Singleton
+  private static CILOSTAZOLBundle instance = null;
+  final ResourceBundle bundle;
+  // endregion
+  private final String bundleName = "CILOSTAZOLBundle";
 
-    private static CILOSTAZOLBundle getInstance()
-    {
-        if (instance == null)
-            instance = new CILOSTAZOLBundle();
+  private CILOSTAZOLBundle() {
+    bundle = ResourceBundle.getBundle(bundleName);
+  }
 
-        return instance;
-    }
-    //endregion
+  private static CILOSTAZOLBundle getInstance() {
+    if (instance == null) instance = new CILOSTAZOLBundle();
 
-    private final String bundleName = "CILOSTAZOLBundle";
-    final ResourceBundle bundle;
+    return instance;
+  }
 
-    private CILOSTAZOLBundle()
-    {
-        bundle = ResourceBundle.getBundle(bundleName);
-    }
-
-    public static String message(String name, Object... args) {
-        return String.format(getInstance().bundle.getString(name), args);
-    }
-
+  public static String message(String name, Object... args) {
+    return String.format(getInstance().bundle.getString(name), args);
+  }
 }

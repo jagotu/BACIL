@@ -1,7 +1,6 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.type.builtin.system;
 
 import com.vztekoverflow.cil.parser.cli.CLIFile;
-import com.vztekoverflow.cilostazol.CILOSTAZOLLanguage;
 import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;

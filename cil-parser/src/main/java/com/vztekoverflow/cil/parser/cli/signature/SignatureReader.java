@@ -14,6 +14,7 @@ public class SignatureReader implements Positionable {
 
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private final byte[] data;
+
   private int position = 0;
   private int lastSize = 0;
   // stored lookahead value

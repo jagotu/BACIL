@@ -11,6 +11,7 @@ public class CLIGenericParamConstraintTableRow
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private static final byte[] MAP_OWNER_TABLES =
       new byte[] {CLITableConstants.CLI_TABLE_GENERIC_PARAM};
+
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private static final byte[] MAP_CONSTRAINT_TABLES =
       new byte[] {

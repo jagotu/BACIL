@@ -15,9 +15,11 @@ public class CLITypeDefTableRow extends CLITableRow<CLITypeDefTableRow> {
         CLITableConstants.CLI_TABLE_TYPE_REF,
         CLITableConstants.CLI_TABLE_TYPE_SPEC
       };
+
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private static final byte[] MAP_FIELD_LIST_TABLES =
       new byte[] {CLITableConstants.CLI_TABLE_FIELD};
+
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private static final byte[] MAP_METHOD_LIST_TABLES =
       new byte[] {CLITableConstants.CLI_TABLE_METHOD_DEF};

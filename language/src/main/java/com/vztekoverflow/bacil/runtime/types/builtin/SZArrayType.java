@@ -7,59 +7,53 @@ import com.vztekoverflow.bacil.parser.signatures.SignatureReader;
 import com.vztekoverflow.bacil.parser.signatures.TypeSig;
 import com.vztekoverflow.bacil.runtime.types.CustomMod;
 import com.vztekoverflow.bacil.runtime.types.Type;
-
 import java.util.List;
 
-/**
- * Represents a SZArray with a specific element type.
- */
+/** Represents a SZArray with a specific element type. */
 public class SZArrayType extends Type {
 
-    public static final String TYPE = "SZArrayType";
+  public static final String TYPE = "SZArrayType";
+  private final Type inner;
 
-    public Type getInner() {
-        return inner;
-    }
+  public SZArrayType(Type inner) {
+    this.inner = inner;
+  }
 
-    private final Type inner;
+  public static SZArrayType read(SignatureReader reader, CLIComponent component) {
+    List<CustomMod> mods = CustomMod.readAll(reader);
 
-    public SZArrayType(Type inner) {
-        this.inner = inner;
-    }
+    Type inner = TypeSig.read(reader, component);
 
-    public static SZArrayType read(SignatureReader reader, CLIComponent component)
-    {
-        List<CustomMod> mods = CustomMod.readAll(reader);
+    return new SZArrayType(inner);
+  }
 
-        Type inner = TypeSig.read(reader, component);
+  public Type getInner() {
+    return inner;
+  }
 
-        return new SZArrayType(inner);
-    }
+  @Override
+  public Type getDirectBaseClass() {
+    // TODO return system.array
+    return null;
+  }
 
+  @Override
+  public CILMethod getMemberMethod(String name, MethodDefSig signature) {
+    return null;
+  }
 
-    @Override
-    public Type getDirectBaseClass() {
-        //TODO return system.array
-        return null;
-    }
+  @Override
+  public boolean isByRef() {
+    return false;
+  }
 
-    @Override
-    public CILMethod getMemberMethod(String name, MethodDefSig signature) {
-        return null;
-    }
+  @Override
+  public boolean isPinned() {
+    return false;
+  }
 
-    @Override
-    public boolean isByRef() {
-        return false;
-    }
-
-    @Override
-    public boolean isPinned() {
-        return false;
-    }
-
-    @Override
-    public List<CustomMod> getMods() {
-        return null;
-    }
+  @Override
+  public List<CustomMod> getMods() {
+    return null;
+  }
 }

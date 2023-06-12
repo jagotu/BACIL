@@ -13,6 +13,7 @@ public class CLITablePtr {
         CLITableConstants.CLI_TABLE_TYPE_REF,
         CLITableConstants.CLI_TABLE_TYPE_SPEC
       };
+
   private final byte tableId;
   private final int rowNo;
 

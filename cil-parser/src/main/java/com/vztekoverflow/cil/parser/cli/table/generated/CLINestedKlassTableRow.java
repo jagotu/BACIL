@@ -10,6 +10,7 @@ public class CLINestedKlassTableRow extends CLITableRow<CLINestedKlassTableRow> 
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private static final byte[] MAP_NESTED_KLASS_TABLES =
       new byte[] {CLITableConstants.CLI_TABLE_TYPE_DEF};
+
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private static final byte[] MAP_ENCLOSING_KLASS_TABLES =
       new byte[] {CLITableConstants.CLI_TABLE_TYPE_DEF};

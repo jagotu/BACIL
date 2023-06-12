@@ -11,6 +11,7 @@ public class CLIImplMapTableRow extends CLITableRow<CLIImplMapTableRow> {
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private static final byte[] MAP_MEMBER_FORWARDED_TABLES =
       new byte[] {CLITableConstants.CLI_TABLE_FIELD, CLITableConstants.CLI_TABLE_METHOD_DEF};
+
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private static final byte[] MAP_IMPORT_SCOPE_TABLES =
       new byte[] {CLITableConstants.CLI_TABLE_MODULE_REF};

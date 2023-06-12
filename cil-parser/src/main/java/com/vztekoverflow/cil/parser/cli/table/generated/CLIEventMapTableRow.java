@@ -9,6 +9,7 @@ public class CLIEventMapTableRow extends CLITableRow<CLIEventMapTableRow> {
 
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private static final byte[] MAP_PARENT_TABLES = new byte[] {CLITableConstants.CLI_TABLE_TYPE_DEF};
+
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   private static final byte[] MAP_EVENT_LIST_TABLES =
       new byte[] {CLITableConstants.CLI_TABLE_EVENT};
