@@ -1,108 +1,128 @@
 package com.vztekoverflow.cil.parser.cli;
 
-import com.vztekoverflow.cil.parser.CILParserException;
 import com.vztekoverflow.cil.parser.ByteSequenceBuffer;
+import com.vztekoverflow.cil.parser.CILParserException;
 import com.vztekoverflow.cil.parser.ParserBundle;
 import com.vztekoverflow.cil.parser.RvaSizePair;
 
-/**
- * Representation of the CLI header's information as specified in II.25.3.3 CLI header.
- */
+/** Representation of the CLI header's information as specified in II.25.3.3 CLI header. */
 public class CLIHeader {
-    private final short majorRuntimeVersion;
-    private final short minorRuntimeVersion;
-    private final RvaSizePair metaData;
-    private final int flags;
-    private final int entryPointToken;
-    private final RvaSizePair resources;
-    private final RvaSizePair strongNameSignature;
-    private final RvaSizePair codeManagerTable;
-    private final RvaSizePair vTableFixups;
-    private final RvaSizePair exportAddressTableJumps;
-    private final RvaSizePair managedNativeHeader;
+  private final short majorRuntimeVersion;
+  private final short minorRuntimeVersion;
+  private final RvaSizePair metaData;
+  private final int flags;
+  private final int entryPointToken;
+  private final RvaSizePair resources;
+  private final RvaSizePair strongNameSignature;
+  private final RvaSizePair codeManagerTable;
+  private final RvaSizePair vTableFixups;
+  private final RvaSizePair exportAddressTableJumps;
+  private final RvaSizePair managedNativeHeader;
 
-    public CLIHeader(short majorRuntimeVersion, short minorRuntimeVersion, RvaSizePair metaData, int flags, int entryPointToken, RvaSizePair resources, RvaSizePair strongNameSignature, RvaSizePair codeManagerTable, RvaSizePair vTableFixups, RvaSizePair exportAddressTableJumps, RvaSizePair managedNativeHeader) {
-        this.majorRuntimeVersion = majorRuntimeVersion;
-        this.minorRuntimeVersion = minorRuntimeVersion;
-        this.metaData = metaData;
-        this.flags = flags;
-        this.entryPointToken = entryPointToken;
-        this.resources = resources;
-        this.strongNameSignature = strongNameSignature;
-        this.codeManagerTable = codeManagerTable;
-        this.vTableFixups = vTableFixups;
-        this.exportAddressTableJumps = exportAddressTableJumps;
-        this.managedNativeHeader = managedNativeHeader;
-    }
+  public CLIHeader(
+      short majorRuntimeVersion,
+      short minorRuntimeVersion,
+      RvaSizePair metaData,
+      int flags,
+      int entryPointToken,
+      RvaSizePair resources,
+      RvaSizePair strongNameSignature,
+      RvaSizePair codeManagerTable,
+      RvaSizePair vTableFixups,
+      RvaSizePair exportAddressTableJumps,
+      RvaSizePair managedNativeHeader) {
+    this.majorRuntimeVersion = majorRuntimeVersion;
+    this.minorRuntimeVersion = minorRuntimeVersion;
+    this.metaData = metaData;
+    this.flags = flags;
+    this.entryPointToken = entryPointToken;
+    this.resources = resources;
+    this.strongNameSignature = strongNameSignature;
+    this.codeManagerTable = codeManagerTable;
+    this.vTableFixups = vTableFixups;
+    this.exportAddressTableJumps = exportAddressTableJumps;
+    this.managedNativeHeader = managedNativeHeader;
+  }
 
-    public short getMajorRuntimeVersion() {
-        return majorRuntimeVersion;
-    }
+  /**
+   * Read the CLI header from the provided {@link ByteSequenceBuffer}
+   *
+   * @param buf the byte sequence to read the CLI Header from
+   * @return the CLI header represented as a {@link CLIHeader} instance
+   */
+  public static CLIHeader read(ByteSequenceBuffer buf) {
+    int cb = buf.getInt();
+    if (cb < 72)
+      throw new CILParserException(
+          ParserBundle.message("cil.parser.exception.cli.header.small", buf.getInt()));
 
-    public short getMinorRuntimeVersion() {
-        return minorRuntimeVersion;
-    }
+    final short majorRuntimeVersion = buf.getShort();
+    final short minorRuntimeVersion = buf.getShort();
+    final RvaSizePair metaData = RvaSizePair.read(buf);
+    final int flags = buf.getInt();
+    final int entryPointToken = buf.getInt();
+    final RvaSizePair resources = RvaSizePair.read(buf);
+    final RvaSizePair strongNameSignature = RvaSizePair.read(buf);
+    final RvaSizePair codeManagerTable = RvaSizePair.read(buf);
+    final RvaSizePair vTableFixups = RvaSizePair.read(buf);
+    final RvaSizePair exportAddressTableJumps = RvaSizePair.read(buf);
+    final RvaSizePair managedNativeHeader = RvaSizePair.read(buf);
 
-    public RvaSizePair getMetaData() {
-        return metaData;
-    }
+    return new CLIHeader(
+        majorRuntimeVersion,
+        minorRuntimeVersion,
+        metaData,
+        flags,
+        entryPointToken,
+        resources,
+        strongNameSignature,
+        codeManagerTable,
+        vTableFixups,
+        exportAddressTableJumps,
+        managedNativeHeader);
+  }
 
-    public int getFlags() {
-        return flags;
-    }
+  public short getMajorRuntimeVersion() {
+    return majorRuntimeVersion;
+  }
 
-    public int getEntryPointToken() {
-        return entryPointToken;
-    }
+  public short getMinorRuntimeVersion() {
+    return minorRuntimeVersion;
+  }
 
-    public RvaSizePair getResources() {
-        return resources;
-    }
+  public RvaSizePair getMetaData() {
+    return metaData;
+  }
 
-    public RvaSizePair getStrongNameSignature() {
-        return strongNameSignature;
-    }
+  public int getFlags() {
+    return flags;
+  }
 
-    public RvaSizePair getCodeManagerTable() {
-        return codeManagerTable;
-    }
+  public int getEntryPointToken() {
+    return entryPointToken;
+  }
 
-    public RvaSizePair getvTableFixups() {
-        return vTableFixups;
-    }
+  public RvaSizePair getResources() {
+    return resources;
+  }
 
-    public RvaSizePair getExportAddressTableJumps() {
-        return exportAddressTableJumps;
-    }
+  public RvaSizePair getStrongNameSignature() {
+    return strongNameSignature;
+  }
 
-    public RvaSizePair getManagedNativeHeader() {
-        return managedNativeHeader;
-    }
+  public RvaSizePair getCodeManagerTable() {
+    return codeManagerTable;
+  }
 
-    /**
-     * Read the CLI header from the provided {@link ByteSequenceBuffer}
-     * @param buf the byte sequence to read the CLI Header from
-     * @return the CLI header represented as a {@link CLIHeader} instance
-     */
-    public static CLIHeader read(ByteSequenceBuffer buf)
-    {
-        int cb = buf.getInt();
-        if(cb < 72)
-            throw new CILParserException(ParserBundle.message("cil.parser.exception.cli.header.small", buf.getInt()));
+  public RvaSizePair getvTableFixups() {
+    return vTableFixups;
+  }
 
-        final short majorRuntimeVersion = buf.getShort();
-        final short minorRuntimeVersion = buf.getShort();
-        final RvaSizePair metaData = RvaSizePair.read(buf);
-        final int flags = buf.getInt();
-        final int entryPointToken = buf.getInt();
-        final RvaSizePair resources = RvaSizePair.read(buf);
-        final RvaSizePair strongNameSignature = RvaSizePair.read(buf);
-        final RvaSizePair codeManagerTable = RvaSizePair.read(buf);
-        final RvaSizePair vTableFixups = RvaSizePair.read(buf);
-        final RvaSizePair exportAddressTableJumps = RvaSizePair.read(buf);
-        final RvaSizePair managedNativeHeader = RvaSizePair.read(buf);
+  public RvaSizePair getExportAddressTableJumps() {
+    return exportAddressTableJumps;
+  }
 
-        return new CLIHeader(majorRuntimeVersion, minorRuntimeVersion, metaData, flags, entryPointToken, resources, strongNameSignature, codeManagerTable, vTableFixups, exportAddressTableJumps, managedNativeHeader);
-
-    }
+  public RvaSizePair getManagedNativeHeader() {
+    return managedNativeHeader;
+  }
 }
