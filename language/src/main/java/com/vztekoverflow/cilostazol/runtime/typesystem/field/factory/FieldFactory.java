@@ -16,7 +16,7 @@ public final class FieldFactory {
         final var signature = fieldRow.getSignatureHeapPtr().read(component.getDefiningFile().getBlobHeap());
 
         final FieldSig fieldSig = FieldSig.parse(new SignatureReader(signature));
-        final IType type = TypeFactory.create(context, fieldSig.getType(), mvars, vars, component);
+        final IType type = TypeFactory.create(fieldSig.getType(), mvars, vars, component);
         boolean isStatic = (fieldRow.getFlags() & 0x0010) != 0;
         boolean isInitOnly = (fieldRow.getFlags() & 0x0010) != 0;
         boolean isLiteral = (fieldRow.getFlags() & 0x0040) != 0;

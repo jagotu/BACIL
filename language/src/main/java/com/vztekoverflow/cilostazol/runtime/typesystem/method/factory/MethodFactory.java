@@ -11,7 +11,6 @@ import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
-import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ITypeParameter;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.NonGenericMethod;
@@ -36,13 +35,13 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.type.NonGenericType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.factory.TypeFactory;
 
 public final class MethodFactory {
-    public static IMethod create(CILOSTAZOLContext context, CLIMethodDefTableRow mDef, CLIType definingType) {
+    public static IMethod create(CLIMethodDefTableRow mDef, CLIType definingType) {
         final IType[] definingTypeParameters = (definingType instanceof NonGenericType) ? new IType[0] : definingType.getTypeParameters();
         final CLIFile file = definingType.getDefiningFile();
         final MethodDefSig mSignature = MethodDefSig.parse(new SignatureReader(mDef.getSignatureHeapPtr().read(file.getBlobHeap())), file);
         final String name = mDef.getNameHeapPtr().read(file.getStringHeap());
         final MethodFlags flags = new MethodFlags(mDef.getFlags());
-
+        final CILOSTAZOLContext context = definingType.getContext();
 
         // Type parameters parsing
         final ITypeParameter[] typeParameters = FactoryUtils.getTypeParameters(context, mSignature.getGenParamCount(), mDef.getPtr(), definingTypeParameters, definingType.getCLIComponent());
@@ -83,7 +82,6 @@ public final class MethodFactory {
                 else
                 {
                     locals = createLocals(
-                            context,
                             LocalVarsSig.read(new SignatureReader(file.getTableHeads().getStandAloneSigTableHead().skip(CLITablePtr.fromToken(localTok)).getSignatureHeapPtr().read(file.getBlobHeap())), file),
                             typeParameters,
                             definingTypeParameters,
@@ -103,7 +101,7 @@ public final class MethodFactory {
                 buf.setPosition(buf.getPosition() + codeSize);
                 buf.align(4);
 
-                handlers = createHandlers(context, buf, typeParameters, definingTypeParameters, definingType.getCLIComponent());
+                handlers = createHandlers(buf, typeParameters, definingTypeParameters, definingType.getCLIComponent());
             } else {
                 handlers = new IExceptionHandler[0];
             }
@@ -129,10 +127,10 @@ public final class MethodFactory {
         }
 
         //Return type parsing
-        IReturnType retType = new ReturnType(mSignature.getRetType().isByRef(), TypeFactory.create(context, mSignature.getRetType().getTypeSig(), typeParameters, definingTypeParameters, definingType.getCLIComponent()));
+        IReturnType retType = new ReturnType(mSignature.getRetType().isByRef(), TypeFactory.create(mSignature.getRetType().getTypeSig(), typeParameters, definingTypeParameters, definingType.getCLIComponent()));
 
         //Parameters parsing
-        final IParameter[] parameters = createParameters(context, mSignature.getParams(), params, typeParameters, definingTypeParameters, definingType.getCLIComponent());
+        final IParameter[] parameters = createParameters(mSignature.getParams(), params, typeParameters, definingTypeParameters, definingType.getCLIComponent());
 
         if (mSignature.getMethodDefFlags().hasFlag(MethodDefFlags.Flag.GENERIC))
             return new OpenGenericMethod(
@@ -184,20 +182,20 @@ public final class MethodFactory {
     }
 
     //region Helpers
-    private static ILocal[] createLocals(CILOSTAZOLContext context, LocalVarsSig signatures, IType[] mvars, IType[] vars, CLIComponent component)
+    private static ILocal[] createLocals(LocalVarsSig signatures, IType[] mvars, IType[] vars, CLIComponent component)
     {
         ILocal[] locals = new ILocal[signatures.getVarsCount()];
         for (int i = 0; i < locals.length; i++) {
             locals[i] = new Local(
                     signatures.getVars()[i].isByRef(),
                     signatures.getVars()[i].isPinned(),
-                    TypeFactory.create(context, signatures.getVars()[i].getTypeSig(), mvars, vars, component)
+                    TypeFactory.create(signatures.getVars()[i].getTypeSig(), mvars, vars, component)
             );
         }
         return locals;
     }
 
-    private static IExceptionHandler[] createHandlers(CILOSTAZOLContext context, ByteSequenceBuffer buf, IType[] mvars, IType[] vars, CLIComponent component)
+    private static IExceptionHandler[] createHandlers(ByteSequenceBuffer buf, IType[] mvars, IType[] vars, CLIComponent component)
     {
         final IExceptionHandler[] handlers;
         final byte kind = buf.getByte();
@@ -246,18 +244,18 @@ public final class MethodFactory {
                 classTokenOrFilterOffset = buf.getInt();
             }
             final IType klass = (flags.hasFlag(ExceptionClauseFlags.Flag.COR_ILEXCEPTION_CLAUSE_EXCEPTION))
-                    ? TypeFactory.create(context, CLITablePtr.fromToken(classTokenOrFilterOffset), mvars, vars, component)
+                    ? TypeFactory.create(CLITablePtr.fromToken(classTokenOrFilterOffset), mvars, vars, component)
                     : null;
             handlers[i] = new ExceptionHandler(tryoffset, trylength, handleroffset, handlerlength, klass, flags);
         }
         return  handlers;
     }
 
-    private static IParameter[] createParameters(CILOSTAZOLContext context, ParamSig[] params, CLIParamTableRow[] rows, IType[] mvars, IType[] vars, CLIComponent component)
+    private static IParameter[] createParameters(ParamSig[] params, CLIParamTableRow[] rows, IType[] mvars, IType[] vars, CLIComponent component)
     {
         final IParameter[] parameters = new IParameter[params.length];
         for (int i = 0; i < params.length; i++) {
-            parameters[i] = new Parameter(params[i].isByRef(), TypeFactory.create(context, params[i].getTypeSig(), mvars, vars, component), rows[i].getNameHeapPtr().read(component.getDefiningFile().getStringHeap()), rows[i].getSequence(), new ParamFlags(rows[i].getFlags()));
+            parameters[i] = new Parameter(params[i].isByRef(), TypeFactory.create(params[i].getTypeSig(), mvars, vars, component), rows[i].getNameHeapPtr().read(component.getDefiningFile().getStringHeap()), rows[i].getSequence(), new ParamFlags(rows[i].getFlags()));
         }
 
         return parameters;

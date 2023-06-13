@@ -49,7 +49,7 @@ public class CLIComponent implements IComponent {
     }
 
     @Override
-    public IType getLocalType(CILOSTAZOLContext context, String namespace, String name) {
+    public IType getLocalType(String namespace, String name) {
         //printAllTypesFile();
 
         //Check typeDefs
@@ -77,7 +77,7 @@ public class CLIComponent implements IComponent {
     }
 
     @Override
-    public IType getLocalType(CILOSTAZOLContext context, CLITablePtr tablePtr) {
+    public IType getLocalType(CLITablePtr tablePtr) {
         var typeDefTableRow = getTableHeads().getTypeDefTableHead().skip(tablePtr);
         return typeCache[typeDefTableRow.getPtr().getRowNo()-1];
     }
@@ -119,6 +119,10 @@ public class CLIComponent implements IComponent {
         return _cliFile.getTableHeads();
     }
 
+    @Override
+    public CILOSTAZOLContext getContext() {
+        return _definingAssembly.getContext();
+    }
     //endregion
 
     private CLIComponent(CLIFile file, IAssembly assembly) {
@@ -132,7 +136,7 @@ public class CLIComponent implements IComponent {
         final int typesCount = _cliFile.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_TYPE_DEF);
         typeCache = new IType[typesCount];
         for (int i = 0; i < typesCount; i++) {
-            typeCache[i] = TypeFactory.create(_definingAssembly.getAppDomain().getContext(), _cliFile.getTableHeads().getTypeDefTableHead().skip(i), this);
+            typeCache[i] = TypeFactory.create(_cliFile.getTableHeads().getTypeDefTableHead().skip(i), this);
         }
     }
 
