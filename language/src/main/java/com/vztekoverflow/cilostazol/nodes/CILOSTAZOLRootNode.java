@@ -6,19 +6,20 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
 
 public class CILOSTAZOLRootNode extends RootNode {
-    protected final CILMethodNode _node;
-    private CILOSTAZOLRootNode(FrameDescriptor descriptor, CILMethodNode node) {
-        super(node.getMethod().getDefiningComponent().getLanguage(), descriptor);
-        _node = node;
-    }
+  protected final CILMethodNode _node;
 
-    public static CILOSTAZOLRootNode create(IMethod method, byte[] cilCode) {
-        final CILMethodNode node = CILMethodNode.create(method, cilCode);
-        return new CILOSTAZOLRootNode(node.getFrameDescriptor(), node);
-    }
+  private CILOSTAZOLRootNode(FrameDescriptor descriptor, CILMethodNode node) {
+    super(node.getMethod().getDefiningComponent().getLanguage(), descriptor);
+    _node = node;
+  }
 
-    @Override
-    public Object execute(VirtualFrame frame) {
-        return _node.execute(frame);
-    }
+  public static CILOSTAZOLRootNode create(IMethod method, byte[] cilCode) {
+    final CILMethodNode node = CILMethodNode.create(method, cilCode);
+    return new CILOSTAZOLRootNode(node.getFrameDescriptor(), node);
+  }
+
+  @Override
+  public Object execute(VirtualFrame frame) {
+    return _node.execute(frame);
+  }
 }
