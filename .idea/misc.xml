@@ -8,5 +8,8 @@
       </list>
     </option>
   </component>
+  <component name="PWA">
+    <option name="wasEnabledAtLeastOnce" value="true" />
+  </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_17" default="true" project-jdk-name="GraalVM 17" project-jdk-type="JavaSDK" />
 </project>

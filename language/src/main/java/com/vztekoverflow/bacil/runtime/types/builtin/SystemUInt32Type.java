@@ -8,59 +8,62 @@ import com.vztekoverflow.bacil.runtime.EvaluationStackPrimitiveMarker;
 import com.vztekoverflow.bacil.runtime.locations.LocationsHolder;
 import com.vztekoverflow.bacil.runtime.types.TypeHelpers;
 
-/**
- * Implementation of the System.UInt32 type.
- */
+/** Implementation of the System.UInt32 type. */
 public class SystemUInt32Type extends SystemValueTypeType {
-    public SystemUInt32Type(CLITypeDefTableRow type, CLIComponent component) {
-        super(type, component);
-    }
+  public SystemUInt32Type(CLITypeDefTableRow type, CLIComponent component) {
+    super(type, component);
+  }
 
-    @Override
-    public void locationToStack(LocationsHolder holder, int primitiveOffset, int refOffset, Object[] refs, long[] primitives, int slot) {
-        refs[slot] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32;
-        primitives[slot] = TypeHelpers.truncate32(holder.getPrimitives()[primitiveOffset]);
-    }
+  @Override
+  public void locationToStack(
+      LocationsHolder holder,
+      int primitiveOffset,
+      int refOffset,
+      Object[] refs,
+      long[] primitives,
+      int slot) {
+    refs[slot] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32;
+    primitives[slot] = TypeHelpers.truncate32(holder.getPrimitives()[primitiveOffset]);
+  }
 
-    @Override
-    public void stackToLocation(LocationsHolder holder, int primitiveOffset, int refOffset, Object ref, long primitive) {
-        if(ref != EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32)
-        {
-            CompilerDirectives.transferToInterpreterAndInvalidate();
-            throw new BACILInternalError("Saving a non-Int32 value into System.UInt32 location.");
-        }
-        holder.getPrimitives()[primitiveOffset]= TypeHelpers.truncate32(primitive);
+  @Override
+  public void stackToLocation(
+      LocationsHolder holder, int primitiveOffset, int refOffset, Object ref, long primitive) {
+    if (ref != EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      throw new BACILInternalError("Saving a non-Int32 value into System.UInt32 location.");
     }
+    holder.getPrimitives()[primitiveOffset] = TypeHelpers.truncate32(primitive);
+  }
 
-    @Override
-    public void objectToStack(Object[] refs, long[] primitives, int slot, Object value) {
-        refs[slot] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32;
-        primitives[slot] = TypeHelpers.truncate32((Integer)value);
+  @Override
+  public void objectToStack(Object[] refs, long[] primitives, int slot, Object value) {
+    refs[slot] = EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32;
+    primitives[slot] = TypeHelpers.truncate32((Integer) value);
+  }
+
+  @Override
+  public Object stackToObject(Object ref, long primitive) {
+    if (ref != EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      throw new BACILInternalError("Accessing a non-Int32 value from a System.UInt32 location.");
     }
+    return (int) primitive;
+  }
 
-    @Override
-    public Object stackToObject(Object ref, long primitive) {
-        if(ref != EvaluationStackPrimitiveMarker.EVALUATION_STACK_INT32)
-        {
-            CompilerDirectives.transferToInterpreterAndInvalidate();
-            throw new BACILInternalError("Accessing a non-Int32 value from a System.UInt32 location.");
-        }
-        return (int) primitive;
-    }
+  @Override
+  public void objectToLocation(
+      LocationsHolder holder, int primitiveOffset, int refOffset, Object value) {
+    holder.getPrimitives()[primitiveOffset] = TypeHelpers.truncate32((Integer) value);
+  }
 
-    @Override
-    public void objectToLocation(LocationsHolder holder, int primitiveOffset, int refOffset, Object value) {
-        holder.getPrimitives()[primitiveOffset] = TypeHelpers.truncate32((Integer) value);
-    }
+  @Override
+  public Object locationToObject(LocationsHolder holder, int primitiveOffset, int refOffset) {
+    return (int) holder.getPrimitives()[primitiveOffset];
+  }
 
-    @Override
-    public Object locationToObject(LocationsHolder holder, int primitiveOffset, int refOffset) {
-        return (int)holder.getPrimitives()[primitiveOffset];
-    }
-
-
-    @Override
-    public int getStorageType() {
-        return STORAGE_PRIMITIVE;
-    }
+  @Override
+  public int getStorageType() {
+    return STORAGE_PRIMITIVE;
+  }
 }

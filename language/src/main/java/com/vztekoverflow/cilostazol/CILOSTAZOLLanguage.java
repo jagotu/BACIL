@@ -8,47 +8,49 @@ import com.oracle.truffle.api.nodes.Node;
 import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
 import com.vztekoverflow.cilostazol.runtime.GuestAllocator;
 
-/**
- * The BACIL language class implementing TruffleLanguage.
- */
-@TruffleLanguage.Registration(id = CILOSTAZOLLanguage.ID, name = CILOSTAZOLLanguage.NAME, interactive = false, defaultMimeType = CILOSTAZOLLanguage.CIL_PE_MIME_TYPE, byteMimeTypes = {CILOSTAZOLLanguage.CIL_PE_MIME_TYPE})
+/** The BACIL language class implementing TruffleLanguage. */
+@TruffleLanguage.Registration(
+    id = CILOSTAZOLLanguage.ID,
+    name = CILOSTAZOLLanguage.NAME,
+    interactive = false,
+    defaultMimeType = CILOSTAZOLLanguage.CIL_PE_MIME_TYPE,
+    byteMimeTypes = {CILOSTAZOLLanguage.CIL_PE_MIME_TYPE})
 public class CILOSTAZOLLanguage extends TruffleLanguage<CILOSTAZOLContext> {
 
-    @CompilerDirectives.CompilationFinal
-    private GuestAllocator allocator;
+  public static final String ID = "cil";
+  public static final String NAME = "CIL";
+  public static final String CIL_PE_MIME_TYPE = "application/x-dosexec";
+  private static final LanguageReference<CILOSTAZOLLanguage> REFERENCE =
+      LanguageReference.create(CILOSTAZOLLanguage.class);
 
-    @CompilerDirectives.CompilationFinal
-    private final Assumption noAllocationTracking = Assumption.create("No allocation tracking assumption");
+  @CompilerDirectives.CompilationFinal
+  private final Assumption noAllocationTracking =
+      Assumption.create("No allocation tracking assumption");
 
-    public static final String ID = "cil";
-    public static final String NAME = "CIL";
+  @CompilerDirectives.CompilationFinal private GuestAllocator allocator;
 
-    public static final String CIL_PE_MIME_TYPE = "application/x-dosexec";
+  public static CILOSTAZOLLanguage get(Node node) {
+    return REFERENCE.get(node);
+  }
 
-    private static final LanguageReference<CILOSTAZOLLanguage> REFERENCE = LanguageReference.create(CILOSTAZOLLanguage.class);
+  @Override
+  protected CILOSTAZOLContext createContext(Env env) {
+    return new CILOSTAZOLContext(this, env);
+  }
 
-    public static CILOSTAZOLLanguage get(Node node) {
-        return REFERENCE.get(node);
-    }
+  public boolean isAllocationTrackingDisabled() {
+    return noAllocationTracking.isValid();
+  }
 
-    @Override
-    protected CILOSTAZOLContext createContext(Env env) {
-        return new CILOSTAZOLContext(this, env);
-    }
+  public void invalidateAllocationTrackingDisabled() {
+    noAllocationTracking.invalidate();
+  }
 
-    public boolean isAllocationTrackingDisabled() {
-        return noAllocationTracking.isValid();
-    }
+  public GuestAllocator getAllocator() {
+    return allocator;
+  }
 
-    public void invalidateAllocationTrackingDisabled() {
-        noAllocationTracking.invalidate();
-    }
-
-    public GuestAllocator getAllocator() {
-        return allocator;
-    }
-
-    public void initializeGuestAllocator(TruffleLanguage.Env env) {
-        this.allocator = new GuestAllocator(this, env.lookup(AllocationReporter.class));
-    }
+  public void initializeGuestAllocator(TruffleLanguage.Env env) {
+    this.allocator = new GuestAllocator(this, env.lookup(AllocationReporter.class));
+  }
 }

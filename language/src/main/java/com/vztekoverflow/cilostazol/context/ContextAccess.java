@@ -6,17 +6,17 @@ import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
 import com.vztekoverflow.cilostazol.runtime.GuestAllocator;
 
 public interface ContextAccess extends LanguageAccess {
-    CILOSTAZOLContext getContext();
+  CILOSTAZOLContext getContext();
 
-    default CILOSTAZOLLanguage getLanguage() {
-        return getContext().getLanguage();
-    }
+  default CILOSTAZOLLanguage getLanguage() {
+    return getContext().getLanguage();
+  }
 
-    default Meta getMeta() {
-        return getContext().getMeta();
-    }
+  default Meta getMeta() {
+    return getContext().getMeta();
+  }
 
-    default GuestAllocator getAllocator() {
-        return getContext().getAllocator();
-    }
+  default GuestAllocator getAllocator() {
+    return getContext().getAllocator();
+  }
 }

@@ -1,7 +1,6 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.method;
 
 import com.oracle.truffle.api.nodes.RootNode;
-import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cil.parser.cli.signature.MethodDefFlags;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitutable;
@@ -17,32 +16,43 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.method.returnType.IReturn
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
 public interface IMethod extends ISubstitutable<IMethod, IType> {
-    //Containing definition
-    public IComponent getDefiningComponent();
-    public IType getDefiningType();
-    public String getName();
+  // Containing definition
+  public IComponent getDefiningComponent();
 
-    //Signature
-    public ITypeParameter[] getTypeParameters();
-    public IParameter[] getParameters();
-    public ILocal[] getLocals();
-    public IReturnType getReturnType();
+  public IType getDefiningType();
 
-    //Flags
-    public MethodDefFlags getMethodDefFlags();
-    public MethodFlags getMethodFlags();
-    public MethodImplFlags getMethodImplFlags();
-    public MethodHeaderFlags getMethodHeaderFlags();
+  public String getName();
 
-    //Body
-    public IExceptionHandler[] getExceptionHandlers();
-    public int getMaxStack();
+  // Signature
+  public ITypeParameter[] getTypeParameters();
 
-    //Truffle execution
-    public RootNode getNode();
+  public IParameter[] getParameters();
 
-    //Substitution
-    public IMethod substitute(ISubstitution<IType> substitution);
-    public IMethod getDefinition();
-    public IMethod getConstructedFrom();
+  public ILocal[] getLocals();
+
+  public IReturnType getReturnType();
+
+  // Flags
+  public MethodDefFlags getMethodDefFlags();
+
+  public MethodFlags getMethodFlags();
+
+  public MethodImplFlags getMethodImplFlags();
+
+  public MethodHeaderFlags getMethodHeaderFlags();
+
+  // Body
+  public IExceptionHandler[] getExceptionHandlers();
+
+  public int getMaxStack();
+
+  // Truffle execution
+  public RootNode getNode();
+
+  // Substitution
+  public IMethod substitute(ISubstitution<IType> substitution);
+
+  public IMethod getDefinition();
+
+  public IMethod getConstructedFrom();
 }

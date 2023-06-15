@@ -7,29 +7,29 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitutable;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
 public interface IField extends ISubstitutable<IField, IType> {
-    public CLIFile getDefiningFile();
+  public CLIFile getDefiningFile();
 
-    public IType getType();
+  public IType getType();
 
-    public String getName();
+  public String getName();
 
-    FieldVisibility getVisibility();
+  FieldVisibility getVisibility();
 
-    boolean isInitOnly();
+  boolean isInitOnly();
 
-    boolean isSpecialName();
+  boolean isSpecialName();
 
-    boolean isNotSerialized();
+  boolean isNotSerialized();
 
-    boolean isLiteral();
+  boolean isLiteral();
 
-    boolean isStatic();
+  boolean isStatic();
 
-    Class<?> getPropertyType();
+  Class<?> getPropertyType();
 
-    boolean isFinal();
+  boolean isFinal();
 
-    SystemTypes getKind();
+  SystemTypes getKind();
 
-    void setObjectValue(StaticObject obj, Object value);
+  void setObjectValue(StaticObject obj, Object value);
 }

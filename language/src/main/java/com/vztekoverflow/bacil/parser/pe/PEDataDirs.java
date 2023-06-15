@@ -9,33 +9,27 @@ import com.vztekoverflow.bacil.parser.RvaSizePair;
  */
 public class PEDataDirs {
 
-    public PEDataDirs (RvaSizePair[] dataDirs) {
-        this.dataDirs = dataDirs;
+  @CompilationFinal(dimensions = 1)
+  private final RvaSizePair[] dataDirs;
+
+  public PEDataDirs(RvaSizePair[] dataDirs) {
+    this.dataDirs = dataDirs;
+  }
+
+  public static PEDataDirs read(ByteSequenceBuffer buf, int count) {
+    RvaSizePair[] dataDirs = new RvaSizePair[count];
+    for (int i = 0; i < count; i++) {
+      dataDirs[i] = RvaSizePair.read(buf);
     }
 
-    @CompilationFinal(dimensions = 1)
-    private final RvaSizePair[] dataDirs;
+    return new PEDataDirs(dataDirs);
+  }
 
-    public int getRva(int offset)
-    {
-        return dataDirs[offset].getRva();
-    }
+  public int getRva(int offset) {
+    return dataDirs[offset].getRva();
+  }
 
-    public int getSize(int offset)
-    {
-        return dataDirs[offset].getSize();
-    }
-
-    public static PEDataDirs read(ByteSequenceBuffer buf, int count)
-    {
-        RvaSizePair[] dataDirs = new RvaSizePair[count];
-        for(int i = 0;i<count;i++)
-        {
-            dataDirs[i] = RvaSizePair.read(buf);
-        }
-
-        return new PEDataDirs(dataDirs);
-    }
-
-
+  public int getSize(int offset) {
+    return dataDirs[offset].getSize();
+  }
 }

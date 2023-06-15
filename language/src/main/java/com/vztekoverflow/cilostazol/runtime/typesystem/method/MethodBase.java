@@ -4,7 +4,6 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cil.parser.cli.signature.MethodDefFlags;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
-import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.exceptionhandler.IExceptionHandler;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.flags.MethodFlags;
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.flags.MethodHeaderFlags;
@@ -14,121 +13,133 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.method.parameter.IParamet
 import com.vztekoverflow.cilostazol.runtime.typesystem.method.returnType.IReturnType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
-public abstract class MethodBase extends CLIMethod implements IMethod, ICILBasedMethod{
-    protected final CLIFile _definingFile;
-    protected final String _name;
-    protected final CLIComponent _definingComponent;
-    protected final IType _definingType;
+public abstract class MethodBase extends CLIMethod implements IMethod, ICILBasedMethod {
+  protected final CLIFile _definingFile;
+  protected final String _name;
+  protected final CLIComponent _definingComponent;
+  protected final IType _definingType;
 
-    //Flags
-    protected final MethodDefFlags _methodDefFlags;
-    protected final MethodFlags _methodFlags;
-    protected final MethodImplFlags _methodImplFlags;
-    private  final MethodHeaderFlags _methodHeaderFlags;
+  // Flags
+  protected final MethodDefFlags _methodDefFlags;
+  protected final MethodFlags _methodFlags;
+  protected final MethodImplFlags _methodImplFlags;
+  // Signature
+  protected final IParameter[] _parameters;
+  protected final ILocal[] _locals;
+  protected final IReturnType _retType;
+  protected final IExceptionHandler[] _exceptionHandlers;
+  protected final byte[] _cil;
+  // body
+  protected final int _maxStack;
+  private final MethodHeaderFlags _methodHeaderFlags;
+  protected RootNode _node;
 
-    //Signature
-    protected final IParameter[] _parameters;
-    protected final ILocal[] _locals;
-    protected final IReturnType _retType;
-    protected final IExceptionHandler[] _exceptionHandlers;
-    protected final byte[] _cil;
+  protected MethodBase(
+      CLIFile definingFile,
+      String name,
+      CLIComponent definingComponent,
+      IType definingType,
+      MethodDefFlags methodDefFlags,
+      MethodFlags methodFlags,
+      MethodImplFlags methodImplFlags,
+      MethodHeaderFlags methodHeaderFlags,
+      IParameter[] parameters,
+      ILocal[] locals,
+      IReturnType retType,
+      IExceptionHandler[] exceptionHandlers,
+      byte[] cil,
+      int maxStack) {
+    _definingFile = definingFile;
+    _name = name;
+    _definingComponent = definingComponent;
+    _definingType = definingType;
+    _methodDefFlags = methodDefFlags;
+    _methodFlags = methodFlags;
+    _methodImplFlags = methodImplFlags;
+    _methodHeaderFlags = methodHeaderFlags;
+    _parameters = parameters;
+    _locals = locals;
+    _retType = retType;
+    _exceptionHandlers = exceptionHandlers;
+    _cil = cil;
+    _maxStack = maxStack;
+  }
 
-    //body
-    protected final int _maxStack;
-    protected RootNode _node;
+  // region IMethod
+  @Override
+  public IType getDefiningType() {
+    return _definingType;
+  }
 
-    protected MethodBase(CLIFile definingFile, String name, CLIComponent definingComponent, IType definingType, MethodDefFlags methodDefFlags, MethodFlags methodFlags, MethodImplFlags methodImplFlags, MethodHeaderFlags methodHeaderFlags, IParameter[] parameters, ILocal[] locals, IReturnType retType, IExceptionHandler[] exceptionHandlers, byte[] cil, int maxStack) {
-        _definingFile = definingFile;
-        _name = name;
-        _definingComponent = definingComponent;
-        _definingType = definingType;
-        _methodDefFlags = methodDefFlags;
-        _methodFlags = methodFlags;
-        _methodImplFlags = methodImplFlags;
-        _methodHeaderFlags = methodHeaderFlags;
-        _parameters = parameters;
-        _locals = locals;
-        _retType = retType;
-        _exceptionHandlers = exceptionHandlers;
-        _cil = cil;
-        _maxStack = maxStack;
-    }
+  @Override
+  public String getName() {
+    return _name;
+  }
 
-    //region IMethod
-    @Override
-    public IType getDefiningType() {
-        return _definingType;
-    }
+  @Override
+  public IParameter[] getParameters() {
+    return _parameters;
+  }
 
-    @Override
-    public String getName() {
-        return _name;
-    }
+  @Override
+  public ILocal[] getLocals() {
+    return _locals;
+  }
 
-    @Override
-    public IParameter[] getParameters() {
-        return _parameters;
-    }
+  @Override
+  public IReturnType getReturnType() {
+    return _retType;
+  }
 
-    @Override
-    public ILocal[] getLocals() {
-        return _locals;
-    }
+  @Override
+  public MethodDefFlags getMethodDefFlags() {
+    return _methodDefFlags;
+  }
 
-    @Override
-    public IReturnType getReturnType() {
-        return _retType;
-    }
+  @Override
+  public MethodFlags getMethodFlags() {
+    return _methodFlags;
+  }
 
-    @Override
-    public MethodDefFlags getMethodDefFlags() {
-        return _methodDefFlags;
-    }
+  @Override
+  public MethodImplFlags getMethodImplFlags() {
+    return _methodImplFlags;
+  }
 
-    @Override
-    public MethodFlags getMethodFlags() {
-        return _methodFlags;
-    }
+  @Override
+  public MethodHeaderFlags getMethodHeaderFlags() {
+    return _methodHeaderFlags;
+  }
 
-    @Override
-    public MethodImplFlags getMethodImplFlags() {
-        return _methodImplFlags;
-    }
+  @Override
+  public IExceptionHandler[] getExceptionHandlers() {
+    return _exceptionHandlers;
+  }
 
-    @Override
-    public MethodHeaderFlags getMethodHeaderFlags() {
-        return _methodHeaderFlags;
-    }
+  @Override
+  public int getMaxStack() {
+    return _maxStack;
+  }
 
-    @Override
-    public IExceptionHandler[] getExceptionHandlers() {
-        return _exceptionHandlers;
-    }
+  @Override
+  public IMethod getDefinition() {
+    return this;
+  }
 
-    @Override
-    public int getMaxStack() {
-        return _maxStack;
-    }
+  @Override
+  public byte[] getCIL() {
+    return _cil;
+  }
 
-    @Override
-    public IMethod getDefinition() {
-        return this;
-    }
+  @Override
+  public String toString() {
+    return "_ " + getName() + "()";
+  }
 
-    @Override
-    public byte[] getCIL() {
-        return _cil;
-    }
+  @Override
+  public CLIComponent getCLIComponent() {
+    return _definingComponent;
+  }
 
-    @Override
-    public String toString() {
-        return "_ " + getName() + "()";
-    }
-
-    @Override
-    public CLIComponent getCLIComponent() {
-        return _definingComponent;
-    }
-
-    //endregion
+  // endregion
 }

@@ -10,19 +10,24 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.typeparameters.factory.TypeParameterFactory;
 
 public final class FactoryUtils {
-    static ITypeParameter[] getTypeParameters(CILOSTAZOLContext context, int count, CLITablePtr ptr, IType[] vars, CLIComponent component) {
-        ITypeParameter[] result = new TypeParameter[count];
-        while (count-- > 0) {
-            for (CLIGenericParamTableRow row : component.getDefiningFile().getTableHeads().getGenericParamTableHead()) {
-                if (ptr.getTableId() == row.getOwnerTablePtr().getTableId() && ptr.getRowNo() == row.getOwnerTablePtr().getRowNo()) {
-                    result[row.getNumber()] = TypeParameterFactory.create(row, result, vars, component, component.getDefiningFile());
-                }
-            }
+  static ITypeParameter[] getTypeParameters(
+      CILOSTAZOLContext context, int count, CLITablePtr ptr, IType[] vars, CLIComponent component) {
+    ITypeParameter[] result = new TypeParameter[count];
+    while (count-- > 0) {
+      for (CLIGenericParamTableRow row :
+          component.getDefiningFile().getTableHeads().getGenericParamTableHead()) {
+        if (ptr.getTableId() == row.getOwnerTablePtr().getTableId()
+            && ptr.getRowNo() == row.getOwnerTablePtr().getRowNo()) {
+          result[row.getNumber()] =
+              TypeParameterFactory.create(
+                  row, result, vars, component, component.getDefiningFile());
         }
-
-        return result;
+      }
     }
 
-    //region MethodDefFlags
-    //endregion
+    return result;
+  }
+
+  // region MethodDefFlags
+  // endregion
 }

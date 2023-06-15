@@ -7,43 +7,30 @@ import com.vztekoverflow.bacil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.bacil.runtime.types.Type;
 import com.vztekoverflow.bacil.runtime.types.builtin.BuiltinTypes;
 
-/**
- * Class representing a generic component with an assembly identity and types.
- */
+/** Class representing a generic component with an assembly identity and types. */
 public abstract class BACILComponent {
 
-    @CompilerDirectives.CompilationFinal
-    private BuiltinTypes builtinTypes;
+  private final BACILLanguage language;
+  @CompilerDirectives.CompilationFinal private BuiltinTypes builtinTypes;
 
-    private final BACILLanguage language;
+  public BACILComponent(BACILLanguage language) {
+    this.language = language;
+  }
 
-    public BACILComponent(BACILLanguage language) {
-        this.language = language;
-    }
+  /** Get the resolved builtinTypes. Used to break the dependency initialization cycle. */
+  public BuiltinTypes getBuiltinTypes() {
+    return builtinTypes;
+  }
 
-    /**
-     * Set the resolved builtinTypes. Used to break the dependency initialization cycle.
-     */
-    public void setBuiltinTypes(BuiltinTypes builtinTypes) {
-        CompilerAsserts.neverPartOfCompilation();
-        this.builtinTypes = builtinTypes;
-    }
+  /** Set the resolved builtinTypes. Used to break the dependency initialization cycle. */
+  public void setBuiltinTypes(BuiltinTypes builtinTypes) {
+    CompilerAsserts.neverPartOfCompilation();
+    this.builtinTypes = builtinTypes;
+  }
 
-    /**
-     * Get the resolved builtinTypes. Used to break the dependency initialization cycle.
-     */
-    public BuiltinTypes getBuiltinTypes() {
-        return builtinTypes;
-    }
+  /** Get the identity of this assembly, including name and version. */
+  public abstract AssemblyIdentity getAssemblyIdentity();
 
-    /**
-     * Get the identity of this assembly, including name and version.
-     */
-    public abstract AssemblyIdentity getAssemblyIdentity();
-
-    /**
-     * Get a type defined by this component.
-     */
-    public abstract Type findLocalType(String namespace, String name);
-
+  /** Get a type defined by this component. */
+  public abstract Type findLocalType(String namespace, String name);
 }

@@ -21,10 +21,11 @@ We recommend the following configuration steps to run and contribute to CILOSTAZ
 4. Download Cilostazol [repo](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg).
     - We put it into `CilostazolDev/CILOSTAZOL-100mg` folder.
 5. Download Benchmarks and Tests [repo](https://github.com/Softwarovy-projekt/TestsAndBenchmarks).
-   - We put it into `CilostazolDev/TestsAndBenchmarks` folder.
-6. Build Benchmark and Tests (See [BenchmarksAndTests/README.md](https://github.com/Softwarovy-projekt/TestsAndBenchmarks/blob/main/README.md)).
+    - We put it into `CilostazolDev/TestsAndBenchmarks` folder.
+6. Build Benchmark and Tests (
+   See [BenchmarksAndTests/README.md](https://github.com/Softwarovy-projekt/TestsAndBenchmarks/blob/main/README.md)).
 7. Fix paths in `CilostazolDev/CILOSTAZOL-100mg/.run` folder.
-   - We changed the following keys in `BACIL-clean-build-run.run.xml` and `BACIL-dry-run.run.xml`
+    - We changed the following keys in `BACIL-clean-build-run.run.xml` and `BACIL-dry-run.run.xml`
         - `<graalvm-path>` to `../GraalVM/graalvm-ce-java17-22.2.0`
         - `<dotnet-core-lib-path>` to `../Microsoft.NETCoreApp/7.0.1`
         - `<dotnet-app-dll-path>` to `../TestsAndBenchmarks/Tests/OSR/CilostazolEx/bin/Debug/net7.0/CilostazolEx.dll`

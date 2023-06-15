@@ -7,24 +7,28 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
 public class BooleanType extends SystemBaseType {
 
-    public static BooleanType INSTANCE = new BooleanType(null, null, null, null);
+  public static BooleanType INSTANCE = new BooleanType(null, null, null, null);
 
-    private BooleanType(CLIFile _definingFile, IType _directBaseClass, IType[] _interfaces, CLIComponent _definingComponent) {
-        super(_definingFile, "Boolean", "System", _directBaseClass, _interfaces, _definingComponent);
-    }
+  private BooleanType(
+      CLIFile _definingFile,
+      IType _directBaseClass,
+      IType[] _interfaces,
+      CLIComponent _definingComponent) {
+    super(_definingFile, "Boolean", "System", _directBaseClass, _interfaces, _definingComponent);
+  }
 
-    @Override
-    public IType[] getTypeParameters() {
-        return new IType[0];
-    }
+  @Override
+  public IType[] getTypeParameters() {
+    return new IType[0];
+  }
 
-    @Override
-    public IType substitute(ISubstitution<IType> substitution) {
-        return null;
-    }
+  @Override
+  public IType substitute(ISubstitution<IType> substitution) {
+    return null;
+  }
 
-    @Override
-    public IType getConstructedFrom() {
-        return null;
-    }
+  @Override
+  public IType getConstructedFrom() {
+    return null;
+  }
 }

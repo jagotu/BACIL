@@ -1,4 +1,3 @@
 package com.vztekoverflow.cil.parser.cli.signature;
 
-public class ArrayShapeSig {
-}
+public class ArrayShapeSig {}

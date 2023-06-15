@@ -2,7 +2,6 @@ package com.vztekoverflow.bacil.parser.cli.tables;
 
 import com.vztekoverflow.bacil.parser.CompressedInteger;
 import com.vztekoverflow.bacil.parser.Positionable;
-
 import java.util.Arrays;
 
 /**
@@ -11,39 +10,34 @@ import java.util.Arrays;
  */
 public abstract class CLIBlobCodedHeapPtr extends CLIHeapPtr<byte[]> implements Positionable {
 
-    public CLIBlobCodedHeapPtr(int offset) {
-        super(offset);
-    }
+  private int position = offset;
 
-    private int position = offset;
+  public CLIBlobCodedHeapPtr(int offset) {
+    super(offset);
+  }
 
+  /** Get the current position in the heap data. */
+  @Override
+  public int getPosition() {
+    return position;
+  }
 
-    /**
-     * Get the current position in the heap data.
-     */
-    @Override
-    public int getPosition() {
-        return position;
-    }
+  /** Set the current position in the heap data. */
+  @Override
+  public void setPosition(int position) {
+    this.position = position;
+  }
 
-    /**
-     * Set the current position in the heap data.
-     */
-    @Override
-    public void setPosition(int position) {
-        this.position = position;
-    }
+  /**
+   * Get the blob data as a byte[].
+   *
+   * @param heapData the bytes of the heap
+   * @return the data of the blob
+   */
+  @Override
+  public byte[] read(byte[] heapData) {
+    int length = CompressedInteger.read(heapData, this);
 
-    /**
-     * Get the blob data as a byte[].
-     * @param heapData the bytes of the heap
-     * @return the data of the blob
-     */
-    @Override
-    public byte[] read(byte[] heapData) {
-        int length = CompressedInteger.read(heapData, this);
-
-        return Arrays.copyOfRange(heapData, position, position+length);
-
-    }
+    return Arrays.copyOfRange(heapData, position, position + length);
+  }
 }

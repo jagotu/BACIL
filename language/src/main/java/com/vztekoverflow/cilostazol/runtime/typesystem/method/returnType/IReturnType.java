@@ -1,10 +1,10 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem.method.returnType;
 
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitutable;
-import com.vztekoverflow.cilostazol.runtime.typesystem.method.parameter.ParamFlags;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
 public interface IReturnType extends ISubstitutable<IReturnType, IType> {
-    boolean isByRef();
-    IType getType();
+  boolean isByRef();
+
+  IType getType();
 }
