@@ -62,6 +62,7 @@ public final class AssemblyIdentity {
    * @param reference an assembly reference to check this assembly against
    * @return whether this assembly can resolve the reference
    */
+  @Deprecated
   public boolean resolvesRef(AssemblyIdentity reference) {
     // The standard is a bit unclear about the necessity of version checks when loading
     // referenced assemblies. Practically, loading multiple assemblies can and will resolve
@@ -136,5 +137,18 @@ public final class AssemblyIdentity {
         + buildNumber
         + "."
         + revisionNumber;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj instanceof AssemblyIdentity) {
+      AssemblyIdentity other = (AssemblyIdentity) obj;
+      return majorVersion == other.majorVersion
+              && minorVersion == other.minorVersion
+              && buildNumber == other.buildNumber
+              && revisionNumber == other.revisionNumber
+              && name.equals(other.name);
+    }
+    return false;
   }
 }

@@ -1,7 +1,10 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem;
 
+import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cilostazol.CILOSTAZOLLanguage;
 import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
+import com.vztekoverflow.cilostazol.runtime.symbols.AssemblySymbol;
+import com.vztekoverflow.cilostazol.runtime.symbols.NamedTypeSymbol;
 import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.AppDomain;
 import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.IAppDomain;
 import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.Assembly;
@@ -18,6 +21,14 @@ import org.graalvm.polyglot.Source;
  * <p>Build it with configuration: {@value _directory} and .NET version: {@value _dotnetVersion}
  */
 public class TypeParsingTest extends TestBase {
+  public void testNewStructure() throws Exception {
+    final String projectName = "ComponentParsingGeneral";
+    CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
+    CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[] { getDllPath(projectName).getParent() } );
+    AssemblyIdentity assemblyIdentity = new AssemblyIdentity((short) 1,(short) 0,(short) 0,(short) 0, "ComponentParsingGeneral");
+
+    NamedTypeSymbol type = ctx.getType("FindLocalType", "Class", assemblyIdentity);
+  }
   public void testComponentParsingGeneral() throws Exception {
     final String projectName = "ComponentParsingGeneral";
 
