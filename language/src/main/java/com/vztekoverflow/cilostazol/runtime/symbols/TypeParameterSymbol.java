@@ -54,6 +54,19 @@ public class TypeParameterSymbol extends TypeSymbol {
       return result;
     }
 
+    public static TypeParameterSymbol[] create(CLITablePtr ptr, TypeSymbol[] vars, ModuleSymbol module) {
+      var result = new ArrayList<TypeParameterSymbol>();
+      for (CLIGenericParamTableRow row :
+              module.getDefiningFile().getTableHeads().getGenericParamTableHead()) {
+        if (ptr.getTableId() == row.getOwnerTablePtr().getTableId()
+                && ptr.getRowNo() == row.getOwnerTablePtr().getRowNo()) {
+          result.add(create(row, result.toArray(TypeParameterSymbol[]::new), vars, module));
+        }
+      }
+
+      return result.toArray(TypeParameterSymbol[]::new);
+    }
+
     private static TypeSymbol[] getConstrains(
         CLIGenericParamTableRow row, TypeSymbol[] mvars, TypeSymbol[] vars, ModuleSymbol module) {
       List<TypeSymbol> constrains = new ArrayList<>();
