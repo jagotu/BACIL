@@ -61,8 +61,7 @@ public class TypeParameterSymbol extends TypeSymbol {
           module.getDefiningFile().getTableHeads().getGenericParamConstraintTableHead()) {
         if (row.getTableId() == r.getOwnerTablePtr().getTableId()
             && row.getRowNo() == r.getOwnerTablePtr().getRowNo()) {
-          // TODO: types
-          // constrains.add(TypeFactory.create(r.getConstraintTablePtr(), mvars, vars, module));
+          constrains.add(NamedTypeSymbol.NamedTypeSymbolFactory.create(r.getConstraintTablePtr(), mvars, vars, module));
         }
       }
 

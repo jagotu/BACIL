@@ -34,8 +34,7 @@ public class LocalSymbol extends Symbol {
       return new LocalSymbol(
           sig.isByRef(),
           sig.isPinned(),
-          null); // TypeFactory.create(signatures.getVars()[i].getTypeSig(), mvars, vars,
-                 // component));
+          NamedTypeSymbol.NamedTypeSymbolFactory.create(sig.getTypeSig(), mvars, vars, module));
     }
 
     public static LocalSymbol[] create(

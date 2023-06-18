@@ -49,7 +49,7 @@ public class ParameterSymbol extends Symbol {
         ModuleSymbol module) {
       return new ParameterSymbol(
           paramSig.isByRef(),
-          null,
+          NamedTypeSymbol.NamedTypeSymbolFactory.create(paramSig.getTypeSig(), mvars, vars, module),
           row.getNameHeapPtr().read(module.getDefiningFile().getStringHeap()),
           row.getSequence(),
           new ParamFlags(row.getFlags()));

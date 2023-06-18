@@ -24,7 +24,9 @@ public class ReturnSymbol extends Symbol {
   public static class ReturnSymbolFactory {
     public static ReturnSymbol create(
         RetTypeSig sig, TypeSymbol[] mvars, TypeSymbol[] vars, ModuleSymbol module) {
-      return new ReturnSymbol(sig.isByRef(), null);
+      return new ReturnSymbol(
+          sig.isByRef(),
+          NamedTypeSymbol.NamedTypeSymbolFactory.create(sig.getTypeSig(), mvars, vars, module));
     }
   }
 }

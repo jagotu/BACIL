@@ -1,6 +1,12 @@
 package com.vztekoverflow.cilostazol.runtime.symbols;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.vztekoverflow.bacil.runtime.types.Type;
+import com.vztekoverflow.cil.parser.cli.signature.TypeSig;
+import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
+import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
+import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
+import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 
 public class NamedTypeSymbol extends TypeSymbol {
   protected final int flags;
@@ -31,5 +37,16 @@ public class NamedTypeSymbol extends TypeSymbol {
     return new TypeSymbol[0];
   }
 
-  public static class NamedTypeSymbolFactory {}
+  public static class NamedTypeSymbolFactory
+  {
+    public static NamedTypeSymbol create(CLITablePtr ptr, TypeSymbol[] mvars, TypeSymbol[] vars, ModuleSymbol module)
+    {
+      throw new NotImplementedException();
+    }
+
+    public static NamedTypeSymbol create(TypeSig sig, TypeSymbol[] mvars, TypeSymbol[] vars, ModuleSymbol module)
+    {
+      throw new NotImplementedException();
+    }
+  }
 }
