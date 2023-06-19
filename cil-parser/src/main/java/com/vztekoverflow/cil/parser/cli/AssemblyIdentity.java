@@ -144,10 +144,10 @@ public final class AssemblyIdentity {
     if (obj instanceof AssemblyIdentity) {
       AssemblyIdentity other = (AssemblyIdentity) obj;
       return majorVersion == other.majorVersion
-              && minorVersion == other.minorVersion
-              && buildNumber == other.buildNumber
-              && revisionNumber == other.revisionNumber
-              && name.equals(other.name);
+          && minorVersion == other.minorVersion
+          && buildNumber == other.buildNumber
+          && revisionNumber == other.revisionNumber
+          && name.equals(other.name);
     }
     return false;
   }

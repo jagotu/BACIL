@@ -3,7 +3,6 @@ package com.vztekoverflow.cilostazol.runtime.symbols;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIGenericParamConstraintTableRow;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIGenericParamTableRow;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,12 +53,13 @@ public class TypeParameterSymbol extends TypeSymbol {
       return result;
     }
 
-    public static TypeParameterSymbol[] create(CLITablePtr ptr, TypeSymbol[] vars, ModuleSymbol module) {
+    public static TypeParameterSymbol[] create(
+        CLITablePtr ptr, TypeSymbol[] vars, ModuleSymbol module) {
       var result = new ArrayList<TypeParameterSymbol>();
       for (CLIGenericParamTableRow row :
-              module.getDefiningFile().getTableHeads().getGenericParamTableHead()) {
+          module.getDefiningFile().getTableHeads().getGenericParamTableHead()) {
         if (ptr.getTableId() == row.getOwnerTablePtr().getTableId()
-                && ptr.getRowNo() == row.getOwnerTablePtr().getRowNo()) {
+            && ptr.getRowNo() == row.getOwnerTablePtr().getRowNo()) {
           result.add(create(row, result.toArray(TypeParameterSymbol[]::new), vars, module));
         }
       }
@@ -74,7 +74,9 @@ public class TypeParameterSymbol extends TypeSymbol {
           module.getDefiningFile().getTableHeads().getGenericParamConstraintTableHead()) {
         if (row.getTableId() == r.getOwnerTablePtr().getTableId()
             && row.getRowNo() == r.getOwnerTablePtr().getRowNo()) {
-          constrains.add(NamedTypeSymbol.NamedTypeSymbolFactory.create(r.getConstraintTablePtr(), mvars, vars, module));
+          constrains.add(
+              NamedTypeSymbol.NamedTypeSymbolFactory.create(
+                  r.getConstraintTablePtr(), mvars, vars, module));
         }
       }
 

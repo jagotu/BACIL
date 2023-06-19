@@ -11,9 +11,6 @@ import com.vztekoverflow.cil.parser.cli.table.generated.CLITypeSpecTableRow;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
-import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
-import com.vztekoverflow.cilostazol.runtime.typesystem.method.factory.MethodFactory;
-
 import java.util.ArrayList;
 
 public class NamedTypeSymbol extends TypeSymbol {
