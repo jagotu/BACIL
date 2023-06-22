@@ -7,6 +7,31 @@ import com.vztekoverflow.cilostazol.runtime.other.ContextProviderImpl;
 public class ExceptionHandlerSymbol extends Symbol {
   private final int tryOffset;
   private final int tryLength;
+
+  public int getTryOffset() {
+    return tryOffset;
+  }
+
+  public int getTryLength() {
+    return tryLength;
+  }
+
+  public int getHandlerOffset() {
+    return handlerOffset;
+  }
+
+  public int getHandlerLength() {
+    return handlerLength;
+  }
+
+  public TypeSymbol getHandlerException() {
+    return handlerException;
+  }
+
+  public ExceptionClauseFlags getFlags() {
+    return flags;
+  }
+
   private final int handlerOffset;
   private final int handlerLength;
   private final TypeSymbol handlerException;

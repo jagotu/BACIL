@@ -24,7 +24,7 @@ public class NamedTypeSymbol extends TypeSymbol {
   @CompilerDirectives.CompilationFinal protected MethodSymbol[] lazyVMethodTable;
   @CompilerDirectives.CompilationFinal protected FieldSymbol[] lazyFields;
   protected final TypeParameterSymbol[] typeParameters;
-
+  protected final TypeMap map;
   protected final CLITablePtr definingRow;
 
   protected NamedTypeSymbol(
@@ -34,12 +34,31 @@ public class NamedTypeSymbol extends TypeSymbol {
       String namespace,
       TypeParameterSymbol[] typeParameters,
       CLITablePtr definingRow) {
+    this(
+        definingModule,
+        flags,
+        name,
+        namespace,
+        typeParameters,
+        definingRow,
+        new TypeMap(new TypeParameterSymbol[0], new TypeSymbol[0]));
+  }
+
+  protected NamedTypeSymbol(
+      ModuleSymbol definingModule,
+      int flags,
+      String name,
+      String namespace,
+      TypeParameterSymbol[] typeParameters,
+      CLITablePtr definingRow,
+      TypeMap map) {
     super(definingModule);
     this.flags = flags;
     this.name = name;
     this.namespace = namespace;
     this.typeParameters = typeParameters;
     this.definingRow = definingRow;
+    this.map = map;
   }
 
   // region Getters
@@ -91,12 +110,20 @@ public class NamedTypeSymbol extends TypeSymbol {
   }
   // endregion
 
-  public ConstructedNamedTypeSymbol Construct(TypeSymbol[] typeArguments) {
+  public ConstructedNamedTypeSymbol construct(TypeSymbol[] typeArguments) {
     throw new NotImplementedException();
   }
 
   public TypeSymbol[] getTypeArguments() {
-    return new TypeSymbol[0];
+    return getTypeParameters();
+  }
+
+  public TypeParameterSymbol[] getTypeParameters() {
+    return typeParameters;
+  }
+
+  public TypeMap getTypeMap() {
+    return map;
   }
 
   private static class LazyFactory {

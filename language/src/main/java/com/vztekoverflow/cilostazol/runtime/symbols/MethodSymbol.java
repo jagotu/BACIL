@@ -138,7 +138,7 @@ public class MethodSymbol extends Symbol {
   }
   // endregion
 
-  public ConstructedMethodSymbol Construct(TypeSymbol[] typeArguments) {
+  public ConstructedMethodSymbol construct(TypeSymbol[] typeArguments) {
     return new ConstructedMethodSymbol(this, this, typeArguments);
   }
 
