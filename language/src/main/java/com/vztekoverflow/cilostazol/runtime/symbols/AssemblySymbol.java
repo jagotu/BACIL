@@ -12,7 +12,7 @@ public class AssemblySymbol extends Symbol {
   private final ModuleSymbol[] modules;
   private final CLIFile definingFile;
 
-  public AssemblySymbol(ModuleSymbol[] modules, CLIFile definingFile) {
+  private AssemblySymbol(ModuleSymbol[] modules, CLIFile definingFile) {
     super(ContextProviderImpl.getInstance());
     this.modules = modules;
     this.definingFile = definingFile;
@@ -28,7 +28,7 @@ public class AssemblySymbol extends Symbol {
 
   public NamedTypeSymbol getLocalType(String name, String namespace) {
     for (ModuleSymbol module : getModules()) {
-      final NamedTypeSymbol type = module.getLocalType(namespace, name);
+      final NamedTypeSymbol type = module.getLocalType(name, namespace);
       if (type != null) return type;
     }
 
@@ -40,6 +40,12 @@ public class AssemblySymbol extends Symbol {
   }
 
   public static class AssemblySymbolFactory {
+    /**
+     * Create an assembly from a DLL file. Is Pure.
+     *
+     * @param dllSource the DLL file
+     * @return the assembly
+     */
     public static AssemblySymbol create(Source dllSource) {
       CLIFile file = CLIFile.parse(dllSource.getName(), dllSource.getPath(), dllSource.getBytes());
 

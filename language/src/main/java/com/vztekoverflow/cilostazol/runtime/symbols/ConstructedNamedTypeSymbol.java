@@ -76,7 +76,7 @@ public class ConstructedNamedTypeSymbol extends NamedTypeSymbol {
   }
 
   @Override
-  public FieldSymbol[] getFiels() {
+  public FieldSymbol[] getFields() {
     if (lazyFields == null) {
       // TODO: substituted field symbols
     }

@@ -9,7 +9,11 @@ import com.vztekoverflow.cil.parser.cli.signature.TypeSpecSig;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
 import com.vztekoverflow.cil.parser.cli.table.generated.*;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
+import com.vztekoverflow.cilostazol.exceptions.InvalidCLIException;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
+import com.vztekoverflow.cilostazol.runtime.symbols.utils.NamedTypeSymbolLayout;
+import com.vztekoverflow.cilostazol.runtime.symbols.utils.NamedTypeSymbolSemantics;
+import com.vztekoverflow.cilostazol.runtime.symbols.utils.NamedTypeSymbolVisibility;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.TypeLayout;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.TypeSemantics;
@@ -19,6 +23,16 @@ import java.util.List;
 import org.jetbrains.annotations.NotNull;
 
 public class NamedTypeSymbol extends TypeSymbol {
+  private static final int ABSTRACT_FLAG_MASK = 0x80;
+  private static final int SEALED_FLAG_MASK = 0x100;
+  private static final int SPECIAL_NAME_FLAG_MASK = 0x400;
+  private static final int IMPORT_FLAG_MASK = 0x1000;
+  private static final int SERIALIZABLE_FLAG_MASK = 0x2000;
+  private static final int BEFORE_FIELD_INIT_FLAG_MASK = 0x100000;
+  private static final int RT_SPECIAL_NAME_FLAG_MASK = 0x800;
+  private static final int HAS_SECURITY_FLAG_MASK = 0x40000;
+  private static final int IS_TYPE_FORWARDER_FLAG_MASK = 0x200000;
+
   protected final int flags;
   protected final String name;
   protected final String namespace;
