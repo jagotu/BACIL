@@ -4,14 +4,16 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.cil.parser.cli.signature.TypeSig;
 import com.vztekoverflow.cil.parser.cli.signature.TypeSpecSig;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
-import com.vztekoverflow.cil.parser.cli.table.generated.CLITableConstants;
-import com.vztekoverflow.cil.parser.cli.table.generated.CLITypeDefTableRow;
-import com.vztekoverflow.cil.parser.cli.table.generated.CLITypeRefTableRow;
-import com.vztekoverflow.cil.parser.cli.table.generated.CLITypeSpecTableRow;
+import com.vztekoverflow.cil.parser.cli.table.generated.*;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
+import com.vztekoverflow.cilostazol.runtime.typesystem.type.TypeLayout;
+import com.vztekoverflow.cilostazol.runtime.typesystem.type.TypeSemantics;
+import com.vztekoverflow.cilostazol.runtime.typesystem.type.TypeVisibility;
 import java.util.ArrayList;
+import java.util.List;
+import org.jetbrains.annotations.NotNull;
 
 public class NamedTypeSymbol extends TypeSymbol {
   protected final int flags;
@@ -53,6 +55,8 @@ public class NamedTypeSymbol extends TypeSymbol {
       CLITablePtr definingRow,
       TypeMap map) {
     super(definingModule);
+    assert definingRow.getTableId() == CLITableConstants.CLI_TABLE_TYPE_DEF;
+
     this.flags = flags;
     this.name = name;
     this.namespace = namespace;
@@ -71,21 +75,32 @@ public class NamedTypeSymbol extends TypeSymbol {
   }
 
   public TypeSymbol getDirectBaseClass() {
-    throw new NotImplementedException();
+    if (lazyDirectBaseClass == null) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      lazyDirectBaseClass = LazyFactory.createDirectBaseClass(this);
+    }
+
+    return lazyDirectBaseClass;
   }
 
   public TypeSymbol[] getInterfaces() {
-    throw new NotImplementedException();
+    if (lazyInterfaces == null) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      lazyInterfaces = LazyFactory.createInterfaces(this);
+    }
+
+    return lazyInterfaces;
   }
 
   public MethodSymbol[] getMethods() {
     if (lazyMethods == null) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
       // TODO: create on demand
       lazyMethods =
           switch (definingRow.getTableId()) {
             case CLITableConstants.CLI_TABLE_TYPE_DEF -> LazyFactory.createMethods(
                 this,
-                getDefiningModule()
+                definingModule
                     .getDefiningFile()
                     .getTableHeads()
                     .getTypeDefTableHead()
@@ -105,8 +120,13 @@ public class NamedTypeSymbol extends TypeSymbol {
     throw new NotImplementedException();
   }
 
-  public FieldSymbol[] getFiels() {
-    throw new NotImplementedException();
+  public FieldSymbol[] getFields() {
+    if (lazyFields == null) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      lazyFields = LazyFactory.createFields(this);
+    }
+
+    return lazyFields;
   }
   // endregion
 
