@@ -1,6 +1,9 @@
 package com.vztekoverflow.cilostazol.runtime.symbols;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
+import com.vztekoverflow.cil.parser.cli.signature.ElementTypeFlag;
+import com.vztekoverflow.cil.parser.cli.signature.SignatureReader;
 import com.vztekoverflow.cil.parser.cli.signature.TypeSig;
 import com.vztekoverflow.cil.parser.cli.signature.TypeSpecSig;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
@@ -146,6 +149,62 @@ public class NamedTypeSymbol extends TypeSymbol {
     return map;
   }
 
+  public NamedTypeSymbolVisibility getVisibility() {
+    return NamedTypeSymbolVisibility.fromFlags(flags & TypeVisibility.MASK);
+  }
+
+  public NamedTypeSymbolLayout getLayout() {
+    return NamedTypeSymbolLayout.fromFlags(flags & TypeLayout.MASK);
+  }
+
+  public NamedTypeSymbolSemantics getSemantics() {
+    return NamedTypeSymbolSemantics.fromFlags(flags & TypeSemantics.MASK);
+  }
+
+  public boolean isSealed() {
+    return (flags & SEALED_FLAG_MASK) != 0;
+  }
+
+  public boolean isAbstract() {
+    return (flags & ABSTRACT_FLAG_MASK) != 0;
+  }
+
+  public boolean isInterface() {
+    return getSemantics() == NamedTypeSymbolSemantics.Interface;
+  }
+
+  public boolean isClass() {
+    return !isInterface();
+  }
+
+  public boolean isSpecialName() {
+    return (flags & SPECIAL_NAME_FLAG_MASK) != 0;
+  }
+
+  public boolean isImport() {
+    return (flags & IMPORT_FLAG_MASK) != 0;
+  }
+
+  public boolean isSerializable() {
+    return (flags & SERIALIZABLE_FLAG_MASK) != 0;
+  }
+
+  public boolean isBeforeFieldInit() {
+    return (flags & BEFORE_FIELD_INIT_FLAG_MASK) != 0;
+  }
+
+  public boolean isRTSpecialName() {
+    return (flags & RT_SPECIAL_NAME_FLAG_MASK) != 0;
+  }
+
+  public boolean hasSecurity() {
+    return (flags & HAS_SECURITY_FLAG_MASK) != 0;
+  }
+
+  public boolean isTypeForwarder() {
+    return (flags & IS_TYPE_FORWARDER_FLAG_MASK) != 0;
+  }
+
   private static class LazyFactory {
     private static MethodSymbol[] createMethods(NamedTypeSymbol symbol, CLITypeDefTableRow row) {
       var methodTablePtr = row.getMethodListTablePtr();
@@ -153,14 +212,14 @@ public class NamedTypeSymbol extends TypeSymbol {
       final boolean isLastType =
           row.getRowNo()
               == symbol
-                  .getDefiningModule()
+                  .definingModule
                   .getDefiningFile()
                   .getTablesHeader()
                   .getRowCount(CLITableConstants.CLI_TABLE_TYPE_DEF);
       final int lastIdx =
           isLastType
               ? symbol
-                  .getDefiningModule()
+                  .definingModule
                   .getDefiningFile()
                   .getTablesHeader()
                   .getRowCount(CLITableConstants.CLI_TABLE_METHOD_DEF)
@@ -168,7 +227,7 @@ public class NamedTypeSymbol extends TypeSymbol {
 
       var methodRow =
           symbol
-              .getDefiningModule()
+              .definingModule
               .getDefiningFile()
               .getTableHeads()
               .getMethodDefTableHead()
@@ -183,21 +242,199 @@ public class NamedTypeSymbol extends TypeSymbol {
 
       return methods.toArray(MethodSymbol[]::new);
     }
+
+    private static TypeSymbol[] createInterfaces(NamedTypeSymbol symbol) {
+      List<TypeSymbol> interfaces = new ArrayList<>();
+      for (var interfaceRow :
+          symbol.definingModule.getDefiningFile().getTableHeads().getInterfaceImplTableHead()) {
+        if (interfaceExtendsClass(
+            interfaceRow, symbol.name, symbol.namespace, symbol.definingModule)) {
+          interfaces.add(getInterface(interfaceRow, symbol.definingModule));
+        }
+      }
+
+      return interfaces.toArray(new TypeSymbol[0]);
+    }
+
+    static boolean interfaceExtendsClass(
+        CLIInterfaceImplTableRow interfaceRow,
+        String extendingClassName,
+        String extendingClassNamespace,
+        ModuleSymbol module) {
+      var potentialExtendingClassRow =
+          module
+              .getDefiningFile()
+              .getTableHeads()
+              .getTypeDefTableHead()
+              .skip(interfaceRow.getKlassTablePtr());
+      // we can not create the whole klass because of circular dependency, we only need the name and
+      // namespace
+      var potentialClassName =
+          potentialExtendingClassRow
+              .getTypeNameHeapPtr()
+              .read(module.getDefiningFile().getStringHeap());
+      var potentialClassNamespace =
+          potentialExtendingClassRow
+              .getTypeNamespaceHeapPtr()
+              .read(module.getDefiningFile().getStringHeap());
+
+      return extendingClassName.equals(potentialClassName)
+          && extendingClassNamespace.equals(potentialClassNamespace);
+    }
+
+    static TypeSymbol getInterface(CLIInterfaceImplTableRow row, ModuleSymbol module) {
+      CLITablePtr tablePtr = row.getInterfaceTablePtr();
+      assert tablePtr != null; // Should never should be
+      return NamedTypeSymbolFactory.create(tablePtr, new TypeSymbol[0], new TypeSymbol[0], module);
+    }
+
+    public static TypeSymbol createDirectBaseClass(NamedTypeSymbol namedTypeSymbol) {
+      CLITablePtr baseClassPtr =
+          namedTypeSymbol
+              .definingModule
+              .getDefiningFile()
+              .getTableHeads()
+              .getTypeDefTableHead()
+              .skip(namedTypeSymbol.definingRow)
+              .getExtendsTablePtr();
+
+      assert baseClassPtr != null; // Never should be null
+      return baseClassPtr.isEmpty()
+          ? null
+          : NamedTypeSymbolFactory.create(
+              baseClassPtr, new TypeSymbol[0], new TypeSymbol[0], namedTypeSymbol.definingModule);
+    }
+
+    public static FieldSymbol[] createFields(NamedTypeSymbol namedTypeSymbol) {
+      var row =
+          namedTypeSymbol
+              .definingModule
+              .getDefiningFile()
+              .getTableHeads()
+              .getTypeDefTableHead()
+              .skip(namedTypeSymbol.definingRow);
+      var fieldTablePtr = row.getFieldListTablePtr();
+      var fieldListEndPtr = row.skip(1).getFieldListTablePtr();
+
+      var fieldRow =
+          namedTypeSymbol
+              .definingModule
+              .getDefiningFile()
+              .getTableHeads()
+              .getFieldTableHead()
+              .skip(fieldTablePtr);
+
+      var fields = new ArrayList<FieldSymbol>();
+      while (fieldRow.getRowNo() < fieldListEndPtr.getRowNo() && fieldRow.hasNext()) {
+        var field =
+            FieldSymbol.FieldSymbolFactory.create(
+                fieldRow,
+                new TypeSymbol[0],
+                namedTypeSymbol.getTypeParameters(),
+                namedTypeSymbol.getDefiningModule());
+
+        fields.add(field);
+        fieldRow = fieldRow.next();
+      }
+
+      return fields.toArray(new FieldSymbol[0]);
+    }
   }
 
   public static class NamedTypeSymbolFactory {
     public static NamedTypeSymbol create(
-        CLITablePtr ptr, TypeSymbol[] mvars, TypeSymbol[] vars, ModuleSymbol module) {
-      throw new NotImplementedException();
+        @NotNull CLITablePtr ptr,
+        @NotNull TypeSymbol[] mvars,
+        @NotNull TypeSymbol[] vars,
+        @NotNull ModuleSymbol module) {
+      return switch (ptr.getTableId()) {
+        case CLITableConstants.CLI_TABLE_TYPE_DEF -> NamedTypeSymbolFactory.create(
+            module.getDefiningFile().getTableHeads().getTypeDefTableHead().skip(ptr), module);
+        case CLITableConstants.CLI_TABLE_TYPE_REF -> NamedTypeSymbolFactory.create(
+            module.getDefiningFile().getTableHeads().getTypeRefTableHead().skip(ptr), module);
+        case CLITableConstants.CLI_TABLE_TYPE_SPEC -> NamedTypeSymbolFactory.create(
+            module.getDefiningFile().getTableHeads().getTypeSpecTableHead().skip(ptr),
+            mvars,
+            vars,
+            module);
+        default -> throw new TypeSystemException(
+            CILOSTAZOLBundle.message("cilostazol.exception.constructor.withoutDefType"));
+      };
     }
 
     public static NamedTypeSymbol create(
         CLITypeSpecTableRow row, TypeSymbol[] mvars, TypeSymbol[] vars, ModuleSymbol module) {
-      throw new NotImplementedException();
+      TypeSig signature =
+          TypeSig.read(
+              new SignatureReader(
+                  row.getSignatureHeapPtr().read(module.getDefiningFile().getBlobHeap())),
+              module.getDefiningFile());
+      return create(signature, mvars, vars, module);
     }
 
     public static NamedTypeSymbol create(CLITypeRefTableRow row, ModuleSymbol module) {
-      throw new NotImplementedException();
+      var name = row.getTypeNameHeapPtr().read(module.getDefiningFile().getStringHeap());
+      var namespace = row.getTypeNamespaceHeapPtr().read(module.getDefiningFile().getStringHeap());
+
+      var resolutionScopeTablePtr = row.getResolutionScopeTablePtr();
+      if (resolutionScopeTablePtr == null) {
+        // TODO: find in ExportedType table
+        throw new NotImplementedException();
+      }
+
+      return switch (resolutionScopeTablePtr.getTableId()) {
+        case CLITableConstants.CLI_TABLE_TYPE_REF -> throw new UnsupportedOperationException(
+            CILOSTAZOLBundle.message("cilostazol.exception.typeRefResolutionScope"));
+        case CLITableConstants.CLI_TABLE_MODULE_REF -> getTypeFromDifferentModule(
+            name, namespace, resolutionScopeTablePtr, module);
+        case CLITableConstants.CLI_TABLE_MODULE -> throw new InvalidCLIException();
+        case CLITableConstants.CLI_TABLE_ASSEMBLY_REF -> getTypeFromDifferentAssembly(
+            name, namespace, resolutionScopeTablePtr, module);
+        default -> throw new TypeSystemException(
+            CILOSTAZOLBundle.message(
+                "cilostazol.exception.unknownResolutionScope",
+                namespace,
+                name,
+                resolutionScopeTablePtr.getTableId()));
+      };
+    }
+
+    private static NamedTypeSymbol getTypeFromDifferentModule(
+        String name, String namespace, CLITablePtr resolutionScopeTablePtr, ModuleSymbol module) {
+      var moduleRefName =
+          module
+              .getDefiningFile()
+              .getTableHeads()
+              .getModuleRefTableHead()
+              .skip(resolutionScopeTablePtr)
+              .getNameHeapPtr()
+              .read(module.getDefiningFile().getStringHeap());
+
+      // We can omit looking for file since we know that it is in the same assembly as this module
+      // TODO: can be improved by calling getLocalTypeFromModule that would filter modules right
+      // away by name
+      return module
+          .getContext()
+          .getType(name, namespace, module.getDefiningFile().getAssemblyIdentity());
+    }
+
+    private static NamedTypeSymbol getTypeFromDifferentAssembly(
+        String name, String namespace, CLITablePtr resolutionScopeTablePtr, ModuleSymbol module) {
+      var referencedAssemblyIdentity =
+          AssemblyIdentity.fromAssemblyRefRow(
+              module.getDefiningFile().getStringHeap(),
+              module
+                  .getDefiningFile()
+                  .getTableHeads()
+                  .getAssemblyRefTableHead()
+                  .skip(resolutionScopeTablePtr));
+      var referencedAssembly = module.getContext().findAssembly(referencedAssemblyIdentity);
+      if (referencedAssembly == null) {
+        // TODO: log CILOSTAZOLBundle.message("cilostazol.warning.referencedAssemblyNotFound",
+        // referencedAssemblyIdentity.toString())
+        return null;
+      }
+      return referencedAssembly.getLocalType(namespace, name);
     }
 
     public static NamedTypeSymbol create(CLITypeDefTableRow row, ModuleSymbol module) {
@@ -213,13 +450,46 @@ public class NamedTypeSymbol extends TypeSymbol {
     }
 
     public static NamedTypeSymbol create(
-        TypeSig sig, TypeSymbol[] mvars, TypeSymbol[] vars, ModuleSymbol module) {
-      throw new NotImplementedException();
+        TypeSig typeSig, TypeSymbol[] mvars, TypeSymbol[] vars, ModuleSymbol module) {
+      // TODO: null reference exception might have occured here if TypeSig is not created from CLASS
+      // TODO: resolve for other types (SZARRAY, GENERICINST, ...)
+      if (typeSig.getElementType() == TypeSig.ELEMENT_TYPE_VALUETYPE
+          || typeSig.getElementType() == TypeSig.ELEMENT_TYPE_CLASS)
+        return create(typeSig.getCliTablePtr(), mvars, vars, module);
+      else if (typeSig.getElementType() == TypeSig.ELEMENT_TYPE_VAR) {
+        return (NamedTypeSymbol) vars[typeSig.getIndex()];
+      } else if (typeSig.getElementType() == TypeSig.ELEMENT_TYPE_MVAR) {
+        return (NamedTypeSymbol) mvars[typeSig.getIndex()];
+      } else if (typeSig.getElementType() == TypeSig.ELEMENT_TYPE_GENERICINST) {
+        var genType = create(typeSig.getCliTablePtr(), mvars, vars, module);
+        NamedTypeSymbol[] typeArgs = new NamedTypeSymbol[typeSig.getTypeArgs().length];
+        for (int i = 0; i < typeArgs.length; i++) {
+          typeArgs[i] = create(typeSig.getTypeArgs()[i], mvars, vars, module);
+        }
+        return genType.construct(typeArgs); // TODO: is this correct? @Tomas
+      } else {
+        return null;
+      }
     }
 
     public static NamedTypeSymbol create(
-        TypeSpecSig sig, TypeSymbol[] mvars, TypeSymbol[] vars, ModuleSymbol module) {
-      throw new NotImplementedException();
+        TypeSpecSig typeSig, TypeSymbol[] mvars, TypeSymbol[] vars, ModuleSymbol module) {
+      // TODO: null reference exception might have occured here if TypeSig is not created from CLASS
+      // TODO: resolve for other types (SZARRAY, GENERICINST, ...)
+      if (typeSig.getFlag().getFlag() == ElementTypeFlag.Flag.ELEMENT_TYPE_GENERICINST) {
+        NamedTypeSymbol genType = create(typeSig.getGenType(), mvars, vars, module);
+        NamedTypeSymbol[] typeArgs = new NamedTypeSymbol[typeSig.getTypeArgs().length];
+        for (int i = 0; i < typeArgs.length; i++) {
+          typeArgs[i] = create(typeSig.getTypeArgs()[i], mvars, vars, module);
+        }
+        return genType.construct(typeArgs); // TODO: is this correct? @Tomas
+      } else if (typeSig.getFlag().getFlag() == ElementTypeFlag.Flag.ELEMENT_TYPE_MVAR) {
+        return null;
+      } else if (typeSig.getFlag().getFlag() == ElementTypeFlag.Flag.ELEMENT_TYPE_VAR) {
+        return null;
+      } else {
+        return null;
+      }
     }
   }
 }
