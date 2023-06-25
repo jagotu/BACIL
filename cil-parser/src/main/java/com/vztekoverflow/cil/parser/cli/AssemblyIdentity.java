@@ -61,6 +61,7 @@ public final class AssemblyIdentity {
    *
    * @param reference an assembly reference to check this assembly against
    * @return whether this assembly can resolve the reference
+   * @deprecated Use {@link #equals(Object)} instead.
    */
   @Deprecated
   public boolean resolvesRef(AssemblyIdentity reference) {

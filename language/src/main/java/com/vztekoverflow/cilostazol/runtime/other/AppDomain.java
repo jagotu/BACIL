@@ -19,8 +19,7 @@ public class AppDomain {
     AssemblySymbol result = null;
 
     for (int i = 0; i < loadedAssemblies.size() && result == null; i++) {
-      if (loadedAssemblies.get(i).getIdentity().resolvesRef(identity))
-        result = loadedAssemblies.get(i);
+      if (loadedAssemblies.get(i).getIdentity().equals(identity)) result = loadedAssemblies.get(i);
     }
 
     return result;

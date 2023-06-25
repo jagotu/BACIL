@@ -100,7 +100,6 @@ public class CILOSTAZOLContext {
     // TODO: resolve and load PrimitiveTypes
 
     // Locate dlls in paths
-
     for (Path path : _libraryPaths) {
       File file = new File(path.toString() + "/" + assemblyIdentity.getName() + ".dll");
       if (file.exists()) {
