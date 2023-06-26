@@ -25,6 +25,22 @@ public final class TypeParameterSymbol extends TypeSymbol {
     this.name = name;
   }
 
+  public TypeSymbol[] getTypeConstrains() {
+    return constraints;
+  }
+
+  public GenericParameterFlags getFlags() {
+    return flags;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public int getOrdinal() {
+    return ordinal;
+  }
+
   public static class TypeParameterSymbolFactory {
     public static TypeParameterSymbol create(
         CLIGenericParamTableRow row, TypeSymbol[] mvars, TypeSymbol[] vars, ModuleSymbol module) {
@@ -75,8 +91,7 @@ public final class TypeParameterSymbol extends TypeSymbol {
         if (row.getTableId() == r.getOwnerTablePtr().getTableId()
             && row.getRowNo() == r.getOwnerTablePtr().getRowNo()) {
           constrains.add(
-              NamedTypeSymbol.NamedTypeSymbolFactory.create(
-                  r.getConstraintTablePtr(), mvars, vars, module));
+              TypeSymbol.TypeSymbolFactory.create(r.getConstraintTablePtr(), mvars, vars, module));
         }
       }
 
@@ -95,26 +110,20 @@ public final class TypeParameterSymbol extends TypeSymbol {
       _flags = flags;
     }
 
-    public boolean hasFlag(
-        com.vztekoverflow.cilostazol.runtime.typesystem.generic.GenericParameterFlags.Flag flag) {
+    public boolean hasFlag(GenericParameterFlags.Flag flag) {
       switch (flag) {
         case NONE:
           return ((_flags & F_VARIANCE_MASK) == flag.code);
         case COVARIANT:
         case CONTRAVARIANT:
-          return !hasFlag(
-                  com.vztekoverflow.cilostazol.runtime.typesystem.generic.GenericParameterFlags.Flag
-                      .NONE)
+          return !hasFlag(GenericParameterFlags.Flag.NONE)
               && ((_flags & F_VARIANCE_MASK) == flag.code);
         case REFERENCE_TYPE_CONSTRAINT:
         case NOT_NULLABLE_VALUE_TYPE_CONSTRAINT:
         case DEFAULT_CONSTRUCTOR_CONSTRAINT:
           return (_flags & F_SPECIAL_CONSTRAINT_MASK) == flag.code;
         default:
-          return !hasFlag(
-                  com.vztekoverflow.cilostazol.runtime.typesystem.generic.GenericParameterFlags.Flag
-                      .NONE)
-              && (_flags & flag.code) == flag.code;
+          return !hasFlag(GenericParameterFlags.Flag.NONE) && (_flags & flag.code) == flag.code;
       }
     }
 

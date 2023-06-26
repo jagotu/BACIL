@@ -97,7 +97,7 @@ public final class ExceptionHandlerSymbol extends Symbol {
         }
         final TypeSymbol klass =
             (flags.hasFlag(ExceptionClauseFlags.Flag.COR_ILEXCEPTION_CLAUSE_EXCEPTION))
-                ? NamedTypeSymbol.NamedTypeSymbolFactory.create(
+                ? TypeSymbol.TypeSymbolFactory.create(
                     CLITablePtr.fromToken(classTokenOrFilterOffset), mvars, vars, module)
                 : null;
         handlers[i] =

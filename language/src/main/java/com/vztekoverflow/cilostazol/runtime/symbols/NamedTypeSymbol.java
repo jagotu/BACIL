@@ -3,8 +3,6 @@ package com.vztekoverflow.cilostazol.runtime.symbols;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cil.parser.cli.signature.ElementTypeFlag;
-import com.vztekoverflow.cil.parser.cli.signature.SignatureReader;
-import com.vztekoverflow.cil.parser.cli.signature.TypeSig;
 import com.vztekoverflow.cil.parser.cli.signature.TypeSpecSig;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
 import com.vztekoverflow.cil.parser.cli.table.generated.*;
@@ -218,6 +216,24 @@ public class NamedTypeSymbol extends TypeSymbol {
   public boolean isTypeForwarder() {
     return (flags & IS_TYPE_FORWARDER_FLAG_MASK) != 0;
   }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj instanceof NamedTypeSymbol) {
+      NamedTypeSymbol other = (NamedTypeSymbol) obj;
+      if (!other.getName().equals(getName()) || !other.getNamespace().equals(getNamespace()))
+        return false;
+
+      if (other.getTypeArguments().length != getTypeArguments().length) return false;
+
+      for (int i = 0; i < other.getTypeArguments().length; i++) {
+        if (other.getTypeArguments()[i].equals(getTypeArguments()[i])) return false;
+      }
+
+      return true;
+    }
+    return super.equals(obj);
+  }
   // endregion
 
   private static class LazyFactory {
@@ -300,7 +316,9 @@ public class NamedTypeSymbol extends TypeSymbol {
     static NamedTypeSymbol getInterface(CLIInterfaceImplTableRow row, ModuleSymbol module) {
       CLITablePtr tablePtr = row.getInterfaceTablePtr();
       assert tablePtr != null; // Should never should be
-      return NamedTypeSymbolFactory.create(tablePtr, new TypeSymbol[0], new TypeSymbol[0], module);
+      return (NamedTypeSymbol)
+          TypeSymbol.TypeSymbolFactory.create(
+              tablePtr, new TypeSymbol[0], new TypeSymbol[0], module);
     }
 
     public static NamedTypeSymbol createDirectBaseClass(NamedTypeSymbol namedTypeSymbol) {
@@ -316,8 +334,12 @@ public class NamedTypeSymbol extends TypeSymbol {
       assert baseClassPtr != null; // Never should be null
       return baseClassPtr.isEmpty()
           ? null
-          : NamedTypeSymbolFactory.create(
-              baseClassPtr, new TypeSymbol[0], new TypeSymbol[0], namedTypeSymbol.definingModule);
+          : (NamedTypeSymbol)
+              TypeSymbol.TypeSymbolFactory.create(
+                  baseClassPtr,
+                  new TypeSymbol[0],
+                  new TypeSymbol[0],
+                  namedTypeSymbol.definingModule);
     }
 
     public static FieldSymbol[] createFields(NamedTypeSymbol namedTypeSymbol) {
@@ -357,33 +379,6 @@ public class NamedTypeSymbol extends TypeSymbol {
   }
 
   public static class NamedTypeSymbolFactory {
-    public static NamedTypeSymbol create(
-        CLITablePtr ptr, TypeSymbol[] mvars, TypeSymbol[] vars, ModuleSymbol module) {
-      return switch (ptr.getTableId()) {
-        case CLITableConstants.CLI_TABLE_TYPE_DEF -> create(
-            module.getDefiningFile().getTableHeads().getTypeDefTableHead().skip(ptr), module);
-        case CLITableConstants.CLI_TABLE_TYPE_REF -> create(
-            module.getDefiningFile().getTableHeads().getTypeRefTableHead().skip(ptr), module);
-        case CLITableConstants.CLI_TABLE_TYPE_SPEC -> create(
-            module.getDefiningFile().getTableHeads().getTypeSpecTableHead().skip(ptr),
-            mvars,
-            vars,
-            module);
-        default -> throw new TypeSystemException(
-            CILOSTAZOLBundle.message("cilostazol.exception.constructor.withoutDefType"));
-      };
-    }
-
-    public static NamedTypeSymbol create(
-        CLITypeSpecTableRow row, TypeSymbol[] mvars, TypeSymbol[] vars, ModuleSymbol module) {
-      TypeSig signature =
-          TypeSig.read(
-              new SignatureReader(
-                  row.getSignatureHeapPtr().read(module.getDefiningFile().getBlobHeap())),
-              module.getDefiningFile());
-      return (NamedTypeSymbol) TypeSymbol.TypeSymbolFactory.create(signature, mvars, vars, module);
-    }
-
     public static NamedTypeSymbol create(CLITypeRefTableRow row, ModuleSymbol module) {
       var name = row.getTypeNameHeapPtr().read(module.getDefiningFile().getStringHeap());
       var namespace = row.getTypeNamespaceHeapPtr().read(module.getDefiningFile().getStringHeap());
@@ -466,7 +461,9 @@ public class NamedTypeSymbol extends TypeSymbol {
       // TODO: null reference exception might have occured here if TypeSig is not created from CLASS
       // TODO: resolve for other types (SZARRAY, GENERICINST, ...)
       if (typeSig.getFlag().getFlag() == ElementTypeFlag.Flag.ELEMENT_TYPE_GENERICINST) {
-        NamedTypeSymbol genType = create(typeSig.getGenType(), mvars, vars, module);
+        NamedTypeSymbol genType =
+            (NamedTypeSymbol)
+                TypeSymbol.TypeSymbolFactory.create(typeSig.getGenType(), mvars, vars, module);
         TypeSymbol[] typeArgs = new NamedTypeSymbol[typeSig.getTypeArgs().length];
         for (int i = 0; i < typeArgs.length; i++) {
           typeArgs[i] =

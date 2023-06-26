@@ -82,8 +82,7 @@ public final class ParameterSymbol extends Symbol {
       _flags = flags;
     }
 
-    public boolean hasFlag(
-        com.vztekoverflow.cilostazol.runtime.typesystem.method.parameter.ParamFlags.Flag flag) {
+    public boolean hasFlag(ParamFlags.Flag flag) {
       return (_flags & flag.code) == flag.code;
     }
 
