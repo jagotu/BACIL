@@ -358,11 +358,11 @@ public class NamedTypeSymbol extends TypeSymbol {
     public static NamedTypeSymbol create(
         CLITablePtr ptr, TypeSymbol[] mvars, TypeSymbol[] vars, ModuleSymbol module) {
       return switch (ptr.getTableId()) {
-        case CLITableConstants.CLI_TABLE_TYPE_DEF -> NamedTypeSymbolFactory.create(
+        case CLITableConstants.CLI_TABLE_TYPE_DEF -> create(
             module.getDefiningFile().getTableHeads().getTypeDefTableHead().skip(ptr), module);
-        case CLITableConstants.CLI_TABLE_TYPE_REF -> NamedTypeSymbolFactory.create(
+        case CLITableConstants.CLI_TABLE_TYPE_REF -> create(
             module.getDefiningFile().getTableHeads().getTypeRefTableHead().skip(ptr), module);
-        case CLITableConstants.CLI_TABLE_TYPE_SPEC -> NamedTypeSymbolFactory.create(
+        case CLITableConstants.CLI_TABLE_TYPE_SPEC -> create(
             module.getDefiningFile().getTableHeads().getTypeSpecTableHead().skip(ptr),
             mvars,
             vars,
@@ -444,7 +444,7 @@ public class NamedTypeSymbol extends TypeSymbol {
         // referencedAssemblyIdentity.toString())
         return null;
       }
-      return referencedAssembly.getLocalType(namespace, name);
+      return referencedAssembly.getLocalType(name, namespace);
     }
 
     public static NamedTypeSymbol create(CLITypeDefTableRow row, ModuleSymbol module) {
