@@ -19,7 +19,7 @@ public class SubstitutedMethodSymbol extends MethodSymbol {
         constructedFrom.methodDefFlags,
         constructedFrom.methodFlags,
         constructedFrom.methodImplFlags,
-        constructedFrom.typeParameters,
+        createTypeParameters(constructedFrom.typeParameters, map),
         createParams(constructedFrom.parameters, map),
         createLocals(constructedFrom.locals, map),
         createReturn(constructedFrom.retType, map),
@@ -30,6 +30,19 @@ public class SubstitutedMethodSymbol extends MethodSymbol {
     this.definition = definition;
     this.constructedFrom = constructedFrom;
     this.map = map;
+  }
+
+  private static TypeParameterSymbol[] createTypeParameters(
+      TypeParameterSymbol[] symbols, TypeMap map) {
+    return Arrays.stream(symbols)
+        .map(
+            x ->
+                TypeParameterSymbol.TypeParameterSymbolFactory.createWith(
+                    x,
+                    Arrays.stream(x.getTypeConstrains())
+                        .map(y -> map.substitute(y))
+                        .toArray(TypeSymbol[]::new)))
+        .toArray(TypeParameterSymbol[]::new);
   }
 
   private static ParameterSymbol[] createParams(ParameterSymbol[] symbols, TypeMap map) {

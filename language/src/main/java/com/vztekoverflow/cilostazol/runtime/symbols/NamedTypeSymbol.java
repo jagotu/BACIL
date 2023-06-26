@@ -280,7 +280,7 @@ public class NamedTypeSymbol extends TypeSymbol {
           symbol.definingModule.getDefiningFile().getTableHeads().getInterfaceImplTableHead()) {
         if (interfaceExtendsClass(
             interfaceRow, symbol.name, symbol.namespace, symbol.definingModule)) {
-          interfaces.add(getInterface(interfaceRow, symbol.definingModule));
+          interfaces.add(getInterface(interfaceRow, symbol.definingModule, symbol));
         }
       }
 
@@ -313,12 +313,13 @@ public class NamedTypeSymbol extends TypeSymbol {
           && extendingClassNamespace.equals(potentialClassNamespace);
     }
 
-    static NamedTypeSymbol getInterface(CLIInterfaceImplTableRow row, ModuleSymbol module) {
+    static NamedTypeSymbol getInterface(
+        CLIInterfaceImplTableRow row, ModuleSymbol module, NamedTypeSymbol symbol) {
       CLITablePtr tablePtr = row.getInterfaceTablePtr();
       assert tablePtr != null; // Should never should be
       return (NamedTypeSymbol)
           TypeSymbol.TypeSymbolFactory.create(
-              tablePtr, new TypeSymbol[0], new TypeSymbol[0], module);
+              tablePtr, new TypeSymbol[0], symbol.getTypeArguments(), module);
     }
 
     public static NamedTypeSymbol createDirectBaseClass(NamedTypeSymbol namedTypeSymbol) {
@@ -338,7 +339,7 @@ public class NamedTypeSymbol extends TypeSymbol {
               TypeSymbol.TypeSymbolFactory.create(
                   baseClassPtr,
                   new TypeSymbol[0],
-                  new TypeSymbol[0],
+                  namedTypeSymbol.getTypeArguments(),
                   namedTypeSymbol.definingModule);
     }
 
@@ -367,7 +368,7 @@ public class NamedTypeSymbol extends TypeSymbol {
             FieldSymbol.FieldSymbolFactory.create(
                 fieldRow,
                 new TypeSymbol[0],
-                namedTypeSymbol.getTypeParameters(),
+                namedTypeSymbol.getTypeArguments(),
                 namedTypeSymbol.getDefiningModule());
 
         fields.add(field);
