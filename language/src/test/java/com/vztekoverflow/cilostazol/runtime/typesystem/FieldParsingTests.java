@@ -36,7 +36,7 @@ public class FieldParsingTests extends TestBase {
             .getType();
 
     assertTrue(fieldClass2Type instanceof NamedTypeSymbol);
-    assertEquals("Class1", ((NamedTypeSymbol)fieldClass2Type).getName());
+    assertEquals("Class1", ((NamedTypeSymbol) fieldClass2Type).getName());
   }
 
   @SuppressWarnings("OptionalGetWithoutIsPresent")
@@ -137,7 +137,7 @@ public class FieldParsingTests extends TestBase {
             .get();
     var selfType = fieldSelf.getType();
     assertTrue(selfType instanceof NamedTypeSymbol);
-    assertEquals(type.getName(), ((NamedTypeSymbol)selfType).getName());
-    assertEquals(type.getNamespace(), ((NamedTypeSymbol)selfType).getNamespace());
+    assertEquals(type.getName(), ((NamedTypeSymbol) selfType).getName());
+    assertEquals(type.getNamespace(), ((NamedTypeSymbol) selfType).getNamespace());
   }
 }
