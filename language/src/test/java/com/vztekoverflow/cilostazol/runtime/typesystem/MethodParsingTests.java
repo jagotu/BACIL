@@ -1,28 +1,14 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem;
 
 import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
-import com.vztekoverflow.cil.parser.cli.CLIFileUtils;
-import com.vztekoverflow.cil.parser.cli.table.generated.CLIMethodDefTableRow;
-import com.vztekoverflow.cilostazol.CILOSTAZOLLanguage;
 import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
 import com.vztekoverflow.cilostazol.runtime.symbols.NamedTypeSymbol;
-import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.AppDomain;
-import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.IAppDomain;
-import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.Assembly;
-import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.IAssembly;
-import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
-import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
-import com.vztekoverflow.cilostazol.runtime.typesystem.method.factory.MethodFactory;
-import com.vztekoverflow.cilostazol.runtime.typesystem.type.CLIType;
-import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
-import org.graalvm.polyglot.Source;
 import org.junit.Assert;
 
 public class MethodParsingTests extends TestBase {
-  public void testMethodParsingGeneral() throws Exception {
+  public void testMethodParsingGeneral() {
     final String projectName = "MethodParsingGeneral";
     final CILOSTAZOLContext ctx = init(new Path[] {getDllPath(projectName).getParent()});
     final AssemblyIdentity assemblyID = getAssemblyID(projectName);
@@ -59,7 +45,7 @@ public class MethodParsingTests extends TestBase {
         Arrays.stream(classBar2.getMethods()).anyMatch(x -> x.getName().equals("Bar2_Foo1")));
   }
 
-  public void testMethodParsing_MethodExistence() throws IOException {
+  public void testMethodParsing_MethodExistence() {
     final String projectName = "MethodParsingGeneral";
     final CILOSTAZOLContext ctx = init(new Path[] {getDllPath(projectName).getParent()});
     final AssemblyIdentity assemblyID = getAssemblyID(projectName);
