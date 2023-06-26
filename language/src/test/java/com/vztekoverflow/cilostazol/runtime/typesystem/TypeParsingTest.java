@@ -3,6 +3,7 @@ package com.vztekoverflow.cilostazol.runtime.typesystem;
 import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cilostazol.CILOSTAZOLLanguage;
 import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
+import com.vztekoverflow.cilostazol.runtime.other.ContextProviderImpl;
 import com.vztekoverflow.cilostazol.runtime.symbols.NamedTypeSymbol;
 import java.nio.file.Path;
 import org.graalvm.polyglot.Source;
@@ -16,12 +17,9 @@ public class TypeParsingTest extends TestBase {
 
   public void testNewStructure() {
     final String projectName = "ComponentParsingGeneral";
-    CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
-    CILOSTAZOLContext ctx =
-        new CILOSTAZOLContext(lang, new Path[] {getDllPath(projectName).getParent()});
-    AssemblyIdentity assemblyIdentity =
-        new AssemblyIdentity((short) 1, (short) 0, (short) 0, (short) 0, "ComponentParsingGeneral");
+    CILOSTAZOLContext ctx = init(new Path[] {getDllPath(projectName).getParent()});
 
+    AssemblyIdentity assemblyIdentity = getAssemblyID(projectName);
     NamedTypeSymbol type = ctx.getType("FindLocalType", "Class", assemblyIdentity);
 
     // No error thrown
@@ -29,7 +27,8 @@ public class TypeParsingTest extends TestBase {
 
   public void testComponentParsingGeneral() throws Exception {
     final String projectName = "ComponentParsingGeneral";
-    CILOSTAZOLContext ctx = new CILOSTAZOLContext(new CILOSTAZOLLanguage(), new Path[0]);
+    CILOSTAZOLContext ctx = init(new Path[] {getDllPath(projectName).getParent()});
+
     Source source = getSourceFromProject(projectName);
 
     var assembly = ctx.loadAssembly(source);
@@ -38,10 +37,10 @@ public class TypeParsingTest extends TestBase {
 
   public void testFindLocalType() throws Exception {
     final String projectName = "FindLocalType";
-    CILOSTAZOLContext ctx = new CILOSTAZOLContext(new CILOSTAZOLLanguage(), new Path[0]);
-    var assembly = ctx.loadAssembly(getSourceFromProject(projectName));
+    CILOSTAZOLContext ctx = init(new Path[] {getDllPath(projectName).getParent()});
+    AssemblyIdentity assemblyIdentity = getAssemblyID(projectName);
 
-    var type = assembly.getLocalType("Class", "FindLocalType");
+    var type = ctx.getType("Class", "FindLocalType", assemblyIdentity);
 
     assertEquals("FindLocalType", type.getNamespace());
     assertEquals("Class", type.getName());
