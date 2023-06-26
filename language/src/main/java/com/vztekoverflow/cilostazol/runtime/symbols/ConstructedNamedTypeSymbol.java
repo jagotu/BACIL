@@ -2,12 +2,12 @@ package com.vztekoverflow.cilostazol.runtime.symbols;
 
 import java.util.Arrays;
 
-public class ConstructedNamedTypeSymbol extends NamedTypeSymbol {
+public final class ConstructedNamedTypeSymbol extends NamedTypeSymbol {
   private final NamedTypeSymbol constructedFrom;
   private final NamedTypeSymbol originalDefinition;
   private final TypeSymbol[] typeArguments;
 
-  protected ConstructedNamedTypeSymbol(
+  private ConstructedNamedTypeSymbol(
       NamedTypeSymbol constructedFrom,
       NamedTypeSymbol originalDefinition,
       TypeSymbol[] typeArguments) {
@@ -56,7 +56,10 @@ public class ConstructedNamedTypeSymbol extends NamedTypeSymbol {
     if (lazyMethods == null) {
       lazyMethods =
           Arrays.stream(constructedFrom.getMethods())
-              .map(x -> new SubstitutedMethodSymbol(x.getDefinition(), x, this))
+              .map(
+                  x ->
+                      SubstitutedMethodSymbol.SubstitutedMethodSymbolFactory.create(
+                          x.getDefinition(), x, this))
               .toArray(MethodSymbol[]::new);
     }
 
@@ -68,7 +71,10 @@ public class ConstructedNamedTypeSymbol extends NamedTypeSymbol {
     if (lazyVMethodTable == null) {
       lazyVMethodTable =
           Arrays.stream(constructedFrom.getMethods())
-              .map(x -> new SubstitutedMethodSymbol(x.getDefinition(), x, this))
+              .map(
+                  x ->
+                      SubstitutedMethodSymbol.SubstitutedMethodSymbolFactory.create(
+                          x.getDefinition(), x, this))
               .toArray(MethodSymbol[]::new);
     }
 
@@ -84,4 +90,13 @@ public class ConstructedNamedTypeSymbol extends NamedTypeSymbol {
     return lazyFields;
   }
   // endregion
+
+  public static final class ConstructedNamedTypeSymbolFactory {
+    public static ConstructedNamedTypeSymbol create(
+        NamedTypeSymbol constructedFrom,
+        NamedTypeSymbol originalDefinition,
+        TypeSymbol[] typeArguments) {
+      return new ConstructedNamedTypeSymbol(constructedFrom, originalDefinition, typeArguments);
+    }
+  }
 }

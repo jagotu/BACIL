@@ -8,7 +8,7 @@ import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.runtime.other.ContextProviderImpl;
 import org.graalvm.polyglot.Source;
 
-public class AssemblySymbol extends Symbol {
+public final class AssemblySymbol extends Symbol {
   private final ModuleSymbol[] modules;
   private final CLIFile definingFile;
 
@@ -39,7 +39,7 @@ public class AssemblySymbol extends Symbol {
     return definingFile.getAssemblyIdentity();
   }
 
-  public static class AssemblySymbolFactory {
+  public static final class AssemblySymbolFactory {
     /**
      * Create an assembly from a DLL file. Is Pure.
      *

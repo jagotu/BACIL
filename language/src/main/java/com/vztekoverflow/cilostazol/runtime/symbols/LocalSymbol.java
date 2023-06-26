@@ -4,12 +4,12 @@ import com.vztekoverflow.cil.parser.cli.signature.LocalVarSig;
 import com.vztekoverflow.cil.parser.cli.signature.LocalVarsSig;
 import com.vztekoverflow.cilostazol.runtime.other.ContextProviderImpl;
 
-public class LocalSymbol extends Symbol {
+public final class LocalSymbol extends Symbol {
   private boolean pinned;
   private boolean byRef;
   private TypeSymbol type;
 
-  public LocalSymbol(boolean pinned, boolean byRef, TypeSymbol type) {
+  private LocalSymbol(boolean pinned, boolean byRef, TypeSymbol type) {
     super(ContextProviderImpl.getInstance());
     this.pinned = pinned;
     this.byRef = byRef;
@@ -28,7 +28,7 @@ public class LocalSymbol extends Symbol {
     return type;
   }
 
-  public static class LocalSymbolFactory {
+  public static final class LocalSymbolFactory {
     public static LocalSymbol create(
         LocalVarSig sig, TypeSymbol[] mvars, TypeSymbol[] vars, ModuleSymbol module) {
       return new LocalSymbol(
@@ -44,6 +44,10 @@ public class LocalSymbol extends Symbol {
         locals[i] = create(sig.getVars()[i], mvars, vars, module);
       }
       return locals;
+    }
+
+    public static LocalSymbol createWith(LocalSymbol symbol, TypeSymbol type) {
+      return new LocalSymbol(symbol.isPinned(), symbol.isByRef(), type);
     }
   }
 }

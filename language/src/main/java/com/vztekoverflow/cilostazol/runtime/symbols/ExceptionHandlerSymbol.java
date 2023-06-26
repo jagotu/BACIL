@@ -4,7 +4,7 @@ import com.vztekoverflow.cil.parser.ByteSequenceBuffer;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
 import com.vztekoverflow.cilostazol.runtime.other.ContextProviderImpl;
 
-public class ExceptionHandlerSymbol extends Symbol {
+public final class ExceptionHandlerSymbol extends Symbol {
   private final int tryOffset;
   private final int tryLength;
 
@@ -37,7 +37,7 @@ public class ExceptionHandlerSymbol extends Symbol {
   private final TypeSymbol handlerException;
   private final ExceptionClauseFlags flags;
 
-  public ExceptionHandlerSymbol(
+  private ExceptionHandlerSymbol(
       int tryOffset,
       int tryLength,
       int handlerOffset,
@@ -53,7 +53,7 @@ public class ExceptionHandlerSymbol extends Symbol {
     this.flags = flags;
   }
 
-  public static class ExceptionHandlerSymbolFactory {
+  public static final class ExceptionHandlerSymbolFactory {
     public static ExceptionHandlerSymbol[] create(
         ByteSequenceBuffer buf, TypeSymbol[] mvars, TypeSymbol[] vars, ModuleSymbol module) {
       final ExceptionHandlerSymbol[] handlers;
@@ -105,6 +105,17 @@ public class ExceptionHandlerSymbol extends Symbol {
                 tryoffset, trylength, handleroffset, handlerlength, klass, flags);
       }
       return handlers;
+    }
+
+    public static ExceptionHandlerSymbol createWith(
+        ExceptionHandlerSymbol symbol, TypeSymbol exception) {
+      return new ExceptionHandlerSymbol(
+          symbol.getTryOffset(),
+          symbol.getTryLength(),
+          symbol.getHandlerOffset(),
+          symbol.getHandlerLength(),
+          exception,
+          symbol.getFlags());
     }
   }
 

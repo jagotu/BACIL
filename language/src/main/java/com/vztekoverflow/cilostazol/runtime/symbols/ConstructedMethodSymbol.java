@@ -1,9 +1,9 @@
 package com.vztekoverflow.cilostazol.runtime.symbols;
 
-public class ConstructedMethodSymbol extends SubstitutedMethodSymbol {
+public final class ConstructedMethodSymbol extends SubstitutedMethodSymbol {
   private final TypeSymbol[] typeArguments;
 
-  public ConstructedMethodSymbol(
+  private ConstructedMethodSymbol(
       MethodSymbol definition, MethodSymbol constructedFrom, TypeSymbol[] typeArguments) {
     super(
         definition,
@@ -19,5 +19,12 @@ public class ConstructedMethodSymbol extends SubstitutedMethodSymbol {
   @Override
   public ConstructedMethodSymbol construct(TypeSymbol[] typeArguments) {
     return new ConstructedMethodSymbol(getDefinition(), this, typeArguments);
+  }
+
+  public static final class ConstructedMethodSymbolFactory {
+    public static ConstructedMethodSymbol create(
+        MethodSymbol definition, MethodSymbol constructedFrom, TypeSymbol[] typeArguments) {
+      return new ConstructedMethodSymbol(definition, constructedFrom, typeArguments);
+    }
   }
 }

@@ -7,17 +7,6 @@ public class SubstitutedMethodSymbol extends MethodSymbol {
   private final MethodSymbol constructedFrom;
   protected final TypeMap map;
 
-  public SubstitutedMethodSymbol(
-      MethodSymbol definition, MethodSymbol constructedFrom, NamedTypeSymbol containingType) {
-    this(
-        definition,
-        constructedFrom,
-        containingType,
-        new TypeMap(
-            constructedFrom.getDefiningType().getTypeParameters(),
-            containingType.getTypeArguments()));
-  }
-
   protected SubstitutedMethodSymbol(
       MethodSymbol definition,
       MethodSymbol constructedFrom,
@@ -45,25 +34,18 @@ public class SubstitutedMethodSymbol extends MethodSymbol {
 
   private static ParameterSymbol[] createParams(ParameterSymbol[] symbols, TypeMap map) {
     return Arrays.stream(symbols)
-        .map(
-            x ->
-                new ParameterSymbol(
-                    x.isByRef(),
-                    map.substitute(x.getType()),
-                    x.getName(),
-                    x.getIndex(),
-                    x.getFlags()))
+        .map(x -> ParameterSymbol.ParameterSymbolFactory.createWith(x, map.substitute(x.getType())))
         .toArray(ParameterSymbol[]::new);
   }
 
   private static LocalSymbol[] createLocals(LocalSymbol[] symbols, TypeMap map) {
     return Arrays.stream(symbols)
-        .map(x -> new LocalSymbol(x.isPinned(), x.isByRef(), map.substitute(x.getType())))
+        .map(x -> LocalSymbol.LocalSymbolFactory.createWith(x, map.substitute(x.getType())))
         .toArray(LocalSymbol[]::new);
   }
 
   private static ReturnSymbol createReturn(ReturnSymbol symbol, TypeMap map) {
-    return new ReturnSymbol(symbol.isByRef(), map.substitute(symbol.getType()));
+    return ReturnSymbol.ReturnSymbolFactory.createWith(symbol, map.substitute(symbol.getType()));
   }
 
   private static ExceptionHandlerSymbol[] createHandlers(
@@ -71,13 +53,21 @@ public class SubstitutedMethodSymbol extends MethodSymbol {
     return Arrays.stream(symbols)
         .map(
             x ->
-                new ExceptionHandlerSymbol(
-                    x.getTryOffset(),
-                    x.getTryLength(),
-                    x.getHandlerOffset(),
-                    x.getHandlerLength(),
-                    map.substitute(x.getHandlerException()),
-                    x.getFlags()))
+                ExceptionHandlerSymbol.ExceptionHandlerSymbolFactory.createWith(
+                    x, map.substitute(x.getHandlerException())))
         .toArray(ExceptionHandlerSymbol[]::new);
+  }
+
+  public static final class SubstitutedMethodSymbolFactory {
+    public static SubstitutedMethodSymbol create(
+        MethodSymbol definition, MethodSymbol constructedFrom, NamedTypeSymbol containingType) {
+      return new SubstitutedMethodSymbol(
+          definition,
+          constructedFrom,
+          containingType,
+          new TypeMap(
+              constructedFrom.getDefiningType().getTypeParameters(),
+              containingType.getTypeArguments()));
+    }
   }
 }

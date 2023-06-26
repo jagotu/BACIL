@@ -6,13 +6,13 @@ import com.vztekoverflow.cil.parser.cli.table.generated.CLIGenericParamTableRow;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TypeParameterSymbol extends TypeSymbol {
+public final class TypeParameterSymbol extends TypeSymbol {
   private final TypeSymbol[] constraints;
   private final GenericParameterFlags flags;
   private final int ordinal;
   private final String name;
 
-  public TypeParameterSymbol(
+  private TypeParameterSymbol(
       ModuleSymbol definingModule,
       TypeSymbol[] constraints,
       GenericParameterFlags flags,

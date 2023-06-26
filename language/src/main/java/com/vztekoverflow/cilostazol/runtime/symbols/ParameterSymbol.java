@@ -4,14 +4,15 @@ import com.vztekoverflow.cil.parser.cli.signature.ParamSig;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIParamTableRow;
 import com.vztekoverflow.cilostazol.runtime.other.ContextProviderImpl;
 
-public class ParameterSymbol extends Symbol {
+public final class ParameterSymbol extends Symbol {
   private final boolean isByRef;
   private final TypeSymbol type;
   private final String name;
   private final int idx;
   private final ParamFlags flags;
 
-  public ParameterSymbol(boolean isByRef, TypeSymbol type, String name, int idx, ParamFlags flags) {
+  private ParameterSymbol(
+      boolean isByRef, TypeSymbol type, String name, int idx, ParamFlags flags) {
     super(ContextProviderImpl.getInstance());
     this.isByRef = isByRef;
     this.type = type;
@@ -40,7 +41,7 @@ public class ParameterSymbol extends Symbol {
     return type;
   }
 
-  public static class ParameterSymbolFactory {
+  public static final class ParameterSymbolFactory {
     public static ParameterSymbol create(
         ParamSig paramSig,
         CLIParamTableRow row,
@@ -66,6 +67,11 @@ public class ParameterSymbol extends Symbol {
         parameters[i] = create(params[i], rows[i], mvars, vars, module);
       }
       return parameters;
+    }
+
+    public static ParameterSymbol createWith(ParameterSymbol symbol, TypeSymbol type) {
+      return new ParameterSymbol(
+          symbol.isByRef(), type, symbol.getName(), symbol.getIndex(), symbol.getFlags());
     }
   }
 

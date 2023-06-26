@@ -4,7 +4,7 @@ import com.vztekoverflow.bacil.parser.cli.tables.generated.CLITableConstants;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cilostazol.runtime.other.ContextProviderImpl;
 
-public class ModuleSymbol extends Symbol {
+public final class ModuleSymbol extends Symbol {
   private final CLIFile definingFile;
   private final NamedTypeSymbol[] containingTypesCache;
 
@@ -41,7 +41,7 @@ public class ModuleSymbol extends Symbol {
     return null;
   }
 
-  public static class ModuleSymbolFactory {
+  public static final class ModuleSymbolFactory {
     public static ModuleSymbol create(CLIFile file) {
       return new ModuleSymbol(file);
     }

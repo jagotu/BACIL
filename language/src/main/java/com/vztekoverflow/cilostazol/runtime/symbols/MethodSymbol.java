@@ -36,7 +36,7 @@ public class MethodSymbol extends Symbol {
   protected final MethodHeaderFlags methodHeaderFlags;
   protected RootNode node;
 
-  public MethodSymbol(
+  protected MethodSymbol(
       String name,
       ModuleSymbol module,
       NamedTypeSymbol definingType,
@@ -139,7 +139,7 @@ public class MethodSymbol extends Symbol {
   // endregion
 
   public ConstructedMethodSymbol construct(TypeSymbol[] typeArguments) {
-    return new ConstructedMethodSymbol(this, this, typeArguments);
+    return ConstructedMethodSymbol.ConstructedMethodSymbolFactory.create(this, this, typeArguments);
   }
 
   public RootNode getNode() {
