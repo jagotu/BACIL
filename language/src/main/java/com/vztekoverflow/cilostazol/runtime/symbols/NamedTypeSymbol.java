@@ -1,6 +1,5 @@
 package com.vztekoverflow.cilostazol.runtime.symbols;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.staticobject.StaticShape;
 import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
@@ -18,7 +17,6 @@ import com.vztekoverflow.cilostazol.runtime.symbols.utils.NamedTypeSymbolSemanti
 import com.vztekoverflow.cilostazol.runtime.symbols.utils.NamedTypeSymbolVisibility;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.*;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,25 +30,12 @@ public class NamedTypeSymbol extends TypeSymbol {
   private static final int RT_SPECIAL_NAME_FLAG_MASK = 0x800;
   private static final int HAS_SECURITY_FLAG_MASK = 0x40000;
   private static final int IS_TYPE_FORWARDER_FLAG_MASK = 0x200000;
-
-  @CompilerDirectives.CompilationFinal
-  private StaticShape<StaticObject.StaticObjectFactory> instanceShape;
-
-  @CompilerDirectives.CompilationFinal
-  private StaticShape<StaticObject.StaticObjectFactory> staticShape;
-
-  @CompilerDirectives.CompilationFinal(dimensions = 1)
-  private StaticField[] instanceFields;
-
-  @CompilerDirectives.CompilationFinal(dimensions = 1)
-  private StaticField[] staticFields;
-
-  @CompilerDirectives.CompilationFinal private NamedTypeSymbol superClass;
-
   protected final int flags;
   protected final String name;
   protected final String namespace;
-
+  protected final TypeParameterSymbol[] typeParameters;
+  protected final TypeMap map;
+  protected final CLITablePtr definingRow;
   @CompilerDirectives.CompilationFinal protected NamedTypeSymbol lazyDirectBaseClass;
 
   @CompilerDirectives.CompilationFinal(dimensions = 1)
@@ -65,9 +50,19 @@ public class NamedTypeSymbol extends TypeSymbol {
   @CompilerDirectives.CompilationFinal(dimensions = 1)
   protected FieldSymbol[] lazyFields;
 
-  protected final TypeParameterSymbol[] typeParameters;
-  protected final TypeMap map;
-  protected final CLITablePtr definingRow;
+  @CompilerDirectives.CompilationFinal
+  private StaticShape<StaticObject.StaticObjectFactory> instanceShape;
+
+  @CompilerDirectives.CompilationFinal
+  private StaticShape<StaticObject.StaticObjectFactory> staticShape;
+
+  @CompilerDirectives.CompilationFinal(dimensions = 1)
+  private StaticField[] instanceFields;
+
+  @CompilerDirectives.CompilationFinal(dimensions = 1)
+  private StaticField[] staticFields;
+
+  @CompilerDirectives.CompilationFinal private NamedTypeSymbol superClass;
 
   protected NamedTypeSymbol(
       ModuleSymbol definingModule,
@@ -246,8 +241,7 @@ public class NamedTypeSymbol extends TypeSymbol {
 
   @Override
   public boolean equals(Object obj) {
-    if (obj instanceof NamedTypeSymbol) {
-      NamedTypeSymbol other = (NamedTypeSymbol) obj;
+    if (obj instanceof NamedTypeSymbol other) {
       if (!other.getName().equals(getName()) || !other.getNamespace().equals(getNamespace()))
         return false;
 

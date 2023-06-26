@@ -49,5 +49,4 @@ public class StaticField extends StaticProperty {
     // TODO:
     return null;
   }
-
 }

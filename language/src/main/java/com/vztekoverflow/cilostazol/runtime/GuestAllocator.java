@@ -63,10 +63,7 @@ public final class GuestAllocator {
   }
 
   private static StaticObject trackAllocation(
-      NamedTypeSymbol typeSymbol,
-      StaticObject obj,
-      CILOSTAZOLLanguage lang,
-      Symbol symbol) {
+      NamedTypeSymbol typeSymbol, StaticObject obj, CILOSTAZOLLanguage lang, Symbol symbol) {
     if (typeSymbol == null || lang.isAllocationTrackingDisabled()) {
       return obj;
     }
