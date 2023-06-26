@@ -20,7 +20,6 @@ import com.vztekoverflow.cilostazol.runtime.typesystem.type.TypeSemantics;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.TypeVisibility;
 import java.util.ArrayList;
 import java.util.List;
-import org.jetbrains.annotations.NotNull;
 
 public class NamedTypeSymbol extends TypeSymbol {
   private static final int ABSTRACT_FLAG_MASK = 0x80;
@@ -357,10 +356,7 @@ public class NamedTypeSymbol extends TypeSymbol {
 
   public static class NamedTypeSymbolFactory {
     public static NamedTypeSymbol create(
-        @NotNull CLITablePtr ptr,
-        @NotNull TypeSymbol[] mvars,
-        @NotNull TypeSymbol[] vars,
-        @NotNull ModuleSymbol module) {
+        CLITablePtr ptr, TypeSymbol[] mvars, TypeSymbol[] vars, ModuleSymbol module) {
       return switch (ptr.getTableId()) {
         case CLITableConstants.CLI_TABLE_TYPE_DEF -> NamedTypeSymbolFactory.create(
             module.getDefiningFile().getTableHeads().getTypeDefTableHead().skip(ptr), module);

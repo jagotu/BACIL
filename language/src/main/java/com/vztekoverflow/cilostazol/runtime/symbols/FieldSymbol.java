@@ -9,11 +9,11 @@ import com.vztekoverflow.cilostazol.runtime.symbols.utils.FieldSymbolVisibility;
 public final class FieldSymbol extends Symbol {
 
   private final String name;
-  private final NamedTypeSymbol type;
+  private final TypeSymbol type;
   private final short flags;
   private final short visibilityFlags;
 
-  private FieldSymbol(String name, NamedTypeSymbol type, short flags, short visibilityFlags) {
+  private FieldSymbol(String name, TypeSymbol type, short flags, short visibilityFlags) {
     super(ContextProviderImpl.getInstance());
     this.name = name;
     this.type = type;
@@ -25,7 +25,7 @@ public final class FieldSymbol extends Symbol {
     return name;
   }
 
-  public NamedTypeSymbol getType() {
+  public TypeSymbol getType() {
     return type;
   }
 
@@ -66,6 +66,10 @@ public final class FieldSymbol extends Symbol {
       short visibilityFlags = (short) (row.getFlags() & 0x0007);
 
       return new FieldSymbol(name, type, flags, visibilityFlags);
+    }
+
+    public static FieldSymbol createWith(FieldSymbol symbol, TypeSymbol type) {
+      return new FieldSymbol(symbol.name, type, symbol.flags, symbol.visibilityFlags);
     }
   }
 }

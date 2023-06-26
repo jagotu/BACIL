@@ -84,7 +84,10 @@ public final class ConstructedNamedTypeSymbol extends NamedTypeSymbol {
   @Override
   public FieldSymbol[] getFields() {
     if (lazyFields == null) {
-      // TODO: substituted field symbols
+      lazyFields =
+          Arrays.stream(constructedFrom.getFields())
+              .map(x -> FieldSymbol.FieldSymbolFactory.createWith(x, map.substitute(x.getType())))
+              .toArray(FieldSymbol[]::new);
     }
 
     return lazyFields;

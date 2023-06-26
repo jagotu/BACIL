@@ -104,8 +104,9 @@ public class TypeParsingTest extends TestBase {
     var localType = assembly.getLocalType("Class1", projectName);
 
     assertEquals(2, localType.getFields().length);
-    assertEquals("Class2", localType.getFields()[1].getType().getName());
-    assertEquals("FindNonLocalType", localType.getFields()[1].getType().getNamespace());
+    assertEquals("Class2", ((NamedTypeSymbol) localType.getFields()[1].getType()).getName());
+    assertEquals(
+        "FindNonLocalType", ((NamedTypeSymbol) localType.getFields()[1].getType()).getNamespace());
   }
 
   // TODO: fix after figuring out how to install the language...
@@ -120,7 +121,8 @@ public class TypeParsingTest extends TestBase {
     var localType = assembly.getLocalType("Class1", projectName);
 
     assertEquals(2, localType.getFields().length);
-    assertEquals("Class", localType.getFields()[0].getType().getName());
-    assertEquals("FindLocalType", localType.getFields()[0].getType().getNamespace());
+    assertEquals("Class", ((NamedTypeSymbol) localType.getFields()[0].getType()).getName());
+    assertEquals(
+        "FindLocalType", ((NamedTypeSymbol) localType.getFields()[0].getType()).getNamespace());
   }
 }
