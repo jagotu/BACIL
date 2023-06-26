@@ -34,7 +34,7 @@ public final class LocalSymbol extends Symbol {
       return new LocalSymbol(
           sig.isByRef(),
           sig.isPinned(),
-          NamedTypeSymbol.NamedTypeSymbolFactory.create(sig.getTypeSig(), mvars, vars, module));
+          TypeSymbol.TypeSymbolFactory.create(sig.getTypeSig(), mvars, vars, module));
     }
 
     public static LocalSymbol[] create(

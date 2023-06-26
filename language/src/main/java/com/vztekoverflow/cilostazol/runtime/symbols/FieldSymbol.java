@@ -60,8 +60,8 @@ public final class FieldSymbol extends Symbol {
       final var signature = row.getSignatureHeapPtr().read(module.getDefiningFile().getBlobHeap());
 
       final FieldSig fieldSig = FieldSig.parse(new SignatureReader(signature));
-      final NamedTypeSymbol type =
-          NamedTypeSymbol.NamedTypeSymbolFactory.create(fieldSig.getType(), mvars, vars, module);
+      final TypeSymbol type =
+          TypeSymbol.TypeSymbolFactory.create(fieldSig.getType(), mvars, vars, module);
       short flags = row.getFlags();
       short visibilityFlags = (short) (row.getFlags() & 0x0007);
 

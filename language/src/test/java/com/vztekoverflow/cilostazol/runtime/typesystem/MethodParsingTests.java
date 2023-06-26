@@ -1,9 +1,11 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem;
 
+import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cil.parser.cli.CLIFileUtils;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIMethodDefTableRow;
 import com.vztekoverflow.cilostazol.CILOSTAZOLLanguage;
 import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
+import com.vztekoverflow.cilostazol.runtime.symbols.NamedTypeSymbol;
 import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.AppDomain;
 import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.IAppDomain;
 import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.Assembly;
@@ -22,85 +24,59 @@ import org.junit.Assert;
 public class MethodParsingTests extends TestBase {
   public void testMethodParsingGeneral() throws Exception {
     final String projectName = "MethodParsingGeneral";
+    final CILOSTAZOLContext ctx = init(new Path[] {getDllPath(projectName).getParent()});
+    final AssemblyIdentity assemblyID = getAssemblyID(projectName);
 
-    final CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
-    CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
-    Source source = getSourceFromProject(projectName);
-
-    final IAppDomain domain = new AppDomain(ctx);
-    final IAssembly assembly = Assembly.parse(domain, source);
-
-    final CLIComponent component = (CLIComponent) assembly.getComponents()[0];
     // Classes
-    final CLIType classA = (CLIType) component.getLocalType("MethodParsingGeneral", "A");
-    // final IType interfaceAI= component.getLocalType("MethodParsingGeneral","AI");
-    final CLIType classG_T = (CLIType) component.getLocalType("MethodParsingGeneral", "G`1");
-    final CLIType classBar1 = (CLIType) component.getLocalType("MethodParsingGeneral", "Bar1");
-    final CLIType classBar2 = (CLIType) component.getLocalType("MethodParsingGeneral", "Bar2`1");
+    final NamedTypeSymbol classA = ctx.getType("A", "MethodParsingGeneral", assemblyID);
+    final NamedTypeSymbol interfaceAI = ctx.getType("AI", "MethodParsingGeneral", assemblyID);
+    final NamedTypeSymbol classG_T = ctx.getType("G`1", "MethodParsingGeneral", assemblyID);
+    final NamedTypeSymbol classBar1 = ctx.getType("Bar1", "MethodParsingGeneral", assemblyID);
+    final NamedTypeSymbol classBar2 = ctx.getType("Bar2`1", "MethodParsingGeneral", assemblyID);
 
-    final CLIMethodDefTableRow method_def_Bar1_Foo1 =
-        CLIFileUtils.getMethodByName("Bar1_Foo1", component.getDefiningFile())[0];
-    final CLIMethodDefTableRow method_def_Bar1_Foo2 =
-        CLIFileUtils.getMethodByName("Bar1_Foo2", component.getDefiningFile())[0];
-    final CLIMethodDefTableRow method_def_Bar1_Foo3 =
-        CLIFileUtils.getMethodByName("Bar1_Foo3", component.getDefiningFile())[0];
-    final CLIMethodDefTableRow method_def_Bar1_Foo4 =
-        CLIFileUtils.getMethodByName("Bar1_Foo4", component.getDefiningFile())[0];
-    final CLIMethodDefTableRow method_def_Bar1_Foo5 =
-        CLIFileUtils.getMethodByName("Bar1_Foo5", component.getDefiningFile())[0];
-    final CLIMethodDefTableRow method_def_Bar1_Foo6 =
-        CLIFileUtils.getMethodByName("Bar1_Foo6", component.getDefiningFile())[0];
-    final CLIMethodDefTableRow method_def_Bar1_Foo7 =
-        CLIFileUtils.getMethodByName("Bar1_Foo7", component.getDefiningFile())[0];
-    final CLIMethodDefTableRow method_def_Bar1_Foo8 =
-        CLIFileUtils.getMethodByName("Bar1_Foo8", component.getDefiningFile())[0];
-    final CLIMethodDefTableRow method_def_Bar1_Foo9 =
-        CLIFileUtils.getMethodByName("Bar1_Foo9", component.getDefiningFile())[0];
-    final CLIMethodDefTableRow method_def_Bar1_Foo10 =
-        CLIFileUtils.getMethodByName("Bar1_Foo10", component.getDefiningFile())[0];
-    final CLIMethodDefTableRow method_def_Bar2_Foo1 =
-        CLIFileUtils.getMethodByName("Bar2_Foo1", component.getDefiningFile())[0];
-
-    final IMethod method_Bar1_Foo1 = MethodFactory.create(method_def_Bar1_Foo1, classBar1);
-    Assert.assertEquals(method_Bar1_Foo1.getName(), "Bar1_Foo1");
-    final IMethod method_Bar1_Foo2 = MethodFactory.create(method_def_Bar1_Foo2, classBar1);
-    final IMethod method_Bar1_Foo3 = MethodFactory.create(method_def_Bar1_Foo3, classBar1);
-    final IMethod method_Bar1_Foo4 = MethodFactory.create(method_def_Bar1_Foo4, classBar1);
-    final IMethod method_Bar1_Foo5 = MethodFactory.create(method_def_Bar1_Foo5, classBar1);
-    final IMethod method_Bar1_Foo6 = MethodFactory.create(method_def_Bar1_Foo6, classBar1);
-    final IMethod method_Bar1_Foo7 = MethodFactory.create(method_def_Bar1_Foo7, classBar1);
-    final IMethod method_Bar1_Foo8 = MethodFactory.create(method_def_Bar1_Foo8, classBar1);
-    final IMethod method_Bar1_Foo9 = MethodFactory.create(method_def_Bar1_Foo9, classBar1);
-    final IMethod method_Bar1_Foo10 = MethodFactory.create(method_def_Bar1_Foo10, classBar1);
-    final IMethod method_Bar2_Foo1 = MethodFactory.create(method_def_Bar2_Foo1, classBar2);
+    // Methods
+    Assert.assertTrue(
+        Arrays.stream(classBar1.getMethods()).anyMatch(x -> x.getName().equals("Bar1_Foo1")));
+    Assert.assertTrue(
+        Arrays.stream(classBar1.getMethods()).anyMatch(x -> x.getName().equals("Bar1_Foo2")));
+    Assert.assertTrue(
+        Arrays.stream(classBar1.getMethods()).anyMatch(x -> x.getName().equals("Bar1_Foo3")));
+    Assert.assertTrue(
+        Arrays.stream(classBar1.getMethods()).anyMatch(x -> x.getName().equals("Bar1_Foo4")));
+    Assert.assertTrue(
+        Arrays.stream(classBar1.getMethods()).anyMatch(x -> x.getName().equals("Bar1_Foo5")));
+    Assert.assertTrue(
+        Arrays.stream(classBar1.getMethods()).anyMatch(x -> x.getName().equals("Bar1_Foo6")));
+    Assert.assertTrue(
+        Arrays.stream(classBar1.getMethods()).anyMatch(x -> x.getName().equals("Bar1_Foo7")));
+    Assert.assertTrue(
+        Arrays.stream(classBar1.getMethods()).anyMatch(x -> x.getName().equals("Bar1_Foo8")));
+    Assert.assertTrue(
+        Arrays.stream(classBar1.getMethods()).anyMatch(x -> x.getName().equals("Bar1_Foo9")));
+    Assert.assertTrue(
+        Arrays.stream(classBar1.getMethods()).anyMatch(x -> x.getName().equals("Bar1_Foo10")));
+    Assert.assertTrue(
+        Arrays.stream(classBar2.getMethods()).anyMatch(x -> x.getName().equals("Bar2_Foo1")));
   }
 
   public void testMethodParsing_MethodExistence() throws IOException {
     final String projectName = "MethodParsingGeneral";
+    final CILOSTAZOLContext ctx = init(new Path[] {getDllPath(projectName).getParent()});
+    final AssemblyIdentity assemblyID = getAssemblyID(projectName);
 
-    final CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
-    CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
-    Source source = getSourceFromProject(projectName);
-    final IAppDomain domain = new AppDomain(ctx);
-    final IAssembly assembly = Assembly.parse(domain, source);
-    IType type = assembly.getLocalType(projectName, "A");
+    final NamedTypeSymbol type = ctx.getType("A", "MethodParsingGeneral", assemblyID);
 
     assertTrue(Arrays.stream(type.getMethods()).anyMatch(m -> m.getName().equals("fooPrivate")));
     assertTrue(Arrays.stream(type.getMethods()).anyMatch(m -> m.getName().equals("fooPublic")));
     assertTrue(Arrays.stream(type.getMethods()).anyMatch(m -> m.getName().equals("fooProtected")));
     assertTrue(Arrays.stream(type.getMethods()).anyMatch(m -> m.getName().equals("fooDefault")));
-    // TODO: test args?
     assertTrue(Arrays.stream(type.getMethods()).anyMatch(m -> m.getName().equals("fooWithArg")));
-    // TODO: test args?
     assertTrue(Arrays.stream(type.getMethods()).anyMatch(m -> m.getName().equals("fooWithArgs")));
-    // TODO: test return type?
     assertTrue(
         Arrays.stream(type.getMethods()).anyMatch(m -> m.getName().equals("fooWithReturnType")));
-    // TODO: test return type?
     assertTrue(
         Arrays.stream(type.getMethods())
             .anyMatch(m -> m.getName().equals("fooWithReturnTypeSelf")));
-    // TODO: test return body?
     assertTrue(
         Arrays.stream(type.getMethods())
             .anyMatch(m -> m.getName().equals("fooWithExpressionBody")));

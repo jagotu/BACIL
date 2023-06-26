@@ -50,7 +50,7 @@ public final class ParameterSymbol extends Symbol {
         ModuleSymbol module) {
       return new ParameterSymbol(
           paramSig.isByRef(),
-          NamedTypeSymbol.NamedTypeSymbolFactory.create(paramSig.getTypeSig(), mvars, vars, module),
+          TypeSymbol.TypeSymbolFactory.create(paramSig.getTypeSig(), mvars, vars, module),
           row.getNameHeapPtr().read(module.getDefiningFile().getStringHeap()),
           row.getSequence(),
           new ParamFlags(row.getFlags()));

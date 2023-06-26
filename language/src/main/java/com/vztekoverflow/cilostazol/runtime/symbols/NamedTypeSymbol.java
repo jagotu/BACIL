@@ -147,7 +147,8 @@ public class NamedTypeSymbol extends TypeSymbol {
   // endregion
 
   public ConstructedNamedTypeSymbol construct(TypeSymbol[] typeArguments) {
-    throw new NotImplementedException();
+    return ConstructedNamedTypeSymbol.ConstructedNamedTypeSymbolFactory.create(
+        this, this, typeArguments);
   }
 
   public TypeSymbol[] getTypeArguments() {
@@ -379,7 +380,7 @@ public class NamedTypeSymbol extends TypeSymbol {
               new SignatureReader(
                   row.getSignatureHeapPtr().read(module.getDefiningFile().getBlobHeap())),
               module.getDefiningFile());
-      return create(signature, mvars, vars, module);
+      return (NamedTypeSymbol) TypeSymbol.TypeSymbolFactory.create(signature, mvars, vars, module);
     }
 
     public static NamedTypeSymbol create(CLITypeRefTableRow row, ModuleSymbol module) {
@@ -460,37 +461,15 @@ public class NamedTypeSymbol extends TypeSymbol {
     }
 
     public static NamedTypeSymbol create(
-        TypeSig typeSig, TypeSymbol[] mvars, TypeSymbol[] vars, ModuleSymbol module) {
-      // TODO: null reference exception might have occured here if TypeSig is not created from CLASS
-      // TODO: resolve for other types (SZARRAY, GENERICINST, ...)
-      if (typeSig.getElementType() == TypeSig.ELEMENT_TYPE_VALUETYPE
-          || typeSig.getElementType() == TypeSig.ELEMENT_TYPE_CLASS)
-        return create(typeSig.getCliTablePtr(), mvars, vars, module);
-      else if (typeSig.getElementType() == TypeSig.ELEMENT_TYPE_VAR) {
-        return (NamedTypeSymbol) vars[typeSig.getIndex()];
-      } else if (typeSig.getElementType() == TypeSig.ELEMENT_TYPE_MVAR) {
-        return (NamedTypeSymbol) mvars[typeSig.getIndex()];
-      } else if (typeSig.getElementType() == TypeSig.ELEMENT_TYPE_GENERICINST) {
-        var genType = create(typeSig.getCliTablePtr(), mvars, vars, module);
-        NamedTypeSymbol[] typeArgs = new NamedTypeSymbol[typeSig.getTypeArgs().length];
-        for (int i = 0; i < typeArgs.length; i++) {
-          typeArgs[i] = create(typeSig.getTypeArgs()[i], mvars, vars, module);
-        }
-        return genType.construct(typeArgs); // TODO: is this correct? @Tomas
-      } else {
-        return null;
-      }
-    }
-
-    public static NamedTypeSymbol create(
         TypeSpecSig typeSig, TypeSymbol[] mvars, TypeSymbol[] vars, ModuleSymbol module) {
       // TODO: null reference exception might have occured here if TypeSig is not created from CLASS
       // TODO: resolve for other types (SZARRAY, GENERICINST, ...)
       if (typeSig.getFlag().getFlag() == ElementTypeFlag.Flag.ELEMENT_TYPE_GENERICINST) {
         NamedTypeSymbol genType = create(typeSig.getGenType(), mvars, vars, module);
-        NamedTypeSymbol[] typeArgs = new NamedTypeSymbol[typeSig.getTypeArgs().length];
+        TypeSymbol[] typeArgs = new NamedTypeSymbol[typeSig.getTypeArgs().length];
         for (int i = 0; i < typeArgs.length; i++) {
-          typeArgs[i] = create(typeSig.getTypeArgs()[i], mvars, vars, module);
+          typeArgs[i] =
+              TypeSymbol.TypeSymbolFactory.create(typeSig.getTypeArgs()[i], mvars, vars, module);
         }
         return genType.construct(typeArgs); // TODO: is this correct? @Tomas
       } else if (typeSig.getFlag().getFlag() == ElementTypeFlag.Flag.ELEMENT_TYPE_MVAR) {
