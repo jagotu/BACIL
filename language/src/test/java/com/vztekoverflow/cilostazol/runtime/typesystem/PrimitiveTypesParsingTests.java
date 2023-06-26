@@ -12,6 +12,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 public class PrimitiveTypesParsingTests extends TestBase {
 
+  private final String coreLibPath = _directory + "/dlls";
   public static Stream<Arguments> provideNumericPrimitiveTypesData() {
     return Stream.of(
         Arguments.of("ByteClass", "Byte", "System"),
@@ -43,7 +44,7 @@ public class PrimitiveTypesParsingTests extends TestBase {
         init(
             new Path[] {
               getDllPath(projectName).getParent(),
-              Path.of("C:\\Users\\klepr\\source\\repos\\Softwerak\\Microsoft.NETCore.App\\6.0.10")
+              Path.of(coreLibPath)
             });
     AssemblyIdentity assemblyIdentity = getAssemblyID(projectName);
 
@@ -69,7 +70,7 @@ public class PrimitiveTypesParsingTests extends TestBase {
         init(
             new Path[] {
               getDllPath(projectName).getParent(),
-              Path.of("C:\\Users\\klepr\\source\\repos\\Softwerak\\Microsoft.NETCore.App\\6.0.10")
+              Path.of(coreLibPath)
             });
     AssemblyIdentity assemblyIdentity = getAssemblyID(projectName);
 
@@ -113,7 +114,7 @@ public class PrimitiveTypesParsingTests extends TestBase {
         init(
             new Path[] {
               getDllPath(projectName).getParent(),
-              Path.of("C:\\Users\\klepr\\source\\repos\\Softwerak\\Microsoft.NETCore.App\\6.0.10")
+              Path.of(coreLibPath)
             });
     AssemblyIdentity assemblyIdentity = getAssemblyID(projectName);
 
@@ -149,7 +150,7 @@ public class PrimitiveTypesParsingTests extends TestBase {
         init(
             new Path[] {
               getDllPath(projectName).getParent(),
-              Path.of("C:\\Users\\klepr\\source\\repos\\Softwerak\\Microsoft.NETCore.App\\6.0.10")
+              Path.of(coreLibPath)
             });
     AssemblyIdentity assemblyIdentity = getAssemblyID(projectName);
 
@@ -174,7 +175,7 @@ public class PrimitiveTypesParsingTests extends TestBase {
         init(
             new Path[] {
               getDllPath(projectName).getParent(),
-              Path.of("C:\\Users\\klepr\\source\\repos\\Softwerak\\Microsoft.NETCore.App\\6.0.10")
+              Path.of(coreLibPath)
             });
     AssemblyIdentity assemblyIdentity = getAssemblyID(projectName);
 
@@ -211,7 +212,7 @@ public class PrimitiveTypesParsingTests extends TestBase {
         init(
             new Path[] {
               getDllPath(projectName).getParent(),
-              Path.of("C:\\Users\\klepr\\source\\repos\\Softwerak\\Microsoft.NETCore.App\\6.0.10")
+              Path.of(coreLibPath)
             });
     AssemblyIdentity assemblyIdentity = getAssemblyID(projectName);
 
