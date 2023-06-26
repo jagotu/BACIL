@@ -2,7 +2,6 @@ package com.vztekoverflow.cilostazol.runtime.other;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
-
 import java.util.function.Supplier;
 
 public class ContextProviderImpl implements ContextProvider {
