@@ -36,8 +36,8 @@ public class NamedTypeSymbol extends TypeSymbol {
   protected final String name;
   protected final String namespace;
 
-  @CompilerDirectives.CompilationFinal protected TypeSymbol lazyDirectBaseClass;
-  @CompilerDirectives.CompilationFinal protected TypeSymbol[] lazyInterfaces;
+  @CompilerDirectives.CompilationFinal protected NamedTypeSymbol lazyDirectBaseClass;
+  @CompilerDirectives.CompilationFinal protected NamedTypeSymbol[] lazyInterfaces;
   @CompilerDirectives.CompilationFinal protected MethodSymbol[] lazyMethods;
   @CompilerDirectives.CompilationFinal protected MethodSymbol[] lazyVMethodTable;
   @CompilerDirectives.CompilationFinal protected FieldSymbol[] lazyFields;
@@ -90,7 +90,7 @@ public class NamedTypeSymbol extends TypeSymbol {
     return namespace;
   }
 
-  public TypeSymbol getDirectBaseClass() {
+  public NamedTypeSymbol getDirectBaseClass() {
     if (lazyDirectBaseClass == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       lazyDirectBaseClass = LazyFactory.createDirectBaseClass(this);
@@ -99,7 +99,7 @@ public class NamedTypeSymbol extends TypeSymbol {
     return lazyDirectBaseClass;
   }
 
-  public TypeSymbol[] getInterfaces() {
+  public NamedTypeSymbol[] getInterfaces() {
     if (lazyInterfaces == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       lazyInterfaces = LazyFactory.createInterfaces(this);
@@ -218,6 +218,7 @@ public class NamedTypeSymbol extends TypeSymbol {
   public boolean isTypeForwarder() {
     return (flags & IS_TYPE_FORWARDER_FLAG_MASK) != 0;
   }
+  // endregion
 
   private static class LazyFactory {
     private static MethodSymbol[] createMethods(NamedTypeSymbol symbol, CLITypeDefTableRow row) {
@@ -257,8 +258,8 @@ public class NamedTypeSymbol extends TypeSymbol {
       return methods.toArray(MethodSymbol[]::new);
     }
 
-    private static TypeSymbol[] createInterfaces(NamedTypeSymbol symbol) {
-      List<TypeSymbol> interfaces = new ArrayList<>();
+    private static NamedTypeSymbol[] createInterfaces(NamedTypeSymbol symbol) {
+      List<NamedTypeSymbol> interfaces = new ArrayList<>();
       for (var interfaceRow :
           symbol.definingModule.getDefiningFile().getTableHeads().getInterfaceImplTableHead()) {
         if (interfaceExtendsClass(
@@ -267,7 +268,7 @@ public class NamedTypeSymbol extends TypeSymbol {
         }
       }
 
-      return interfaces.toArray(new TypeSymbol[0]);
+      return interfaces.toArray(new NamedTypeSymbol[0]);
     }
 
     static boolean interfaceExtendsClass(
@@ -296,13 +297,13 @@ public class NamedTypeSymbol extends TypeSymbol {
           && extendingClassNamespace.equals(potentialClassNamespace);
     }
 
-    static TypeSymbol getInterface(CLIInterfaceImplTableRow row, ModuleSymbol module) {
+    static NamedTypeSymbol getInterface(CLIInterfaceImplTableRow row, ModuleSymbol module) {
       CLITablePtr tablePtr = row.getInterfaceTablePtr();
       assert tablePtr != null; // Should never should be
       return NamedTypeSymbolFactory.create(tablePtr, new TypeSymbol[0], new TypeSymbol[0], module);
     }
 
-    public static TypeSymbol createDirectBaseClass(NamedTypeSymbol namedTypeSymbol) {
+    public static NamedTypeSymbol createDirectBaseClass(NamedTypeSymbol namedTypeSymbol) {
       CLITablePtr baseClassPtr =
           namedTypeSymbol
               .definingModule
@@ -359,11 +360,11 @@ public class NamedTypeSymbol extends TypeSymbol {
     public static NamedTypeSymbol create(
         CLITablePtr ptr, TypeSymbol[] mvars, TypeSymbol[] vars, ModuleSymbol module) {
       return switch (ptr.getTableId()) {
-        case CLITableConstants.CLI_TABLE_TYPE_DEF -> NamedTypeSymbolFactory.create(
+        case CLITableConstants.CLI_TABLE_TYPE_DEF -> create(
             module.getDefiningFile().getTableHeads().getTypeDefTableHead().skip(ptr), module);
-        case CLITableConstants.CLI_TABLE_TYPE_REF -> NamedTypeSymbolFactory.create(
+        case CLITableConstants.CLI_TABLE_TYPE_REF -> create(
             module.getDefiningFile().getTableHeads().getTypeRefTableHead().skip(ptr), module);
-        case CLITableConstants.CLI_TABLE_TYPE_SPEC -> NamedTypeSymbolFactory.create(
+        case CLITableConstants.CLI_TABLE_TYPE_SPEC -> create(
             module.getDefiningFile().getTableHeads().getTypeSpecTableHead().skip(ptr),
             mvars,
             vars,
@@ -445,7 +446,7 @@ public class NamedTypeSymbol extends TypeSymbol {
         // referencedAssemblyIdentity.toString())
         return null;
       }
-      return referencedAssembly.getLocalType(namespace, name);
+      return referencedAssembly.getLocalType(name, namespace);
     }
 
     public static NamedTypeSymbol create(CLITypeDefTableRow row, ModuleSymbol module) {

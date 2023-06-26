@@ -2,13 +2,12 @@ package com.vztekoverflow.cilostazol.runtime.typesystem;
 
 import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cilostazol.CILOSTAZOLLanguage;
+import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
+import com.vztekoverflow.cilostazol.runtime.other.ContextProviderImpl;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
-import com.vztekoverflow.cilostazol.runtime.other.ContextProviderImpl;
 import junit.framework.TestCase;
 import org.graalvm.polyglot.Source;
 

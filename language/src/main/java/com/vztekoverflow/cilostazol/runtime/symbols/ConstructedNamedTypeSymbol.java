@@ -31,7 +31,7 @@ public final class ConstructedNamedTypeSymbol extends NamedTypeSymbol {
 
   // region Getters
   @Override
-  public TypeSymbol getDirectBaseClass() {
+  public NamedTypeSymbol getDirectBaseClass() {
     if (lazyDirectBaseClass == null) {
       lazyDirectBaseClass = map.substitute(constructedFrom.getDirectBaseClass());
     }
@@ -40,12 +40,12 @@ public final class ConstructedNamedTypeSymbol extends NamedTypeSymbol {
   }
 
   @Override
-  public TypeSymbol[] getInterfaces() {
+  public NamedTypeSymbol[] getInterfaces() {
     if (lazyInterfaces == null) {
       lazyInterfaces =
           Arrays.stream(constructedFrom.getInterfaces())
               .map(x -> map.substitute(x))
-              .toArray(TypeSymbol[]::new);
+              .toArray(NamedTypeSymbol[]::new);
     }
 
     return lazyInterfaces;
