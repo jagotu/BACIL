@@ -1,43 +1,31 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem;
 
-import com.vztekoverflow.cilostazol.CILOSTAZOLLanguage;
+import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
-import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.AppDomain;
-import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.IAppDomain;
-import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.Assembly;
-import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.IAssembly;
-import com.vztekoverflow.cilostazol.runtime.typesystem.field.FieldVisibility;
-import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
+import com.vztekoverflow.cilostazol.runtime.symbols.NamedTypeSymbol;
+import com.vztekoverflow.cilostazol.runtime.symbols.utils.FieldSymbolVisibility;
 import java.nio.file.Path;
 import java.util.Arrays;
-import org.graalvm.polyglot.Source;
 
 public class FieldParsingTests extends TestBase {
 
-  @SuppressWarnings("OptionalGetWithoutIsPresent")
-  public void testFieldParsing_General() throws Exception {
+  public void testFieldParsing_General() {
     final String projectName = "FieldTest";
-    Source source = getSourceFromProject(projectName);
+    CILOSTAZOLContext ctx = init(new Path[] {getDllPath(projectName).getParent()});
+    AssemblyIdentity assemblyIdentity = getAssemblyID(projectName);
 
-    CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
-    CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
-    IAppDomain domain = new AppDomain(ctx);
-    IAssembly assembly = Assembly.parse(domain, source);
-    IType type = assembly.getLocalType(projectName, "Class");
+    var type = ctx.getType("Class", projectName, assemblyIdentity);
 
     assertEquals(9, type.getFields().length);
   }
 
   @SuppressWarnings("OptionalGetWithoutIsPresent")
-  public void testFieldParsing_Types() throws Exception {
+  public void testFieldParsing_Types() {
     final String projectName = "FieldTest";
-    Source source = getSourceFromProject(projectName);
+    CILOSTAZOLContext ctx = init(new Path[] {getDllPath(projectName).getParent()});
+    AssemblyIdentity assemblyIdentity = getAssemblyID(projectName);
 
-    CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
-    CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
-    IAppDomain domain = new AppDomain(ctx);
-    IAssembly assembly = Assembly.parse(domain, source);
-    IType type = assembly.getLocalType(projectName, "Class");
+    var type = ctx.getType("Class", projectName, assemblyIdentity);
 
     assertTrue(Arrays.stream(type.getFields()).anyMatch(f -> f.getName().equals("fieldClass2")));
     var fieldClass2Type =
@@ -46,19 +34,18 @@ public class FieldParsingTests extends TestBase {
             .findFirst()
             .get()
             .getType();
-    assertEquals("Class1", fieldClass2Type.getName());
+
+    assertTrue(fieldClass2Type instanceof NamedTypeSymbol);
+    assertEquals("Class1", ((NamedTypeSymbol)fieldClass2Type).getName());
   }
 
   @SuppressWarnings("OptionalGetWithoutIsPresent")
-  public void testFieldParsing_Staticness() throws Exception {
+  public void testFieldParsing_Staticness() {
     final String projectName = "FieldTest";
-    Source source = getSourceFromProject(projectName);
+    CILOSTAZOLContext ctx = init(new Path[] {getDllPath(projectName).getParent()});
+    AssemblyIdentity assemblyIdentity = getAssemblyID(projectName);
 
-    CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
-    CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
-    IAppDomain domain = new AppDomain(ctx);
-    IAssembly assembly = Assembly.parse(domain, source);
-    IType type = assembly.getLocalType(projectName, "Class");
+    var type = ctx.getType("Class", projectName, assemblyIdentity);
 
     assertFalse(
         Arrays.stream(type.getFields())
@@ -75,15 +62,12 @@ public class FieldParsingTests extends TestBase {
   }
 
   @SuppressWarnings("OptionalGetWithoutIsPresent")
-  public void testFieldParsing_Visibility() throws Exception {
+  public void testFieldParsing_Visibility() {
     final String projectName = "FieldTest";
-    Source source = getSourceFromProject(projectName);
+    CILOSTAZOLContext ctx = init(new Path[] {getDllPath(projectName).getParent()});
+    AssemblyIdentity assemblyIdentity = getAssemblyID(projectName);
 
-    CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
-    CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
-    IAppDomain domain = new AppDomain(ctx);
-    IAssembly assembly = Assembly.parse(domain, source);
-    IType type = assembly.getLocalType(projectName, "Class");
+    var type = ctx.getType("Class", projectName, assemblyIdentity);
 
     assertTrue(Arrays.stream(type.getFields()).anyMatch(f -> f.getName().equals("fieldPrivate")));
     var fieldPrivate =
@@ -91,7 +75,7 @@ public class FieldParsingTests extends TestBase {
             .filter(f -> f.getName().equals("fieldPrivate"))
             .findFirst()
             .get();
-    assertEquals(FieldVisibility.Private, fieldPrivate.getVisibility());
+    assertEquals(FieldSymbolVisibility.Private, fieldPrivate.getVisibility());
 
     assertTrue(Arrays.stream(type.getFields()).anyMatch(f -> f.getName().equals("fieldPublic")));
     var fieldPublic =
@@ -99,7 +83,7 @@ public class FieldParsingTests extends TestBase {
             .filter(f -> f.getName().equals("fieldPublic"))
             .findFirst()
             .get();
-    assertEquals(FieldVisibility.Public, fieldPublic.getVisibility());
+    assertEquals(FieldSymbolVisibility.Public, fieldPublic.getVisibility());
 
     assertTrue(Arrays.stream(type.getFields()).anyMatch(f -> f.getName().equals("fieldInternal")));
     var fieldInternal =
@@ -107,7 +91,7 @@ public class FieldParsingTests extends TestBase {
             .filter(f -> f.getName().equals("fieldInternal"))
             .findFirst()
             .get();
-    assertEquals(FieldVisibility.Assembly, fieldInternal.getVisibility());
+    assertEquals(FieldSymbolVisibility.Assembly, fieldInternal.getVisibility());
 
     assertTrue(Arrays.stream(type.getFields()).anyMatch(f -> f.getName().equals("fieldProtected")));
     var fieldProtected =
@@ -115,7 +99,7 @@ public class FieldParsingTests extends TestBase {
             .filter(f -> f.getName().equals("fieldProtected"))
             .findFirst()
             .get();
-    assertEquals(FieldVisibility.Family, fieldProtected.getVisibility());
+    assertEquals(FieldSymbolVisibility.Family, fieldProtected.getVisibility());
 
     assertTrue(
         Arrays.stream(type.getFields())
@@ -125,7 +109,7 @@ public class FieldParsingTests extends TestBase {
             .filter(f -> f.getName().equals("fieldProtectedInternal"))
             .findFirst()
             .get();
-    assertEquals(FieldVisibility.FamORAssem, fieldProtectedInternal.getVisibility());
+    assertEquals(FieldSymbolVisibility.FamORAssem, fieldProtectedInternal.getVisibility());
 
     assertTrue(
         Arrays.stream(type.getFields()).anyMatch(f -> f.getName().equals("fieldPrivateProtected")));
@@ -134,19 +118,16 @@ public class FieldParsingTests extends TestBase {
             .filter(f -> f.getName().equals("fieldPrivateProtected"))
             .findFirst()
             .get();
-    assertEquals(FieldVisibility.FamANDAssem, fieldPrivateProtected.getVisibility());
+    assertEquals(FieldSymbolVisibility.FamANDAssem, fieldPrivateProtected.getVisibility());
   }
 
   @SuppressWarnings("OptionalGetWithoutIsPresent")
   public void testFieldParsing_SelfType() throws Exception {
     final String projectName = "FieldTest";
-    Source source = getSourceFromProject(projectName);
+    CILOSTAZOLContext ctx = init(new Path[] {getDllPath(projectName).getParent()});
+    AssemblyIdentity assemblyIdentity = getAssemblyID(projectName);
 
-    CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
-    CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
-    IAppDomain domain = new AppDomain(ctx);
-    IAssembly assembly = Assembly.parse(domain, source);
-    IType type = assembly.getLocalType(projectName, "Class");
+    var type = ctx.getType("Class", projectName, assemblyIdentity);
 
     assertTrue(Arrays.stream(type.getFields()).anyMatch(f -> f.getName().equals("fieldSelf")));
     var fieldSelf =
@@ -155,7 +136,8 @@ public class FieldParsingTests extends TestBase {
             .findFirst()
             .get();
     var selfType = fieldSelf.getType();
-    assertEquals(type.getName(), selfType.getName());
-    assertEquals(type.getNamespace(), selfType.getNamespace());
+    assertTrue(selfType instanceof NamedTypeSymbol);
+    assertEquals(type.getName(), ((NamedTypeSymbol)selfType).getName());
+    assertEquals(type.getNamespace(), ((NamedTypeSymbol)selfType).getNamespace());
   }
 }
