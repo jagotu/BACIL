@@ -3,6 +3,7 @@ package com.vztekoverflow.cilostazol.runtime.symbols;
 import com.vztekoverflow.cil.parser.cli.signature.FieldSig;
 import com.vztekoverflow.cil.parser.cli.signature.SignatureReader;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIFieldTableRow;
+import com.vztekoverflow.cilostazol.meta.SystemTypes;
 import com.vztekoverflow.cilostazol.runtime.other.ContextProviderImpl;
 import com.vztekoverflow.cilostazol.runtime.symbols.utils.FieldSymbolVisibility;
 
@@ -12,6 +13,7 @@ public final class FieldSymbol extends Symbol {
   private final TypeSymbol type;
   private final short flags;
   private final short visibilityFlags;
+  private final TypeSymbol declaringType;
 
   private FieldSymbol(String name, TypeSymbol type, short flags, short visibilityFlags) {
     super(ContextProviderImpl.getInstance());
@@ -19,6 +21,8 @@ public final class FieldSymbol extends Symbol {
     this.type = type;
     this.flags = flags;
     this.visibilityFlags = visibilityFlags;
+    // TODO:
+    this.declaringType = null;
   }
 
   public String getName() {
@@ -51,6 +55,14 @@ public final class FieldSymbol extends Symbol {
 
   public FieldSymbolVisibility getVisibility() {
     return FieldSymbolVisibility.fromFlags(visibilityFlags);
+  }
+
+  public SystemTypes getKind() {
+    return type.getKind();
+  }
+
+  public TypeSymbol getDeclaringType() {
+    return declaringType;
   }
 
   public static class FieldSymbolFactory {

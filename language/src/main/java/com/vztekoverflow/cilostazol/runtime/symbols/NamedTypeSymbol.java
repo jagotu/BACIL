@@ -1,6 +1,8 @@
 package com.vztekoverflow.cilostazol.runtime.symbols;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.staticobject.StaticShape;
 import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cil.parser.cli.signature.ElementTypeFlag;
 import com.vztekoverflow.cil.parser.cli.signature.TypeSpecSig;
@@ -9,13 +11,14 @@ import com.vztekoverflow.cil.parser.cli.table.generated.*;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.exceptions.InvalidCLIException;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
+import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticField;
+import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.symbols.utils.NamedTypeSymbolLayout;
 import com.vztekoverflow.cilostazol.runtime.symbols.utils.NamedTypeSymbolSemantics;
 import com.vztekoverflow.cilostazol.runtime.symbols.utils.NamedTypeSymbolVisibility;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
-import com.vztekoverflow.cilostazol.runtime.typesystem.type.TypeLayout;
-import com.vztekoverflow.cilostazol.runtime.typesystem.type.TypeSemantics;
-import com.vztekoverflow.cilostazol.runtime.typesystem.type.TypeVisibility;
+import com.vztekoverflow.cilostazol.runtime.typesystem.type.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,15 +33,38 @@ public class NamedTypeSymbol extends TypeSymbol {
   private static final int HAS_SECURITY_FLAG_MASK = 0x40000;
   private static final int IS_TYPE_FORWARDER_FLAG_MASK = 0x200000;
 
+  @CompilerDirectives.CompilationFinal
+  private StaticShape<StaticObject.StaticObjectFactory> instanceShape;
+
+  @CompilerDirectives.CompilationFinal
+  private StaticShape<StaticObject.StaticObjectFactory> staticShape;
+
+  @CompilerDirectives.CompilationFinal(dimensions = 1)
+  private StaticField[] instanceFields;
+
+  @CompilerDirectives.CompilationFinal(dimensions = 1)
+  private StaticField[] staticFields;
+
+  @CompilerDirectives.CompilationFinal private NamedTypeSymbol superClass;
+
   protected final int flags;
   protected final String name;
   protected final String namespace;
 
   @CompilerDirectives.CompilationFinal protected NamedTypeSymbol lazyDirectBaseClass;
-  @CompilerDirectives.CompilationFinal protected NamedTypeSymbol[] lazyInterfaces;
-  @CompilerDirectives.CompilationFinal protected MethodSymbol[] lazyMethods;
-  @CompilerDirectives.CompilationFinal protected MethodSymbol[] lazyVMethodTable;
-  @CompilerDirectives.CompilationFinal protected FieldSymbol[] lazyFields;
+
+  @CompilerDirectives.CompilationFinal(dimensions = 1)
+  protected NamedTypeSymbol[] lazyInterfaces;
+
+  @CompilerDirectives.CompilationFinal(dimensions = 1)
+  protected MethodSymbol[] lazyMethods;
+
+  @CompilerDirectives.CompilationFinal(dimensions = 1)
+  protected MethodSymbol[] lazyVMethodTable;
+
+  @CompilerDirectives.CompilationFinal(dimensions = 1)
+  protected FieldSymbol[] lazyFields;
+
   protected final TypeParameterSymbol[] typeParameters;
   protected final TypeMap map;
   protected final CLITablePtr definingRow;
@@ -181,6 +207,7 @@ public class NamedTypeSymbol extends TypeSymbol {
     return (flags & ABSTRACT_FLAG_MASK) != 0;
   }
 
+  @Override
   public boolean isInterface() {
     return getSemantics() == NamedTypeSymbolSemantics.Interface;
   }
@@ -234,7 +261,51 @@ public class NamedTypeSymbol extends TypeSymbol {
     }
     return super.equals(obj);
   }
+
+  @Override
+  public Symbol getType() {
+    return NamedTypeSymbol.this;
+  }
+
   // endregion
+
+  public StaticShape<StaticObject.StaticObjectFactory> getShape(boolean isStatic) {
+    if (isStatic && staticShape == null || !isStatic && instanceShape == null) {
+      createShapes();
+    }
+
+    return isStatic ? staticShape : instanceShape;
+  }
+
+  public StaticField[] getInstanceFields() {
+    if (instanceShape == null) {
+      createShapes();
+    }
+
+    return instanceFields;
+  }
+
+  public StaticField[] getStaticFields() {
+    if (staticFields == null) {
+      createShapes();
+    }
+
+    return staticFields;
+  }
+
+  // TODO
+  public void safelyInitialize() {}
+
+  private void createShapes() {
+    // TODO: Is this invalidation necessary when initializing CompilationFinal fields?
+    CompilerDirectives.transferToInterpreterAndInvalidate();
+
+    LinkedFieldLayout layout = new LinkedFieldLayout(getContext(), this, superClass);
+    instanceShape = layout.instanceShape;
+    staticShape = layout.staticShape;
+    instanceFields = layout.instanceFields;
+    staticFields = layout.staticFields;
+  }
 
   private static class LazyFactory {
     private static MethodSymbol[] createMethods(NamedTypeSymbol symbol, CLITypeDefTableRow row) {
