@@ -13,6 +13,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 public class PrimitiveTypesParsingTests extends TestBase {
 
   private final String coreLibPath = _directory + "/dlls";
+
   public static Stream<Arguments> provideNumericPrimitiveTypesData() {
     return Stream.of(
         Arguments.of("ByteClass", "Byte", "System"),
@@ -41,11 +42,7 @@ public class PrimitiveTypesParsingTests extends TestBase {
   public void testStructInheritance() {
     final String projectName = "PrimitiveTypesTest";
     CILOSTAZOLContext ctx =
-        init(
-            new Path[] {
-              getDllPath(projectName).getParent(),
-              Path.of(coreLibPath)
-            });
+        init(new Path[] {getDllPath(projectName).getParent(), Path.of(coreLibPath)});
     AssemblyIdentity assemblyIdentity = getAssemblyID(projectName);
 
     var type = ctx.getType("IntClass", projectName, assemblyIdentity);
@@ -67,11 +64,7 @@ public class PrimitiveTypesParsingTests extends TestBase {
   public void testInt() {
     final String projectName = "PrimitiveTypesTest";
     CILOSTAZOLContext ctx =
-        init(
-            new Path[] {
-              getDllPath(projectName).getParent(),
-              Path.of(coreLibPath)
-            });
+        init(new Path[] {getDllPath(projectName).getParent(), Path.of(coreLibPath)});
     AssemblyIdentity assemblyIdentity = getAssemblyID(projectName);
 
     var type = ctx.getType("IntClass", projectName, assemblyIdentity);
@@ -111,11 +104,7 @@ public class PrimitiveTypesParsingTests extends TestBase {
   public void testUInt() {
     final String projectName = "PrimitiveTypesTest";
     CILOSTAZOLContext ctx =
-        init(
-            new Path[] {
-              getDllPath(projectName).getParent(),
-              Path.of(coreLibPath)
-            });
+        init(new Path[] {getDllPath(projectName).getParent(), Path.of(coreLibPath)});
     AssemblyIdentity assemblyIdentity = getAssemblyID(projectName);
 
     var type = ctx.getType("UIntClass", projectName, assemblyIdentity);
@@ -147,11 +136,7 @@ public class PrimitiveTypesParsingTests extends TestBase {
   public void testVoid() {
     final String projectName = "PrimitiveTypesTest";
     CILOSTAZOLContext ctx =
-        init(
-            new Path[] {
-              getDllPath(projectName).getParent(),
-              Path.of(coreLibPath)
-            });
+        init(new Path[] {getDllPath(projectName).getParent(), Path.of(coreLibPath)});
     AssemblyIdentity assemblyIdentity = getAssemblyID(projectName);
 
     var type = ctx.getType("VoidClass", projectName, assemblyIdentity);
@@ -172,11 +157,7 @@ public class PrimitiveTypesParsingTests extends TestBase {
       String classname, String expectedTypeName, String expectedTypeNamespace) {
     final String projectName = "PrimitiveTypesTest";
     CILOSTAZOLContext ctx =
-        init(
-            new Path[] {
-              getDllPath(projectName).getParent(),
-              Path.of(coreLibPath)
-            });
+        init(new Path[] {getDllPath(projectName).getParent(), Path.of(coreLibPath)});
     AssemblyIdentity assemblyIdentity = getAssemblyID(projectName);
 
     var type = ctx.getType(classname, projectName, assemblyIdentity);
@@ -209,11 +190,7 @@ public class PrimitiveTypesParsingTests extends TestBase {
       String classname, String expectedTypeName, String expectedTypeNamespace) {
     final String projectName = "PrimitiveTypesTest";
     CILOSTAZOLContext ctx =
-        init(
-            new Path[] {
-              getDllPath(projectName).getParent(),
-              Path.of(coreLibPath)
-            });
+        init(new Path[] {getDllPath(projectName).getParent(), Path.of(coreLibPath)});
     AssemblyIdentity assemblyIdentity = getAssemblyID(projectName);
 
     var type = ctx.getType(classname, projectName, assemblyIdentity);
