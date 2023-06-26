@@ -1,197 +1,143 @@
 package com.vztekoverflow.cilostazol.runtime.typesystem;
 
-import com.vztekoverflow.cilostazol.CILOSTAZOLLanguage;
+import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
-import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.AppDomain;
-import com.vztekoverflow.cilostazol.runtime.typesystem.appdomain.IAppDomain;
-import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.Assembly;
-import com.vztekoverflow.cilostazol.runtime.typesystem.assembly.IAssembly;
-import com.vztekoverflow.cilostazol.runtime.typesystem.generic.Substitution;
-import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
-import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
+import com.vztekoverflow.cilostazol.runtime.symbols.*;
 import java.nio.file.Path;
-import java.util.HashMap;
-import org.graalvm.polyglot.Source;
 
 public class SubstitutionTest extends TestBase {
-  private IAssembly getAssembly() throws Exception {
+  public void testSubTypeParameter() {
     final String projectName = "SubstitutionTest";
+    final CILOSTAZOLContext ctx = init(new Path[] {getDllPath(projectName).getParent()});
+    final AssemblyIdentity assemblyID = getAssemblyID(projectName);
 
-    final CILOSTAZOLLanguage lang = new CILOSTAZOLLanguage();
-    CILOSTAZOLContext ctx = new CILOSTAZOLContext(lang, new Path[0]);
-    Source source = getSourceFromProject(projectName);
-
-    IAppDomain domain = new AppDomain(ctx);
-    IAssembly assembly = Assembly.parse(domain, source);
-    return assembly;
-  }
-
-  private IType getType(IAssembly assembly, String namespace, String klass) {
-    return assembly.getLocalType(namespace, klass);
-  }
-
-  public void testSubTypeParameter() throws Exception {
-    IAssembly assembly = getAssembly();
     // class Accessibility
-    IType typeA1 = getType(assembly, "SubstitutionTest", "A1");
-    IType typeG1 = getType(assembly, "SubstitutionTest", "G1a`1");
+    NamedTypeSymbol typeA1 = ctx.getType("A1", "SubstitutionTest", assemblyID);
+    NamedTypeSymbol typeG1 = ctx.getType("G1a`1", "SubstitutionTest", assemblyID);
 
-    Substitution<IType> substitution1 =
-        new Substitution<>(
-            new HashMap<IType, IType>() {
-              {
-                put(typeG1.getTypeParameters()[0], typeA1);
-              }
-            });
-
-    IType substitutedG1 = typeG1.substitute(substitution1);
-    assertEquals(typeA1, substitutedG1.getTypeParameters()[0]);
+    ConstructedNamedTypeSymbol substitutedG1 = typeG1.construct(new TypeSymbol[] {typeA1});
+    assertEquals(typeA1, substitutedG1.getTypeArguments()[0]);
   }
 
-  public void testSubInheritance() throws Exception {
-    IAssembly assembly = getAssembly();
-    IType typeA1 = getType(assembly, "SubstitutionTest", "A1");
-    IType typeG1 = getType(assembly, "SubstitutionTest", "G1b`1");
+  public void testSubInheritance() {
+    final String projectName = "SubstitutionTest";
+    final CILOSTAZOLContext ctx = init(new Path[] {getDllPath(projectName).getParent()});
+    final AssemblyIdentity assemblyID = getAssemblyID(projectName);
 
-    Substitution<IType> substitution1 =
-        new Substitution<>(
-            new HashMap<IType, IType>() {
-              {
-                put(typeG1.getTypeParameters()[0], typeA1);
-              }
-            });
+    TypeSymbol typeA1 = ctx.getType("A1", "SubstitutionTest", assemblyID);
+    NamedTypeSymbol typeG1 = ctx.getType("G1b`1", "SubstitutionTest", assemblyID);
 
-    IType substitutedG1 = typeG1.substitute(substitution1);
-    IType baseClass = substitutedG1.getDirectBaseClass();
-    assertEquals(baseClass.getTypeParameters()[0], typeA1);
+    ConstructedNamedTypeSymbol substitutedG1 = typeG1.construct(new TypeSymbol[] {typeA1});
+    NamedTypeSymbol baseClass = substitutedG1.getDirectBaseClass();
+    assertEquals(baseClass.getTypeArguments()[0], typeA1);
   }
 
-  public void testSubFields() throws Exception {
-    IAssembly assembly = getAssembly();
-    IType typeA1 = getType(assembly, "SubstitutionTest", "A1");
-    IType typeG1 = getType(assembly, "SubstitutionTest", "G1c`1");
+  public void testSubFields() {
+    final String projectName = "SubstitutionTest";
+    final CILOSTAZOLContext ctx = init(new Path[] {getDllPath(projectName).getParent()});
+    final AssemblyIdentity assemblyID = getAssemblyID(projectName);
 
-    Substitution<IType> substitution1 =
-        new Substitution<>(
-            new HashMap<IType, IType>() {
-              {
-                put(typeG1.getTypeParameters()[0], typeA1);
-              }
-            });
+    NamedTypeSymbol typeA1 = ctx.getType("A1", "SubstitutionTest", assemblyID);
+    NamedTypeSymbol typeG1 = ctx.getType("G1c`1", "SubstitutionTest", assemblyID);
 
-    IType substitutedG1 = typeG1.substitute(substitution1);
-    IType field = substitutedG1.getFields()[0].getType();
+    NamedTypeSymbol substitutedG1 = typeG1.construct(new TypeSymbol[] {typeA1});
+    TypeSymbol field = substitutedG1.getFields()[0].getType();
     assertEquals(typeA1, field);
   }
 
-  public void testSubClassMethod() throws Exception {
-    IAssembly assembly = getAssembly();
-    IType typeA1 = getType(assembly, "SubstitutionTest", "A1");
-    IType typeG1 = getType(assembly, "SubstitutionTest", "G1d`1");
+  public void testSubClassMethod() {
+    final String projectName = "SubstitutionTest";
+    final CILOSTAZOLContext ctx = init(new Path[] {getDllPath(projectName).getParent()});
+    final AssemblyIdentity assemblyID = getAssemblyID(projectName);
 
-    Substitution<IType> substitution1 =
-        new Substitution<>(
-            new HashMap<IType, IType>() {
-              {
-                put(typeG1.getTypeParameters()[0], typeA1);
-              }
-            });
+    NamedTypeSymbol typeA1 = ctx.getType("A1", "SubstitutionTest", assemblyID);
+    NamedTypeSymbol typeG1 = ctx.getType("G1d`1", "SubstitutionTest", assemblyID);
 
-    IType substitutedG1 = typeG1.substitute(substitution1);
-    IMethod method = substitutedG1.getMethods()[0];
+    NamedTypeSymbol substitutedG1 = typeG1.construct(new TypeSymbol[] {typeA1});
+    MethodSymbol method = substitutedG1.getMethods()[0];
     assertEquals(typeA1, method.getParameters()[0].getType());
   }
 
-  public void testNestedInheritance() throws Exception {
-    IAssembly assembly = getAssembly();
-    IType typeA1 = getType(assembly, "SubstitutionTest", "A1");
-    IType typeG1 = getType(assembly, "SubstitutionTest", "G1e`1");
+  public void testNestedInheritance() {
+    final String projectName = "SubstitutionTest";
+    final CILOSTAZOLContext ctx = init(new Path[] {getDllPath(projectName).getParent()});
+    final AssemblyIdentity assemblyID = getAssemblyID(projectName);
 
-    Substitution<IType> substitution1 =
-        new Substitution<>(
-            new HashMap<IType, IType>() {
-              {
-                put(typeG1.getTypeParameters()[0], typeA1);
-              }
-            });
+    NamedTypeSymbol typeA1 = ctx.getType("A1", "SubstitutionTest", assemblyID);
+    NamedTypeSymbol typeG1 = ctx.getType("G1e`1", "SubstitutionTest", assemblyID);
 
-    IType substitutedG1 = typeG1.substitute(substitution1);
-    IType typeParam =
-        substitutedG1.getDirectBaseClass().getTypeParameters()[0].getTypeParameters()[0];
+    NamedTypeSymbol substitutedG1 = typeG1.construct(new TypeSymbol[] {typeA1});
+    TypeSymbol typeParam =
+        ((NamedTypeSymbol) (substitutedG1.getDirectBaseClass().getTypeArguments()[0]))
+            .getTypeArguments()[0];
     assertEquals(typeA1, typeParam);
   }
 
-  public void testMethodRetParam() throws Exception {
-    IAssembly assembly = getAssembly();
-    IType typeA1 = getType(assembly, "SubstitutionTest", "A1");
-    IType typeMethod = getType(assembly, "SubstitutionTest", "Methods");
-    IMethod method = typeMethod.getMethods()[2];
+  public void testMethodRetParam() {
+    final String projectName = "SubstitutionTest";
+    final CILOSTAZOLContext ctx = init(new Path[] {getDllPath(projectName).getParent()});
+    final AssemblyIdentity assemblyID = getAssemblyID(projectName);
 
-    Substitution<IType> substitution1 =
-        new Substitution<>(
-            new HashMap<IType, IType>() {
-              {
-                put(method.getTypeParameters()[0], typeA1);
-              }
-            });
+    NamedTypeSymbol typeA1 = ctx.getType("A1", "SubstitutionTest", assemblyID);
+    NamedTypeSymbol typeMethod = ctx.getType("Methods", "SubstitutionTest", assemblyID);
+    MethodSymbol method = typeMethod.getMethods()[2];
 
-    IMethod substitutedMethod = method.substitute(substitution1);
+    MethodSymbol substitutedMethod = method.construct(new TypeSymbol[] {typeA1});
     assertEquals(typeA1, substitutedMethod.getReturnType().getType());
   }
 
-  public void testMethodSubLocals() throws Exception {
-    IAssembly assembly = getAssembly();
-    IType typeA1 = getType(assembly, "SubstitutionTest", "A1");
-    IType typeMethod = getType(assembly, "SubstitutionTest", "Methods");
-    IMethod method = typeMethod.getMethods()[3];
+  public void testMethodSubLocals() {
+    final String projectName = "SubstitutionTest";
+    final CILOSTAZOLContext ctx = init(new Path[] {getDllPath(projectName).getParent()});
+    final AssemblyIdentity assemblyID = getAssemblyID(projectName);
 
-    Substitution<IType> substitution1 =
-        new Substitution<>(
-            new HashMap<IType, IType>() {
-              {
-                put(method.getTypeParameters()[0], typeA1);
-              }
-            });
+    NamedTypeSymbol typeA1 = ctx.getType("A1", "SubstitutionTest", assemblyID);
+    NamedTypeSymbol typeMethod = ctx.getType("Methods", "SubstitutionTest", assemblyID);
+    MethodSymbol method = typeMethod.getMethods()[3];
 
-    IMethod substitutedMethod = method.substitute(substitution1);
+    MethodSymbol substitutedMethod = method.construct(new TypeSymbol[] {typeA1});
     assertEquals(typeA1, substitutedMethod.getLocals()[0].getType());
   }
 
-  public void testMethodSubTryBlock() throws Exception {
-    IAssembly assembly = getAssembly();
-    IType typeA1 = getType(assembly, "SubstitutionTest", "A1");
-    IType typeMethod = getType(assembly, "SubstitutionTest", "Methods");
-    IMethod method = typeMethod.getMethods()[4];
+  public void testMethodSubTryBlock() {
+    final String projectName = "SubstitutionTest";
+    final CILOSTAZOLContext ctx = init(new Path[] {getDllPath(projectName).getParent()});
+    final AssemblyIdentity assemblyID = getAssemblyID(projectName);
 
-    Substitution<IType> substitution1 =
-        new Substitution<>(
-            new HashMap<IType, IType>() {
-              {
-                put(method.getTypeParameters()[0], typeA1);
-              }
-            });
+    NamedTypeSymbol typeA1 = ctx.getType("A1", "SubstitutionTest", assemblyID);
+    NamedTypeSymbol typeMethod = ctx.getType("Methods", "SubstitutionTest", assemblyID);
+    MethodSymbol method = typeMethod.getMethods()[4];
 
-    IMethod substitutedMethod = method.substitute(substitution1);
-    assertEquals(typeA1, substitutedMethod.getExceptionHandlers()[0].getHandlingException());
+    MethodSymbol substitutedMethod = method.construct(new TypeSymbol[] {typeA1});
+    assertEquals(typeA1, substitutedMethod.getExceptionHandlers()[0].getHandlerException());
   }
 
-  public void testMethodSubContraint() throws Exception {
-    IAssembly assembly = getAssembly();
-    IType typeA1 = getType(assembly, "SubstitutionTest", "A1");
-    IType typeMethod = getType(assembly, "SubstitutionTest", "Methods");
-    IMethod method = typeMethod.getMethods()[5];
+  public void testMethodSubContraint() {
+    final String projectName = "SubstitutionTest";
+    final CILOSTAZOLContext ctx = init(new Path[] {getDllPath(projectName).getParent()});
+    final AssemblyIdentity assemblyID = getAssemblyID(projectName);
 
-    Substitution<IType> substitution1 =
-        new Substitution<>(
-            new HashMap<IType, IType>() {
-              {
-                put(method.getTypeParameters()[0], typeA1);
-              }
-            });
+    NamedTypeSymbol typeA1 = ctx.getType("A1", "SubstitutionTest", assemblyID);
+    NamedTypeSymbol typeMethod = ctx.getType("Methods", "SubstitutionTest", assemblyID);
+    MethodSymbol method = typeMethod.getMethods()[5];
 
-    IMethod substitutedMethod = method.substitute(substitution1);
-    // assertEquals(typeA1, substitutedMethod.getTypeParameters()[0]);
+    MethodSymbol substitutedMethod = method.construct(new TypeSymbol[] {typeA1});
+    assertEquals(
+        typeA1,
+        ((NamedTypeSymbol) substitutedMethod.getTypeParameters()[0].getTypeConstrains()[0])
+            .getTypeArguments()[0]);
   }
 
-  public void testSubInterfaceImpl() throws Exception {}
+  public void testSubInterfaceImpl() {
+    final String projectName = "SubstitutionTest";
+    final CILOSTAZOLContext ctx = init(new Path[] {getDllPath(projectName).getParent()});
+    final AssemblyIdentity assemblyID = getAssemblyID(projectName);
+
+    NamedTypeSymbol typeA1 = ctx.getType("A1", "SubstitutionTest", assemblyID);
+    NamedTypeSymbol typeG2a = ctx.getType("G2a`2", "SubstitutionTest", assemblyID);
+
+    NamedTypeSymbol substitutedTypeG2a = typeG2a.construct(new TypeSymbol[] {typeA1, typeA1});
+    assertEquals(typeA1, substitutedTypeG2a.getInterfaces()[0].getTypeArguments()[0]);
+    assertEquals(typeA1, substitutedTypeG2a.getInterfaces()[1].getTypeArguments()[0]);
+  }
 }
