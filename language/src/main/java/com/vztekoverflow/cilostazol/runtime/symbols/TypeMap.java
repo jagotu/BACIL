@@ -1,6 +1,5 @@
 package com.vztekoverflow.cilostazol.runtime.symbols;
 
-import com.vztekoverflow.cilostazol.exceptions.InvalidCLIException;
 import java.util.Arrays;
 import java.util.HashMap;
 
@@ -33,13 +32,26 @@ public class TypeMap {
     return symbol.construct(replacedTypeArgs);
   }
 
+  /**
+   * Substitute all type parameters in the given symbol. Use specific versions when possible: {@link
+   * #substitute(NamedTypeSymbol)} or {@link #substitute(TypeParameterSymbol)}.
+   *
+   * @param symbol where to substitute
+   * @return substituted symbol
+   */
   public TypeSymbol substitute(TypeSymbol symbol) {
     if (symbol instanceof TypeParameterSymbol) {
       return substituteTypeParameter((TypeParameterSymbol) symbol);
-    } else if (symbol instanceof NamedTypeSymbol) {
-      return substituteNamedTypeSymbol((NamedTypeSymbol) symbol);
     } else {
-      throw new InvalidCLIException();
+      return substituteNamedTypeSymbol((NamedTypeSymbol) symbol);
     }
+  }
+
+  public NamedTypeSymbol substitute(NamedTypeSymbol symbol) {
+    return substituteNamedTypeSymbol(symbol);
+  }
+
+  public TypeSymbol substitute(TypeParameterSymbol symbol) {
+    return substituteTypeParameter(symbol);
   }
 }

@@ -36,8 +36,8 @@ public class NamedTypeSymbol extends TypeSymbol {
   protected final String name;
   protected final String namespace;
 
-  @CompilerDirectives.CompilationFinal protected TypeSymbol lazyDirectBaseClass;
-  @CompilerDirectives.CompilationFinal protected TypeSymbol[] lazyInterfaces;
+  @CompilerDirectives.CompilationFinal protected NamedTypeSymbol lazyDirectBaseClass;
+  @CompilerDirectives.CompilationFinal protected NamedTypeSymbol[] lazyInterfaces;
   @CompilerDirectives.CompilationFinal protected MethodSymbol[] lazyMethods;
   @CompilerDirectives.CompilationFinal protected MethodSymbol[] lazyVMethodTable;
   @CompilerDirectives.CompilationFinal protected FieldSymbol[] lazyFields;
@@ -81,6 +81,10 @@ public class NamedTypeSymbol extends TypeSymbol {
     this.map = map;
   }
 
+  public ConstructedNamedTypeSymbol construct(TypeSymbol[] typeArguments) {
+    throw new NotImplementedException();
+  }
+
   // region Getters
   public String getName() {
     return name;
@@ -90,7 +94,7 @@ public class NamedTypeSymbol extends TypeSymbol {
     return namespace;
   }
 
-  public TypeSymbol getDirectBaseClass() {
+  public NamedTypeSymbol getDirectBaseClass() {
     if (lazyDirectBaseClass == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       lazyDirectBaseClass = LazyFactory.createDirectBaseClass(this);
@@ -99,7 +103,7 @@ public class NamedTypeSymbol extends TypeSymbol {
     return lazyDirectBaseClass;
   }
 
-  public TypeSymbol[] getInterfaces() {
+  public NamedTypeSymbol[] getInterfaces() {
     if (lazyInterfaces == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       lazyInterfaces = LazyFactory.createInterfaces(this);
@@ -143,11 +147,6 @@ public class NamedTypeSymbol extends TypeSymbol {
     }
 
     return lazyFields;
-  }
-  // endregion
-
-  public ConstructedNamedTypeSymbol construct(TypeSymbol[] typeArguments) {
-    throw new NotImplementedException();
   }
 
   public TypeSymbol[] getTypeArguments() {
@@ -217,6 +216,7 @@ public class NamedTypeSymbol extends TypeSymbol {
   public boolean isTypeForwarder() {
     return (flags & IS_TYPE_FORWARDER_FLAG_MASK) != 0;
   }
+  // endregion
 
   private static class LazyFactory {
     private static MethodSymbol[] createMethods(NamedTypeSymbol symbol, CLITypeDefTableRow row) {
@@ -256,8 +256,8 @@ public class NamedTypeSymbol extends TypeSymbol {
       return methods.toArray(MethodSymbol[]::new);
     }
 
-    private static TypeSymbol[] createInterfaces(NamedTypeSymbol symbol) {
-      List<TypeSymbol> interfaces = new ArrayList<>();
+    private static NamedTypeSymbol[] createInterfaces(NamedTypeSymbol symbol) {
+      List<NamedTypeSymbol> interfaces = new ArrayList<>();
       for (var interfaceRow :
           symbol.definingModule.getDefiningFile().getTableHeads().getInterfaceImplTableHead()) {
         if (interfaceExtendsClass(
@@ -266,7 +266,7 @@ public class NamedTypeSymbol extends TypeSymbol {
         }
       }
 
-      return interfaces.toArray(new TypeSymbol[0]);
+      return interfaces.toArray(new NamedTypeSymbol[0]);
     }
 
     static boolean interfaceExtendsClass(
@@ -295,13 +295,13 @@ public class NamedTypeSymbol extends TypeSymbol {
           && extendingClassNamespace.equals(potentialClassNamespace);
     }
 
-    static TypeSymbol getInterface(CLIInterfaceImplTableRow row, ModuleSymbol module) {
+    static NamedTypeSymbol getInterface(CLIInterfaceImplTableRow row, ModuleSymbol module) {
       CLITablePtr tablePtr = row.getInterfaceTablePtr();
       assert tablePtr != null; // Should never should be
       return NamedTypeSymbolFactory.create(tablePtr, new TypeSymbol[0], new TypeSymbol[0], module);
     }
 
-    public static TypeSymbol createDirectBaseClass(NamedTypeSymbol namedTypeSymbol) {
+    public static NamedTypeSymbol createDirectBaseClass(NamedTypeSymbol namedTypeSymbol) {
       CLITablePtr baseClassPtr =
           namedTypeSymbol
               .definingModule

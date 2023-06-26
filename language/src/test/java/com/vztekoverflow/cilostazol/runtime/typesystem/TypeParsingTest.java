@@ -56,8 +56,8 @@ public class TypeParsingTest extends TestBase {
     assertEquals("ExtendsTest", type.getNamespace());
     assertEquals("Class", type.getName());
 
-    assertEquals("AClass", ((NamedTypeSymbol) type.getDirectBaseClass()).getName());
-    assertEquals("ExtendsTest", ((NamedTypeSymbol) type.getDirectBaseClass()).getNamespace());
+    assertEquals("AClass", type.getDirectBaseClass().getName());
+    assertEquals("ExtendsTest", type.getDirectBaseClass().getNamespace());
   }
 
   public void testFindLocalType_Interfaces() throws Exception {
