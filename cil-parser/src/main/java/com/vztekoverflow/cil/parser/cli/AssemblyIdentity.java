@@ -56,6 +56,11 @@ public final class AssemblyIdentity {
         row.getNameHeapPtr().read(stringHeap));
   }
 
+  public static AssemblyIdentity SystemPrivateCoreLib() {
+    return new AssemblyIdentity(
+        (short) 7, (short) 0, (short) 0, (short) 0, "System.Private.CoreLib");
+  }
+
   /**
    * Check whether this assembly matches an assembly reference.
    *

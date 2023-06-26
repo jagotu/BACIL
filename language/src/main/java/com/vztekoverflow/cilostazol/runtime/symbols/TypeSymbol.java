@@ -1,5 +1,6 @@
 package com.vztekoverflow.cilostazol.runtime.symbols;
 
+import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cil.parser.cli.signature.SignatureReader;
 import com.vztekoverflow.cil.parser.cli.signature.TypeSig;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
@@ -26,23 +27,78 @@ public abstract class TypeSymbol extends Symbol {
         TypeSig typeSig, TypeSymbol[] mvars, TypeSymbol[] vars, ModuleSymbol module) {
       // TODO: null reference exception might have occured here if TypeSig is not created from CLASS
       // TODO: resolve for other types (SZARRAY, GENERICINST, ...)
-      if (typeSig.getElementType() == TypeSig.ELEMENT_TYPE_VALUETYPE
-          || typeSig.getElementType() == TypeSig.ELEMENT_TYPE_CLASS)
-        return create(typeSig.getCliTablePtr(), mvars, vars, module);
-      else if (typeSig.getElementType() == TypeSig.ELEMENT_TYPE_VAR) {
-        return vars[typeSig.getIndex()];
-      } else if (typeSig.getElementType() == TypeSig.ELEMENT_TYPE_MVAR) {
-        return mvars[typeSig.getIndex()];
-      } else if (typeSig.getElementType() == TypeSig.ELEMENT_TYPE_GENERICINST) {
-        var genType = (NamedTypeSymbol) create(typeSig.getCliTablePtr(), mvars, vars, module);
-        TypeSymbol[] typeArgs = new TypeSymbol[typeSig.getTypeArgs().length];
-        for (int i = 0; i < typeArgs.length; i++) {
-          typeArgs[i] = create(typeSig.getTypeArgs()[i], mvars, vars, module);
+      return switch (typeSig.getElementType()) {
+        case TypeSig.ELEMENT_TYPE_CLASS, TypeSig.ELEMENT_TYPE_VALUETYPE -> create(
+            typeSig.getCliTablePtr(), mvars, vars, module);
+        case TypeSig.ELEMENT_TYPE_VAR -> vars[typeSig.getIndex()];
+        case TypeSig.ELEMENT_TYPE_MVAR -> mvars[typeSig.getIndex()];
+        case TypeSig.ELEMENT_TYPE_GENERICINST -> {
+          var genType = (NamedTypeSymbol) create(typeSig.getCliTablePtr(), mvars, vars, module);
+          TypeSymbol[] typeArgs = new TypeSymbol[typeSig.getTypeArgs().length];
+          for (int i = 0; i < typeArgs.length; i++) {
+            typeArgs[i] = create(typeSig.getTypeArgs()[i], mvars, vars, module);
+          }
+          yield genType.construct(typeArgs);
         }
-        return genType.construct(typeArgs);
-      } else {
-        return null;
-      }
+        case TypeSig.ELEMENT_TYPE_I4 -> module // int
+            .getContext()
+            .getType("Int32", "System", AssemblyIdentity.SystemPrivateCoreLib());
+        case TypeSig.ELEMENT_TYPE_I8 -> module // long
+            .getContext()
+            .getType("Int64", "System", AssemblyIdentity.SystemPrivateCoreLib());
+        case TypeSig.ELEMENT_TYPE_I2 -> module // short
+            .getContext()
+            .getType("Int16", "System", AssemblyIdentity.SystemPrivateCoreLib());
+        case TypeSig.ELEMENT_TYPE_I1 -> module
+            .getContext()
+            .getType("SByte", "System", AssemblyIdentity.SystemPrivateCoreLib());
+        case TypeSig.ELEMENT_TYPE_U4 -> module // uint
+            .getContext()
+            .getType("UInt32", "System", AssemblyIdentity.SystemPrivateCoreLib());
+        case TypeSig.ELEMENT_TYPE_U8 -> module // ulong
+            .getContext()
+            .getType("UInt64", "System", AssemblyIdentity.SystemPrivateCoreLib());
+        case TypeSig.ELEMENT_TYPE_U2 -> module
+            .getContext()
+            .getType("UInt16", "System", AssemblyIdentity.SystemPrivateCoreLib());
+        case TypeSig.ELEMENT_TYPE_U1 -> module
+            .getContext()
+            .getType("Byte", "System", AssemblyIdentity.SystemPrivateCoreLib());
+        case TypeSig.ELEMENT_TYPE_R4 -> module
+            .getContext()
+            .getType("Single", "System", AssemblyIdentity.SystemPrivateCoreLib());
+        case TypeSig.ELEMENT_TYPE_R8 -> module
+            .getContext()
+            .getType("Double", "System", AssemblyIdentity.SystemPrivateCoreLib());
+        case TypeSig.ELEMENT_TYPE_BOOLEAN -> module
+            .getContext()
+            .getType("Boolean", "System", AssemblyIdentity.SystemPrivateCoreLib());
+        case TypeSig.ELEMENT_TYPE_CHAR -> module
+            .getContext()
+            .getType("Char", "System", AssemblyIdentity.SystemPrivateCoreLib());
+        case TypeSig.ELEMENT_TYPE_STRING -> module
+            .getContext()
+            .getType("String", "System", AssemblyIdentity.SystemPrivateCoreLib());
+        case TypeSig.ELEMENT_TYPE_OBJECT -> module
+            .getContext()
+            .getType("Object", "System", AssemblyIdentity.SystemPrivateCoreLib());
+        case TypeSig.ELEMENT_TYPE_VOID -> module
+            .getContext()
+            .getType("Void", "System", AssemblyIdentity.SystemPrivateCoreLib());
+        case TypeSig.ELEMENT_TYPE_TYPEDBYREF -> module
+            .getContext()
+            .getType("TypedReference", "System", AssemblyIdentity.SystemPrivateCoreLib());
+        case TypeSig.ELEMENT_TYPE_I -> module
+            .getContext()
+            .getType("IntPtr", "System", AssemblyIdentity.SystemPrivateCoreLib());
+        case TypeSig.ELEMENT_TYPE_U -> module
+            .getContext()
+            .getType("UIntPtr", "System", AssemblyIdentity.SystemPrivateCoreLib());
+        case TypeSig.ELEMENT_TYPE_FNPTR -> module
+            .getContext()
+            .getType("RuntimeMethodHandle", "System", AssemblyIdentity.SystemPrivateCoreLib());
+        default -> null;
+      };
     }
 
     public static TypeSymbol create(

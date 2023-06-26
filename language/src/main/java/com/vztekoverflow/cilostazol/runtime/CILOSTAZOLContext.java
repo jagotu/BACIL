@@ -29,7 +29,7 @@ public class CILOSTAZOLContext {
   private final CILOSTAZOLLanguage language;
   private final TruffleLanguage.Env env;
 
-  private Map<TypeSymbolCacheKey, NamedTypeSymbol> typeSymbolCache = new HashMap<>();
+  private final Map<TypeSymbolCacheKey, NamedTypeSymbol> typeSymbolCache = new HashMap<>();
   @CompilerDirectives.CompilationFinal private Meta meta;
   private final AppDomain appDomain;
 
@@ -106,9 +106,6 @@ public class CILOSTAZOLContext {
   public AssemblySymbol findAssembly(AssemblyIdentity assemblyIdentity) {
     // Loading assemblies is an expensive task which should be never compiled
     CompilerAsserts.neverPartOfCompilation();
-
-    // TODO: resolve and load PrimitiveTypes
-
     // Locate dlls in paths
     for (Path path : libraryPaths) {
       File file = new File(path.toString() + "/" + assemblyIdentity.getName() + ".dll");
