@@ -152,9 +152,6 @@ public class Field extends StaticProperty implements IField {
 
   @Override
   public final void setObjectValue(StaticObject obj, Object value) {
-    assert getDeclaringType().isAssignableFrom((CLIType) obj.getType())
-        : this + " does not exist in " + obj.getType();
-
     // Call to StaticProperty!
     setObject(obj, value);
   }
