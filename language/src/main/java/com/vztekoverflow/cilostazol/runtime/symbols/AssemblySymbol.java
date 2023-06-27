@@ -52,9 +52,10 @@ public final class AssemblySymbol extends Symbol {
       if (file.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_MODULE) != 1)
         throw new CILParserException(CILOSTAZOLBundle.message("cilostazol.exception.module"));
 
-      if (file.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_MODULE_REF) > 0)
-        throw new CILParserException(
-            CILOSTAZOLBundle.message("cilostazol.exception.multimoduleAssembly"));
+      // TODO: multimodule assembly is not supported but is allowed so we can parse primitive types
+      //      if (file.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_MODULE_REF) > 0)
+      //        throw new CILParserException(
+      //            CILOSTAZOLBundle.message("cilostazol.exception.multimoduleAssembly"));
 
       return new AssemblySymbol(
           new ModuleSymbol[] {ModuleSymbol.ModuleSymbolFactory.create(file)}, file);
