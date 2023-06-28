@@ -1,9 +1,9 @@
 package com.vztekoverflow.cilostazol.runtime.symbols;
 
-import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cil.parser.cli.signature.SignatureReader;
 import com.vztekoverflow.cil.parser.cli.signature.TypeSig;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
@@ -15,14 +15,39 @@ import com.vztekoverflow.cilostazol.runtime.other.ContextProviderImpl;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 
 public abstract class TypeSymbol extends Symbol {
-  private final SystemTypes kind;
   protected final ModuleSymbol definingModule;
+  private final SystemTypes kind;
 
   public TypeSymbol(ModuleSymbol definingModule) {
     super(ContextProviderImpl.getInstance());
     this.definingModule = definingModule;
     // TODO
     this.kind = SystemTypes.Object;
+  }
+
+  protected static int fastLookup(TypeSymbol target, TypeSymbol[] types) {
+    if (!CompilerDirectives.isPartialEvaluationConstant(types)) {
+      return fastLookupBoundary(target, types);
+    }
+    // PE-friendly.
+    CompilerAsserts.partialEvaluationConstant(types);
+    return fastLookupImpl(target, types);
+  }
+
+  @ExplodeLoop(kind = ExplodeLoop.LoopExplosionKind.FULL_EXPLODE_UNTIL_RETURN)
+  protected static int fastLookupImpl(TypeSymbol target, TypeSymbol[] types) {
+    for (int i = 0; i < types.length; i++) {
+      if (types[i].getType() == target) {
+        return i;
+      }
+    }
+
+    return -1;
+  }
+
+  @CompilerDirectives.TruffleBoundary(allowInlining = true)
+  protected static int fastLookupBoundary(TypeSymbol target, TypeSymbol[] types) {
+    return fastLookupImpl(target, types);
   }
 
   public ModuleSymbol getDefiningModule() {
@@ -59,7 +84,6 @@ public abstract class TypeSymbol extends Symbol {
 
     if (this.isArray()) {
       if (other.isArray()) {
-        TODO:
         return false; // ((ArrayKlass) this).arrayTypeChecks((ArrayKlass) other);
       }
     }
@@ -90,31 +114,6 @@ public abstract class TypeSymbol extends Symbol {
   public boolean checkInterfaceSubclassing(TypeSymbol other) {
     NamedTypeSymbol[] interfaces = other.getInterfaces();
     return fastLookup(this, interfaces) >= 0;
-  }
-
-  protected static int fastLookup(TypeSymbol target, TypeSymbol[] types) {
-    if (!CompilerDirectives.isPartialEvaluationConstant(types)) {
-      return fastLookupBoundary(target, types);
-    }
-    // PE-friendly.
-    CompilerAsserts.partialEvaluationConstant(types);
-    return fastLookupImpl(target, types);
-  }
-
-  @ExplodeLoop(kind = ExplodeLoop.LoopExplosionKind.FULL_EXPLODE_UNTIL_RETURN)
-  protected static int fastLookupImpl(TypeSymbol target, TypeSymbol[] types) {
-    for (int i = 0; i < types.length; i++) {
-      if (types[i].getType() == target) {
-        return i;
-      }
-    }
-
-    return -1;
-  }
-
-  @CompilerDirectives.TruffleBoundary(allowInlining = true)
-  protected static int fastLookupBoundary(TypeSymbol target, TypeSymbol[] types) {
-    return fastLookupImpl(target, types);
   }
 
   public static final class TypeSymbolFactory {
