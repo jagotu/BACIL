@@ -27,8 +27,7 @@ public class TypeMap {
 
   private NamedTypeSymbol substituteNamedTypeSymbol(NamedTypeSymbol symbol) {
     var typeArgs = symbol.getTypeArguments();
-    var replacedTypeArgs =
-        Arrays.stream(typeArgs).map(x -> this.substitute(x)).toArray(TypeSymbol[]::new);
+    var replacedTypeArgs = Arrays.stream(typeArgs).map(this::substitute).toArray(TypeSymbol[]::new);
     return symbol.construct(replacedTypeArgs);
   }
 
@@ -40,6 +39,8 @@ public class TypeMap {
    * @return substituted symbol
    */
   public TypeSymbol substitute(TypeSymbol symbol) {
+    if (symbol == null) return null;
+
     if (symbol instanceof TypeParameterSymbol) {
       return substituteTypeParameter((TypeParameterSymbol) symbol);
     } else {

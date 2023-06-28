@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class TypeParameterSymbol extends TypeSymbol {
-  private final TypeSymbol[] constraints;
+  private TypeSymbol[] constraints;
   private final GenericParameterFlags flags;
   private final int ordinal;
   private final String name;
@@ -42,12 +42,18 @@ public final class TypeParameterSymbol extends TypeSymbol {
   }
 
   public static class TypeParameterSymbolFactory {
+    public static TypeParameterSymbol createWith(
+        TypeParameterSymbol symbol, TypeSymbol[] constrains) {
+      return new TypeParameterSymbol(
+          symbol.definingModule, constrains, symbol.flags, symbol.ordinal, null);
+    }
+
     public static TypeParameterSymbol create(
         CLIGenericParamTableRow row, TypeSymbol[] mvars, TypeSymbol[] vars, ModuleSymbol module) {
       final short flags = row.getFlags();
       return new TypeParameterSymbol(
           module,
-          getConstrains(row, mvars, vars, module),
+          null,
           new GenericParameterFlags(flags),
           row.getNumber(),
           row.getNameHeapPtr().read(module.getDefiningFile().getStringHeap()));
@@ -62,6 +68,7 @@ public final class TypeParameterSymbol extends TypeSymbol {
           if (ptr.getTableId() == row.getOwnerTablePtr().getTableId()
               && ptr.getRowNo() == row.getOwnerTablePtr().getRowNo()) {
             result[row.getNumber()] = create(row, result, vars, module);
+            result[row.getNumber()].constraints = getConstrains(row, result, vars, module);
           }
         }
       }
