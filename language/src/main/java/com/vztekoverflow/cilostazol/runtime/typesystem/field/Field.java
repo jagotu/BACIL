@@ -5,7 +5,6 @@ import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cilostazol.meta.SystemTypes;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
-import com.vztekoverflow.cilostazol.runtime.typesystem.type.CLIType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
 import com.vztekoverflow.cilostazol.runtime.typesystem.type.TypeBase;
 
@@ -152,9 +151,6 @@ public class Field extends StaticProperty implements IField {
 
   @Override
   public final void setObjectValue(StaticObject obj, Object value) {
-    assert getDeclaringType().isAssignableFrom((CLIType) obj.getType())
-        : this + " does not exist in " + obj.getType();
-
     // Call to StaticProperty!
     setObject(obj, value);
   }

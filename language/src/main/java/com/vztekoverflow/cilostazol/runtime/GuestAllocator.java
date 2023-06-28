@@ -5,18 +5,16 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.instrumentation.AllocationReporter;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.vztekoverflow.cilostazol.CILOSTAZOLLanguage;
-import com.vztekoverflow.cilostazol.context.ContextAccessImpl;
-import com.vztekoverflow.cilostazol.context.LanguageAccess;
 import com.vztekoverflow.cilostazol.exceptions.InstantiationError;
 import com.vztekoverflow.cilostazol.exceptions.InstantiationException;
 import com.vztekoverflow.cilostazol.exceptions.NegativeArraySizeException;
 import com.vztekoverflow.cilostazol.meta.SystemTypes;
+import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticField;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
-import com.vztekoverflow.cilostazol.runtime.typesystem.field.IField;
-import com.vztekoverflow.cilostazol.runtime.typesystem.type.CLIType;
-import com.vztekoverflow.cilostazol.runtime.typesystem.type.TypeBase;
+import com.vztekoverflow.cilostazol.runtime.symbols.NamedTypeSymbol;
+import com.vztekoverflow.cilostazol.runtime.symbols.Symbol;
 
-public final class GuestAllocator implements LanguageAccess {
+public final class GuestAllocator {
   private final CILOSTAZOLLanguage language;
   private final AllocationReporter allocationReporter;
 
@@ -26,28 +24,28 @@ public final class GuestAllocator implements LanguageAccess {
     if (allocationReporter != null) {
       // Can be already active, in which case the active value change notification is missed.
       if (allocationReporter.isActive()) {
-        getLanguage().invalidateAllocationTrackingDisabled();
+        language.invalidateAllocationTrackingDisabled();
       }
       allocationReporter.addActiveListener(
           (isActive) -> {
             if (isActive) {
-              getLanguage().invalidateAllocationTrackingDisabled();
+              language.invalidateAllocationTrackingDisabled();
             }
           });
     }
   }
 
-  private static void initInstanceFields(StaticObject obj, TypeBase<?> thisKlass) {
-    if (CompilerDirectives.isPartialEvaluationConstant(thisKlass)) {
-      initLoop(obj, thisKlass);
+  private static void initInstanceFields(StaticObject obj, NamedTypeSymbol typeSymbol) {
+    if (CompilerDirectives.isPartialEvaluationConstant(typeSymbol)) {
+      initLoop(obj, typeSymbol);
     } else {
-      initLoopNoExplode(obj, thisKlass);
+      initLoopNoExplode(obj, typeSymbol);
     }
   }
 
   @ExplodeLoop
-  private static void initLoop(StaticObject obj, TypeBase<?> type) {
-    for (IField f : type.getFields()) {
+  private static void initLoop(StaticObject obj, NamedTypeSymbol typeSymbol) {
+    for (StaticField f : typeSymbol.getInstanceFields()) {
       assert !f.isStatic();
       if (f.getKind() == SystemTypes.Object) {
         f.setObjectValue(obj, StaticObject.NULL);
@@ -55,8 +53,8 @@ public final class GuestAllocator implements LanguageAccess {
     }
   }
 
-  private static void initLoopNoExplode(StaticObject obj, TypeBase<?> type) {
-    for (IField f : type.getFields()) {
+  private static void initLoopNoExplode(StaticObject obj, NamedTypeSymbol typeSymbol) {
+    for (StaticField f : typeSymbol.getInstanceFields()) {
       assert !f.isStatic();
       if (f.getKind() == SystemTypes.Object) {
         f.setObjectValue(obj, StaticObject.NULL);
@@ -65,52 +63,44 @@ public final class GuestAllocator implements LanguageAccess {
   }
 
   private static StaticObject trackAllocation(
-      TypeBase<?> type,
-      StaticObject obj,
-      CILOSTAZOLLanguage lang,
-      ContextAccessImpl contextAccess) {
-    if (type == null || lang.isAllocationTrackingDisabled()) {
+      NamedTypeSymbol typeSymbol, StaticObject obj, CILOSTAZOLLanguage lang, Symbol symbol) {
+    if (typeSymbol == null || lang.isAllocationTrackingDisabled()) {
       return obj;
     }
-    if (!CompilerDirectives.isPartialEvaluationConstant(contextAccess)) {
-      return trackAllocationBoundary(contextAccess, obj);
+    if (!CompilerDirectives.isPartialEvaluationConstant(symbol)) {
+      return trackAllocationBoundary(symbol, obj);
     }
-    return contextAccess.getAllocator().trackAllocation(obj);
+    return symbol.getContext().getAllocator().trackAllocation(obj);
   }
 
   @CompilerDirectives.TruffleBoundary
-  private static StaticObject trackAllocationBoundary(ContextAccessImpl context, StaticObject obj) {
-    return context.getAllocator().trackAllocation(obj);
-  }
-
-  @Override
-  public CILOSTAZOLLanguage getLanguage() {
-    return language;
+  private static StaticObject trackAllocationBoundary(Symbol symbol, StaticObject obj) {
+    return symbol.getContext().getAllocator().trackAllocation(obj);
   }
 
   /**
    * Allocates a new instance of the given class; does not call any constructor. Initializes the
    * class.
    *
-   * @param type The type of the reference to allocate. If it is PE-constant, the field
+   * @param typeSymbol The typeSymbol of the reference to allocate. If it is PE-constant, the field
    *     initialization loop can be exploded. This is expected to be the case when executing the
    *     {@code NEW} bytecode, but may not be the case always.
    */
-  public StaticObject createNew(TypeBase<?> type) {
-    assert AllocationChecks.canAllocateNewReference(type);
-    type.safelyInitialize();
-    StaticObject newObj = type.getShape(false).getFactory().create(type);
-    initInstanceFields(newObj, type);
-    return trackAllocation(type, newObj);
+  public StaticObject createNew(NamedTypeSymbol typeSymbol) {
+    assert AllocationChecks.canAllocateNewReference(typeSymbol);
+    typeSymbol.safelyInitialize();
+    StaticObject newObj = typeSymbol.getShape(false).getFactory().create(typeSymbol);
+    initInstanceFields(newObj, typeSymbol);
+    return trackAllocation(typeSymbol, newObj);
   }
 
   // TODO: This might take constructors into consideration
-  public StaticObject createClass(TypeBase<?> type) {
-    return createNew(type);
+  public StaticObject createClass(NamedTypeSymbol typeSymbol) {
+    return createNew(typeSymbol);
   }
 
-  private StaticObject trackAllocation(TypeBase<?> type, StaticObject obj) {
-    return trackAllocation(type, obj, getLanguage(), type);
+  private StaticObject trackAllocation(NamedTypeSymbol typeSymbol, StaticObject obj) {
+    return trackAllocation(typeSymbol, obj, language, typeSymbol);
   }
 
   public <T> T trackAllocation(T object) {
@@ -145,8 +135,8 @@ public final class GuestAllocator implements LanguageAccess {
   public static final class AllocationChecks {
     private AllocationChecks() {}
 
-    public static void checkCanAllocateNewReference(CLIType type, boolean error) {
-      checkCanAllocateNewReference(type, error, AllocationProfiler.NO_PROFILE);
+    public static void checkCanAllocateNewReference(NamedTypeSymbol typeSymbol, boolean error) {
+      checkCanAllocateNewReference(typeSymbol, error, AllocationProfiler.NO_PROFILE);
     }
 
     public static void checkCanAllocateArray(int size) {
@@ -154,8 +144,8 @@ public final class GuestAllocator implements LanguageAccess {
     }
 
     public static void checkCanAllocateNewReference(
-        CLIType type, boolean error, AllocationProfiler profile) {
-      if (!canAllocateNewReference(type)) {
+        NamedTypeSymbol typeSymbol, boolean error, AllocationProfiler profile) {
+      if (!canAllocateNewReference(typeSymbol)) {
         profile.enterNewReference();
         throw error ? new InstantiationError() : new InstantiationException();
       }
@@ -168,8 +158,8 @@ public final class GuestAllocator implements LanguageAccess {
       }
     }
 
-    private static boolean canAllocateNewReference(CLIType type) {
-      return (type instanceof TypeBase<?>) && !type.isAbstract() && !type.isInterface();
+    private static boolean canAllocateNewReference(NamedTypeSymbol type) {
+      return !type.isAbstract() && !type.isInterface();
     }
 
     private static boolean canAllocateNewArray(int size) {

@@ -248,26 +248,14 @@ public abstract class TypeBase<T extends CLITableRow<T>> extends CLIType impleme
   }
 
   public StaticShape<StaticObject.StaticObjectFactory> getShape(boolean isStatic) {
-    if (isStatic && staticShape == null || !isStatic && instanceShape == null) {
-      createShapes();
-    }
-
     return isStatic ? staticShape : instanceShape;
   }
 
   public Field[] getInstanceFields() {
-    if (instanceShape == null) {
-      createShapes();
-    }
-
     return instanceFields;
   }
 
   public Field[] getStaticFields() {
-    if (staticFields == null) {
-      createShapes();
-    }
-
     return staticFields;
   }
 
@@ -321,16 +309,5 @@ public abstract class TypeBase<T extends CLITableRow<T>> extends CLIType impleme
     }
 
     return methods.toArray(new IMethod[0]);
-  }
-
-  private void createShapes() {
-    // TODO: Is this invalidation necessary when initializing CompilationFinal fields?
-    CompilerDirectives.transferToInterpreterAndInvalidate();
-
-    LinkedFieldLayout layout = new LinkedFieldLayout(getContext(), this, superClass);
-    instanceShape = layout.instanceShape;
-    staticShape = layout.staticShape;
-    instanceFields = layout.instanceFields;
-    staticFields = layout.staticFields;
   }
 }
