@@ -3,8 +3,9 @@ package com.vztekoverflow.cilostazol.nodes;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
-import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
-import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
+import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
+import com.vztekoverflow.cilostazol.runtime.symbols.MethodSymbol;
+import com.vztekoverflow.cilostazol.runtime.symbols.TypeSymbol;
 
 public class CILOSTAZOLFrame {
   public static FrameDescriptor create(int locals, int stack) {
@@ -14,30 +15,12 @@ public class CILOSTAZOLFrame {
     return builder.build();
   }
 
-  public static int getStartStackOffset(IMethod method) {
+  public static int getStartStackOffset(MethodSymbol method) {
     return method.getMaxStack();
   }
 
-  public static CILOSTAZOLFrameSlotKind getKind(IType type) {
-    if (type.getNamespace() == "System" && type.getName() == "Boolean") {
-      return CILOSTAZOLFrameSlotKind.Boolean;
-    } else if (type.getNamespace() == "System" && type.getName() == "Byte") {
-      return CILOSTAZOLFrameSlotKind.Byte;
-    }
-    if (type.getNamespace() == "System" && type.getName() == "Int") {
-      return CILOSTAZOLFrameSlotKind.Int;
-    }
-    if (type.getNamespace() == "System" && type.getName() == "Long") {
-      return CILOSTAZOLFrameSlotKind.Long;
-    }
-    if (type.getNamespace() == "System" && type.getName() == "Double") {
-      return CILOSTAZOLFrameSlotKind.Double;
-    }
-    if (type.getNamespace() == "System" && type.getName() == "Float") {
-      return CILOSTAZOLFrameSlotKind.Float;
-    } else {
-      return CILOSTAZOLFrameSlotKind.Object;
-    }
+  public static CILOSTAZOLFrameSlotKind getKind(TypeSymbol type) {
+    throw new NotImplementedException();
   }
 
   // region StackManipulation

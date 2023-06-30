@@ -2,7 +2,6 @@ package com.vztekoverflow.cilostazol.runtime.typesystem.method;
 
 import com.oracle.truffle.api.nodes.RootNode;
 import com.vztekoverflow.cil.parser.cli.signature.MethodDefFlags;
-import com.vztekoverflow.cilostazol.nodes.CILOSTAZOLRootNode;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.IComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ITypeParameter;
@@ -121,9 +120,9 @@ public class SubstitutedGenericMethod implements IMethod, ICILBasedMethod {
 
   @Override
   public RootNode getNode() {
-    if (_node == null) _node = CILOSTAZOLRootNode.create(this, _constructedFrom.getCIL());
+    // if (_node == null) _node = CILOSTAZOLRootNode.create(this, _constructedFrom.getCIL());
 
-    return _node;
+    return null;
   }
   // endregion
 

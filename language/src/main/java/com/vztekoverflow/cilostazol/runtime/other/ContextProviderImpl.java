@@ -1,6 +1,7 @@
 package com.vztekoverflow.cilostazol.runtime.other;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.vztekoverflow.cilostazol.CILOSTAZOLLanguage;
 import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
 import java.util.function.Supplier;
 
@@ -21,6 +22,11 @@ public class ContextProviderImpl implements ContextProvider {
   @Override
   public CILOSTAZOLContext getContext() {
     return ctx.get();
+  }
+
+  @Override
+  public CILOSTAZOLLanguage getLanguage() {
+    return CILOSTAZOLLanguage.get(null);
   }
 
   public void setContext(Supplier<CILOSTAZOLContext> ctx) {
