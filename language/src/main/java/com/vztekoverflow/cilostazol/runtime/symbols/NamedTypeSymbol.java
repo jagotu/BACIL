@@ -311,16 +311,16 @@ public class NamedTypeSymbol extends TypeSymbol {
               .getDefiningFile()
               .getTableHeads()
               .getMethodDefTableHead()
-              .skip(methodRange.getLeft());
+              .skip(new CLITablePtr(CLITableConstants.CLI_TABLE_METHOD_DEF, methodRange.getLeft()));
 
-      var methods = new ArrayList<MethodSymbol>();
+      var methods = new MethodSymbol[methodRange.getRight() - methodRange.getLeft()];
       while (methodRow.getRowNo() < methodRange.getRight()) {
-        var method = MethodSymbol.MethodSymbolFactory.create(methodRow, symbol);
-        methods.add(method);
-        methodRow = methodRow.next();
+        methods[methodRow.getRowNo() - methodRange.getLeft()] =
+            symbol.getDefiningModule().getLocalMethod(methodRow.getRowNo());
+        methodRow = methodRow.skip(1);
       }
 
-      return methods.toArray(MethodSymbol[]::new);
+      return methods;
     }
 
     private static NamedTypeSymbol[] createInterfaces(NamedTypeSymbol symbol) {

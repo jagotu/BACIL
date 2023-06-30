@@ -12,7 +12,7 @@ import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIMethodDefTableRow;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIParamTableRow;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
-import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
+import com.vztekoverflow.cilostazol.nodes.CILOSTAZOLRootNode;
 import com.vztekoverflow.cilostazol.runtime.other.ContextProviderImpl;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 
@@ -143,11 +143,9 @@ public class MethodSymbol extends Symbol {
   }
 
   public RootNode getNode() {
-    throw new NotImplementedException();
-    // if (node == null)
-    // node = CILOSTAZOLRootNode.create(this, cil);
+    if (node == null) node = CILOSTAZOLRootNode.create(this, cil);
 
-    // return node;
+    return node;
   }
 
   public static class MethodSymbolFactory {

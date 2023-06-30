@@ -1,6 +1,7 @@
 package com.vztekoverflow.cilostazol.runtime.symbols;
 
 import com.vztekoverflow.cil.parser.cli.CLIFile;
+import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITableConstants;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITypeDefTableRow;
 import com.vztekoverflow.cilostazol.runtime.other.ContextProviderImpl;
@@ -60,11 +61,18 @@ public final class ModuleSymbol extends Symbol {
   public MethodSymbol getLocalMethod(int index) {
     if (methodCache[index] == null) {
       var classRow =
-          definingFile.getTableHeads().getTypeDefTableHead().skip(methodToClassIndex[index]);
+          definingFile
+              .getTableHeads()
+              .getTypeDefTableHead()
+              .skip(
+                  new CLITablePtr(CLITableConstants.CLI_TABLE_TYPE_DEF, methodToClassIndex[index]));
       var nameAndNamespace = CLIFileUtils.getNameAndNamespace(definingFile, classRow);
       methodCache[index] =
           MethodSymbol.MethodSymbolFactory.create(
-              definingFile.getTableHeads().getMethodDefTableHead().skip(index),
+              definingFile
+                  .getTableHeads()
+                  .getMethodDefTableHead()
+                  .skip(new CLITablePtr(CLITableConstants.CLI_TABLE_METHOD_DEF, index)),
               getContext()
                   .getType(
                       nameAndNamespace.getLeft(),

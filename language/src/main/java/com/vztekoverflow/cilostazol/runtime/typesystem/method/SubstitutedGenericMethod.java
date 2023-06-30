@@ -121,9 +121,9 @@ public class SubstitutedGenericMethod implements IMethod, ICILBasedMethod {
 
   @Override
   public RootNode getNode() {
-    if (_node == null) _node = CILOSTAZOLRootNode.create(this, _constructedFrom.getCIL());
+    // if (_node == null) _node = CILOSTAZOLRootNode.create(this, _constructedFrom.getCIL());
 
-    return _node;
+    return null;
   }
   // endregion
 

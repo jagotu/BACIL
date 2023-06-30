@@ -1,12 +1,16 @@
 package com.vztekoverflow.cilostazol;
 
 import com.oracle.truffle.api.Assumption;
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.instrumentation.AllocationReporter;
 import com.oracle.truffle.api.nodes.Node;
+import com.vztekoverflow.cilostazol.nodes.CallEntryPointCallTarget;
 import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
 import com.vztekoverflow.cilostazol.runtime.GuestAllocator;
+import com.vztekoverflow.cilostazol.runtime.symbols.MethodSymbol;
+import org.graalvm.polyglot.Source;
 
 /** The BACIL language class implementing TruffleLanguage. */
 @TruffleLanguage.Registration(
@@ -36,6 +40,21 @@ public class CILOSTAZOLLanguage extends TruffleLanguage<CILOSTAZOLContext> {
   @Override
   protected CILOSTAZOLContext createContext(Env env) {
     return new CILOSTAZOLContext(this, env);
+  }
+
+  @Override
+  protected CallTarget parse(ParsingRequest request) throws Exception {
+    var source =
+        Source.newBuilder(
+                CILOSTAZOLLanguage.ID,
+                request.getSource().getBytes(),
+                request.getSource().getName())
+            .build();
+
+    var assembly = CILOSTAZOLContext.get(null).loadAssembly(source);
+    MethodSymbol main = assembly.getEntryPoint();
+    return new CallEntryPointCallTarget(
+        main.getNode().getCallTarget(), main.getParameters().length == 1);
   }
 
   public boolean isAllocationTrackingDisabled() {

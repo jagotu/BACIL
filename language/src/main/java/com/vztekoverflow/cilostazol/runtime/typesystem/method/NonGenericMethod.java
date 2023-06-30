@@ -72,9 +72,9 @@ public class NonGenericMethod extends MethodBase {
 
   @Override
   public RootNode getNode() {
-    if (_node == null) _node = CILOSTAZOLRootNode.create(this, _cil);
+    // if (_node == null) _node = CILOSTAZOLRootNode.create(this, _cil);
 
-    return _node;
+    return null;
   }
   // endregion
 }

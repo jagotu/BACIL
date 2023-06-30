@@ -6,27 +6,27 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.BytecodeOSRNode;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
-import com.vztekoverflow.cilostazol.runtime.typesystem.method.IMethod;
-import com.vztekoverflow.cilostazol.runtime.typesystem.type.IType;
+import com.vztekoverflow.cilostazol.runtime.symbols.MethodSymbol;
+import com.vztekoverflow.cilostazol.runtime.symbols.TypeSymbol;
 
 public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
-  private final IMethod _method;
+  private final MethodSymbol _method;
   private final byte[] _cil;
   private final FrameDescriptor _frameDescriptor;
   private final CILOSTAZOLFrame.CILOSTAZOLFrameSlotKind[] _taggedFrame;
 
-  private CILMethodNode(IMethod method, byte[] cilCode) {
+  private CILMethodNode(MethodSymbol method, byte[] cilCode) {
     _method = method;
     _cil = cilCode;
     _frameDescriptor = CILOSTAZOLFrame.create(method.getLocals().length, method.getMaxStack());
     _taggedFrame = new CILOSTAZOLFrame.CILOSTAZOLFrameSlotKind[_frameDescriptor.getNumberOfSlots()];
   }
 
-  public static CILMethodNode create(IMethod method, byte[] cilCode) {
+  public static CILMethodNode create(MethodSymbol method, byte[] cilCode) {
     return new CILMethodNode(method, cilCode);
   }
 
-  public IMethod getMethod() {
+  public MethodSymbol getMethod() {
     return _method;
   }
 
@@ -44,7 +44,7 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
   private void initializeFrame(VirtualFrame frame) {
     frame.isInt(1);
     Object[] args = frame.getArguments();
-    IType[] argTypes = null; // _method.getParameters();
+    TypeSymbol[] argTypes = null; // _method.getParameters();
     int topStack = CILOSTAZOLFrame.getStartStackOffset(_method) - 1;
 
     for (int i = 0; i < _method.getParameters().length; i++) {

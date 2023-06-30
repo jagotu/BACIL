@@ -1,5 +1,6 @@
 package com.vztekoverflow.cilostazol.runtime.symbols;
 
+import com.vztekoverflow.bacil.parser.cli.tables.CLITablePtr;
 import com.vztekoverflow.cil.parser.CILParserException;
 import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
@@ -37,6 +38,16 @@ public final class AssemblySymbol extends Symbol {
 
   public AssemblyIdentity getIdentity() {
     return definingFile.getAssemblyIdentity();
+  }
+
+  public MethodSymbol getEntryPoint() {
+    if (definingFile.getCliHeader().getEntryPointToken() == 0) {
+      throw new RuntimeException(
+          CILOSTAZOLBundle.message("cilostazol.exception.runtime.no.entrypoint"));
+    }
+
+    CLITablePtr entryPtr = CLITablePtr.fromToken(definingFile.getCliHeader().getEntryPointToken());
+    return modules[0].getLocalMethod(entryPtr.getRowNo());
   }
 
   public static final class AssemblySymbolFactory {
