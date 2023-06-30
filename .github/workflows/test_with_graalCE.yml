@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
       - uses: graalvm/setup-graalvm@v1
@@ -21,15 +21,15 @@ jobs:
 
       - name: Build parser test targets
         working-directory: ./language/src/test/resources/TypeParsingTestTargets
-        run: ./build.sh
+        run: ./build.ps1
 
       - name: Build SOM test targets
         working-directory: ./language/src/test/resources/StaticObjectModelTestTargets
-        run: ./build.sh
+        run: ./build.ps1
         
       - name: Build Interpreter test targets
         working-directory: ./tests/src/test/resources
-        run: ./build.sh
+        run: ./build.ps1
 
       - name: Build with Maven
         run: mvn package
