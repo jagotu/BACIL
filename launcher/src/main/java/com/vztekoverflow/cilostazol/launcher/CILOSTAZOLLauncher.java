@@ -25,6 +25,10 @@ public class CILOSTAZOLLauncher extends AbstractLanguageLauncher {
     System.exit(launcher.getReturnValue());
   }
 
+  public void test(String[] args) {
+    launch(args);
+  }
+
   public int getReturnValue() {
     return returnValue;
   }

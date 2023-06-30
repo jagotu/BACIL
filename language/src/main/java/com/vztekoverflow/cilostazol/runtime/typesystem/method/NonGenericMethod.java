@@ -4,7 +4,6 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cil.parser.cli.signature.MethodDefFlags;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
-import com.vztekoverflow.cilostazol.nodes.CILOSTAZOLRootNode;
 import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.typesystem.component.CLIComponent;
 import com.vztekoverflow.cilostazol.runtime.typesystem.generic.ISubstitution;
@@ -72,9 +71,9 @@ public class NonGenericMethod extends MethodBase {
 
   @Override
   public RootNode getNode() {
-    if (_node == null) _node = CILOSTAZOLRootNode.create(this, _cil);
+    // if (_node == null) _node = CILOSTAZOLRootNode.create(this, _cil);
 
-    return _node;
+    return null;
   }
   // endregion
 }

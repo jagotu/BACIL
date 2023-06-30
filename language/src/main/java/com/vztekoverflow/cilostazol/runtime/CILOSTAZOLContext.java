@@ -128,7 +128,9 @@ public class CILOSTAZOLContext {
   }
 
   public AssemblySymbol loadAssembly(Source source) {
-    return AssemblySymbol.AssemblySymbolFactory.create(source);
+    var result = AssemblySymbol.AssemblySymbolFactory.create(source);
+    appDomain.loadAssembly(result);
+    return result;
   }
   // endregion
 }
