@@ -20,7 +20,7 @@ public final class ModuleSymbol extends Symbol {
             [definingFile.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_METHOD_DEF)];
     // Fill method to class indices
     this.methodToClassIndex =
-        new int[definingFile.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_METHOD_DEF)];
+        new int[definingFile.getTablesHeader().getRowCount(CLITableConstants.CLI_TABLE_METHOD_DEF) +1];
     for (CLITypeDefTableRow klass : definingFile.getTableHeads().getTypeDefTableHead()) {
       var methodRange = CLIFileUtils.getMethodRange(definingFile, klass);
       int startIdx = methodRange.getLeft();
