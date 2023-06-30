@@ -10,13 +10,13 @@ import com.vztekoverflow.cil.parser.cli.table.generated.*;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.exceptions.InvalidCLIException;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
+import com.vztekoverflow.cilostazol.exceptions.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticField;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.symbols.utils.CLIFileUtils;
 import com.vztekoverflow.cilostazol.runtime.symbols.utils.NamedTypeSymbolLayout;
 import com.vztekoverflow.cilostazol.runtime.symbols.utils.NamedTypeSymbolSemantics;
 import com.vztekoverflow.cilostazol.runtime.symbols.utils.NamedTypeSymbolVisibility;
-import com.vztekoverflow.cilostazol.exceptions.TypeSystemException;
 import java.util.ArrayList;
 import java.util.List;
 
