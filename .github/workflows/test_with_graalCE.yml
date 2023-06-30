@@ -18,7 +18,6 @@ jobs:
           java-version: '17'
           components: 'native-image'
           github-token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/download-artifact@v3
 
       - name: Build parser test targets
         working-directory: ./language/src/test/resources/TypeParsingTestTargets
