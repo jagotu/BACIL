@@ -1,9 +1,8 @@
 package com.vztekoverflow.cilostazol.tests;
 
-import junit.framework.TestCase;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import junit.framework.TestCase;
 
 public abstract class TestBase extends TestCase {
   protected static final String _directory = "src/test/resources/BasicTests";
