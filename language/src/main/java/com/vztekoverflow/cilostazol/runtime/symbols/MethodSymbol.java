@@ -13,8 +13,8 @@ import com.vztekoverflow.cil.parser.cli.table.generated.CLIMethodDefTableRow;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIParamTableRow;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.nodes.CILOSTAZOLRootNode;
-import com.vztekoverflow.cilostazol.runtime.other.ContextProviderImpl;
-import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
+import com.vztekoverflow.cilostazol.runtime.context.ContextProviderImpl;
+import com.vztekoverflow.cilostazol.exceptions.TypeSystemException;
 
 public class MethodSymbol extends Symbol {
   protected final String name;

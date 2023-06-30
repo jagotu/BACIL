@@ -6,7 +6,7 @@ import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLITableConstants;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
-import com.vztekoverflow.cilostazol.runtime.other.ContextProviderImpl;
+import com.vztekoverflow.cilostazol.runtime.context.ContextProviderImpl;
 import org.graalvm.polyglot.Source;
 
 public final class AssemblySymbol extends Symbol {

@@ -2,7 +2,7 @@ package com.vztekoverflow.cilostazol.runtime.symbols;
 
 import com.vztekoverflow.cil.parser.cli.signature.LocalVarSig;
 import com.vztekoverflow.cil.parser.cli.signature.LocalVarsSig;
-import com.vztekoverflow.cilostazol.runtime.other.ContextProviderImpl;
+import com.vztekoverflow.cilostazol.runtime.context.ContextProviderImpl;
 
 public final class LocalSymbol extends Symbol {
   private boolean pinned;

@@ -1,12 +1,9 @@
 package com.vztekoverflow.cilostazol.meta;
 
-import com.vztekoverflow.cilostazol.context.ContextAccessImpl;
-import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
+import com.vztekoverflow.cilostazol.runtime.context.CILOSTAZOLContext;
 
-public final class Meta extends ContextAccessImpl {
-  public Meta(CILOSTAZOLContext context) {
-    super(context);
-  }
+public final class Meta {
+  public Meta(CILOSTAZOLContext context) {}
 
   /*
   public final TypeBase<?> system_Object;

@@ -2,7 +2,7 @@ package com.vztekoverflow.cilostazol.runtime.symbols;
 
 import com.vztekoverflow.cil.parser.cli.signature.ParamSig;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIParamTableRow;
-import com.vztekoverflow.cilostazol.runtime.other.ContextProviderImpl;
+import com.vztekoverflow.cilostazol.runtime.context.ContextProviderImpl;
 
 public final class ParameterSymbol extends Symbol {
   private final boolean isByRef;

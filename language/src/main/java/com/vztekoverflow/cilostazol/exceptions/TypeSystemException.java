@@ -1,4 +1,4 @@
-package com.vztekoverflow.cilostazol.runtime.typesystem;
+package com.vztekoverflow.cilostazol.exceptions;
 
 import com.vztekoverflow.cilostazol.exceptions.CILOSTAZOLException;
 

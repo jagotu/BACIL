@@ -2,7 +2,7 @@ package com.vztekoverflow.cilostazol.runtime.symbols;
 
 import com.vztekoverflow.cil.parser.ByteSequenceBuffer;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
-import com.vztekoverflow.cilostazol.runtime.other.ContextProviderImpl;
+import com.vztekoverflow.cilostazol.runtime.context.ContextProviderImpl;
 
 public final class ExceptionHandlerSymbol extends Symbol {
   private final int tryOffset;
