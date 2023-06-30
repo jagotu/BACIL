@@ -1,6 +1,5 @@
 package com.vztekoverflow.cil.parser.cli.signature;
 
-import com.vztekoverflow.cil.parser.cli.CLIFile;
 import java.util.List;
 
 public class RetTypeSig {
@@ -18,7 +17,7 @@ public class RetTypeSig {
     _byRef = byRef;
   }
 
-  public static RetTypeSig parse(SignatureReader reader, CLIFile file) {
+  public static RetTypeSig parse(SignatureReader reader) {
     boolean byRef = false;
     final CustomMod[] mods;
     final List<CustomMod> modsL = CustomMod.readAll(reader);
@@ -29,7 +28,7 @@ public class RetTypeSig {
       reader.getUnsigned();
     }
 
-    final TypeSig type = TypeSig.read(reader, file);
+    final TypeSig type = TypeSig.read(reader);
     return new RetTypeSig(mods, type, byRef);
   }
 

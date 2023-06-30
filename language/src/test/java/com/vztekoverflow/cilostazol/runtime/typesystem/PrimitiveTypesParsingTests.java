@@ -2,6 +2,7 @@ package com.vztekoverflow.cilostazol.runtime.typesystem;
 
 import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
+import com.vztekoverflow.cilostazol.runtime.symbols.ArrayTypeSymbol;
 import com.vztekoverflow.cilostazol.runtime.symbols.NamedTypeSymbol;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -26,8 +27,7 @@ public class PrimitiveTypesParsingTests extends TestBase {
         Arguments.of("ULongClass", "UInt64", "System"),
         Arguments.of("FloatClass", "Single", "System"),
         Arguments.of("DoubleClass", "Double", "System")
-        //                Arguments.of("DecimalClass", "Decimal", "System", "Decimal") //is not
-        // supported -> issue #41
+        // Arguments.of("DecimalClass", "Decimal", "System", "Decimal") //not supported -> issue #41
         );
   }
 
@@ -141,7 +141,7 @@ public class PrimitiveTypesParsingTests extends TestBase {
 
     var type = ctx.getType("VoidClass", projectName, assemblyIdentity);
 
-    assertEquals(1, type.getMethods().length);
+    assertEquals(2, type.getMethods().length);
     var method = type.getMethods()[0];
     assertEquals("Method", method.getName());
     assertTrue(method.getReturnType().getType() instanceof NamedTypeSymbol);
@@ -149,6 +149,88 @@ public class PrimitiveTypesParsingTests extends TestBase {
     NamedTypeSymbol voidType = (NamedTypeSymbol) method.getReturnType().getType();
     assertEquals("Void", voidType.getName());
     assertEquals("System", voidType.getNamespace());
+  }
+
+  public void testArray() {
+    final String projectName = "PrimitiveTypesTest";
+    CILOSTAZOLContext ctx =
+        init(new Path[] {getDllPath(projectName).getParent(), Path.of(coreLibPath)});
+    AssemblyIdentity assemblyIdentity = getAssemblyID(projectName);
+
+    var type = ctx.getType("ArrayClass", projectName, assemblyIdentity);
+
+    assertEquals(1, type.getFields().length);
+    assertEquals("fieldArray", type.getFields()[0].getName());
+    assertTrue(type.getFields()[0].getType() instanceof ArrayTypeSymbol);
+    var arrayType = (ArrayTypeSymbol) type.getFields()[0].getType();
+
+    assertEquals(1, arrayType.getRank());
+    assertEquals(0, arrayType.getLengths().length);
+    assertEquals(0, arrayType.getLowerBounds().length);
+
+    assertTrue(arrayType.getElementType() instanceof NamedTypeSymbol);
+    var elementType = (NamedTypeSymbol) arrayType.getElementType();
+
+    assertEquals("Int32", elementType.getName());
+    assertEquals("System", elementType.getNamespace());
+  }
+
+  public void testDoubleArray() {
+    final String projectName = "PrimitiveTypesTest";
+    CILOSTAZOLContext ctx =
+        init(new Path[] {getDllPath(projectName).getParent(), Path.of(coreLibPath)});
+    AssemblyIdentity assemblyIdentity = getAssemblyID(projectName);
+
+    var type = ctx.getType("DoubleArrayClass", projectName, assemblyIdentity);
+
+    assertEquals(1, type.getFields().length);
+    assertEquals("fieldDoubleArray", type.getFields()[0].getName());
+    assertTrue(type.getFields()[0].getType() instanceof ArrayTypeSymbol);
+    var arrayType = (ArrayTypeSymbol) type.getFields()[0].getType();
+
+    assertEquals(2, arrayType.getRank());
+    assertEquals(
+        0, arrayType.getLengths().length); // TODO: is this correct? how to make it somehting else?
+    assertEquals(2, arrayType.getLowerBounds().length);
+    assertEquals(0, arrayType.getLowerBounds()[0]);
+    assertEquals(0, arrayType.getLowerBounds()[1]);
+
+    assertTrue(arrayType.getElementType() instanceof NamedTypeSymbol);
+    var elementType = (NamedTypeSymbol) arrayType.getElementType();
+
+    assertEquals("Int32", elementType.getName());
+    assertEquals("System", elementType.getNamespace());
+  }
+
+  public void testNestedArray() {
+    final String projectName = "PrimitiveTypesTest";
+    CILOSTAZOLContext ctx =
+        init(new Path[] {getDllPath(projectName).getParent(), Path.of(coreLibPath)});
+    AssemblyIdentity assemblyIdentity = getAssemblyID(projectName);
+
+    var type = ctx.getType("NestedArrayClass", projectName, assemblyIdentity);
+
+    assertEquals(1, type.getFields().length);
+    assertEquals("fieldNestedArray", type.getFields()[0].getName());
+    assertTrue(type.getFields()[0].getType() instanceof ArrayTypeSymbol);
+    var arrayType = (ArrayTypeSymbol) type.getFields()[0].getType();
+
+    assertEquals(1, arrayType.getRank());
+    assertEquals(0, arrayType.getLengths().length);
+    assertEquals(0, arrayType.getLowerBounds().length);
+
+    assertTrue(type.getFields()[0].getType() instanceof ArrayTypeSymbol);
+    var arrayNestedType = (ArrayTypeSymbol) arrayType.getElementType().getType();
+
+    assertEquals(1, arrayNestedType.getRank());
+    assertEquals(0, arrayNestedType.getLengths().length);
+    assertEquals(0, arrayNestedType.getLowerBounds().length);
+
+    assertTrue(arrayNestedType.getElementType() instanceof NamedTypeSymbol);
+    var elementType = (NamedTypeSymbol) arrayNestedType.getElementType();
+
+    assertEquals("Int32", elementType.getName());
+    assertEquals("System", elementType.getNamespace());
   }
 
   @ParameterizedTest

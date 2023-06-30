@@ -79,8 +79,7 @@ public final class TypeFactory {
     TypeSig signature =
         TypeSig.read(
             new SignatureReader(
-                type.getSignatureHeapPtr().read(component.getDefiningFile().getBlobHeap())),
-            component.getDefiningFile());
+                type.getSignatureHeapPtr().read(component.getDefiningFile().getBlobHeap())));
     return create(signature, methodTypeParameters, classTypeParameters, component);
   }
 

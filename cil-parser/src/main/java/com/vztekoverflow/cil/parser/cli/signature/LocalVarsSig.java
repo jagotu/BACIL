@@ -17,7 +17,7 @@ public class LocalVarsSig {
     LocalVarSig[] varTypes = new LocalVarSig[count];
 
     for (int i = 0; i < count; i++) {
-      varTypes[i] = LocalVarSig.parse(reader, file);
+      varTypes[i] = LocalVarSig.parse(reader);
     }
 
     return new LocalVarsSig(varTypes);

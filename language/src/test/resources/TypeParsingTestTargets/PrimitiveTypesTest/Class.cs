@@ -91,3 +91,24 @@ public class VoidClass
     {
     }
 }
+
+public class ArrayClass
+{
+    int[] fieldArray;
+}
+
+public class NestedArrayClass
+{
+    int[][] fieldNestedArray;
+}
+
+
+public class DoubleArrayClass
+{
+    int[,] fieldDoubleArray = new int[1, 1];
+}
+
+public class GenericArrayClass<T>
+{
+    T[] fieldGenericArray;
+}

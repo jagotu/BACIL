@@ -1,6 +1,5 @@
 package com.vztekoverflow.cil.parser.cli.signature;
 
-import com.vztekoverflow.cil.parser.cli.CLIFile;
 import java.util.List;
 
 public class LocalVarSig {
@@ -21,9 +20,9 @@ public class LocalVarSig {
     this._typeSig = _typeSig;
   }
 
-  public static LocalVarSig parse(SignatureReader reader, CLIFile file) {
+  public static LocalVarSig parse(SignatureReader reader) {
     if (reader.peekUnsigned() == ELEMENT_TYPE_TYPEDBYREF) {
-      return new LocalVarSig(false, false, null, TypeSig.read(reader, file));
+      return new LocalVarSig(false, false, null, TypeSig.read(reader));
     }
 
     boolean pinned = false;
@@ -43,7 +42,7 @@ public class LocalVarSig {
       reader.getUnsigned();
     }
 
-    TypeSig type = TypeSig.read(reader, file);
+    TypeSig type = TypeSig.read(reader);
     return new LocalVarSig(pinned, byRef, mods, type);
   }
 

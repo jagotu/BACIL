@@ -1,6 +1,5 @@
 package com.vztekoverflow.cil.parser.cli.signature;
 
-import com.vztekoverflow.cil.parser.cli.CLIFile;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
 
 public class TypeSpecSig {
@@ -35,7 +34,7 @@ public class TypeSpecSig {
     this.genType = genType;
   }
 
-  public static TypeSpecSig read(SignatureReader reader, CLIFile file) {
+  public static TypeSpecSig read(SignatureReader reader) {
     ElementTypeFlag flag = new ElementTypeFlag(reader.getUnsigned());
     CustomMod[] mod = null;
     TypeSig typeSig = null;
@@ -52,7 +51,7 @@ public class TypeSpecSig {
       genArgCount = reader.getUnsigned();
       typeArgs = new TypeSig[genArgCount];
       for (int i = 0; i < typeArgs.length; i++) {
-        typeArgs[i] = TypeSig.read(reader, file);
+        typeArgs[i] = TypeSig.read(reader);
       }
     }
 
