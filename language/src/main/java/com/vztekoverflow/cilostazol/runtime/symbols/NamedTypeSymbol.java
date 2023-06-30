@@ -10,6 +10,7 @@ import com.vztekoverflow.cil.parser.cli.table.generated.*;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.exceptions.InvalidCLIException;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
+import com.vztekoverflow.cilostazol.runtime.symbols.utils.CLIFileUtils;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticField;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.symbols.utils.NamedTypeSymbolLayout;
@@ -202,7 +203,6 @@ public class NamedTypeSymbol extends TypeSymbol {
     return (flags & ABSTRACT_FLAG_MASK) != 0;
   }
 
-  @Override
   public boolean isInterface() {
     return getSemantics() == NamedTypeSymbolSemantics.Interface;
   }
@@ -303,23 +303,7 @@ public class NamedTypeSymbol extends TypeSymbol {
 
   private static class LazyFactory {
     private static MethodSymbol[] createMethods(NamedTypeSymbol symbol, CLITypeDefTableRow row) {
-      var methodTablePtr = row.getMethodListTablePtr();
-
-      final boolean isLastType =
-          row.getRowNo()
-              == symbol
-                  .definingModule
-                  .getDefiningFile()
-                  .getTablesHeader()
-                  .getRowCount(CLITableConstants.CLI_TABLE_TYPE_DEF);
-      final int lastIdx =
-          isLastType
-              ? symbol
-                  .definingModule
-                  .getDefiningFile()
-                  .getTablesHeader()
-                  .getRowCount(CLITableConstants.CLI_TABLE_METHOD_DEF)
-              : row.skip(1).getMethodListTablePtr().getRowNo();
+      var methodRange = CLIFileUtils.getMethodRange(symbol.definingModule.getDefiningFile(), row);
 
       var methodRow =
           symbol
@@ -327,10 +311,10 @@ public class NamedTypeSymbol extends TypeSymbol {
               .getDefiningFile()
               .getTableHeads()
               .getMethodDefTableHead()
-              .skip(methodTablePtr);
+              .skip(methodRange.getLeft());
 
       var methods = new ArrayList<MethodSymbol>();
-      while (methodRow.getRowNo() < lastIdx) {
+      while (methodRow.getRowNo() < methodRange.getRight()) {
         var method = MethodSymbol.MethodSymbolFactory.create(methodRow, symbol);
         methods.add(method);
         methodRow = methodRow.next();
@@ -511,9 +495,10 @@ public class NamedTypeSymbol extends TypeSymbol {
     }
 
     public static NamedTypeSymbol create(CLITypeDefTableRow row, ModuleSymbol module) {
-      final String name = row.getTypeNameHeapPtr().read(module.getDefiningFile().getStringHeap());
-      final String namespace =
-          row.getTypeNamespaceHeapPtr().read(module.getDefiningFile().getStringHeap());
+      var nameAndNamespace = CLIFileUtils.getNameAndNamespace(module.getDefiningFile(), row);
+
+      final String name = nameAndNamespace.getLeft();
+      final String namespace = nameAndNamespace.getRight();
       final TypeParameterSymbol[] typeParams =
           TypeParameterSymbol.TypeParameterSymbolFactory.create(
               row.getPtr(), new TypeSymbol[0], module);
