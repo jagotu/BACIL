@@ -1,4 +1,4 @@
-package com.vztekoverflow.cilostazol.runtime;
+package com.vztekoverflow.cilostazol.runtime.context;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
@@ -10,6 +10,7 @@ import com.vztekoverflow.cilostazol.CILOSTAZOLEngineOption;
 import com.vztekoverflow.cilostazol.CILOSTAZOLLanguage;
 import com.vztekoverflow.cilostazol.meta.Meta;
 import com.vztekoverflow.cilostazol.runtime.other.AppDomain;
+import com.vztekoverflow.cilostazol.runtime.other.GuestAllocator;
 import com.vztekoverflow.cilostazol.runtime.other.TypeSymbolCacheKey;
 import com.vztekoverflow.cilostazol.runtime.symbols.AssemblySymbol;
 import com.vztekoverflow.cilostazol.runtime.symbols.NamedTypeSymbol;

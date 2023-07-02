@@ -1,4 +1,4 @@
-package com.vztekoverflow.cilostazol.runtime;
+package com.vztekoverflow.cilostazol.runtime.other;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;

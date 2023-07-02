@@ -10,14 +10,13 @@ import com.vztekoverflow.cil.parser.cli.table.generated.*;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.exceptions.InvalidCLIException;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
+import com.vztekoverflow.cilostazol.exceptions.TypeSystemException;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticField;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.symbols.utils.CLIFileUtils;
 import com.vztekoverflow.cilostazol.runtime.symbols.utils.NamedTypeSymbolLayout;
 import com.vztekoverflow.cilostazol.runtime.symbols.utils.NamedTypeSymbolSemantics;
 import com.vztekoverflow.cilostazol.runtime.symbols.utils.NamedTypeSymbolVisibility;
-import com.vztekoverflow.cilostazol.runtime.typesystem.TypeSystemException;
-import com.vztekoverflow.cilostazol.runtime.typesystem.type.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -184,15 +183,15 @@ public class NamedTypeSymbol extends TypeSymbol {
   }
 
   public NamedTypeSymbolVisibility getVisibility() {
-    return NamedTypeSymbolVisibility.fromFlags(flags & TypeVisibility.MASK);
+    return NamedTypeSymbolVisibility.fromFlags(flags & NamedTypeSymbolVisibility.MASK);
   }
 
   public NamedTypeSymbolLayout getLayout() {
-    return NamedTypeSymbolLayout.fromFlags(flags & TypeLayout.MASK);
+    return NamedTypeSymbolLayout.fromFlags(flags & NamedTypeSymbolLayout.MASK);
   }
 
   public NamedTypeSymbolSemantics getSemantics() {
-    return NamedTypeSymbolSemantics.fromFlags(flags & TypeSemantics.MASK);
+    return NamedTypeSymbolSemantics.fromFlags(flags & NamedTypeSymbolSemantics.MASK);
   }
 
   public boolean isSealed() {

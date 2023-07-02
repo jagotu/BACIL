@@ -4,7 +4,7 @@ import com.vztekoverflow.cil.parser.cli.signature.FieldSig;
 import com.vztekoverflow.cil.parser.cli.signature.SignatureReader;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIFieldTableRow;
 import com.vztekoverflow.cilostazol.meta.SystemTypes;
-import com.vztekoverflow.cilostazol.runtime.other.ContextProviderImpl;
+import com.vztekoverflow.cilostazol.runtime.context.ContextProviderImpl;
 import com.vztekoverflow.cilostazol.runtime.symbols.utils.FieldSymbolVisibility;
 
 public final class FieldSymbol extends Symbol {
