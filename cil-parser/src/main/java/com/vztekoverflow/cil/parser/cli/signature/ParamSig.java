@@ -1,6 +1,5 @@
 package com.vztekoverflow.cil.parser.cli.signature;
 
-import com.vztekoverflow.cil.parser.cli.CLIFile;
 import java.util.List;
 
 public class ParamSig {
@@ -18,7 +17,7 @@ public class ParamSig {
     _byRef = byRef;
   }
 
-  public static ParamSig parse(SignatureReader reader, CLIFile file, boolean allowVoid) {
+  public static ParamSig parse(SignatureReader reader, boolean allowVoid) {
     boolean byRef = false;
     final CustomMod[] mods;
     final List<CustomMod> modsL = CustomMod.readAll(reader);
@@ -29,7 +28,7 @@ public class ParamSig {
       reader.getUnsigned();
     }
 
-    final TypeSig type = TypeSig.read(reader, file);
+    final TypeSig type = TypeSig.read(reader);
 
     return new ParamSig(mods, type, byRef);
   }

@@ -1,5 +1,7 @@
 package com.vztekoverflow.cilostazol.runtime.symbols;
 
+import static com.vztekoverflow.cilostazol.runtime.symbols.ArrayTypeSymbol.*;
+
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
@@ -119,8 +121,6 @@ public abstract class TypeSymbol extends Symbol {
   public static final class TypeSymbolFactory {
     public static TypeSymbol create(
         TypeSig typeSig, TypeSymbol[] mvars, TypeSymbol[] vars, ModuleSymbol module) {
-      // TODO: null reference exception might have occured here if TypeSig is not created from CLASS
-      // TODO: resolve for other types (SZARRAY, GENERICINST, ...)
       return switch (typeSig.getElementType()) {
         case TypeSig.ELEMENT_TYPE_CLASS, TypeSig.ELEMENT_TYPE_VALUETYPE -> create(
             typeSig.getCliTablePtr(), mvars, vars, module);
@@ -134,22 +134,22 @@ public abstract class TypeSymbol extends Symbol {
           }
           yield genType.construct(typeArgs);
         }
-        case TypeSig.ELEMENT_TYPE_I4 -> module // int
+        case TypeSig.ELEMENT_TYPE_I4 -> module
             .getContext()
             .getType("Int32", "System", AssemblyIdentity.SystemPrivateCoreLib());
-        case TypeSig.ELEMENT_TYPE_I8 -> module // long
+        case TypeSig.ELEMENT_TYPE_I8 -> module
             .getContext()
             .getType("Int64", "System", AssemblyIdentity.SystemPrivateCoreLib());
-        case TypeSig.ELEMENT_TYPE_I2 -> module // short
+        case TypeSig.ELEMENT_TYPE_I2 -> module
             .getContext()
             .getType("Int16", "System", AssemblyIdentity.SystemPrivateCoreLib());
         case TypeSig.ELEMENT_TYPE_I1 -> module
             .getContext()
             .getType("SByte", "System", AssemblyIdentity.SystemPrivateCoreLib());
-        case TypeSig.ELEMENT_TYPE_U4 -> module // uint
+        case TypeSig.ELEMENT_TYPE_U4 -> module
             .getContext()
             .getType("UInt32", "System", AssemblyIdentity.SystemPrivateCoreLib());
-        case TypeSig.ELEMENT_TYPE_U8 -> module // ulong
+        case TypeSig.ELEMENT_TYPE_U8 -> module
             .getContext()
             .getType("UInt64", "System", AssemblyIdentity.SystemPrivateCoreLib());
         case TypeSig.ELEMENT_TYPE_U2 -> module
@@ -179,18 +179,12 @@ public abstract class TypeSymbol extends Symbol {
         case TypeSig.ELEMENT_TYPE_VOID -> module
             .getContext()
             .getType("Void", "System", AssemblyIdentity.SystemPrivateCoreLib());
-        case TypeSig.ELEMENT_TYPE_TYPEDBYREF -> module
-            .getContext()
-            .getType("TypedReference", "System", AssemblyIdentity.SystemPrivateCoreLib());
-        case TypeSig.ELEMENT_TYPE_I -> module
-            .getContext()
-            .getType("IntPtr", "System", AssemblyIdentity.SystemPrivateCoreLib());
-        case TypeSig.ELEMENT_TYPE_U -> module
-            .getContext()
-            .getType("UIntPtr", "System", AssemblyIdentity.SystemPrivateCoreLib());
-        case TypeSig.ELEMENT_TYPE_FNPTR -> module
-            .getContext()
-            .getType("RuntimeMethodHandle", "System", AssemblyIdentity.SystemPrivateCoreLib());
+        case TypeSig.ELEMENT_TYPE_ARRAY -> ArrayTypeSymbolFactory.create(
+            create(typeSig.getInnerType(), mvars, vars, module),
+            typeSig.getArrayShapeSig(),
+            module);
+        case TypeSig.ELEMENT_TYPE_SZARRAY -> ArrayTypeSymbolFactory.create(
+            create(typeSig.getInnerType(), mvars, vars, module), module);
         default -> null;
       };
     }
@@ -217,8 +211,7 @@ public abstract class TypeSymbol extends Symbol {
       TypeSig signature =
           TypeSig.read(
               new SignatureReader(
-                  row.getSignatureHeapPtr().read(module.getDefiningFile().getBlobHeap())),
-              module.getDefiningFile());
+                  row.getSignatureHeapPtr().read(module.getDefiningFile().getBlobHeap())));
       return TypeSymbol.TypeSymbolFactory.create(signature, mvars, vars, module);
     }
   }

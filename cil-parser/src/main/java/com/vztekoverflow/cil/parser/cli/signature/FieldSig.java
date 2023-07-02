@@ -34,14 +34,14 @@ public class FieldSig {
     while (cmod == ELEMENT_TYPE_CMOD_REQD || cmod == ELEMENT_TYPE_CMOD_OPT) {
       reader.getUnsigned(); // read the actual cmod
       if (cmod == ELEMENT_TYPE_CMOD_REQD) {
-        requiredModifiers.add(TypeSig.read(reader, null));
+        requiredModifiers.add(TypeSig.read(reader));
       } else {
-        optionalModifiers.add(TypeSig.read(reader, null));
+        optionalModifiers.add(TypeSig.read(reader));
       }
       cmod = reader.peekUnsigned();
     }
 
-    TypeSig type = TypeSig.read(reader, null);
+    TypeSig type = TypeSig.read(reader);
 
     return new FieldSig(
         requiredModifiers.toArray(new TypeSig[0]), optionalModifiers.toArray(new TypeSig[0]), type);

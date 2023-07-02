@@ -25,10 +25,10 @@ public class MethodDefSig {
     }
 
     final int count = reader.getUnsigned();
-    final RetTypeSig retType = RetTypeSig.parse(reader, file);
+    final RetTypeSig retType = RetTypeSig.parse(reader);
     final ParamSig[] paramTypes = new ParamSig[count];
     for (int i = 0; i < count; i++) {
-      paramTypes[i] = ParamSig.parse(reader, file, false);
+      paramTypes[i] = ParamSig.parse(reader, false);
     }
 
     return new MethodDefSig(flags, genParamCount, retType, paramTypes);
