@@ -1,7 +1,7 @@
 package com.vztekoverflow.cilostazol.runtime.symbols;
 
-import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
-import com.vztekoverflow.cilostazol.runtime.other.ContextProvider;
+import com.vztekoverflow.cilostazol.runtime.context.CILOSTAZOLContext;
+import com.vztekoverflow.cilostazol.runtime.context.ContextProvider;
 
 public abstract class Symbol {
   private final ContextProvider ctxProvider;

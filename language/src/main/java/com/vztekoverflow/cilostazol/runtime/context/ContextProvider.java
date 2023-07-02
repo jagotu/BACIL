@@ -1,7 +1,6 @@
-package com.vztekoverflow.cilostazol.runtime.other;
+package com.vztekoverflow.cilostazol.runtime.context;
 
 import com.vztekoverflow.cilostazol.CILOSTAZOLLanguage;
-import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
 
 public interface ContextProvider {
   public CILOSTAZOLContext getContext();

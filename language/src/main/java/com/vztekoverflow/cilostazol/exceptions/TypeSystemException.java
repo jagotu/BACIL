@@ -1,6 +1,4 @@
-package com.vztekoverflow.cilostazol.runtime.typesystem;
-
-import com.vztekoverflow.cilostazol.exceptions.CILOSTAZOLException;
+package com.vztekoverflow.cilostazol.exceptions;
 
 public class TypeSystemException extends CILOSTAZOLException {
   public TypeSystemException() {}

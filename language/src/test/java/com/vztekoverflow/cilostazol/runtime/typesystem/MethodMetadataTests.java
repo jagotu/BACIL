@@ -2,7 +2,7 @@ package com.vztekoverflow.cilostazol.runtime.typesystem;
 
 import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cil.parser.cli.signature.MethodDefFlags;
-import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
+import com.vztekoverflow.cilostazol.runtime.context.CILOSTAZOLContext;
 import com.vztekoverflow.cilostazol.runtime.symbols.*;
 import java.nio.file.Path;
 import java.util.Arrays;

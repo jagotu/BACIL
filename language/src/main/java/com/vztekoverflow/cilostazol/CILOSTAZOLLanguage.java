@@ -7,8 +7,8 @@ import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.instrumentation.AllocationReporter;
 import com.oracle.truffle.api.nodes.Node;
 import com.vztekoverflow.cilostazol.nodes.CallEntryPointCallTarget;
-import com.vztekoverflow.cilostazol.runtime.CILOSTAZOLContext;
-import com.vztekoverflow.cilostazol.runtime.GuestAllocator;
+import com.vztekoverflow.cilostazol.runtime.context.CILOSTAZOLContext;
+import com.vztekoverflow.cilostazol.runtime.other.GuestAllocator;
 import com.vztekoverflow.cilostazol.runtime.symbols.MethodSymbol;
 import org.graalvm.polyglot.Source;
 
