@@ -6,5 +6,5 @@ projects=$(find $SCRIPT_DIR -name '*.csproj')
 
 for project in $projects; do
 	echo $project
-	dotnet build -c=Release $project
+	dotnet build -c=Release "${project}\..\bin"
 done

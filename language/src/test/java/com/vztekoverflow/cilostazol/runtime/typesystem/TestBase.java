@@ -25,11 +25,7 @@ public abstract class TestBase extends TestCase {
   protected CILOSTAZOLLanguage lang;
 
   protected Path getDllPath(String projectName) {
-    return Paths.get(
-        _directory,
-        projectName,
-        String.format("bin/%s/%s", _configuration, _dotnetVersion),
-        projectName + ".dll");
+    return Paths.get(_directory, projectName, "bin", projectName + ".dll");
   }
 
   protected Source getSourceFromProject(String projectName) throws IOException {
