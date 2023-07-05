@@ -25,6 +25,11 @@
             <version>1.0-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.graalvm.truffle</groupId>
+            <artifactId>truffle-api</artifactId>
+            <version>22.3.0</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -37,6 +42,14 @@
                     <argLine>
                         -Dtruffle.class.path.append=${project.parent.basedir}/language/target/language-1.0-SNAPSHOT.jar:${project.parent.basedir}/cil-parser/target/cil-parser-1.0-SNAPSHOT.jar
                     </argLine>
+                    <additionalClasspathElements>
+                        <additionalClasspathElement>
+                            ${project.parent.basedir}/language/target/language-1.0-SNAPSHOT.jar
+                        </additionalClasspathElement>
+                        <additionalClasspathElement>
+                            ${project.parent.basedir}/cil-parser/target/cil-parser-1.0-SNAPSHOT.jar
+                        </additionalClasspathElement>
+                    </additionalClasspathElements>
                 </configuration>
             </plugin>
         </plugins>
