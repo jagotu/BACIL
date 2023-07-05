@@ -16,8 +16,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FieldTest", "FieldTest\Fiel
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FindNonLocalType", "FindNonLocalType\FindNonLocalType.csproj", "{FEF27C17-FDC4-4C2E-A2B1-32F0735E26D9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MethodParsingGeneral", "MethodParsingGeneral\MethodParsingGeneral.csproj", "{CDA8D283-E45F-439A-BA2F-D8D8556A0DC0}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubstitutionTest", "SubstitutionTest\SubstitutionTest.csproj", "{45C6F0EC-E119-4912-A3FC-AAB0A7736C30}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MethodMetadataTest", "MethodMetadataTest\MethodMetadataTest.csproj", "{F541A02C-4DB1-4B3D-943A-B3CFE00161BC}"
