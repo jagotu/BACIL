@@ -21,15 +21,15 @@ jobs:
 
       - name: Build parser test targets
         working-directory: ./language/src/test/resources/TypeParsingTestTargets
-        run: ./build.ps1
+        run: ./build.sh
 
       - name: Build SOM test targets
         working-directory: ./language/src/test/resources/StaticObjectModelTestTargets
-        run: ./build.ps1
+        run: ./build.sh
         
       - name: Build Interpreter test targets
         working-directory: ./tests/src/test/resources
-        run: ./build.ps1
+        run: ./build.sh
 
       - name: Build with Maven
         run: mvn package
