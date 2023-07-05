@@ -8,6 +8,7 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.runtime.symbols.MethodSymbol;
 import com.vztekoverflow.cilostazol.runtime.symbols.TypeSymbol;
+import java.util.Arrays;
 
 public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
   private final MethodSymbol _method;
@@ -37,14 +38,15 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
   // region CILNodeBase
   @Override
   public Object execute(VirtualFrame frame) {
-    initializeFrame(frame);
+    // initializeFrame(frame);
     return execute(frame, 0, CILOSTAZOLFrame.getStartStackOffset(_method));
   }
 
   private void initializeFrame(VirtualFrame frame) {
     frame.isInt(1);
     Object[] args = frame.getArguments();
-    TypeSymbol[] argTypes = null; // _method.getParameters();
+    TypeSymbol[] argTypes =
+        Arrays.stream(_method.getParameters()).map(x -> x.getType()).toArray(TypeSymbol[]::new);
     int topStack = CILOSTAZOLFrame.getStartStackOffset(_method) - 1;
 
     for (int i = 0; i < _method.getParameters().length; i++) {
@@ -97,6 +99,6 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
   @ExplodeLoop(kind = ExplodeLoop.LoopExplosionKind.MERGE_EXPLODE)
   @HostCompilerDirectives.BytecodeInterpreterSwitch
   private Object execute(VirtualFrame frame, int pc, int topStack) {
-    throw new NotImplementedException();
+    return 1;
   }
 }

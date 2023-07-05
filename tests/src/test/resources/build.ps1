@@ -5,5 +5,5 @@ $projects = Get-ChildItem -Path (Get-Item $scriptPath ).parent.FullName -Include
 foreach ($project in $projects)
 {
   Write-Host $project
-  dotnet build -c=Release $project
+  dotnet build -c=Release $project --output $project\..\bin
 }
