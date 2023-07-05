@@ -7,5 +7,5 @@ projects=$(find $SCRIPT_DIR -name '*.csproj')
 for project in $projects; do
 	echo $project
 	projectdir="$(dirname "$project")"
-	dotnet build -c=Release "${projectdir}\bin"
+	dotnet build -c=Release --output "${projectdir}\bin"
 done
