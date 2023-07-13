@@ -26,7 +26,7 @@ public class BasicTests extends TestBase {
   /** This is a template for tests that get sourcecode from string. */
   public void testFromSourceCode() {
     var launcher =
-        runTestFromSourceCode(
+        runTestFromCode(
             """
       using System;
       namespace CustomTest
@@ -56,4 +56,23 @@ public class BasicTests extends TestBase {
   }
 
   // endregion
+
+  public void testWithSpecialEval() {
+    var result =
+        runTest(
+            """
+      using System;
+      namespace CustomTest
+      {
+        public class Program
+        {
+            public static int Main(int a)
+            {
+                return 42;
+            }
+        }
+      }""");
+
+    assertEquals("TEST\r\n", result);
+  }
 }

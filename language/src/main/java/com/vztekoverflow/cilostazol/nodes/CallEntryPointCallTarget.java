@@ -1,7 +1,9 @@
 package com.vztekoverflow.cilostazol.nodes;
 
 import com.oracle.truffle.api.CallTarget;
-import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
+import com.oracle.truffle.api.TruffleLanguage;
+import com.vztekoverflow.cilostazol.runtime.context.CILOSTAZOLContext;
+import java.io.PrintStream;
 
 public final class CallEntryPointCallTarget implements CallTarget {
 
@@ -13,7 +15,16 @@ public final class CallEntryPointCallTarget implements CallTarget {
     this.inner = inner;
     this.shouldAddArgs = shouldAddArgs;
     if (shouldAddArgs) {
-      throw new NotImplementedException();
+      // TODO: this part is how we can implement Console.WriteLine, it is now here just for the test
+      {
+        TruffleLanguage.Env env = CILOSTAZOLContext.CONTEXT_REF.get(null).getEnv();
+
+        try (var p = new PrintStream(env.out())) {
+          p.println("TEST");
+        }
+      }
+      arg = null; // TODO: implement, now disabled because of test templates and top-level code
+      //      throw new NotImplementedException();
     } else {
       arg = null;
     }

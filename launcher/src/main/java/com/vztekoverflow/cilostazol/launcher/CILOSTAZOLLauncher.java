@@ -15,7 +15,7 @@ import org.graalvm.polyglot.Source;
 
 public class CILOSTAZOLLauncher extends AbstractLanguageLauncher {
 
-  private static final String LANGUAGE_ID = "cil";
+  public static final String LANGUAGE_ID = "cil";
   private String inputFile = null;
   private int returnValue = 0;
 
