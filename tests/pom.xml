@@ -30,6 +30,12 @@
             <artifactId>truffle-api</artifactId>
             <version>22.3.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>13.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
