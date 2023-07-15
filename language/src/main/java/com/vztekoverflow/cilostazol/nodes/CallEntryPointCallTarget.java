@@ -4,7 +4,6 @@ import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.vztekoverflow.cilostazol.runtime.context.CILOSTAZOLContext;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
-
 import java.io.PrintStream;
 
 public final class CallEntryPointCallTarget implements CallTarget {

@@ -1,12 +1,9 @@
 package com.vztekoverflow.bacil;
 
-import com.oracle.truffle.api.Option;
 import com.oracle.truffle.api.TruffleLanguage;
 import java.util.Arrays;
 import java.util.List;
-import org.graalvm.options.OptionCategory;
 import org.graalvm.options.OptionKey;
-import org.graalvm.options.OptionStability;
 
 /** Options for the BACIL Engine. */
 public final class BACILEngineOption {
