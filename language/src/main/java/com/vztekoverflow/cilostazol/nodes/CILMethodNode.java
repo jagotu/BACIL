@@ -5,22 +5,31 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.BytecodeOSRNode;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.vztekoverflow.cil.parser.bytecode.BytecodeBuffer;
+import com.vztekoverflow.cil.parser.bytecode.BytecodeInstructions;
+import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
+import com.vztekoverflow.cilostazol.exceptions.InvalidCLIException;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
+import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.symbols.MethodSymbol;
 import com.vztekoverflow.cilostazol.runtime.symbols.TypeSymbol;
 import java.util.Arrays;
 
+import static com.vztekoverflow.cil.parser.bytecode.BytecodeInstructions.*;
+
 public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
-  private final MethodSymbol _method;
-  private final byte[] _cil;
-  private final FrameDescriptor _frameDescriptor;
-  private final CILOSTAZOLFrame.CILOSTAZOLFrameSlotKind[] _taggedFrame;
+  private final MethodSymbol method;
+  private final byte[] cil;
+  private final BytecodeBuffer bytecodeBuffer;
+  private final FrameDescriptor frameDescriptor;
+  private final TypeSymbol[] taggedFrame;
 
   private CILMethodNode(MethodSymbol method, byte[] cilCode) {
-    _method = method;
-    _cil = cilCode;
-    _frameDescriptor = CILOSTAZOLFrame.create(method.getLocals().length, method.getMaxStack());
-    _taggedFrame = new CILOSTAZOLFrame.CILOSTAZOLFrameSlotKind[_frameDescriptor.getNumberOfSlots()];
+    this.method = method;
+    cil = cilCode;
+    frameDescriptor = CILOSTAZOLFrame.create(method.getLocals().length, method.getMaxStack());
+    this.bytecodeBuffer = new BytecodeBuffer(cil);
+    taggedFrame = new TypeSymbol[frameDescriptor.getNumberOfSlots()];
   }
 
   public static CILMethodNode create(MethodSymbol method, byte[] cilCode) {
@@ -28,52 +37,62 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
   }
 
   public MethodSymbol getMethod() {
-    return _method;
+    return method;
   }
 
   public FrameDescriptor getFrameDescriptor() {
-    return _frameDescriptor;
+    return frameDescriptor;
   }
 
   // region CILNodeBase
   @Override
   public Object execute(VirtualFrame frame) {
-    // initializeFrame(frame);
-    return execute(frame, 0, CILOSTAZOLFrame.getStartStackOffset(_method));
+    initializeFrame(frame);
+    return execute(frame, 0, CILOSTAZOLFrame.getStartStackOffset(method));
   }
 
   private void initializeFrame(VirtualFrame frame) {
-    frame.isInt(1);
+    // Init arguments
     Object[] args = frame.getArguments();
-    TypeSymbol[] argTypes =
-        Arrays.stream(_method.getParameters()).map(x -> x.getType()).toArray(TypeSymbol[]::new);
-    int topStack = CILOSTAZOLFrame.getStartStackOffset(_method) - 1;
 
-    for (int i = 0; i < _method.getParameters().length; i++) {
-      switch (CILOSTAZOLFrame.getKind(argTypes[i])) {
-        case Object:
-          CILOSTAZOLFrame.putObject(frame, topStack, args[i]);
-          break;
+    boolean hasReceiver =
+        !getMethod().getMethodFlags().hasFlag(MethodSymbol.MethodFlags.Flag.STATIC);
+    int receiverSlot = hasReceiver ? 1 : 0;
+    if (hasReceiver) {
+      throw new NotImplementedException();
+    }
+
+    TypeSymbol[] argTypes =
+        Arrays.stream(method.getParameters()).map(x -> x.getType()).toArray(TypeSymbol[]::new);
+    int topStack = CILOSTAZOLFrame.getStartStackOffset(method) - 1;
+
+    for (int i = 0; i < method.getParameters().length; i++) {
+      switch (argTypes[i].getKind()) {
         case Boolean:
-          CILOSTAZOLFrame.putBoolean(frame, topStack, (boolean) args[i]);
+          CILOSTAZOLFrame.putInt(frame, topStack, (boolean) args[i + receiverSlot] ? 1 : 0);
           break;
-        case Byte:
-          CILOSTAZOLFrame.putByte(frame, topStack, (byte) args[i]);
+        case Char:
+          CILOSTAZOLFrame.putInt(frame, topStack, (byte) args[i + receiverSlot]);
           break;
         case Int:
-          CILOSTAZOLFrame.putInt(frame, topStack, (int) args[i]);
+          CILOSTAZOLFrame.putInt(frame, topStack, (int) args[i + receiverSlot]);
           break;
         case Long:
-          CILOSTAZOLFrame.putLong(frame, topStack, (int) args[i]);
+          CILOSTAZOLFrame.putLong(frame, topStack, (int) args[i + receiverSlot]);
           break;
         case Double:
-          CILOSTAZOLFrame.putDouble(frame, topStack, (double) args[i]);
+          CILOSTAZOLFrame.putDouble(frame, topStack, (double) args[i + receiverSlot]);
           break;
         case Float:
-          CILOSTAZOLFrame.putFloat(frame, topStack, (float) args[i]);
+          CILOSTAZOLFrame.putFloat(frame, topStack, (float) args[i + receiverSlot]);
           break;
+        case Object:
+          CILOSTAZOLFrame.putObject(frame, topStack, (StaticObject) args[i + receiverSlot]);
+          break;
+        default:
+          throw new NotImplementedException();
       }
-      _taggedFrame[topStack] = CILOSTAZOLFrame.getKind(argTypes[i]);
+      taggedFrame[topStack] = argTypes[i + receiverSlot];
       topStack--;
     }
   }
@@ -99,6 +118,65 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
   @ExplodeLoop(kind = ExplodeLoop.LoopExplosionKind.MERGE_EXPLODE)
   @HostCompilerDirectives.BytecodeInterpreterSwitch
   private Object execute(VirtualFrame frame, int pc, int topStack) {
-    return 1;
+
+    loop:
+    while (true) {
+      int curOpcode = bytecodeBuffer.getOpcode(pc);
+      int nextpc = bytecodeBuffer.nextInstruction(pc);
+      switch (curOpcode) {
+        case NOP:
+          break;
+
+        case LDC_I4_S:
+          CILOSTAZOLFrame.putInt(frame, topStack, bytecodeBuffer.getImmByte(pc));
+          taggedFrame[topStack] =
+              getMethod()
+                  .getContext()
+                  .getType("System", "Int32", AssemblyIdentity.SystemPrivateCoreLib());
+          break;
+
+        case RET:
+          return getReturnValue(frame, topStack - 1);
+      }
+
+      topStack += BytecodeInstructions.getStackEffect(curOpcode);
+      pc = nextpc;
+    }
   }
+
+  // region CIL opcode helpers
+  private Object getReturnValue(VirtualFrame frame, int top) {
+    TypeSymbol retType = getMethod().getReturnType().getType();
+
+    switch (retType.getKind()) {
+      case Boolean -> {
+        return CILOSTAZOLFrame.popInt(frame, top - 1) > 1 ? true : false;
+      }
+      case Char -> {
+        return (byte) CILOSTAZOLFrame.popInt(frame, top - 1);
+      }
+      case Int -> {
+        return CILOSTAZOLFrame.popInt(frame, top - 1);
+      }
+      case Float -> {
+        return CILOSTAZOLFrame.popFloat(frame, top - 1);
+      }
+      case Long -> {
+        return CILOSTAZOLFrame.popLong(frame, top - 1);
+      }
+      case Double -> {
+        return CILOSTAZOLFrame.popDouble(frame, top - 1);
+      }
+      case Void -> {
+        return null;
+      }
+      case Object -> {
+        return CILOSTAZOLFrame.popObject(frame, top - 1);
+      }
+      default -> {
+        throw new InvalidCLIException();
+      }
+    }
+  }
+  // endregion
 }

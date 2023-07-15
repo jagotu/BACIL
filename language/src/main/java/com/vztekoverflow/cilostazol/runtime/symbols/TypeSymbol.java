@@ -20,11 +20,10 @@ public abstract class TypeSymbol extends Symbol {
   protected final ModuleSymbol definingModule;
   private final SystemTypes kind;
 
-  public TypeSymbol(ModuleSymbol definingModule) {
+  public TypeSymbol(ModuleSymbol definingModule, SystemTypes kind) {
     super(ContextProviderImpl.getInstance());
     this.definingModule = definingModule;
-    // TODO
-    this.kind = SystemTypes.Object;
+    this.kind = kind;
   }
 
   protected static int fastLookup(TypeSymbol target, TypeSymbol[] types) {

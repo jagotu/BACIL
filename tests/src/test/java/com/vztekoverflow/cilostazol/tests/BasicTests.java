@@ -115,7 +115,7 @@ public class BasicTests extends TestBase {
     var result = runTestFromFile("return.cs");
 
     assertEquals("TEST\r\n", result.output());
-    assertEquals(1, result.exitCode());
+    assertEquals(42, result.exitCode());
   }
 
   // endregion
