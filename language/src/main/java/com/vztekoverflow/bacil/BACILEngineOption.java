@@ -23,15 +23,15 @@ public final class BACILEngineOption {
 
   public static final String STUBBED_METHODS_NAME = "cil.stubMethods";
 
-  @Option(
-      name = STUBBED_METHODS_NAME,
-      category = OptionCategory.USER,
-      stability = OptionStability.STABLE,
-      help =
-          "A list of methods to be replaced with stubs returning a default value. "
-              + "Delimited by a semicolon \'"
-              + OPTION_ARRAY_SEPARATOR
-              + "\'.")
+  //  @Option(
+  //      name = STUBBED_METHODS_NAME,
+  //      category = OptionCategory.USER,
+  //      stability = OptionStability.STABLE,
+  //      help =
+  //          "A list of methods to be replaced with stubs returning a default value. "
+  //              + "Delimited by a semicolon \'"
+  //              + OPTION_ARRAY_SEPARATOR
+  //              + "\'.")
   public static final OptionKey<String> STUBBED_METHODS = new OptionKey<>("");
 
   public static List<String> getPolyglotOptionSearchPaths(TruffleLanguage.Env env) {

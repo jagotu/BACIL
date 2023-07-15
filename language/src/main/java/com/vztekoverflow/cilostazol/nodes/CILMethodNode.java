@@ -150,28 +150,28 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
 
     switch (retType.getKind()) {
       case Boolean -> {
-        return CILOSTAZOLFrame.popInt(frame, top - 1) > 1 ? true : false;
+        return CILOSTAZOLFrame.popInt(frame, top) > 1 ? true : false;
       }
       case Char -> {
         return (byte) CILOSTAZOLFrame.popInt(frame, top - 1);
       }
       case Int -> {
-        return CILOSTAZOLFrame.popInt(frame, top - 1);
+        return CILOSTAZOLFrame.popInt(frame, top);
       }
       case Float -> {
-        return CILOSTAZOLFrame.popFloat(frame, top - 1);
+        return CILOSTAZOLFrame.popFloat(frame, top);
       }
       case Long -> {
-        return CILOSTAZOLFrame.popLong(frame, top - 1);
+        return CILOSTAZOLFrame.popLong(frame, top);
       }
       case Double -> {
-        return CILOSTAZOLFrame.popDouble(frame, top - 1);
+        return CILOSTAZOLFrame.popDouble(frame, top);
       }
       case Void -> {
         return null;
       }
       case Object -> {
-        return CILOSTAZOLFrame.popObject(frame, top - 1);
+        return CILOSTAZOLFrame.popObject(frame, top);
       }
       default -> {
         throw new InvalidCLIException();

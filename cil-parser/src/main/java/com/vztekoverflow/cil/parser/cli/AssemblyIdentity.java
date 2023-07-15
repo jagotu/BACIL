@@ -56,10 +56,16 @@ public final class AssemblyIdentity {
         row.getNameHeapPtr().read(stringHeap));
   }
 
+  // region PredefinedStandardLibraries
   public static AssemblyIdentity SystemPrivateCoreLib() {
     return new AssemblyIdentity(
         (short) 7, (short) 0, (short) 0, (short) 0, "System.Private.CoreLib");
   }
+
+  public static AssemblyIdentity SystemRuntimeLib() {
+    return new AssemblyIdentity((short) 7, (short) 0, (short) 0, (short) 0, "System.Runtime");
+  }
+  // endregion
 
   /**
    * Check whether this assembly matches an assembly reference.

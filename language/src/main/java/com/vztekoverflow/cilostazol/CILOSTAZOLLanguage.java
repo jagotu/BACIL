@@ -10,6 +10,7 @@ import com.vztekoverflow.cilostazol.nodes.CallEntryPointCallTarget;
 import com.vztekoverflow.cilostazol.runtime.context.CILOSTAZOLContext;
 import com.vztekoverflow.cilostazol.runtime.other.GuestAllocator;
 import com.vztekoverflow.cilostazol.runtime.symbols.MethodSymbol;
+import org.graalvm.options.OptionDescriptors;
 import org.graalvm.polyglot.Source;
 
 /** The BACIL language class implementing TruffleLanguage. */
@@ -35,6 +36,11 @@ public class CILOSTAZOLLanguage extends TruffleLanguage<CILOSTAZOLContext> {
 
   public static CILOSTAZOLLanguage get(Node node) {
     return REFERENCE.get(node);
+  }
+
+  @Override
+  protected OptionDescriptors getOptionDescriptors() {
+    return new CILOSTAZOLEngineOptionOptionDescriptors();
   }
 
   @Override

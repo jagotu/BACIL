@@ -88,7 +88,7 @@ public class CILOSTAZOLContext {
 
   // region Symbols
   public NamedTypeSymbol getType(String name, String namespace, AssemblyIdentity assembly) {
-    var cacheKey = new TypeSymbolCacheKey(name, namespace, assembly);
+    var cacheKey = hardCodedForwarding(new TypeSymbolCacheKey(name, namespace, assembly));
 
     return typeSymbolCache.computeIfAbsent(
         cacheKey,
@@ -102,6 +102,21 @@ public class CILOSTAZOLContext {
 
           return null;
         });
+  }
+
+  public TypeSymbolCacheKey hardCodedForwarding(TypeSymbolCacheKey cacheKey) {
+    if (cacheKey.assemblyIdentity() == AssemblyIdentity.SystemRuntimeLib()) {
+      if (cacheKey.namespace() == "System") {
+        if (cacheKey.name() == "Int32")
+          return new TypeSymbolCacheKey(
+              cacheKey.name(), cacheKey.namespace(), AssemblyIdentity.SystemPrivateCoreLib());
+        else return cacheKey;
+      } else {
+        return cacheKey;
+      }
+    } else {
+      return cacheKey;
+    }
   }
 
   public AssemblySymbol findAssembly(AssemblyIdentity assemblyIdentity) {

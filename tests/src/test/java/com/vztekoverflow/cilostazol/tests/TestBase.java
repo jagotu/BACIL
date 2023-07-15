@@ -12,12 +12,14 @@ import java.nio.file.Paths;
 import java.util.concurrent.locks.ReentrantLock;
 import junit.framework.TestCase;
 import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.Source;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 
 public abstract class TestBase extends TestCase {
+  private static final String directoryDlls = "src/test/resources/dlls";
   private static final String directoryDllTests = "src/test/resources/BasicTests";
   private static final String directoryCustomTest =
       "src/test/resources/InterpreterTests/CustomTest";
@@ -33,7 +35,7 @@ public abstract class TestBase extends TestCase {
   @BeforeAll
   public void setUp() {
     outputStream = new ByteArrayOutputStream();
-    context = setupContext().build();
+    context = setupContext().option("cil.libraryPath", directoryDlls).build();
   }
 
   /**
@@ -225,7 +227,11 @@ public abstract class TestBase extends TestCase {
   }
 
   private Context.Builder setupContext() {
-    return Context.newBuilder(LANGUAGE_ID).out(outputStream).err(outputStream).allowAllAccess(true);
+    return Context.newBuilder(LANGUAGE_ID)
+        .engine(Engine.newBuilder(LANGUAGE_ID).build())
+        .out(outputStream)
+        .err(outputStream)
+        .allowAllAccess(true);
   }
 
   private Source getSource(File sourceFile) {

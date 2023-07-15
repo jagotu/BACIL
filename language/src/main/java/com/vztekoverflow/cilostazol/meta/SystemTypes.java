@@ -1,5 +1,7 @@
 package com.vztekoverflow.cilostazol.meta;
 
+import java.util.Objects;
+
 public enum SystemTypes {
   Boolean,
   Char,
@@ -12,7 +14,7 @@ public enum SystemTypes {
 
   // TODO: It should rely on assembly identity too.
   public static SystemTypes getKind(String name, String namespace) {
-    if (namespace == "System") {
+    if (Objects.equals(namespace, "System")) {
       switch (name) {
         case "Boolean":
           return SystemTypes.Boolean;
