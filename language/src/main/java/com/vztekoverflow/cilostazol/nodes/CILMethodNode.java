@@ -1,5 +1,7 @@
 package com.vztekoverflow.cilostazol.nodes;
 
+import static com.vztekoverflow.cil.parser.bytecode.BytecodeInstructions.*;
+
 import com.oracle.truffle.api.HostCompilerDirectives;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -14,8 +16,6 @@ import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.symbols.MethodSymbol;
 import com.vztekoverflow.cilostazol.runtime.symbols.TypeSymbol;
 import java.util.Arrays;
-
-import static com.vztekoverflow.cil.parser.bytecode.BytecodeInstructions.*;
 
 public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
   private final MethodSymbol method;
@@ -119,7 +119,6 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
   @HostCompilerDirectives.BytecodeInterpreterSwitch
   private Object execute(VirtualFrame frame, int pc, int topStack) {
 
-    loop:
     while (true) {
       int curOpcode = bytecodeBuffer.getOpcode(pc);
       int nextpc = bytecodeBuffer.nextInstruction(pc);
@@ -150,7 +149,7 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
 
     switch (retType.getKind()) {
       case Boolean -> {
-        return CILOSTAZOLFrame.popInt(frame, top) > 1 ? true : false;
+        return CILOSTAZOLFrame.popInt(frame, top) > 1;
       }
       case Char -> {
         return (byte) CILOSTAZOLFrame.popInt(frame, top - 1);
