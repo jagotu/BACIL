@@ -246,8 +246,8 @@ It would be better to set Project SDK in IntelliJ IDEA to GraalVM SDK, becuase o
 | ldloca | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
 | ldobj | x | x | [#64](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/64) |
 | ldvirtftn | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
-| leave | x | x | x |
-| leave.s | x | x | x |
+| leave | x | x | [#61](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/61) |
+| leave.s | x | x | [#61](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/61) |
 | localloc | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
 | mkrefany | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
 | mul.ovf | x | x | [#75](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/75) |
