@@ -1,6 +1,5 @@
 package com.vztekoverflow.cilostazol.nodes;
 
-import static com.vztekoverflow.bacil.bytecode.BytecodeInstructions.LDARGA_S;
 import static com.vztekoverflow.cil.parser.bytecode.BytecodeInstructions.*;
 
 import com.oracle.truffle.api.HostCompilerDirectives;
@@ -11,8 +10,11 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.vztekoverflow.cil.parser.bytecode.BytecodeBuffer;
 import com.vztekoverflow.cil.parser.bytecode.BytecodeInstructions;
 import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
+import com.vztekoverflow.cilostazol.exceptions.InterpreterException;
 import com.vztekoverflow.cilostazol.exceptions.InvalidCLIException;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
+import com.vztekoverflow.cilostazol.meta.SystemTypes;
+import com.vztekoverflow.cilostazol.runtime.ReferenceSymbol;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.symbols.*;
 
@@ -200,6 +202,20 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
           loadArgRefToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack);
           break;
 
+        case LDIND_I1:
+        case LDIND_U1:
+        case LDIND_I2:
+        case LDIND_U2:
+        case LDIND_I4:
+        case LDIND_U4:
+        case LDIND_I8:
+        case LDIND_I:
+        case LDIND_R4:
+        case LDIND_R8:
+        case LDIND_REF:
+          loadIndirect(frame, topStack - 1);
+          break;
+
         case RET:
           return getReturnValue(frame, topStack - 1);
       }
@@ -284,6 +300,25 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
     // In this situation we don't know the type of null yet -> it will be determined later
     CILOSTAZOLFrame.putObject(frame, top, StaticObject.NULL);
     taggedFrame[top] = new NullSymbol();
+  }
+
+  private void loadIndirect(VirtualFrame frame, int top) {
+    if (taggedFrame[top] instanceof ReferenceSymbol) {
+      int offset = 0;
+      if (taggedFrame[top] instanceof LocalReferenceSymbol)
+        offset = CILOSTAZOLFrame.getStartLocalsOffset(getMethod());
+      else if (taggedFrame[top] instanceof ArgReferenceSymbol)
+        offset = CILOSTAZOLFrame.getStartArgsOffset(getMethod());
+      else throw new InterpreterException();
+
+      assert taggedFrame[top].getKind() != SystemTypes.Int;
+      int slot = offset + CILOSTAZOLFrame.popInt(frame, top);
+      // Get referenced slot, copy it and tag frame with its type
+      CILOSTAZOLFrame.Copy(frame, slot, top);
+      taggedFrame[top] = ((ReferenceSymbol) taggedFrame[top]).getUnderlyingTypeSymbol();
+    } else {
+      throw new InterpreterException();
+    }
   }
 
   private void popStack(int top) {
