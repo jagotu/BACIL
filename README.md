@@ -105,7 +105,7 @@ It would be better to set Project SDK in IntelliJ IDEA to GraalVM SDK, becuase o
 | ldarg.1 | o | x |
 | ldarg.2 | o | x |
 | ldarg.3 | o | x |
-| ldarga.s | x | x |
+| ldarga.s | o | x |
 | ldarg.s | o | x |
 | ldc.i4 | o | x |
 | ldc.i4.0 | o | x |
@@ -153,7 +153,7 @@ It would be better to set Project SDK in IntelliJ IDEA to GraalVM SDK, becuase o
 | ldloc.1 | o | x |
 | ldloc.2 | o | x |
 | ldloc.3 | o | x |
-| ldloca.s | x | x |
+| ldloca.s | o | x |
 | ldloc.s | o | x |
 | ldnull | x | x |
 | ldsfld | x | x |
