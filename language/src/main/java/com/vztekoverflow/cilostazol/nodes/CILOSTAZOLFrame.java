@@ -3,10 +3,8 @@ package com.vztekoverflow.cilostazol.nodes;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
-import com.vztekoverflow.cilostazol.meta.SystemTypes;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.symbols.MethodSymbol;
-
 import java.util.Objects;
 
 public final class CILOSTAZOLFrame {

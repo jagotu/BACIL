@@ -3,9 +3,7 @@ package com.vztekoverflow.cilostazol.runtime.symbols;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIGenericParamConstraintTableRow;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIGenericParamTableRow;
-import com.vztekoverflow.cilostazol.meta.SystemTypes;
 import com.vztekoverflow.cilostazol.nodes.CILOSTAZOLFrame;
-
 import java.util.ArrayList;
 import java.util.List;
 

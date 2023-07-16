@@ -1,7 +1,5 @@
 package com.vztekoverflow.cilostazol.meta;
 
-import java.util.Objects;
-
 public enum SystemTypes {
   Boolean,
   Char,
@@ -10,5 +8,5 @@ public enum SystemTypes {
   Long,
   Double,
   Void,
-  Object;
+  Object
 }
