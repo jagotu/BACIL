@@ -48,225 +48,225 @@ It would be better to set Project SDK in IntelliJ IDEA to GraalVM SDK, becuase o
 
 **Interpreter**
 
-| Opcode | Implemented | Tested | 
-| --- | --- | --- |
-| add | x | x |
-| and | x | x |
-| beq | x | x |
-| beq.s | x | x |
-| bge | x | x |
-| bge.s | x | x |
-| bge.un | x | x |
-| bge.un.s | x | x |
-| bgt | x | x |
-| bgt.s | x | x |
-| bgt.un | x | x |
-| bgt.un.s | x | x |
-| ble | x | x |
-| ble.s | x | x |
-| ble.un | x | x |
-| ble.un.s | x | x |
-| blt | x | x |
-| blt.s | x | x |
-| blt.un | x | x |
-| blt.un.s | x | x |
-| bne.un | x | x |
-| bne.un.s | x | x |
+| Opcode | Implemented | Tested | Issue|
+| --- | --- | --- | --- |
+| add | x | x | x |
+| and | x | x | x |
+| beq | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| beq.s | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| bge | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| bge.s | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| bge.un | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| bge.un.s | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| bgt | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| bgt.s | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| bgt.un | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| bgt.un.s | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| ble | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| ble.s | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| ble.un | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| ble.un.s | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| blt | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| blt.s | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| blt.un | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| blt.un.s | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| bne.un | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| bne.un.s | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
 | box | x | x |
-| br | x | x |
-| brfalse | x | x |
-| brfalse.s | x | x |
-| br.s | x | x |
-| brtrue | x | x |
-| brtrue.s | x | x |
+| br | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| brfalse | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| brfalse.s | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| br.s | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| brtrue | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| brtrue.s | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
 | call | x | x |
 | callvirt | x | x |
-| ceq | x | x |
-| cgt | x | x |
-| cgt.un | x | x |
-| clt | x | x |
-| clt.un | x | x |
-| conv.i | x | x |
-| conv.i1 | x | x |
-| conv.i2 | x | x |
-| conv.i4 | x | x |
-| conv.i8 | x | x |
-| conv.r4 | x | x |
-| conv.r8 | x | x |
-| conv.u | x | x |
-| conv.u1 | x | x |
-| conv.u2 | x | x |
-| conv.u4 | x | x |
-| conv.u8 | x | x |
-| div | x | x |
-| dup | x | x |
-| initobj | x | x |
-| ldarg.0 | x | x |
-| ldarg.1 | x | x |
-| ldarg.2 | x | x |
-| ldarg.3 | x | x |
-| ldarga.s | x | x |
-| ldarg.s | x | x |
-| ldc.i4 | x | x |
-| ldc.i4.0 | x | x |
-| ldc.i4.1 | x | x |
-| ldc.i4.2 | x | x |
-| ldc.i4.3 | x | x |
-| ldc.i4.4 | x | x |
-| ldc.i4.5 | x | x |
-| ldc.i4.6 | x | x |
-| ldc.i4.7 | x | x |
-| ldc.i4.8 | x | x |
-| ldc.i4.m1 | x | x |
-| ldc.i4.s | o | o |
-| ldc.i8 | x | x |
-| ldc.r4 | x | x |
-| ldc.r8 | x | x |
-| ldelem | x | x |
-| ldelema | x | x |
-| ldelem.i | x | x |
-| ldelem.i1 | x | x |
-| ldelem.i2 | x | x |
-| ldelem.i4 | x | x |
-| ldelem.i8 | x | x |
-| ldelem.r4 | x | x |
-| ldelem.r8 | x | x |
-| ldelem.ref | x | x |
-| ldelem.u1 | x | x |
-| ldelem.u2 | x | x |
-| ldelem.u4 | x | x |
-| ldfld | x | x |
-| ldflda | x | x |
-| ldind.i | x | x |
-| ldind.i1 | x | x |
-| ldind.i2 | x | x |
-| ldind.i4 | x | x |
-| ldind.i8 | x | x |
-| ldind.r4 | x | x |
-| ldind.r8 | x | x |
-| ldind.ref | x | x |
-| ldind.u1 | x | x |
-| ldind.u2 | x | x |
-| ldind.u4 | x | x |
-| ldlen | x | x |
-| ldloc.0 | x | x |
-| ldloc.1 | x | x |
-| ldloc.2 | x | x |
-| ldloc.3 | x | x |
-| ldloca.s | x | x |
-| ldloc.s | x | x |
-| ldnull | x | x |
-| ldsfld | x | x |
-| ldsflda | x | x |
-| ldstr | x | x |
-| ldtoken | x | x |
-| mul | x | x |
-| neg | x | x |
-| newarr | x | x |
-| newobj | x | x |
-| nop | x | x |
-| not | x | x |
-| or | x | x |
-| pop | x | x |
-| rem | x | x |
-| ret | o | o |
-| shl | x | x |
-| shr | x | x |
-| shr.un | x | x |
-| starg.s | x | x |
-| stelem | x | x |
-| stelem.i | x | x |
-| stelem.i1 | x | x |
-| stelem.i2 | x | x |
-| stelem.i4 | x | x |
-| stelem.i8 | x | x |
-| stelem.r4 | x | x |
-| stelem.r8 | x | x |
-| stelem.ref | x | x |
-| stfld | x | x |
-| stind.i | x | x |
-| stind.i1 | x | x |
-| stind.i2 | x | x |
-| stind.i4 | x | x |
-| stind.i8 | x | x |
-| stind.r4 | x | x |
-| stind.r8 | x | x |
-| stind.ref | x | x |
-| stloc.0 | x | x |
-| stloc.1 | x | x |
-| stloc.2 | x | x |
-| stloc.3 | x | x |
-| stloc.s | x | x |
-| stsfld | x | x |
-| sub | x | x |
-| unbox.any | x | x |
-| xor |
+| ceq | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| cgt | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| cgt.un | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| clt | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| clt.un | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| conv.i | x | x | x |
+| conv.i1 | x | x | x |
+| conv.i2 | x | x | x |
+| conv.i4 | x | x | x |
+| conv.i8 | x | x | x |
+| conv.r4 | x | x | x |
+| conv.r8 | x | x | x |
+| conv.u | x | x | x |
+| conv.u1 | x | x | x |
+| conv.u2 | x | x | x |
+| conv.u4 | x | x | x |
+| conv.u8 | x | x | x |
+| div | x | x | x |
+| dup | x | x | x |
+| initobj | x | x | x |
+| ldarg.0 | x | x | x |
+| ldarg.1 | x | x | x |
+| ldarg.2 | x | x | x |
+| ldarg.3 | x | x | x |
+| ldarga.s | x | x | x |
+| ldarg.s | x | x | x |
+| ldc.i4 | x | x | x |
+| ldc.i4.0 | x | x | x |
+| ldc.i4.1 | x | x | x |
+| ldc.i4.2 | x | x | x |
+| ldc.i4.3 | x | x | x |
+| ldc.i4.4 | x | x | x |
+| ldc.i4.5 | x | x | x |
+| ldc.i4.6 | x | x | x |
+| ldc.i4.7 | x | x | x |
+| ldc.i4.8 | x | x | x |
+| ldc.i4.m1 | x | x | x |
+| ldc.i4.s | o | o | x |
+| ldc.i8 | x | x | x |
+| ldc.r4 | x | x | x |
+| ldc.r8 | x | x | x |
+| ldelem | x | x | x |
+| ldelema | x | x | x |
+| ldelem.i | x | x | x |
+| ldelem.i1 | x | x | x |
+| ldelem.i2 | x | x | x |
+| ldelem.i4 | x | x | x |
+| ldelem.i8 | x | x | x |
+| ldelem.r4 | x | x | x |
+| ldelem.r8 | x | x | x |
+| ldelem.ref | x | x | x |
+| ldelem.u1 | x | x | x |
+| ldelem.u2 | x | x | x |
+| ldelem.u4 | x | x | x |
+| ldfld | x | x | x |
+| ldflda | x | x | x |
+| ldind.i | x | x | x |
+| ldind.i1 | x | x | x |
+| ldind.i2 | x | x | x |
+| ldind.i4 | x | x | x |
+| ldind.i8 | x | x | x |
+| ldind.r4 | x | x | x |
+| ldind.r8 | x | x | x |
+| ldind.ref | x | x | x |
+| ldind.u1 | x | x | x |
+| ldind.u2 | x | x | x |
+| ldind.u4 | x | x | x |
+| ldlen | x | x | x |
+| ldloc.0 | x | x | x |
+| ldloc.1 | x | x | x |
+| ldloc.2 | x | x | x |
+| ldloc.3 | x | x | x |
+| ldloca.s | x | x | x |
+| ldloc.s | x | x | x |
+| ldnull | x | x | x |
+| ldsfld | x | x | x |
+| ldsflda | x | x | x |
+| ldstr | x | x | x |
+| ldtoken | x | x | x |
+| mul | x | x | x |
+| neg | x | x | x |
+| newarr | x | x | x |
+| newobj | x | x | x |
+| nop | x | x | x |
+| not | x | x | x |
+| or | x | x | x |
+| pop | x | x | x |
+| rem | x | x | x |
+| ret | o | o | x |
+| shl | x | x | x |
+| shr | x | x | x |
+| shr.un | x | x | x |
+| starg.s | x | x | x |
+| stelem | x | x | x |
+| stelem.i | x | x | x |
+| stelem.i1 | x | x | x |
+| stelem.i2 | x | x | x |
+| stelem.i4 | x | x | x |
+| stelem.i8 | x | x | x |
+| stelem.r4 | x | x | x |
+| stelem.r8 | x | x | x |
+| stelem.ref | x | x | x |
+| stfld | x | x | x |
+| stind.i | x | x | x |
+| stind.i1 | x | x | x |
+| stind.i2 | x | x | x |
+| stind.i4 | x | x | x |
+| stind.i8 | x | x | x |
+| stind.r4 | x | x | x |
+| stind.r8 | x | x | x |
+| stind.ref | x | x | x |
+| stloc.0 | x | x | x |
+| stloc.1 | x | x | x |
+| stloc.2 | x | x | x |
+| stloc.3 | x | x | x |
+| stloc.s | x | x | x |
+| stsfld | x | x | x |
+| sub | x | x | x |
+| unbox.any | x | x | x |
+| xor | x | x | x |
 | Doesn't have impl. in bachelor thesis |
-| add.ovf | x | x |
-| add.ovf.un | x | x |
-| arglist | x | x |
-| break | x | x |
-| calli | x | x |
-| castclass | x | x |
-| ckfinite | x | x |
-| constrained. | x | x |
-| conv.ovf.i | x | x |
-| conv.ovf.i1 | x | x |
-| conv.ovf.i1.un | x | x |
-| conv.ovf.i2 | x | x |
-| conv.ovf.i2.un | x | x |
-| conv.ovf.i4 | x | x |
-| conv.ovf.i4.un | x | x |
-| conv.ovf.i8 | x | x |
-| conv.ovf.i8.un | x | x |
-| conv.ovf.i.un | x | x |
-| conv.ovf.u | x | x |
-| conv.ovf.u1 | x | x |
-| conv.ovf.u1.un | x | x |
-| conv.ovf.u2 | x | x |
-| conv.ovf.u2.un | x | x |
-| conv.ovf.u4 | x | x |
-| conv.ovf.u4.un | x | x |
-| conv.ovf.u8 | x | x |
-| conv.ovf.u8.un | x | x |
-| conv.ovf.u.un | x | x |
-| conv.r.un | x | x |
-| cpblk | x | x |
-| cpobj | x | x |
-| div.un | x | x |
-| endfilter | x | x |
-| endfinally | x | x |
-| initblk | x | x |
-| isinst | x | x |
-| jmp | x | x |
-| ldarg | x | x |
-| ldarga | x | x |
-| ldftn | x | x |
-| ldloc | x | x |
-| ldloca | x | x |
-| ldobj | x | x |
-| ldvirtftn | x | x |
-| leave | x | x |
-| leave.s | x | x |
-| localloc | x | x |
-| mkrefany | x | x |
-| mul.ovf | x | x |
-| mul.ovf.un | x | x |
-| no. | x | x |
-| readonly. | x | x |
-| Refanytype | x | x |
-| refanyval | x | x |
-| rem.un | x | x |
-| rethrow | x | x |
-| sizeof | x | x |
-| starg | x | x |
-| stloc | x | x |
-| stobj | x | x |
-| sub.ovf | x | x |
-| sub.ovf.un | x | x |
-| switch | x | x |
-| tail. | x | x |
-| throw | x | x |
+| add.ovf | x | x | x |
+| add.ovf.un | x | x | x |
+| arglist | x | x | x |
+| break | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| calli | x | x | x |
+| castclass | x | x | x |
+| ckfinite | x | x | x |
+| constrained. | x | x | x |
+| conv.ovf.i | x | x | x |
+| conv.ovf.i1 | x | x | x |
+| conv.ovf.i1.un | x | x | x |
+| conv.ovf.i2 | x | x | x |
+| conv.ovf.i2.un | x | x | x |
+| conv.ovf.i4 | x | x | x |
+| conv.ovf.i4.un | x | x | x |
+| conv.ovf.i8 | x | x | x |
+| conv.ovf.i8.un | x | x | x |
+| conv.ovf.i.un | x | x | x |
+| conv.ovf.u | x | x | x |
+| conv.ovf.u1 | x | x | x |
+| conv.ovf.u1.un | x | x | x |
+| conv.ovf.u2 | x | x | x |
+| conv.ovf.u2.un | x | x | x |
+| conv.ovf.u4 | x | x | x |
+| conv.ovf.u4.un | x | x | x |
+| conv.ovf.u8 | x | x | x |
+| conv.ovf.u8.un | x | x | x |
+| conv.ovf.u.un | x | x | x |
+| conv.r.un | x | x | x |
+| cpblk | x | x | x |
+| cpobj | x | x | x |
+| div.un | x | x | x |
+| endfilter | x | x | x |
+| endfinally | x | x | x |
+| initblk | x | x | x |
+| isinst | x | x | x |
+| jmp | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| ldarg | x | x | x |
+| ldarga | x | x | x |
+| ldftn | x | x | x |
+| ldloc | x | x | x |
+| ldloca | x | x | x |
+| ldobj | x | x | x |
+| ldvirtftn | x | x | x |
+| leave | x | x | x |
+| leave.s | x | x | x |
+| localloc | x | x | x |
+| mkrefany | x | x | x |
+| mul.ovf | x | x | x |
+| mul.ovf.un | x | x | x |
+| no. | x | x | x |
+| readonly. | x | x x | |
+| Refanytype | x | x | x |
+| refanyval | x | x | x |
+| rem.un | x | x | x |
+| rethrow | x | x | x |
+| sizeof | x | x | x |
+| starg | x | x | x |
+| stloc | x | x | x |
+| stobj | x | x | x |
+| sub.ovf | x | x | x |
+| sub.ovf.un | x | x | x |
+| switch | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| tail. | x | x | x |
+| throw | x | x | x |
 | unaligned. | x | x |
-| unbox | x | x |
-| volatile. | x | x |
+| unbox | x | x | x |
+| volatile. | x | x | x |
