@@ -253,7 +253,7 @@ It would be better to set Project SDK in IntelliJ IDEA to GraalVM SDK, becuase o
 | mul.ovf | x | x | [#75](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/75) |
 | mul.ovf.un | x | x | [#75](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/75) |
 | no. | x | x | [#68](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/68) |
-| readonly. | x | x x | [#68](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/68) |
+| readonly. | x | x | [#68](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/68) |
 | Refanytype | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
 | refanyval | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
 | rem.un | x | x | [#75](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/75) |
