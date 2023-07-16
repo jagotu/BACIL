@@ -80,7 +80,7 @@ It would be better to set Project SDK in IntelliJ IDEA to GraalVM SDK, becuase o
 | brtrue | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
 | brtrue.s | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
 | call | x | x | [#62](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/62) | 
-| callvirt | x | x | x |
+| callvirt | x | x | [#63](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/63) |
 | ceq | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
 | cgt | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
 | cgt.un | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
