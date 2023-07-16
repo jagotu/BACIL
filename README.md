@@ -202,71 +202,71 @@ It would be better to set Project SDK in IntelliJ IDEA to GraalVM SDK, becuase o
 | unbox.any | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
 | xor | x | x | [#75](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/75) |
 | Doesn't have impl. in bachelor thesis |
-| add.ovf | x | x |
-| add.ovf.un | x | x |
-| arglist | x | x |
-| break | x | x |
-| calli | x | x |
-| castclass | x | x |
-| ckfinite | x | x |
-| constrained. | x | x |
-| conv.ovf.i | x | x |
-| conv.ovf.i1 | x | x |
-| conv.ovf.i1.un | x | x |
-| conv.ovf.i2 | x | x |
-| conv.ovf.i2.un | x | x |
-| conv.ovf.i4 | x | x |
-| conv.ovf.i4.un | x | x |
-| conv.ovf.i8 | x | x |
-| conv.ovf.i8.un | x | x |
-| conv.ovf.i.un | x | x |
-| conv.ovf.u | x | x |
-| conv.ovf.u1 | x | x |
-| conv.ovf.u1.un | x | x |
-| conv.ovf.u2 | x | x |
-| conv.ovf.u2.un | x | x |
-| conv.ovf.u4 | x | x |
-| conv.ovf.u4.un | x | x |
-| conv.ovf.u8 | x | x |
-| conv.ovf.u8.un | x | x |
-| conv.ovf.u.un | x | x |
-| conv.r.un | x | x |
-| cpblk | x | x |
-| cpobj | x | x |
-| div.un | x | x |
-| endfilter | x | x |
-| endfinally | x | x |
-| initblk | x | x |
-| isinst | x | x |
-| jmp | x | x |
-| ldarg | x | x |
-| ldarga | x | x |
-| ldftn | x | x |
-| ldloc | x | x |
-| ldloca | x | x |
-| ldobj | x | x |
-| ldvirtftn | x | x |
-| leave | x | x |
-| leave.s | x | x |
-| localloc | x | x |
-| mkrefany | x | x |
-| mul.ovf | x | x |
-| mul.ovf.un | x | x |
-| no. | x | x |
-| readonly. | x | x |
-| Refanytype | x | x |
-| refanyval | x | x |
-| rem.un | x | x |
-| rethrow | x | x |
-| sizeof | x | x |
-| starg | x | x |
-| stloc | x | x |
-| stobj | x | x |
-| sub.ovf | x | x |
-| sub.ovf.un | x | x |
-| switch | x | x |
-| tail. | x | x |
-| throw | x | x |
+| add.ovf | x | x | [#75](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/75) |
+| add.ovf.un | x | x | [#75](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/75) |
+| arglist | x | x | x |
+| break | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| calli | x | x | x |
+| castclass | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
+| ckfinite | x | x | [#68](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/68) |
+| constrained. | x | x | [#68](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/68) |
+| conv.ovf.i | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
+| conv.ovf.i1 | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
+| conv.ovf.i1.un | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
+| conv.ovf.i2 | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
+| conv.ovf.i2.un | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
+| conv.ovf.i4 | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
+| conv.ovf.i4.un | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
+| conv.ovf.i8 | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
+| conv.ovf.i8.un | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
+| conv.ovf.i.un | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
+| conv.ovf.u | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
+| conv.ovf.u1 | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
+| conv.ovf.u1.un | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
+| conv.ovf.u2 | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
+| conv.ovf.u2.un | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
+| conv.ovf.u4 | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
+| conv.ovf.u4.un | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
+| conv.ovf.u8 | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
+| conv.ovf.u8.un | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
+| conv.ovf.u.un | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
+| conv.r.un | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
+| cpblk | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
+| cpobj | x | x | [#64](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/64) |
+| div.un | x | x | [#75](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/75) |
+| endfilter | x | x | [#61](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/61) |
+| endfinally | x | x | [#61](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/61) |
+| initblk | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
+| isinst | x | x | [#64](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/64) |
+| jmp | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| ldarg | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
+| ldarga | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
+| ldftn | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
+| ldloc | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
+| ldloca | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
+| ldobj | x | x | [#64](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/64) |
+| ldvirtftn | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
+| leave | x | x | [#61](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/61) |
+| leave.s | x | x | [#61](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/61) |
+| localloc | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
+| mkrefany | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
+| mul.ovf | x | x | [#75](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/75) |
+| mul.ovf.un | x | x | [#75](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/75) |
+| no. | x | x | [#68](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/68) |
+| readonly. | x | x | [#68](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/68) |
+| Refanytype | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
+| refanyval | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
+| rem.un | x | x | [#75](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/75) |
+| rethrow | x | x | [#61](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/61) |
+| sizeof | x | x | [#80](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/80) |
+| starg | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
+| stloc | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
+| stobj | x | x | [#64](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/64) |
+| sub.ovf | x | x | [#75](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/75) |
+| sub.ovf.un | x | x | [#75](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/75) |
+| switch | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
+| tail. | x | x | x |
+| throw | x | x | [#61](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/61) |
 | unaligned. | x | x |
-| unbox | x | x |
-| volatile. | x | x |
+| unbox | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
+| volatile. | x | x | x |
