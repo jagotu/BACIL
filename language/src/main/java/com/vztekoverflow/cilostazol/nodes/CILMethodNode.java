@@ -1,5 +1,6 @@
 package com.vztekoverflow.cilostazol.nodes;
 
+import static com.vztekoverflow.bacil.bytecode.BytecodeInstructions.LDARGA_S;
 import static com.vztekoverflow.cil.parser.bytecode.BytecodeInstructions.*;
 
 import com.oracle.truffle.api.HostCompilerDirectives;
@@ -13,6 +14,8 @@ import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cilostazol.exceptions.InvalidCLIException;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
+import com.vztekoverflow.cilostazol.runtime.symbols.ArgReferenceSymbol;
+import com.vztekoverflow.cilostazol.runtime.symbols.LocalReferenceSymbol;
 import com.vztekoverflow.cilostazol.runtime.symbols.MethodSymbol;
 import com.vztekoverflow.cilostazol.runtime.symbols.TypeSymbol;
 import java.util.Arrays;
@@ -57,14 +60,14 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
 
     boolean hasReceiver =
         !getMethod().getMethodFlags().hasFlag(MethodSymbol.MethodFlags.Flag.STATIC);
-    int receiverSlot = hasReceiver ? 1 : 0;
+    int receiverSlot = CILOSTAZOLFrame.getStartLocalsOffset(getMethod());
     if (hasReceiver) {
       throw new NotImplementedException();
     }
 
     TypeSymbol[] argTypes =
         Arrays.stream(method.getParameters()).map(x -> x.getType()).toArray(TypeSymbol[]::new);
-    int topStack = method.getLocals().length - 1;
+    int topStack = CILOSTAZOLFrame.getStartArgsOffset(getMethod());
 
     for (int i = 0; i < method.getParameters().length; i++) {
       switch (argTypes[i].getKind()) {
@@ -181,6 +184,9 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
         case LDLOC_S:
           loadLocalToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack - 1);
           break;
+        case LDLOCA_S:
+          loadLocalRefToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack);
+          break;
 
           // Loading args to top
         case LDARG_0:
@@ -191,6 +197,9 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
           break;
         case LDARG_S:
           loadArgToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack);
+          break;
+        case LDARGA_S:
+          loadArgRefToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack);
           break;
 
         case RET:
@@ -248,15 +257,29 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
   }
 
   private void loadLocalToTop(VirtualFrame frame, int localIdx, int top) {
-    CILOSTAZOLFrame.Copy(frame, localIdx, top);
+    int localSlot = CILOSTAZOLFrame.getStartLocalsOffset(getMethod()) + localIdx;
+    CILOSTAZOLFrame.Copy(frame, localSlot, top);
     // Tag the top of the stack
-    taggedFrame[top] = taggedFrame[localIdx];
+    taggedFrame[top] = taggedFrame[localSlot];
   }
 
   private void loadArgToTop(VirtualFrame frame, int argIdx, int top) {
-    CILOSTAZOLFrame.Copy(frame, method.getLocals().length + argIdx, top);
+    int argSlot = CILOSTAZOLFrame.getStartArgsOffset(getMethod()) + argIdx;
+    CILOSTAZOLFrame.Copy(frame, argSlot, top);
     // Tag the top of the stack
-    taggedFrame[top] = taggedFrame[method.getLocals().length + argIdx];
+    taggedFrame[top] = taggedFrame[argSlot];
+  }
+
+  private void loadLocalRefToTop(VirtualFrame frame, int localIdx, int top) {
+    int localSlot = CILOSTAZOLFrame.getStartLocalsOffset(getMethod()) + localIdx;
+    CILOSTAZOLFrame.putInt(frame, top, localSlot);
+    taggedFrame[top] = new LocalReferenceSymbol(taggedFrame[localSlot]);
+  }
+
+  private void loadArgRefToTop(VirtualFrame frame, int argIdx, int top) {
+    int argSlot = CILOSTAZOLFrame.getStartArgsOffset(getMethod()) + argIdx;
+    CILOSTAZOLFrame.putInt(frame, top, argSlot);
+    taggedFrame[top] = new ArgReferenceSymbol(taggedFrame[argSlot]);
   }
 
   private void loadNull(VirtualFrame frame, int top) {

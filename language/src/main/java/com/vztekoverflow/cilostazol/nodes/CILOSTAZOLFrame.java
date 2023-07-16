@@ -15,7 +15,15 @@ public class CILOSTAZOLFrame {
   }
 
   public static int getStartStackOffset(MethodSymbol method) {
-    return method.getLocals().length + method.getParameters().length;
+    return getStartArgsOffset(method) + method.getParameters().length;
+  }
+
+  public static int getStartArgsOffset(MethodSymbol methodSymbol) {
+    return getStartLocalsOffset(methodSymbol) + methodSymbol.getLocals().length;
+  }
+
+  public static int getStartLocalsOffset(MethodSymbol methodSymbol) {
+    return methodSymbol.getMethodFlags().hasFlag(MethodSymbol.MethodFlags.Flag.STATIC) ? 0 : 1;
   }
 
   // region StackManipulation
