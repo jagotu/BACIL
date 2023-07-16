@@ -5,8 +5,9 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.symbols.MethodSymbol;
+import java.util.Objects;
 
-public class CILOSTAZOLFrame {
+public final class CILOSTAZOLFrame {
   public static FrameDescriptor create(int locals, int stack) {
     int slotCount = locals + stack;
     FrameDescriptor.Builder builder = FrameDescriptor.newBuilder(slotCount);
@@ -14,11 +15,21 @@ public class CILOSTAZOLFrame {
     return builder.build();
   }
 
+  // region stack offsets
   public static int getStartStackOffset(MethodSymbol method) {
-    return method.getLocals().length + method.getParameters().length;
+    return getStartArgsOffset(method) + method.getParameters().length;
   }
 
-  // region StackManipulation
+  public static int getStartArgsOffset(MethodSymbol methodSymbol) {
+    return getStartLocalsOffset(methodSymbol) + methodSymbol.getLocals().length;
+  }
+
+  public static int getStartLocalsOffset(MethodSymbol methodSymbol) {
+    return methodSymbol.getMethodFlags().hasFlag(MethodSymbol.MethodFlags.Flag.STATIC) ? 0 : 1;
+  }
+  // endregion
+
+  // region stack put
   public static void putObject(Frame frame, int slot, StaticObject value) {
     assert slot >= 0;
     assert value != null;
@@ -44,7 +55,9 @@ public class CILOSTAZOLFrame {
     assert slot >= 0;
     frame.setDoubleStatic(slot, value);
   }
+  // endregion
 
+  // region stack pop
   public static int popInt(Frame frame, int slot) {
     assert slot >= 0;
     int result = frame.getIntStatic(slot);
@@ -89,7 +102,9 @@ public class CILOSTAZOLFrame {
     assert slot >= 0;
     frame.clearPrimitiveStatic(slot);
   }
+  // endregion
 
+  // region stack set
   public static void setLocalObject(Frame frame, int localSlot, StaticObject value) {
     assert localSlot >= 0;
     assert value != null;
@@ -115,7 +130,9 @@ public class CILOSTAZOLFrame {
     assert localSlot >= 0;
     frame.setDoubleStatic(localSlot, value);
   }
+  // endregion
 
+  // region stack get
   public static int getLocalInt(Frame frame, int localSlot) {
     assert localSlot >= 0;
     return frame.getIntStatic(localSlot);
@@ -143,4 +160,47 @@ public class CILOSTAZOLFrame {
     return frame.getDoubleStatic(localSlot);
   }
   // endregion
+
+  // region stack types
+  public enum StackType {
+    Object,
+    Int,
+    Long,
+    Float,
+    Double,
+    Void,
+  }
+
+  // TODO: It should rely on Assembly as well...
+  public static StackType getStackTypeKind(String name, String namespace) {
+    if (Objects.equals(namespace, "System")) {
+      switch (name) {
+        case "Boolean":
+        case "Byte":
+        case "SByte":
+        case "Char":
+        case "Int16":
+        case "UInt16":
+        case "Int32":
+        case "UInt32":
+          return StackType.Int;
+        case "Double":
+          return StackType.Double;
+        case "Single":
+          return StackType.Float;
+        case "Int64":
+        case "UInt64":
+          return StackType.Long;
+          // Decimal, UIntPtr, IntPtr ??
+      }
+    }
+
+    return StackType.Object;
+  }
+  // endregion
+
+  public static void copy(Frame frame, int sourceSlot, int destSlot) {
+    assert sourceSlot >= 0 && destSlot >= 0;
+    frame.copy(sourceSlot, destSlot);
+  }
 }

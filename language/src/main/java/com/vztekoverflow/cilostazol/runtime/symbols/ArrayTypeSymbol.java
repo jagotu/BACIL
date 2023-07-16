@@ -1,7 +1,7 @@
 package com.vztekoverflow.cilostazol.runtime.symbols;
 
 import com.vztekoverflow.cil.parser.cli.signature.ArrayShapeSig;
-import com.vztekoverflow.cilostazol.meta.SystemTypes;
+import com.vztekoverflow.cilostazol.nodes.CILOSTAZOLFrame;
 
 public final class ArrayTypeSymbol extends TypeSymbol {
   private final TypeSymbol elementType;
@@ -15,7 +15,7 @@ public final class ArrayTypeSymbol extends TypeSymbol {
       int[] lengths,
       int[] lowerBounds,
       ModuleSymbol definingModule) {
-    super(definingModule, SystemTypes.Object);
+    super(definingModule, CILOSTAZOLFrame.StackType.Object);
     this.elementType = elementType;
     this.rank = rank;
     this.lengths = lengths;
