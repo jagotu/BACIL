@@ -195,32 +195,6 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
           loadArgRefToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack);
           break;
 
-          // load indirect local/arg
-        case LDIND_I1:
-        case LDIND_U1:
-        case LDIND_I2:
-        case LDIND_U2:
-        case LDIND_I4:
-        case LDIND_U4:
-        case LDIND_I8:
-        case LDIND_I:
-        case LDIND_R4:
-        case LDIND_R8:
-        case LDIND_REF:
-          loadIndirect(frame, topStack - 1);
-          break;
-
-          // store to indirect
-        case STIND_I1:
-        case STIND_I2:
-        case STIND_I4:
-        case STIND_I8:
-        case STIND_I:
-        case STIND_R4:
-        case STIND_R8:
-        case STIND_REF:
-          break;
-
         case RET:
           return getReturnValue(frame, topStack - 1);
       }
@@ -299,25 +273,6 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
     taggedFrame[top] = new NullSymbol();
   }
 
-  private void loadIndirect(VirtualFrame frame, int top) {
-    if (taggedFrame[top] instanceof ReferenceSymbol) {
-      int offset = 0;
-      if (taggedFrame[top] instanceof LocalReferenceSymbol)
-        offset = CILOSTAZOLFrame.getStartLocalsOffset(getMethod());
-      else if (taggedFrame[top] instanceof ArgReferenceSymbol)
-        offset = CILOSTAZOLFrame.getStartArgsOffset(getMethod());
-      else throw new InterpreterException();
-
-      // assert taggedFrame[top].getKind() != SystemTypes.Int;
-      int slot = offset + CILOSTAZOLFrame.popInt(frame, top);
-      // Get referenced slot, copy it and tag frame with its type
-      CILOSTAZOLFrame.copy(frame, slot, top);
-      taggedFrame[top] = ((ReferenceSymbol) taggedFrame[top]).getUnderlyingTypeSymbol();
-    } else {
-      throw new InterpreterException();
-    }
-  }
-
   private void storeValueToLocal(VirtualFrame frame, int localIdx, int top) {
     // Locals are already typed
     // TODO: type checking
@@ -325,8 +280,6 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
     // pop taggedFrame
     taggedFrame[top] = null;
   }
-
-  private void storeIndirect(VirtualFrame frame, int top) {}
 
   private void popStack(int top) {
     // pop taggedFrame
