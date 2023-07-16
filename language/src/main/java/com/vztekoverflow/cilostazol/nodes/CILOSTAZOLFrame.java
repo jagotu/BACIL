@@ -142,5 +142,10 @@ public class CILOSTAZOLFrame {
     assert localSlot >= 0;
     return frame.getDoubleStatic(localSlot);
   }
+
+  public static void Copy(Frame frame, int sourceSlot, int destSlot) {
+    assert sourceSlot >= 0 && destSlot >= 0;
+    frame.copy(sourceSlot, destSlot);
+  }
   // endregion
 }

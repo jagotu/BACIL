@@ -64,7 +64,7 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
 
     TypeSymbol[] argTypes =
         Arrays.stream(method.getParameters()).map(x -> x.getType()).toArray(TypeSymbol[]::new);
-    int topStack = CILOSTAZOLFrame.getStartStackOffset(method) - 1;
+    int topStack = method.getLocals().length - 1;
 
     for (int i = 0; i < method.getParameters().length; i++) {
       switch (argTypes[i].getKind()) {
@@ -124,14 +124,73 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
       int nextpc = bytecodeBuffer.nextInstruction(pc);
       switch (curOpcode) {
         case NOP:
+        case POP:
+          popStack(topStack - 1);
           break;
 
+          // Loading on top of the stack
+        case LDNULL:
+          loadNull(frame, topStack);
+          break;
+        case LDC_I4_M1:
+        case LDC_I4_0:
+        case LDC_I4_1:
+        case LDC_I4_2:
+        case LDC_I4_3:
+        case LDC_I4_4:
+        case LDC_I4_5:
+        case LDC_I4_6:
+        case LDC_I4_7:
+        case LDC_I4_8:
+          loadValueOnTop(frame, topStack, curOpcode - LDC_I4_0);
+          break;
         case LDC_I4_S:
-          CILOSTAZOLFrame.putInt(frame, topStack, bytecodeBuffer.getImmByte(pc));
-          taggedFrame[topStack] =
-              getMethod()
-                  .getContext()
-                  .getType("System", "Int32", AssemblyIdentity.SystemPrivateCoreLib());
+          loadValueOnTop(frame, topStack, bytecodeBuffer.getImmByte(pc));
+          break;
+        case LDC_I4:
+          loadValueOnTop(frame, topStack, bytecodeBuffer.getImmInt(pc));
+          break;
+        case LDC_I8:
+          loadValueOnTop(frame, topStack, bytecodeBuffer.getImmLong(pc));
+          break;
+        case LDC_R4:
+          loadValueOnTop(frame, topStack, Float.intBitsToFloat(bytecodeBuffer.getImmInt(pc)));
+          break;
+        case LDC_R8:
+          loadValueOnTop(frame, topStack, Double.longBitsToDouble(bytecodeBuffer.getImmLong(pc)));
+          break;
+
+          // Storing to locals
+        case STLOC_0:
+        case STLOC_1:
+        case STLOC_2:
+        case STLOC_3:
+          storeValueToLocal(frame, topStack - 1, topStack - 1);
+          break;
+        case STLOC_S:
+          storeValueToLocal(frame, bytecodeBuffer.getImmUByte(pc), topStack - 1);
+          break;
+
+          // Loading locals to top
+        case LDLOC_0:
+        case LDLOC_1:
+        case LDLOC_2:
+        case LDLOC_3:
+          loadLocalToTop(frame, curOpcode - LDLOC_0, topStack - 1);
+          break;
+        case LDLOC_S:
+          loadLocalToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack - 1);
+          break;
+
+          // Loading args to top
+        case LDARG_0:
+        case LDARG_1:
+        case LDARG_2:
+        case LDARG_3:
+          loadArgToTop(frame, curOpcode - LDARG_0, topStack);
+          break;
+        case LDARG_S:
+          loadArgToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack);
           break;
 
         case RET:
@@ -144,9 +203,76 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
   }
 
   // region CIL opcode helpers
+  private void loadValueOnTop(VirtualFrame frame, int top, int value) {
+    // We want to tag the stack by types in it
+    CILOSTAZOLFrame.putInt(frame, top, value);
+    taggedFrame[top] =
+        getMethod()
+            .getContext()
+            .getType("System", "Int32", AssemblyIdentity.SystemPrivateCoreLib());
+  }
+
+  private void loadValueOnTop(VirtualFrame frame, int top, long value) {
+    // We want to tag the stack by types in it
+    CILOSTAZOLFrame.putLong(frame, top, value);
+    taggedFrame[top] =
+        getMethod()
+            .getContext()
+            .getType("System", "Int64", AssemblyIdentity.SystemPrivateCoreLib());
+  }
+
+  private void loadValueOnTop(VirtualFrame frame, int top, double value) {
+    // We want to tag the stack by types in it
+    CILOSTAZOLFrame.putDouble(frame, top, value);
+    taggedFrame[top] =
+        getMethod()
+            .getContext()
+            .getType("System", "Double", AssemblyIdentity.SystemPrivateCoreLib());
+  }
+
+  private void loadValueOnTop(VirtualFrame frame, int top, float value) {
+    // We want to tag the stack by types in it
+    CILOSTAZOLFrame.putFloat(frame, top, value);
+    taggedFrame[top] =
+        getMethod()
+            .getContext()
+            .getType("System", "Single", AssemblyIdentity.SystemPrivateCoreLib());
+  }
+
+  private void storeValueToLocal(VirtualFrame frame, int localIdx, int top) {
+    // Locals are already typed
+    // TODO: type checking
+    CILOSTAZOLFrame.Copy(frame, top, localIdx);
+    // pop taggedFrame
+    taggedFrame[top] = null;
+  }
+
+  private void loadLocalToTop(VirtualFrame frame, int localIdx, int top) {
+    CILOSTAZOLFrame.Copy(frame, localIdx, top);
+    // Tag the top of the stack
+    taggedFrame[top] = taggedFrame[localIdx];
+  }
+
+  private void loadArgToTop(VirtualFrame frame, int argIdx, int top) {
+    CILOSTAZOLFrame.Copy(frame, method.getLocals().length + argIdx, top);
+    // Tag the top of the stack
+    taggedFrame[top] = taggedFrame[method.getLocals().length + argIdx];
+  }
+
+  private void loadNull(VirtualFrame frame, int top) {
+    // In this situation we don't know the type of null yet -> it will be determined later
+    CILOSTAZOLFrame.putObject(frame, top, StaticObject.NULL);
+    taggedFrame[top] = null;
+  }
+
+  private void popStack(int top) {
+    // pop taggedFrame
+    taggedFrame[top] = null;
+  }
+
   private Object getReturnValue(VirtualFrame frame, int top) {
     TypeSymbol retType = getMethod().getReturnType().getType();
-
+    // TODO: type checking
     switch (retType.getKind()) {
       case Boolean -> {
         return CILOSTAZOLFrame.popInt(frame, top) > 1;
