@@ -234,8 +234,8 @@ It would be better to set Project SDK in IntelliJ IDEA to GraalVM SDK, becuase o
 | cpblk | x | x | x |
 | cpobj | x | x | x |
 | div.un | x | x | x |
-| endfilter | x | x | x |
-| endfinally | x | x | x |
+| endfilter | x | x | [#61](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/61) |
+| endfinally | x | x | [#61](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/61) |
 | initblk | x | x | x |
 | isinst | x | x | x |
 | jmp | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
@@ -257,7 +257,7 @@ It would be better to set Project SDK in IntelliJ IDEA to GraalVM SDK, becuase o
 | Refanytype | x | x | x |
 | refanyval | x | x | x |
 | rem.un | x | x | x |
-| rethrow | x | x | x |
+| rethrow | x | x | [#61](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/61) |
 | sizeof | x | x | x |
 | starg | x | x | x |
 | stloc | x | x | x |
@@ -266,7 +266,7 @@ It would be better to set Project SDK in IntelliJ IDEA to GraalVM SDK, becuase o
 | sub.ovf.un | x | x | x |
 | switch | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
 | tail. | x | x | x |
-| throw | x | x | x |
+| throw | x | x | [#61](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/61) |
 | unaligned. | x | x |
 | unbox | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
 | volatile. | x | x | x |
