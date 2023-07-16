@@ -207,7 +207,7 @@ It would be better to set Project SDK in IntelliJ IDEA to GraalVM SDK, becuase o
 | arglist | x | x | x |
 | break | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
 | calli | x | x | x |
-| castclass | x | x | x |
+| castclass | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
 | ckfinite | x | x | x |
 | constrained. | x | x | x |
 | conv.ovf.i | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
