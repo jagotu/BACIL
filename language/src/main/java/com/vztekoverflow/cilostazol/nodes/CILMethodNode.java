@@ -14,10 +14,8 @@ import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cilostazol.exceptions.InvalidCLIException;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
-import com.vztekoverflow.cilostazol.runtime.symbols.ArgReferenceSymbol;
-import com.vztekoverflow.cilostazol.runtime.symbols.LocalReferenceSymbol;
-import com.vztekoverflow.cilostazol.runtime.symbols.MethodSymbol;
-import com.vztekoverflow.cilostazol.runtime.symbols.TypeSymbol;
+import com.vztekoverflow.cilostazol.runtime.symbols.*;
+
 import java.util.Arrays;
 
 public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
@@ -285,7 +283,7 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
   private void loadNull(VirtualFrame frame, int top) {
     // In this situation we don't know the type of null yet -> it will be determined later
     CILOSTAZOLFrame.putObject(frame, top, StaticObject.NULL);
-    taggedFrame[top] = null;
+    taggedFrame[top] = new NullSymbol();
   }
 
   private void popStack(int top) {

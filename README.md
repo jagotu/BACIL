@@ -155,7 +155,7 @@ It would be better to set Project SDK in IntelliJ IDEA to GraalVM SDK, becuase o
 | ldloc.3 | o | x |
 | ldloca.s | o | x |
 | ldloc.s | o | x |
-| ldnull | x | x |
+| ldnull | o | x |
 | ldsfld | x | x |
 | ldsflda | x | x |
 | ldstr | x | x |
