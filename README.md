@@ -159,7 +159,7 @@ It would be better to set Project SDK in IntelliJ IDEA to GraalVM SDK, becuase o
 | ldsfld | x | x | [#64](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/64) |
 | ldsflda | x | x | [#64](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/64) |
 | ldstr | x | x | [#79](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/79) |
-| ldtoken | x | x | x |
+| ldtoken | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
 | mul | x | x | [#75](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/75) |
 | neg | x | x | [#75](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/75) |
 | newarr | x | x | [#76](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/76) |
@@ -208,8 +208,8 @@ It would be better to set Project SDK in IntelliJ IDEA to GraalVM SDK, becuase o
 | break | x | x | [#60](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/60) |
 | calli | x | x | x |
 | castclass | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
-| ckfinite | x | x | x |
-| constrained. | x | x | x |
+| ckfinite | x | x | [#68](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/68) |
+| constrained. | x | x | [#68](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/68) |
 | conv.ovf.i | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
 | conv.ovf.i1 | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
 | conv.ovf.i1.un | x | x | [#66](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/66) |
@@ -249,13 +249,13 @@ It would be better to set Project SDK in IntelliJ IDEA to GraalVM SDK, becuase o
 | leave | x | x | x |
 | leave.s | x | x | x |
 | localloc | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
-| mkrefany | x | x | x |
+| mkrefany | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
 | mul.ovf | x | x | [#75](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/75) |
 | mul.ovf.un | x | x | [#75](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/75) |
-| no. | x | x | x |
-| readonly. | x | x x | |
-| Refanytype | x | x | x |
-| refanyval | x | x | x |
+| no. | x | x | [#68](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/68) |
+| readonly. | x | x x | [#68](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/68) |
+| Refanytype | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
+| refanyval | x | x | [#78](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/78) |
 | rem.un | x | x | [#75](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/75) |
 | rethrow | x | x | [#61](https://github.com/Softwarovy-projekt/CILOSTAZOL-100mg/issues/61) |
 | sizeof | x | x | x |
