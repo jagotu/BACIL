@@ -1,12 +1,9 @@
 package com.vztekoverflow.bacil;
 
-import com.oracle.truffle.api.Option;
 import com.oracle.truffle.api.TruffleLanguage;
 import java.util.Arrays;
 import java.util.List;
-import org.graalvm.options.OptionCategory;
 import org.graalvm.options.OptionKey;
-import org.graalvm.options.OptionStability;
 
 /** Options for the BACIL Engine. */
 public final class BACILEngineOption {
@@ -23,15 +20,15 @@ public final class BACILEngineOption {
 
   public static final String STUBBED_METHODS_NAME = "cil.stubMethods";
 
-  @Option(
-      name = STUBBED_METHODS_NAME,
-      category = OptionCategory.USER,
-      stability = OptionStability.STABLE,
-      help =
-          "A list of methods to be replaced with stubs returning a default value. "
-              + "Delimited by a semicolon \'"
-              + OPTION_ARRAY_SEPARATOR
-              + "\'.")
+  //  @Option(
+  //      name = STUBBED_METHODS_NAME,
+  //      category = OptionCategory.USER,
+  //      stability = OptionStability.STABLE,
+  //      help =
+  //          "A list of methods to be replaced with stubs returning a default value. "
+  //              + "Delimited by a semicolon \'"
+  //              + OPTION_ARRAY_SEPARATOR
+  //              + "\'.")
   public static final OptionKey<String> STUBBED_METHODS = new OptionKey<>("");
 
   public static List<String> getPolyglotOptionSearchPaths(TruffleLanguage.Env env) {

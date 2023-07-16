@@ -11,6 +11,7 @@ import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.exceptions.InvalidCLIException;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.exceptions.TypeSystemException;
+import com.vztekoverflow.cilostazol.meta.SystemTypes;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticField;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.symbols.utils.CLIFileUtils;
@@ -89,7 +90,7 @@ public class NamedTypeSymbol extends TypeSymbol {
       TypeParameterSymbol[] typeParameters,
       CLITablePtr definingRow,
       TypeMap map) {
-    super(definingModule);
+    super(definingModule, SystemTypes.getKind(name, namespace));
     assert definingRow.getTableId() == CLITableConstants.CLI_TABLE_TYPE_DEF;
 
     this.flags = flags;

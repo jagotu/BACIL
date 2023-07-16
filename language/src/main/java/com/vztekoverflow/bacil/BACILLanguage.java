@@ -63,7 +63,7 @@ public class BACILLanguage extends TruffleLanguage<BACILContext> {
 
   @Override
   protected OptionDescriptors getOptionDescriptors() {
-    return new BACILEngineOptionOptionDescriptors();
+    return null;
   }
 
   /**

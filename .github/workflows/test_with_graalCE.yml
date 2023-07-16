@@ -28,7 +28,7 @@ jobs:
         run: ./build.sh
         
       - name: Build Interpreter test targets
-        working-directory: ./tests/src/test/resources
+        working-directory: ./tests/src/test/resources/BasicTests
         run: ./build.sh
 
       - name: Build with Maven

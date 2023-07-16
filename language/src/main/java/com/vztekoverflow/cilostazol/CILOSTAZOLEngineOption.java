@@ -16,7 +16,6 @@ public final class CILOSTAZOLEngineOption {
 
   public static final String LIBRARY_PATH_NAME = "cil.libraryPath";
 
-  // TODO: undo comment when fully ported from BACIL -> now it causes regression
   @Option(
       name = LIBRARY_PATH_NAME,
       category = OptionCategory.USER,
@@ -38,7 +37,7 @@ public final class CILOSTAZOLEngineOption {
           "".equals(libraryPathOption)
               ? new String[0]
               : libraryPathOption.split(OPTION_ARRAY_SEPARATOR);
-      return (Path[]) Arrays.stream(libraryPaths).map(Paths::get).toArray();
+      return Arrays.stream(libraryPaths).map(Paths::get).toArray(Path[]::new);
     }
   }
 }

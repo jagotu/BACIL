@@ -111,11 +111,11 @@ public class BasicTests extends TestBase {
    * Use this or {@link #testFromDll()} template for each major feature of the interpreter (return,
    * if, while, etc.)
    */
-  public void testFromFile() {
+  public void testReturn() {
     var result = runTestFromFile("return.cs");
 
     assertEquals("TEST\r\n", result.output());
-    assertEquals(1, result.exitCode());
+    assertEquals(42, result.exitCode());
   }
 
   // endregion

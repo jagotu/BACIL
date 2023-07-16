@@ -3,6 +3,7 @@ package com.vztekoverflow.cilostazol.nodes;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.vztekoverflow.cilostazol.runtime.context.CILOSTAZOLContext;
+import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
 import java.io.PrintStream;
 
 public final class CallEntryPointCallTarget implements CallTarget {
@@ -23,8 +24,7 @@ public final class CallEntryPointCallTarget implements CallTarget {
           p.println("TEST");
         }
       }
-      arg = null; // TODO: implement, now disabled because of test templates and top-level code
-      //      throw new NotImplementedException();
+      arg = StaticObject.NULL; // TODO: Make as Static object array
     } else {
       arg = null;
     }
