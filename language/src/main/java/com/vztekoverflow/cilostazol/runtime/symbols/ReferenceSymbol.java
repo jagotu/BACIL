@@ -1,13 +1,12 @@
-package com.vztekoverflow.cilostazol.runtime;
+package com.vztekoverflow.cilostazol.runtime.symbols;
 
-import com.vztekoverflow.cilostazol.meta.SystemTypes;
-import com.vztekoverflow.cilostazol.runtime.symbols.TypeSymbol;
+import com.vztekoverflow.cilostazol.nodes.CILOSTAZOLFrame;
 
 public abstract class ReferenceSymbol extends TypeSymbol {
   private final TypeSymbol underlyingTypeSymbol;
 
   public ReferenceSymbol(TypeSymbol underlyingTypeSymbol) {
-    super(underlyingTypeSymbol.getDefiningModule(), SystemTypes.Int);
+    super(underlyingTypeSymbol.getDefiningModule(), CILOSTAZOLFrame.StackType.Int);
     this.underlyingTypeSymbol = underlyingTypeSymbol;
   }
 

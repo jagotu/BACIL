@@ -13,8 +13,7 @@ import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cilostazol.exceptions.InterpreterException;
 import com.vztekoverflow.cilostazol.exceptions.InvalidCLIException;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
-import com.vztekoverflow.cilostazol.meta.SystemTypes;
-import com.vztekoverflow.cilostazol.runtime.ReferenceSymbol;
+import com.vztekoverflow.cilostazol.runtime.symbols.ReferenceSymbol;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.symbols.*;
 
@@ -70,18 +69,12 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
     int topStack = CILOSTAZOLFrame.getStartArgsOffset(getMethod());
 
     for (int i = 0; i < method.getParameters().length; i++) {
-      switch (argTypes[i].getKind()) {
-        case Boolean:
-          CILOSTAZOLFrame.putInt(frame, topStack, (boolean) args[i + receiverSlot] ? 1 : 0);
-          break;
-        case Char:
-          CILOSTAZOLFrame.putInt(frame, topStack, (byte) args[i + receiverSlot]);
-          break;
+      switch (argTypes[i].getStackTypeKind()) {
         case Int:
           CILOSTAZOLFrame.putInt(frame, topStack, (int) args[i + receiverSlot]);
           break;
         case Long:
-          CILOSTAZOLFrame.putLong(frame, topStack, (int) args[i + receiverSlot]);
+          CILOSTAZOLFrame.putLong(frame, topStack, (long) args[i + receiverSlot]);
           break;
         case Double:
           CILOSTAZOLFrame.putDouble(frame, topStack, (double) args[i + receiverSlot]);
@@ -202,6 +195,7 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
           loadArgRefToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack);
           break;
 
+          // load indirect local/arg
         case LDIND_I1:
         case LDIND_U1:
         case LDIND_I2:
@@ -216,6 +210,17 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
           loadIndirect(frame, topStack - 1);
           break;
 
+          // store to indirect
+        case STIND_I1:
+        case STIND_I2:
+        case STIND_I4:
+        case STIND_I8:
+        case STIND_I:
+        case STIND_R4:
+        case STIND_R8:
+        case STIND_REF:
+          break;
+
         case RET:
           return getReturnValue(frame, topStack - 1);
       }
@@ -225,7 +230,7 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
     }
   }
 
-  // region CIL opcode helpers
+  // region Helpers
   private void loadValueOnTop(VirtualFrame frame, int top, int value) {
     // We want to tag the stack by types in it
     CILOSTAZOLFrame.putInt(frame, top, value);
@@ -262,24 +267,16 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
             .getType("System", "Single", AssemblyIdentity.SystemPrivateCoreLib());
   }
 
-  private void storeValueToLocal(VirtualFrame frame, int localIdx, int top) {
-    // Locals are already typed
-    // TODO: type checking
-    CILOSTAZOLFrame.Copy(frame, top, localIdx);
-    // pop taggedFrame
-    taggedFrame[top] = null;
-  }
-
   private void loadLocalToTop(VirtualFrame frame, int localIdx, int top) {
     int localSlot = CILOSTAZOLFrame.getStartLocalsOffset(getMethod()) + localIdx;
-    CILOSTAZOLFrame.Copy(frame, localSlot, top);
+    CILOSTAZOLFrame.copy(frame, localSlot, top);
     // Tag the top of the stack
     taggedFrame[top] = taggedFrame[localSlot];
   }
 
   private void loadArgToTop(VirtualFrame frame, int argIdx, int top) {
     int argSlot = CILOSTAZOLFrame.getStartArgsOffset(getMethod()) + argIdx;
-    CILOSTAZOLFrame.Copy(frame, argSlot, top);
+    CILOSTAZOLFrame.copy(frame, argSlot, top);
     // Tag the top of the stack
     taggedFrame[top] = taggedFrame[argSlot];
   }
@@ -311,15 +308,25 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
         offset = CILOSTAZOLFrame.getStartArgsOffset(getMethod());
       else throw new InterpreterException();
 
-      assert taggedFrame[top].getKind() != SystemTypes.Int;
+      // assert taggedFrame[top].getKind() != SystemTypes.Int;
       int slot = offset + CILOSTAZOLFrame.popInt(frame, top);
       // Get referenced slot, copy it and tag frame with its type
-      CILOSTAZOLFrame.Copy(frame, slot, top);
+      CILOSTAZOLFrame.copy(frame, slot, top);
       taggedFrame[top] = ((ReferenceSymbol) taggedFrame[top]).getUnderlyingTypeSymbol();
     } else {
       throw new InterpreterException();
     }
   }
+
+  private void storeValueToLocal(VirtualFrame frame, int localIdx, int top) {
+    // Locals are already typed
+    // TODO: type checking
+    CILOSTAZOLFrame.copy(frame, top, localIdx);
+    // pop taggedFrame
+    taggedFrame[top] = null;
+  }
+
+  private void storeIndirect(VirtualFrame frame, int top) {}
 
   private void popStack(int top) {
     // pop taggedFrame
@@ -329,13 +336,7 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
   private Object getReturnValue(VirtualFrame frame, int top) {
     TypeSymbol retType = getMethod().getReturnType().getType();
     // TODO: type checking
-    switch (retType.getKind()) {
-      case Boolean -> {
-        return CILOSTAZOLFrame.popInt(frame, top) > 1;
-      }
-      case Char -> {
-        return (byte) CILOSTAZOLFrame.popInt(frame, top - 1);
-      }
+    switch (retType.getStackTypeKind()) {
       case Int -> {
         return CILOSTAZOLFrame.popInt(frame, top);
       }

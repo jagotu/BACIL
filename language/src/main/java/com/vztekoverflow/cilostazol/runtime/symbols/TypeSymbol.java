@@ -14,16 +14,17 @@ import com.vztekoverflow.cil.parser.cli.table.generated.CLITypeSpecTableRow;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.exceptions.TypeSystemException;
 import com.vztekoverflow.cilostazol.meta.SystemTypes;
+import com.vztekoverflow.cilostazol.nodes.CILOSTAZOLFrame;
 import com.vztekoverflow.cilostazol.runtime.context.ContextProviderImpl;
 
 public abstract class TypeSymbol extends Symbol {
   protected final ModuleSymbol definingModule;
-  private final SystemTypes kind;
+  private final CILOSTAZOLFrame.StackType stackTypeKind;
 
-  public TypeSymbol(ModuleSymbol definingModule, SystemTypes kind) {
+  public TypeSymbol(ModuleSymbol definingModule, CILOSTAZOLFrame.StackType stackTypeKind) {
     super(ContextProviderImpl.getInstance());
     this.definingModule = definingModule;
-    this.kind = kind;
+    this.stackTypeKind = stackTypeKind;
   }
 
   protected static int fastLookup(TypeSymbol target, TypeSymbol[] types) {
@@ -77,7 +78,11 @@ public abstract class TypeSymbol extends Symbol {
   }
 
   public SystemTypes getKind() {
-    return kind;
+    return SystemTypes.Object;
+  }
+
+  public CILOSTAZOLFrame.StackType getStackTypeKind() {
+    return stackTypeKind;
   }
 
   public boolean isAssignableFrom(TypeSymbol other) {
