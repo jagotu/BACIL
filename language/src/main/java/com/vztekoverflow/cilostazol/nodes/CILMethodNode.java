@@ -62,7 +62,9 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
     }
 
     TypeSymbol[] argTypes =
-        Arrays.stream(method.getParameters()).map(x -> x.getType()).toArray(TypeSymbol[]::new);
+        Arrays.stream(method.getParameters())
+            .map(ParameterSymbol::getType)
+            .toArray(TypeSymbol[]::new);
     int topStack = CILOSTAZOLFrame.getStartArgsOffset(getMethod());
 
     for (int i = 0; i < method.getParameters().length; i++) {
@@ -192,8 +194,21 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
           loadArgRefToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack);
           break;
 
+        case LDSTR:
+          System.out.println("LOADING STRING");
+          //          loadStringToTop(frame, bytecodeBuffer.getImmUShort(pc), topStack);
+          break;
+
         case RET:
           return getReturnValue(frame, topStack - 1);
+
+        case CALL:
+          System.out.println("CALLING");
+          break;
+
+        default:
+          System.out.println("Opcode not implemented: " + curOpcode);
+          break;
       }
 
       topStack += BytecodeInstructions.getStackEffect(curOpcode);

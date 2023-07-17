@@ -1,14 +1,14 @@
 package com.vztekoverflow.cilostazol.tests;
 
-import com.vztekoverflow.cilostazol.launcher.CILOSTAZOLLauncher;
-import org.junit.Ignore;
-import org.junit.Test;
-// import org.junit.jupiter.api.TestInstance;
-// import org.junit.jupiter.params.ParameterizedTest;
-// import org.junit.jupiter.params.provider.ValueSource;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-// @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class BasicTests extends TestBase {
+import com.vztekoverflow.cilostazol.launcher.CILOSTAZOLLauncher;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public class TestTemplates extends TestBase {
   /*
    Here is shown how to write tests that get sourcecode form:
     - dll:
@@ -23,7 +23,7 @@ public class BasicTests extends TestBase {
   // region Deprecated Test templates
   /** This is a template for tests that get sourcecode from dll. */
   @Test
-  @Ignore("Does not work with Console.WriteLine()")
+  @Disabled("Paths to dlls are not setup")
   public void FromDllViaLauncher() {
     CILOSTAZOLLauncher launcher = runTestFromDllViaLauncher("Initial");
 
@@ -33,7 +33,7 @@ public class BasicTests extends TestBase {
 
   /** This is a template for tests that get sourcecode from string. */
   @Test
-  @Ignore("Does not work with Console.WriteLine()")
+  @Disabled("Paths to dlls are not setup")
   public void FromSourceCodeViaLauncher() {
     var launcher =
         runTestFromCodeLauncher(
@@ -59,84 +59,55 @@ public class BasicTests extends TestBase {
    * file.
    */
   @Test
-  @Ignore("Does not work with Console.WriteLine()")
+  @Disabled("Paths to dlls are not setup")
   public void FromSourceFileViaLauncher() {
     CILOSTAZOLLauncher launcher = runTestFromFileLauncher("return.cs");
 
     int returnValue = launcher.getReturnValue();
-    assertEquals(1, returnValue);
+    assertEquals(42, returnValue);
   }
 
   // endregion
 
-  // TODO: this test will need some modifications after args are implemented
   // region Test Templates
 
   /**
    * Use this for quick/additional tests who's core features are tested by File or DLL tests already
    */
-  public void testFromCode() {
+  @Test
+  public void FromCode() {
     // TODO: this test will need to be redone after args are implemented
-    var result =
-        runTestFromCode(
-            """
-      using System;
-      namespace CustomTest
-      {
-        public class Program
-        {
-            public static int Main()
-            {
-                return 42;
-            }
-        }
-      }""");
+    var result = runTestFromCode("""
+return 42;
+""");
 
     assertEquals("", result.output());
-    assertEquals(1, result.exitCode());
-  }
-
-  /**
-   * Use this or {@link #runTestFromFile(String)} template for each major feature of the interpreter (return,
-   * if, while, etc.)
-   */
-  public void testFromDll() {
-    var result = runTestFromDll("Initial");
-
-    assertEquals("", result.output());
-    assertEquals(1, result.exitCode());
-  }
-
-  /**
-   * Use this or {@link #testFromDll()} template for each major feature of the interpreter (return,
-   * if, while, etc.)
-   */
-  public void testReturn() {
-    var result = runTestFromFile("return.cs");
-
-    assertEquals("TEST\r\n", result.output());
     assertEquals(42, result.exitCode());
   }
 
-  // endregion
+  /**
+   * Use this or {@link #runTestFromFile(String)} template for each major feature of the interpreter
+   * (return, if, while, etc.)
+   */
+  @Test
+  public void FromDll() {
+    var result = runTestFromDll("Initial");
 
-  // region Tests
+    assertEquals("", result.output());
+    assertEquals(42, result.exitCode());
+  }
 
-  //  @ParameterizedTest
-  //  @ValueSource(strings = {
-  //          "return.cs",
-  //          "return0.cs",
-  ////          "ConsoleWriteline.cs",
-  ////          "assignment.cs",
-  //  })
-  //  public void fileTests(String fileName) {
-  //    //TODO: replace Value source with MethodSource that gets all files in TestSources directory
-  //    //TODO: replace assertEquals of the ouptut with adequate gold files
-  //    var result = runTestFromFile(fileName);
-  //
-  ////    assertEquals("TEST\r\n", result.output());
-  //    assertEquals(1, result.exitCode());
-  //  }
+  /**
+   * Use this or {@link #FromDll()} template for each major feature of the interpreter (return, if,
+   * while, etc.)
+   */
+  @Test
+  public void FromFile() {
+    var result = runTestFromFile("return.cs");
+
+    assertEquals("", result.output());
+    assertEquals(42, result.exitCode());
+  }
 
   // endregion
 }
