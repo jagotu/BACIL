@@ -65,7 +65,7 @@ public class CILOSTAZOLLauncher extends AbstractLanguageLauncher {
       returnValue = context.eval(source).asInt();
       System.err.println(LauncherBundle.message("launcher.output.return.value", returnValue));
       final long done = System.currentTimeMillis();
-      System.err.println(LauncherBundle.message("launcher.output.return.time", done));
+      System.err.println(LauncherBundle.message("launcher.output.return.time", done - start));
     } catch (IOException e) {
       printFileNotFound();
     } catch (PolyglotException e) {

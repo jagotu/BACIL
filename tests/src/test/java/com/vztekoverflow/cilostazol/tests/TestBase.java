@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.concurrent.locks.ReentrantLock;
 import junit.framework.TestCase;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Engine;
@@ -30,7 +29,6 @@ public abstract class TestBase extends TestCase {
 
   private OutputStream outputStream;
   private Context context;
-  ReentrantLock lock = new ReentrantLock();
 
   @BeforeAll
   public void setUp() {

@@ -97,7 +97,7 @@ public class BasicTests extends TestBase {
   }
 
   /**
-   * Use this or {@link #testFromFile()} template for each major feature of the interpreter (return,
+   * Use this or {@link #runTestFromFile(String)} template for each major feature of the interpreter (return,
    * if, while, etc.)
    */
   public void testFromDll() {
