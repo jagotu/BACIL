@@ -15,7 +15,7 @@ import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.Source;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
 public abstract class TestBase {
   private static final String directoryDlls = "src/test/resources/dlls";
@@ -30,8 +30,8 @@ public abstract class TestBase {
   private static OutputStream outputStream;
   private static Context context;
 
-  @BeforeAll
-  public static void setup() {
+  @BeforeEach
+  public void setup() {
     outputStream = new ByteArrayOutputStream();
     context = setupContext().build();
   }
@@ -232,7 +232,7 @@ public abstract class TestBase {
     return sourceCode;
   }
 
-  private static Context.Builder setupContext() {
+  private Context.Builder setupContext() {
     return Context.newBuilder(LANGUAGE_ID)
         .engine(Engine.newBuilder(LANGUAGE_ID).build())
         .option("cil.libraryPath", directoryDlls)
