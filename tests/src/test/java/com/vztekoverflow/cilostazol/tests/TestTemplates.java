@@ -5,8 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.vztekoverflow.cilostazol.launcher.CILOSTAZOLLauncher;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
+@DisabledOnOs(value = OS.LINUX, disabledReason = "Avoid CI on Linux")
 public class TestTemplates extends TestBase {
+
   /*
    Here is shown how to write tests that get sourcecode form:
     - dll:

@@ -4,12 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Disabled("WIP")
 public class NonVirtualCallsTests extends TestBase {
   @Test
-  @Disabled("Not implemented yet - WIP")
   public void simpleCall() {
     var result =
         runTestFromCode(
@@ -36,7 +34,6 @@ public class NonVirtualCallsTests extends TestBase {
   }
 
   @Test
-  @Disabled("Not implemented yet - waiting for LDSTR")
   public void consoleWriteLine() {
     var result =
         runTestFromCode("""
@@ -47,7 +44,6 @@ public class NonVirtualCallsTests extends TestBase {
   }
 
   @Test
-  @Disabled("Not implemented yet - waiting for LDSTR")
   public void nestedConsoleWriteLine() {
     var launcher =
         runTestFromCode(

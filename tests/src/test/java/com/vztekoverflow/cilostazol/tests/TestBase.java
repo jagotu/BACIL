@@ -29,7 +29,8 @@ public abstract class TestBase {
   private static final String dotnetVersion = "net7.0";
 
   private static OutputStream outputStream;
-  private static Context context;
+
+  public static Context context;
 
   @BeforeEach
   public void setup() {
