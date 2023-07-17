@@ -2,6 +2,7 @@ package com.vztekoverflow.cilostazol.tests;
 
 import static com.vztekoverflow.cilostazol.launcher.CILOSTAZOLLauncher.LANGUAGE_ID;
 
+import com.vztekoverflow.cilostazol.CILOSTAZOLEngineOption;
 import com.vztekoverflow.cilostazol.launcher.CILOSTAZOLLauncher;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -234,8 +235,10 @@ public abstract class TestBase {
 
   private Context.Builder setupContext() {
     return Context.newBuilder(LANGUAGE_ID)
-        .engine(Engine.newBuilder(LANGUAGE_ID).build())
-        .option("cil.libraryPath", directoryDlls)
+        .engine(
+            Engine.newBuilder(LANGUAGE_ID)
+                .option(CILOSTAZOLEngineOption.LIBRARY_PATH_NAME, directoryDlls)
+                .build())
         .out(outputStream)
         .err(outputStream)
         .allowAllAccess(true);
