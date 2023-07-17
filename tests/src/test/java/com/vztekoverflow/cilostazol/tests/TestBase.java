@@ -27,13 +27,13 @@ public abstract class TestBase {
   private static final String configuration = "Release";
   private static final String dotnetVersion = "net7.0";
 
-  private OutputStream outputStream;
-  private Context context;
+  private static OutputStream outputStream;
+  private static Context context;
 
   @BeforeAll
-  public void setUp() {
+  public static void setup() {
     outputStream = new ByteArrayOutputStream();
-    context = setupContext().option("cil.libraryPath", directoryDlls).build();
+    context = setupContext().build();
   }
 
   /**
@@ -232,9 +232,10 @@ public abstract class TestBase {
     return sourceCode;
   }
 
-  private Context.Builder setupContext() {
+  private static Context.Builder setupContext() {
     return Context.newBuilder(LANGUAGE_ID)
         .engine(Engine.newBuilder(LANGUAGE_ID).build())
+        .option("cil.libraryPath", directoryDlls)
         .out(outputStream)
         .err(outputStream)
         .allowAllAccess(true);
