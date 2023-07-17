@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.io.ByteSequence;
+import org.jetbrains.annotations.TestOnly;
 
 public class CILOSTAZOLContext {
   public static final TruffleLanguage.ContextReference<CILOSTAZOLContext> CONTEXT_REF =
@@ -51,6 +52,7 @@ public class CILOSTAZOLContext {
   }
 
   // For test propose only
+  @TestOnly
   public CILOSTAZOLContext(CILOSTAZOLLanguage lang, Path[] libraryPaths) {
     language = lang;
     env = null;
