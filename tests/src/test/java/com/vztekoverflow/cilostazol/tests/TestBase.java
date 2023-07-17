@@ -2,23 +2,23 @@ package com.vztekoverflow.cilostazol.tests;
 
 import static com.vztekoverflow.cilostazol.launcher.CILOSTAZOLLauncher.LANGUAGE_ID;
 
+import com.vztekoverflow.cilostazol.CILOSTAZOLEngineOption;
 import com.vztekoverflow.cilostazol.launcher.CILOSTAZOLLauncher;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.concurrent.locks.ReentrantLock;
-import junit.framework.TestCase;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.Source;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-public abstract class TestBase extends TestCase {
+public abstract class TestBase {
   private static final String directoryDlls = "src/test/resources/dlls";
   private static final String directoryDllTests = "src/test/resources/BasicTests";
   private static final String directoryCustomTest =
@@ -28,14 +28,14 @@ public abstract class TestBase extends TestCase {
   private static final String configuration = "Release";
   private static final String dotnetVersion = "net7.0";
 
-  private OutputStream outputStream;
-  private Context context;
-  ReentrantLock lock = new ReentrantLock();
+  private static OutputStream outputStream;
 
-  @BeforeAll
-  public void setUp() {
+  public static Context context;
+
+  @BeforeEach
+  public void setup() {
     outputStream = new ByteArrayOutputStream();
-    context = setupContext().option("cil.libraryPath", directoryDlls).build();
+    context = setupContext().build();
   }
 
   /**
@@ -47,28 +47,36 @@ public abstract class TestBase extends TestCase {
     var randomName = java.util.UUID.randomUUID().toString();
     var directory = Paths.get(directoryCustomTest, randomName);
 
-    var sourceFile = compileCode(sourceCode, directory).toFile();
+    try {
+      var sourceFile = compileCode(sourceCode, directory).toFile();
 
-    var retCode = context.eval(getSource(sourceFile)).asInt();
+      var retCode = context.eval(getSource(sourceFile)).asInt();
 
-    // delete random directory
-    deleteDirectory(directory.toFile());
-
-    return new RunResult(outputStream.toString(), retCode);
+      return new RunResult(outputStream.toString(), retCode);
+    } finally {
+      // delete random directory
+      deleteDirectory(directory.toFile());
+    }
   }
   /**
    * Use this or {@link #runTestFromDll(String)} for each major feature of the interpreter (return,
    * if, while, etc.).
    */
   protected RunResult runTestFromFile(@NotNull String sourceFile) {
+    // create random directory for the dummy project
     var randomName = java.util.UUID.randomUUID().toString();
     var directory = Paths.get(directoryCustomTest, randomName);
-    var sourceFilePath = compileFile(sourceFile, directory).toFile();
 
-    var retCode = context.eval(getSource(sourceFilePath)).asInt();
+    try {
+      var sourceFilePath = compileFile(sourceFile, directory).toFile();
 
-    deleteDirectory(directory.toFile());
-    return new RunResult(outputStream.toString(), retCode);
+      var retCode = context.eval(getSource(sourceFilePath)).asInt();
+
+      return new RunResult(outputStream.toString(), retCode);
+    } finally {
+      // delete random directory
+      deleteDirectory(directory.toFile());
+    }
   }
   /**
    * Use this or {@link #runTestFromFile(String)} for each major feature of the interpreter (return,
@@ -228,7 +236,10 @@ public abstract class TestBase extends TestCase {
 
   private Context.Builder setupContext() {
     return Context.newBuilder(LANGUAGE_ID)
-        .engine(Engine.newBuilder(LANGUAGE_ID).build())
+        .engine(
+            Engine.newBuilder(LANGUAGE_ID)
+                .option(CILOSTAZOLEngineOption.LIBRARY_PATH_NAME, directoryDlls)
+                .build())
         .out(outputStream)
         .err(outputStream)
         .allowAllAccess(true);
@@ -237,6 +248,8 @@ public abstract class TestBase extends TestCase {
   private Source getSource(File sourceFile) {
     try {
       return Source.newBuilder(LANGUAGE_ID, sourceFile).build();
+    } catch (NoSuchFileException e) {
+      throw new RuntimeException("Problem with compilation of test sources");
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
