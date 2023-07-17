@@ -1,7 +1,6 @@
 package com.vztekoverflow.cilostazol.runtime.objectmodel;
 
 import com.oracle.truffle.api.staticobject.StaticProperty;
-import com.vztekoverflow.cilostazol.meta.SystemTypes;
 import com.vztekoverflow.cilostazol.runtime.symbols.FieldSymbol;
 
 public class StaticField extends StaticProperty {

@@ -1,4 +1,4 @@
-package com.vztekoverflow.cilostazol.meta;
+package com.vztekoverflow.cilostazol.runtime.objectmodel;
 
 public enum SystemTypes {
   Boolean,
