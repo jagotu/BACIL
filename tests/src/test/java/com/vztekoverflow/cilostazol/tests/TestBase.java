@@ -15,6 +15,7 @@ import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.Source;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.BeforeAll;
 
 public abstract class TestBase {
   private static final String directoryDlls = "src/test/resources/dlls";
@@ -29,7 +30,8 @@ public abstract class TestBase {
   private static OutputStream outputStream;
   private static Context context;
 
-  public void setup() {
+  @BeforeAll
+  public static void setup() {
     outputStream = new ByteArrayOutputStream();
     context = setupContext().build();
   }
@@ -39,8 +41,6 @@ public abstract class TestBase {
    * #runTestFromFile(String)} or {@link #runTestFromDll(String)} tests already.
    */
   protected RunResult runTestFromCode(@NotNull @Language("cs") String sourceCode) {
-    setup();
-
     // create random directory for the dummy project
     var randomName = java.util.UUID.randomUUID().toString();
     var directory = Paths.get(directoryCustomTest, randomName);
@@ -61,7 +61,6 @@ public abstract class TestBase {
    * if, while, etc.).
    */
   protected RunResult runTestFromFile(@NotNull String sourceFile) {
-    setup();
     // create random directory for the dummy project
     var randomName = java.util.UUID.randomUUID().toString();
     var directory = Paths.get(directoryCustomTest, randomName);
@@ -82,7 +81,6 @@ public abstract class TestBase {
    * if, while, etc.).
    */
   protected RunResult runTestFromDll(@NotNull String projectName) {
-    setup();
     var sourceFilePath = this.getDllPathFromProject(projectName).toFile();
 
     var retCode = context.eval(getSource(sourceFilePath)).asInt();
@@ -234,7 +232,7 @@ public abstract class TestBase {
     return sourceCode;
   }
 
-  private Context.Builder setupContext() {
+  private static Context.Builder setupContext() {
     return Context.newBuilder(LANGUAGE_ID)
         .engine(Engine.newBuilder(LANGUAGE_ID).build())
         .option("cil.libraryPath", directoryDlls)

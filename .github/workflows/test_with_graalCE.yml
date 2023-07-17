@@ -49,4 +49,4 @@ jobs:
         run: ./build.sh
 
       - name: Test with Maven
-        run: mvn test
+        run: mvn clean install
