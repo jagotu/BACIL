@@ -70,7 +70,8 @@
                 <version>3.0.0</version>
                 <configuration>
                     <argLine>
-                        -Dtruffle.class.path.append=${project.parent.basedir}/language/target/language-1.0-SNAPSHOT.jar;${project.parent.basedir}/cil-parser/target/cil-parser-1.0-SNAPSHOT.jar
+                        -Dtruffle.class.path.append=${project.parent.basedir}/language/target/language-1.0-SNAPSHOT.jar
+                        -Dgraalvm.locatorDisabled=true
                     </argLine>
                     <additionalClasspathElements>
                         <additionalClasspathElement>
