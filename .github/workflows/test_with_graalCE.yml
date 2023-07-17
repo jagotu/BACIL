@@ -32,4 +32,4 @@ jobs:
         run: ./build.sh
 
       - name: Build with Maven
-        run: mvn package
+        run: mvn clean package
