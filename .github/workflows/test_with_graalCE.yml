@@ -48,17 +48,11 @@ jobs:
         working-directory: ./tests/src/test/resources/BasicTests
         run: ./build.sh
 
-      - name: echo1
-        run: pwd
-
-      - name: echo2
-        working-directory: .
-        run: pwd
-
       - name: clean
-        working-directory: .
         run: mvn clean
 
+      - name: install
+        run: mvn install -DskipTests
+
       - name: test
-        working-directory: .
         run: mvn test
