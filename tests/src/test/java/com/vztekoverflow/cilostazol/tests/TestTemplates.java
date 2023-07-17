@@ -5,9 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.vztekoverflow.cilostazol.launcher.CILOSTAZOLLauncher;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class TestTemplates extends TestBase {
   /*
    Here is shown how to write tests that get sourcecode form:
@@ -76,7 +74,6 @@ public class TestTemplates extends TestBase {
    */
   @Test
   public void FromCode() {
-    // TODO: this test will need to be redone after args are implemented
     var result = runTestFromCode("""
 return 42;
 """);

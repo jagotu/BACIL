@@ -15,8 +15,8 @@ jobs:
       - uses: actions/checkout@v3
       - uses: graalvm/setup-graalvm@v1
         with:
-          version: 'latest'
           java-version: '17'
+          distribution: 'graalvm'
           components: 'native-image'
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -26,7 +26,7 @@ jobs:
   test:
     needs: build
     name: "tests"
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: graalvm/setup-graalvm@v1
@@ -38,15 +38,15 @@ jobs:
 
       - name: Build parser test targets
         working-directory: ./language/src/test/resources/TypeParsingTestTargets
-        run: ./build.ps1
+        run: ./build.sh
 
       - name: Build SOM test targets
         working-directory: ./language/src/test/resources/StaticObjectModelTestTargets
-        run: ./build.ps1
+        run: ./build.sh
 
       - name: Build Interpreter test targets
         working-directory: ./tests/src/test/resources/BasicTests
-        run: ./build.ps1
+        run: ./build.sh
 
       - name: test
         run: mvn test
