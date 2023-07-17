@@ -1,14 +1,12 @@
 package com.vztekoverflow.cilostazol.runtime.context;
 
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleFile;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.nodes.Node;
 import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cilostazol.CILOSTAZOLEngineOption;
 import com.vztekoverflow.cilostazol.CILOSTAZOLLanguage;
-import com.vztekoverflow.cilostazol.meta.Meta;
 import com.vztekoverflow.cilostazol.runtime.other.AppDomain;
 import com.vztekoverflow.cilostazol.runtime.other.GuestAllocator;
 import com.vztekoverflow.cilostazol.runtime.other.TypeSymbolCacheKey;
@@ -31,7 +29,6 @@ public class CILOSTAZOLContext {
   private final TruffleLanguage.Env env;
 
   private final Map<TypeSymbolCacheKey, NamedTypeSymbol> typeSymbolCache = new HashMap<>();
-  @CompilerDirectives.CompilationFinal private Meta meta;
   private final AppDomain appDomain;
 
   public CILOSTAZOLContext(CILOSTAZOLLanguage lang, TruffleLanguage.Env env) {
@@ -66,10 +63,6 @@ public class CILOSTAZOLContext {
     return language;
   }
 
-  public Meta getMeta() {
-    return meta;
-  }
-
   public GuestAllocator getAllocator() {
     return getLanguage().getAllocator();
   }
@@ -80,10 +73,6 @@ public class CILOSTAZOLContext {
 
   public Path[] getLibsPaths() {
     return libraryPaths;
-  }
-
-  public void setBootstrapMeta(Meta meta) {
-    this.meta = meta;
   }
 
   // region Symbols
