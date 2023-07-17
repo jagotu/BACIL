@@ -30,7 +30,6 @@ public abstract class TestBase {
   private OutputStream outputStream;
   private Context context;
 
-
   @BeforeAll
   public void setUp() {
     outputStream = new ByteArrayOutputStream();
