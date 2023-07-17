@@ -48,5 +48,17 @@ jobs:
         working-directory: ./tests/src/test/resources/BasicTests
         run: ./build.sh
 
-      - name: Test with Maven
-        run: mvn clean install
+      - name: echo1
+        run: pwd
+
+      - name: echo2
+        working-directory: .
+        run: pwd
+
+      - name: clean
+        working-directory: .
+        run: mvn clean
+
+      - name: test
+        working-directory: .
+        run: mvn test
