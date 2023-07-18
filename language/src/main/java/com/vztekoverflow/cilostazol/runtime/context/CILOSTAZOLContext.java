@@ -139,5 +139,39 @@ public class CILOSTAZOLContext {
     appDomain.loadAssembly(result);
     return result;
   }
+
+  // Built-in type symbols
+  public enum CILBuiltInType
+  {
+    Boolean("Boolean"),
+    Byte("Byte"),
+    SByte("SByte"),
+    Char("Char"),
+    Decimal("Decimal"),
+    Double("Double"),
+    Single("Single"),
+    Int32("Int32"),
+    UInt32("UInt32"),
+    IntPtr("IntPtr"),
+    UIntPtr("UIntPtr"),
+    Int64("Int64"),
+    UInt64("UInt64"),
+    Int16("Int16"),
+    UInt16("UInt16"),
+    Object("Object"),
+    String("String");
+
+    public final String Name;
+
+    CILBuiltInType(String name)
+    {
+      Name = name;
+    }
+  }
+
+  public NamedTypeSymbol getType(CILBuiltInType type)
+  {
+    return getType(type.Name, "System", AssemblyIdentity.SystemPrivateCoreLib());
+  }
   // endregion
 }
