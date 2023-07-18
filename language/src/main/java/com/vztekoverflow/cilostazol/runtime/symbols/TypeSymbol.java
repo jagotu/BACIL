@@ -5,7 +5,6 @@ import static com.vztekoverflow.cilostazol.runtime.symbols.ArrayTypeSymbol.*;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
-import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cil.parser.cli.signature.SignatureReader;
 import com.vztekoverflow.cil.parser.cli.signature.TypeSig;
 import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
@@ -14,17 +13,20 @@ import com.vztekoverflow.cil.parser.cli.table.generated.CLITypeSpecTableRow;
 import com.vztekoverflow.cilostazol.CILOSTAZOLBundle;
 import com.vztekoverflow.cilostazol.exceptions.TypeSystemException;
 import com.vztekoverflow.cilostazol.nodes.CILOSTAZOLFrame;
+import com.vztekoverflow.cilostazol.runtime.context.CILOSTAZOLContext;
 import com.vztekoverflow.cilostazol.runtime.context.ContextProviderImpl;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.SystemTypes;
 
 public abstract class TypeSymbol extends Symbol {
   protected final ModuleSymbol definingModule;
   private final CILOSTAZOLFrame.StackType stackTypeKind;
+  private final SystemTypes staticObjType;
 
-  public TypeSymbol(ModuleSymbol definingModule, CILOSTAZOLFrame.StackType stackTypeKind) {
+  public TypeSymbol(ModuleSymbol definingModule, CILOSTAZOLFrame.StackType stackTypeKind, SystemTypes staticObjType) {
     super(ContextProviderImpl.getInstance());
     this.definingModule = definingModule;
     this.stackTypeKind = stackTypeKind;
+    this.staticObjType = staticObjType;
   }
 
   protected static int fastLookup(TypeSymbol target, TypeSymbol[] types) {
@@ -78,7 +80,7 @@ public abstract class TypeSymbol extends Symbol {
   }
 
   public SystemTypes getKind() {
-    return SystemTypes.Object;
+    return staticObjType;
   }
 
   public CILOSTAZOLFrame.StackType getStackTypeKind() {
@@ -140,49 +142,49 @@ public abstract class TypeSymbol extends Symbol {
         }
         case TypeSig.ELEMENT_TYPE_I4 -> module
             .getContext()
-            .getType("Int32", "System", AssemblyIdentity.SystemPrivateCoreLib());
+            .getType(CILOSTAZOLContext.CILBuiltInType.Int32);
         case TypeSig.ELEMENT_TYPE_I8 -> module
             .getContext()
-            .getType("Int64", "System", AssemblyIdentity.SystemPrivateCoreLib());
+            .getType(CILOSTAZOLContext.CILBuiltInType.Int64);
         case TypeSig.ELEMENT_TYPE_I2 -> module
             .getContext()
-            .getType("Int16", "System", AssemblyIdentity.SystemPrivateCoreLib());
+            .getType(CILOSTAZOLContext.CILBuiltInType.Int16);
         case TypeSig.ELEMENT_TYPE_I1 -> module
             .getContext()
-            .getType("SByte", "System", AssemblyIdentity.SystemPrivateCoreLib());
+            .getType(CILOSTAZOLContext.CILBuiltInType.SByte);
         case TypeSig.ELEMENT_TYPE_U4 -> module
             .getContext()
-            .getType("UInt32", "System", AssemblyIdentity.SystemPrivateCoreLib());
+            .getType(CILOSTAZOLContext.CILBuiltInType.UInt32);
         case TypeSig.ELEMENT_TYPE_U8 -> module
             .getContext()
-            .getType("UInt64", "System", AssemblyIdentity.SystemPrivateCoreLib());
+            .getType(CILOSTAZOLContext.CILBuiltInType.UInt64);
         case TypeSig.ELEMENT_TYPE_U2 -> module
             .getContext()
-            .getType("UInt16", "System", AssemblyIdentity.SystemPrivateCoreLib());
+            .getType(CILOSTAZOLContext.CILBuiltInType.UInt16);
         case TypeSig.ELEMENT_TYPE_U1 -> module
             .getContext()
-            .getType("Byte", "System", AssemblyIdentity.SystemPrivateCoreLib());
+            .getType(CILOSTAZOLContext.CILBuiltInType.Byte);
         case TypeSig.ELEMENT_TYPE_R4 -> module
             .getContext()
-            .getType("Single", "System", AssemblyIdentity.SystemPrivateCoreLib());
+            .getType(CILOSTAZOLContext.CILBuiltInType.Single);
         case TypeSig.ELEMENT_TYPE_R8 -> module
             .getContext()
-            .getType("Double", "System", AssemblyIdentity.SystemPrivateCoreLib());
+            .getType(CILOSTAZOLContext.CILBuiltInType.Double);
         case TypeSig.ELEMENT_TYPE_BOOLEAN -> module
             .getContext()
-            .getType("Boolean", "System", AssemblyIdentity.SystemPrivateCoreLib());
+            .getType(CILOSTAZOLContext.CILBuiltInType.Boolean);
         case TypeSig.ELEMENT_TYPE_CHAR -> module
             .getContext()
-            .getType("Char", "System", AssemblyIdentity.SystemPrivateCoreLib());
+            .getType(CILOSTAZOLContext.CILBuiltInType.Char);
         case TypeSig.ELEMENT_TYPE_STRING -> module
             .getContext()
-            .getType("String", "System", AssemblyIdentity.SystemPrivateCoreLib());
+            .getType(CILOSTAZOLContext.CILBuiltInType.String);
         case TypeSig.ELEMENT_TYPE_OBJECT -> module
             .getContext()
-            .getType("Object", "System", AssemblyIdentity.SystemPrivateCoreLib());
+            .getType(CILOSTAZOLContext.CILBuiltInType.Object);
         case TypeSig.ELEMENT_TYPE_VOID -> module
             .getContext()
-            .getType("Void", "System", AssemblyIdentity.SystemPrivateCoreLib());
+            .getType(CILOSTAZOLContext.CILBuiltInType.Void);
         case TypeSig.ELEMENT_TYPE_ARRAY -> ArrayTypeSymbolFactory.create(
             create(typeSig.getInnerType(), mvars, vars, module),
             typeSig.getArrayShapeSig(),

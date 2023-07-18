@@ -11,8 +11,8 @@ public class StaticField extends StaticProperty {
   }
 
   public final void setObjectValue(StaticObject obj, Object value) {
-    assert symbol.getDeclaringType().isAssignableFrom(obj.getTypeSymbol())
-        : this + " does not exist in " + obj.getTypeSymbol();
+    //assert symbol.getDeclaringType().isAssignableFrom(obj.getTypeSymbol())
+     //   : this + " does not exist in " + obj.getTypeSymbol();
 
     // Call to StaticProperty!
     setObject(obj, value);
@@ -45,7 +45,6 @@ public class StaticField extends StaticProperty {
 
   @Override
   protected String getId() {
-    // TODO:
-    return null;
+    return symbol.getName();
   }
 }

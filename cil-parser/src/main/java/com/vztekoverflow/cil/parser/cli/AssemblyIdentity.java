@@ -3,6 +3,8 @@ package com.vztekoverflow.cil.parser.cli;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIAssemblyRefTableRow;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIAssemblyTableRow;
 
+import java.util.Objects;
+
 /** Representation of an assembly's identity, including its name and version. */
 public final class AssemblyIdentity {
   private final short majorVersion;
@@ -162,5 +164,10 @@ public final class AssemblyIdentity {
           && name.equals(other.name);
     }
     return false;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(majorVersion, minorVersion, buildNumber, revisionNumber, name);
   }
 }

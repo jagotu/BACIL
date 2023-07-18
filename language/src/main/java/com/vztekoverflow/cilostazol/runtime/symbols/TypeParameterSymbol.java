@@ -4,6 +4,8 @@ import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIGenericParamConstraintTableRow;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIGenericParamTableRow;
 import com.vztekoverflow.cilostazol.nodes.CILOSTAZOLFrame;
+import com.vztekoverflow.cilostazol.runtime.objectmodel.SystemTypes;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +21,7 @@ public final class TypeParameterSymbol extends TypeSymbol {
       GenericParameterFlags flags,
       int ordinal,
       String name) {
-    super(definingModule, CILOSTAZOLFrame.StackType.Void);
+    super(definingModule, CILOSTAZOLFrame.StackType.Void, SystemTypes.Void);
     this.constraints = constraints;
     this.flags = flags;
     this.ordinal = ordinal;

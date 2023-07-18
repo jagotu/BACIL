@@ -159,7 +159,8 @@ public class CILOSTAZOLContext {
     Int16("Int16"),
     UInt16("UInt16"),
     Object("Object"),
-    String("String");
+    String("String"),
+    Void("Void");
 
     public final String Name;
 
