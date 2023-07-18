@@ -164,7 +164,6 @@ public class NamedTypeSymbol extends TypeSymbol {
 
     return lazyFields;
   }
-  // endregion
 
   public ConstructedNamedTypeSymbol construct(TypeSymbol[] typeArguments) {
     return ConstructedNamedTypeSymbol.ConstructedNamedTypeSymbolFactory.create(
