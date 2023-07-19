@@ -126,8 +126,7 @@ public class CILOSTAZOLContext {
                   .build());
         } catch (Exception e) {
           throw new RuntimeException(
-              "Error loading assembly " + assemblyIdentity.getName() + " from " + path,
-              e);
+              "Error loading assembly " + assemblyIdentity.getName() + " from " + path, e);
         }
       }
     }
@@ -140,9 +139,8 @@ public class CILOSTAZOLContext {
     return result;
   }
 
-  //region Built-in type symbols
-  public enum CILBuiltInType
-  {
+  // region Built-in type symbols
+  public enum CILBuiltInType {
     Boolean("Boolean"),
     Byte("Byte"),
     SByte("SByte"),
@@ -164,14 +162,12 @@ public class CILOSTAZOLContext {
 
     public final String Name;
 
-    CILBuiltInType(String name)
-    {
+    CILBuiltInType(String name) {
       Name = name;
     }
   }
 
-  public NamedTypeSymbol getType(CILBuiltInType type)
-  {
+  public NamedTypeSymbol getType(CILBuiltInType type) {
     return getType(type.Name, "System", AssemblyIdentity.SystemPrivateCoreLib());
   }
   // endregion

@@ -4,7 +4,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.vztekoverflow.cilostazol.runtime.symbols.TypeSymbol;
 
-public abstract class NodeizedNodeBase  extends Node {
+public abstract class NodeizedNodeBase extends Node {
 
   /**
    * Execute the node on the given evaluation stack.
