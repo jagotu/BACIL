@@ -367,14 +367,12 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
   {
     CompilerDirectives.transferToInterpreterAndInvalidate();
     final NodeizedNodeBase node;
-    switch (opcode) {
-      case LDSTR:
-        CLIUSHeapPtr ptr = new CLIUSHeapPtr(token.getRowNo());
-        node = new LDSTRNode(ptr.readString(method.getModule().getDefiningFile().getUSHeap()), top, method.getContext().getType(CILOSTAZOLContext.CILBuiltInType.String));
-        break;
-      default:
-        CompilerAsserts.neverPartOfCompilation();
-        throw new InterpreterException();
+    if (opcode == LDSTR) {
+      CLIUSHeapPtr ptr = new CLIUSHeapPtr(token.getRowNo());
+      node = new LDSTRNode(ptr.readString(method.getModule().getDefiningFile().getUSHeap()), top, method.getContext().getType(CILOSTAZOLContext.CILBuiltInType.String));
+    } else {
+      CompilerAsserts.neverPartOfCompilation();
+      throw new InterpreterException();
     }
 
     int index = addNode(node);

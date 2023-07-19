@@ -5,7 +5,6 @@ import com.vztekoverflow.cil.parser.cli.table.generated.CLIGenericParamConstrain
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIGenericParamTableRow;
 import com.vztekoverflow.cilostazol.nodes.CILOSTAZOLFrame;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.SystemTypes;
-
 import java.util.ArrayList;
 import java.util.List;
 

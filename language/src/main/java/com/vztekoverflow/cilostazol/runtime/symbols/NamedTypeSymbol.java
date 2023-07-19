@@ -93,7 +93,10 @@ public class NamedTypeSymbol extends TypeSymbol {
       TypeParameterSymbol[] typeParameters,
       CLITablePtr definingRow,
       TypeMap map) {
-    super(definingModule, CILOSTAZOLFrame.getStackTypeKind(name, namespace), SystemTypes.getTypeKind(name, namespace));
+    super(
+        definingModule,
+        CILOSTAZOLFrame.getStackTypeKind(name, namespace),
+        SystemTypes.getTypeKind(name, namespace));
     assert definingRow.getTableId() == CLITableConstants.CLI_TABLE_TYPE_DEF;
 
     this.flags = flags;
@@ -431,13 +434,15 @@ public class NamedTypeSymbol extends TypeSymbol {
     }
   }
 
-  private static FieldSymbol patch(FieldSymbol symbol, NamedTypeSymbol type)
-  {
+  private static FieldSymbol patch(FieldSymbol symbol, NamedTypeSymbol type) {
     if (Objects.equals(type.getNamespace(), "System")
-    && Objects.equals(type.getName(), "String")
-    && symbol.getName().equals("_firstChar"))
-    {
-      return FieldSymbol.FieldSymbolFactory.createWith(symbol, ArrayTypeSymbol.ArrayTypeSymbolFactory.create(type.getContext().getType(CILOSTAZOLContext.CILBuiltInType.Char), type.getDefiningModule()));
+        && Objects.equals(type.getName(), "String")
+        && symbol.getName().equals("_firstChar")) {
+      return FieldSymbol.FieldSymbolFactory.createWith(
+          symbol,
+          ArrayTypeSymbol.ArrayTypeSymbolFactory.create(
+              type.getContext().getType(CILOSTAZOLContext.CILBuiltInType.Char),
+              type.getDefiningModule()));
     }
     return symbol;
   }

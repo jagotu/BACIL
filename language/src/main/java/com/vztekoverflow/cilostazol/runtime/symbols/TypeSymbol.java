@@ -22,7 +22,10 @@ public abstract class TypeSymbol extends Symbol {
   private final CILOSTAZOLFrame.StackType stackTypeKind;
   private final SystemTypes staticObjType;
 
-  public TypeSymbol(ModuleSymbol definingModule, CILOSTAZOLFrame.StackType stackTypeKind, SystemTypes staticObjType) {
+  public TypeSymbol(
+      ModuleSymbol definingModule,
+      CILOSTAZOLFrame.StackType stackTypeKind,
+      SystemTypes staticObjType) {
     super(ContextProviderImpl.getInstance());
     this.definingModule = definingModule;
     this.stackTypeKind = stackTypeKind;

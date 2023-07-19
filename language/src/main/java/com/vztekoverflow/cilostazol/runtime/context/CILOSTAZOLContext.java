@@ -126,7 +126,7 @@ public class CILOSTAZOLContext {
                   .build());
         } catch (Exception e) {
           throw new RuntimeException(
-              "Error loading assembly " + assemblyIdentity.getName() + " from " + path.toString(),
+              "Error loading assembly " + assemblyIdentity.getName() + " from " + path,
               e);
         }
       }

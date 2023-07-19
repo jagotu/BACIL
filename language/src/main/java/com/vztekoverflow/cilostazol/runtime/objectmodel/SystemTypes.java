@@ -1,6 +1,5 @@
 package com.vztekoverflow.cilostazol.runtime.objectmodel;
 
-
 import java.util.Objects;
 
 public enum SystemTypes {
@@ -36,7 +35,7 @@ public enum SystemTypes {
         case "Int64":
         case "UInt64":
           return SystemTypes.Long;
-        // Decimal, UIntPtr, IntPtr ??
+          // Decimal, UIntPtr, IntPtr ??
       }
     }
 

@@ -11,8 +11,8 @@ public class StaticField extends StaticProperty {
   }
 
   public final void setObjectValue(StaticObject obj, Object value) {
-    //assert symbol.getDeclaringType().isAssignableFrom(obj.getTypeSymbol())
-     //   : this + " does not exist in " + obj.getTypeSymbol();
+    // assert symbol.getDeclaringType().isAssignableFrom(obj.getTypeSymbol())
+    //   : this + " does not exist in " + obj.getTypeSymbol();
 
     // Call to StaticProperty!
     setObject(obj, value);
@@ -39,7 +39,7 @@ public class StaticField extends StaticProperty {
       case Double -> double.class;
       case Int -> int.class;
       case Long -> long.class;
-      case Array -> Object.class; //TODO: Klepitko -> arrrays will be objects
+      case Array -> Object.class; // TODO: Klepitko -> arrrays will be objects
       default -> StaticObject.class;
     };
   }

@@ -12,7 +12,7 @@ public record TypeSymbolCacheKey(String name, String namespace, AssemblyIdentity
 
   @Override
   public int hashCode() {
-    return Objects.hash(name.hashCode(), namespace.hashCode(),assemblyIdentity.hashCode());
+    return Objects.hash(name.hashCode(), namespace.hashCode(), assemblyIdentity.hashCode());
   }
 
   @Override

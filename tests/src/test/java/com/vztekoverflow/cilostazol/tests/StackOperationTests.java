@@ -1,16 +1,15 @@
 package com.vztekoverflow.cilostazol.tests;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class StackOperationTests extends TestBase
-{
+import org.junit.jupiter.api.Test;
+
+public class StackOperationTests extends TestBase {
   @Test
   public void simpleCall() {
     var result =
-            runTestFromCode(
-                    """
+        runTestFromCode(
+            """
                   using System;
                   namespace CustomTest
                   {
