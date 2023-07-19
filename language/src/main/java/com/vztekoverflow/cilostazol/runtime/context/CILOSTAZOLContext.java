@@ -1,14 +1,12 @@
 package com.vztekoverflow.cilostazol.runtime.context;
 
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleFile;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.nodes.Node;
 import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
 import com.vztekoverflow.cilostazol.CILOSTAZOLEngineOption;
 import com.vztekoverflow.cilostazol.CILOSTAZOLLanguage;
-import com.vztekoverflow.cilostazol.meta.Meta;
 import com.vztekoverflow.cilostazol.runtime.other.AppDomain;
 import com.vztekoverflow.cilostazol.runtime.other.GuestAllocator;
 import com.vztekoverflow.cilostazol.runtime.other.TypeSymbolCacheKey;
@@ -22,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.io.ByteSequence;
+import org.jetbrains.annotations.TestOnly;
 
 public class CILOSTAZOLContext {
   public static final TruffleLanguage.ContextReference<CILOSTAZOLContext> CONTEXT_REF =
@@ -31,7 +30,6 @@ public class CILOSTAZOLContext {
   private final TruffleLanguage.Env env;
 
   private final Map<TypeSymbolCacheKey, NamedTypeSymbol> typeSymbolCache = new HashMap<>();
-  @CompilerDirectives.CompilationFinal private Meta meta;
   private final AppDomain appDomain;
 
   public CILOSTAZOLContext(CILOSTAZOLLanguage lang, TruffleLanguage.Env env) {
@@ -51,6 +49,7 @@ public class CILOSTAZOLContext {
   }
 
   // For test propose only
+  @TestOnly
   public CILOSTAZOLContext(CILOSTAZOLLanguage lang, Path[] libraryPaths) {
     language = lang;
     env = null;
@@ -66,10 +65,6 @@ public class CILOSTAZOLContext {
     return language;
   }
 
-  public Meta getMeta() {
-    return meta;
-  }
-
   public GuestAllocator getAllocator() {
     return getLanguage().getAllocator();
   }
@@ -80,10 +75,6 @@ public class CILOSTAZOLContext {
 
   public Path[] getLibsPaths() {
     return libraryPaths;
-  }
-
-  public void setBootstrapMeta(Meta meta) {
-    this.meta = meta;
   }
 
   // region Symbols
@@ -135,8 +126,7 @@ public class CILOSTAZOLContext {
                   .build());
         } catch (Exception e) {
           throw new RuntimeException(
-              "Error loading assembly " + assemblyIdentity.getName() + " from " + path.toString(),
-              e);
+              "Error loading assembly " + assemblyIdentity.getName() + " from " + path, e);
         }
       }
     }
@@ -147,6 +137,38 @@ public class CILOSTAZOLContext {
     var result = AssemblySymbol.AssemblySymbolFactory.create(source);
     appDomain.loadAssembly(result);
     return result;
+  }
+
+  // region Built-in type symbols
+  public enum CILBuiltInType {
+    Boolean("Boolean"),
+    Byte("Byte"),
+    SByte("SByte"),
+    Char("Char"),
+    Decimal("Decimal"),
+    Double("Double"),
+    Single("Single"),
+    Int32("Int32"),
+    UInt32("UInt32"),
+    IntPtr("IntPtr"),
+    UIntPtr("UIntPtr"),
+    Int64("Int64"),
+    UInt64("UInt64"),
+    Int16("Int16"),
+    UInt16("UInt16"),
+    Object("Object"),
+    String("String"),
+    Void("Void");
+
+    public final String Name;
+
+    CILBuiltInType(String name) {
+      Name = name;
+    }
+  }
+
+  public NamedTypeSymbol getType(CILBuiltInType type) {
+    return getType(type.Name, "System", AssemblyIdentity.SystemPrivateCoreLib());
   }
   // endregion
 }

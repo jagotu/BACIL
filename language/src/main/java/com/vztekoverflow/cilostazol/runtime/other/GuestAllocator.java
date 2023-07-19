@@ -8,9 +8,9 @@ import com.vztekoverflow.cilostazol.CILOSTAZOLLanguage;
 import com.vztekoverflow.cilostazol.exceptions.InstantiationError;
 import com.vztekoverflow.cilostazol.exceptions.InstantiationException;
 import com.vztekoverflow.cilostazol.exceptions.NegativeArraySizeException;
-import com.vztekoverflow.cilostazol.meta.SystemTypes;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticField;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
+import com.vztekoverflow.cilostazol.runtime.objectmodel.SystemTypes;
 import com.vztekoverflow.cilostazol.runtime.symbols.NamedTypeSymbol;
 import com.vztekoverflow.cilostazol.runtime.symbols.Symbol;
 
