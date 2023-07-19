@@ -666,9 +666,13 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
   }
 
   private boolean binaryCompareDouble(int opcode, double op1, double op2) {
+    // Unordered values always compare false
+    if (Double.isNaN(op1) || Double.isNaN(op2)) {
+      return false;
+    }
+
     boolean result;
     switch (opcode) {
-        // Breaks standard: we implement unordered and ordered double compares identically
       case CGT:
       case BGT:
       case BGT_S:
