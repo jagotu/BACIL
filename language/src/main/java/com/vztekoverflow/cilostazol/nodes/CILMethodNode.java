@@ -666,51 +666,92 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
   }
 
   private boolean binaryCompareDouble(int opcode, double op1, double op2) {
-    // Unordered values always compare false
-    if (Double.isNaN(op1) || Double.isNaN(op2)) {
-      return false;
-    }
-
+    final boolean isUnordered = Double.isNaN(op1) || Double.isNaN(op2);
     boolean result;
     switch (opcode) {
       case CGT:
       case BGT:
       case BGT_S:
+        if (isUnordered) {
+          return false;
+        }
+        result = op1 > op2;
+        break;
+
       case CGT_UN:
       case BGT_UN:
       case BGT_UN_S:
+        if (isUnordered) {
+          return true;
+        }
         result = op1 > op2;
         break;
+
       case BGE:
       case BGE_S:
+        if (isUnordered) {
+          return false;
+        }
+        result = op1 >= op2;
+        break;
+
       case BGE_UN:
       case BGE_UN_S:
+        if (isUnordered) {
+          return true;
+        }
         result = op1 >= op2;
         break;
 
       case CLT:
       case BLT:
       case BLT_S:
+        if (isUnordered) {
+          return false;
+        }
+        result = op1 < op2;
+        break;
+
       case CLT_UN:
       case BLT_UN:
       case BLT_UN_S:
+        if (isUnordered) {
+          return true;
+        }
         result = op1 < op2;
         break;
+
       case BLE:
       case BLE_S:
+        if (isUnordered) {
+          return false;
+        }
+        result = op1 <= op2;
+        break;
+
       case BLE_UN:
       case BLE_UN_S:
+        if (isUnordered) {
+          return true;
+        }
         result = op1 <= op2;
         break;
 
       case CEQ:
       case BEQ:
       case BEQ_S:
+        if (isUnordered) {
+          return false;
+        }
+
         result = op1 == op2;
         break;
 
       case BNE_UN:
       case BNE_UN_S:
+        if (isUnordered) {
+          return true;
+        }
         result = op1 != op2;
         break;
       default:
