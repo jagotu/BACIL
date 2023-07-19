@@ -2,6 +2,7 @@ package com.vztekoverflow.cil.parser.cli;
 
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIAssemblyRefTableRow;
 import com.vztekoverflow.cil.parser.cli.table.generated.CLIAssemblyTableRow;
+import java.util.Objects;
 
 /** Representation of an assembly's identity, including its name and version. */
 public final class AssemblyIdentity {
@@ -86,9 +87,7 @@ public final class AssemblyIdentity {
     // match precisely when binding a reference, or it can exhibit any other behavior deemed
     // appropriate.
 
-    if (!name.equals(reference.name)) return false;
-
-    return true;
+    return name.equals(reference.name);
 
     // In case strict verison checks are required, the code below can be uncommented.
     /*if(reference.majorVersion != -1)
@@ -153,8 +152,7 @@ public final class AssemblyIdentity {
 
   @Override
   public boolean equals(Object obj) {
-    if (obj instanceof AssemblyIdentity) {
-      AssemblyIdentity other = (AssemblyIdentity) obj;
+    if (obj instanceof AssemblyIdentity other) {
       return majorVersion == other.majorVersion
           && minorVersion == other.minorVersion
           && buildNumber == other.buildNumber
@@ -162,5 +160,10 @@ public final class AssemblyIdentity {
           && name.equals(other.name);
     }
     return false;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(majorVersion, minorVersion, buildNumber, revisionNumber, name);
   }
 }

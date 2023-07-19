@@ -2,6 +2,8 @@ package com.vztekoverflow.cilostazol.nodes;
 
 import static com.vztekoverflow.cil.parser.bytecode.BytecodeInstructions.*;
 
+import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.HostCompilerDirectives;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -9,9 +11,14 @@ import com.oracle.truffle.api.nodes.BytecodeOSRNode;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.vztekoverflow.cil.parser.bytecode.BytecodeBuffer;
 import com.vztekoverflow.cil.parser.bytecode.BytecodeInstructions;
-import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
+import com.vztekoverflow.cil.parser.cli.table.CLITablePtr;
+import com.vztekoverflow.cil.parser.cli.table.CLIUSHeapPtr;
+import com.vztekoverflow.cilostazol.exceptions.InterpreterException;
 import com.vztekoverflow.cilostazol.exceptions.InvalidCLIException;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
+import com.vztekoverflow.cilostazol.nodes.nodeized.LDSTRNode;
+import com.vztekoverflow.cilostazol.nodes.nodeized.NodeizedNodeBase;
+import com.vztekoverflow.cilostazol.runtime.context.CILOSTAZOLContext;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.symbols.*;
 import java.util.Arrays;
@@ -22,6 +29,8 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
   private final BytecodeBuffer bytecodeBuffer;
   private final FrameDescriptor frameDescriptor;
   private final TypeSymbol[] taggedFrame;
+
+  @Children private NodeizedNodeBase[] nodes = new NodeizedNodeBase[0];
 
   private CILMethodNode(MethodSymbol method, byte[] cilCode) {
     this.method = method;
@@ -154,6 +163,9 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
         case LDC_R8:
           loadValueOnTop(frame, topStack, Double.longBitsToDouble(bytecodeBuffer.getImmLong(pc)));
           break;
+        case LDSTR:
+          topStack = nodeizeOpToken(frame, topStack, bytecodeBuffer.getImmToken(pc), pc, curOpcode);
+          break;
 
           // Storing to locals
         case STLOC_0:
@@ -194,16 +206,15 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
           loadArgRefToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack);
           break;
 
-        case LDSTR:
-          System.out.println("LOADING STRING");
-          //          loadStringToTop(frame, bytecodeBuffer.getImmUShort(pc), topStack);
-          break;
-
         case RET:
           return getReturnValue(frame, topStack - 1);
 
         case CALL:
           System.out.println("CALLING");
+          break;
+
+        case TRUFFLE_NODE:
+          topStack = nodes[bytecodeBuffer.getImmInt(pc)].execute(frame, taggedFrame);
           break;
 
         default:
@@ -220,37 +231,25 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
   private void loadValueOnTop(VirtualFrame frame, int top, int value) {
     // We want to tag the stack by types in it
     CILOSTAZOLFrame.putInt(frame, top, value);
-    taggedFrame[top] =
-        getMethod()
-            .getContext()
-            .getType("System", "Int32", AssemblyIdentity.SystemPrivateCoreLib());
+    taggedFrame[top] = getMethod().getContext().getType(CILOSTAZOLContext.CILBuiltInType.Int32);
   }
 
   private void loadValueOnTop(VirtualFrame frame, int top, long value) {
     // We want to tag the stack by types in it
     CILOSTAZOLFrame.putLong(frame, top, value);
-    taggedFrame[top] =
-        getMethod()
-            .getContext()
-            .getType("System", "Int64", AssemblyIdentity.SystemPrivateCoreLib());
+    taggedFrame[top] = getMethod().getContext().getType(CILOSTAZOLContext.CILBuiltInType.Int64);
   }
 
   private void loadValueOnTop(VirtualFrame frame, int top, double value) {
     // We want to tag the stack by types in it
     CILOSTAZOLFrame.putDouble(frame, top, value);
-    taggedFrame[top] =
-        getMethod()
-            .getContext()
-            .getType("System", "Double", AssemblyIdentity.SystemPrivateCoreLib());
+    taggedFrame[top] = getMethod().getContext().getType(CILOSTAZOLContext.CILBuiltInType.Double);
   }
 
   private void loadValueOnTop(VirtualFrame frame, int top, float value) {
     // We want to tag the stack by types in it
     CILOSTAZOLFrame.putFloat(frame, top, value);
-    taggedFrame[top] =
-        getMethod()
-            .getContext()
-            .getType("System", "Single", AssemblyIdentity.SystemPrivateCoreLib());
+    taggedFrame[top] = getMethod().getContext().getType(CILOSTAZOLContext.CILBuiltInType.Single);
   }
 
   private void loadLocalToTop(VirtualFrame frame, int localIdx, int top) {
@@ -324,6 +323,64 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
         throw new InvalidCLIException();
       }
     }
+  }
+  // endregion
+
+  // region Nodeization
+  /**
+   * Get a byte[] representing an instruction with the specified opcode and a 32-bit immediate
+   * value.
+   *
+   * @param opcode opcode of the new instruction
+   * @param imm 32-bit immediate value of the new instruction
+   * @param targetLength the length of the resulting patch, instruction will be padded with NOPs
+   * @return The new instruction bytes.
+   */
+  private static byte[] preparePatch(byte opcode, int imm, int targetLength) {
+    assert (targetLength >= 5); // Smaller instructions won't fit the 32-bit immediate
+    byte[] patch = new byte[targetLength];
+    patch[0] = opcode;
+    patch[1] = (byte) (imm & 0xFF);
+    patch[2] = (byte) ((imm >> 8) & 0xFF);
+    patch[3] = (byte) ((imm >> 16) & 0xFF);
+    patch[4] = (byte) ((imm >> 24) & 0xFF);
+    return patch;
+  }
+
+  private int nodeizeOpToken(VirtualFrame frame, int top, CLITablePtr token, int pc, int opcode) {
+    CompilerDirectives.transferToInterpreterAndInvalidate();
+    final NodeizedNodeBase node;
+    if (opcode == LDSTR) {
+      CLIUSHeapPtr ptr = new CLIUSHeapPtr(token.getRowNo());
+      node =
+          new LDSTRNode(
+              ptr.readString(method.getModule().getDefiningFile().getUSHeap()),
+              top,
+              method.getContext().getType(CILOSTAZOLContext.CILBuiltInType.String));
+    } else {
+      CompilerAsserts.neverPartOfCompilation();
+      throw new InterpreterException();
+    }
+
+    int index = addNode(node);
+
+    byte[] patch =
+        preparePatch(
+            (byte) TRUFFLE_NODE,
+            index,
+            com.vztekoverflow.bacil.bytecode.BytecodeInstructions.getLength(opcode));
+    bytecodeBuffer.patchBytecode(pc, patch);
+
+    // execute the new node
+    return nodes[index].execute(frame, taggedFrame);
+  }
+
+  private int addNode(NodeizedNodeBase node) {
+    CompilerAsserts.neverPartOfCompilation();
+    nodes = Arrays.copyOf(nodes, nodes.length + 1);
+    int nodeIndex = nodes.length - 1; // latest empty slot
+    nodes[nodeIndex] = insert(node);
+    return nodeIndex;
   }
   // endregion
 }
