@@ -4,4 +4,8 @@ public class InterpreterException extends CILOSTAZOLException {
   public InterpreterException() {
     super("");
   }
+
+  public InterpreterException(String message) {
+    super(message);
+  }
 }

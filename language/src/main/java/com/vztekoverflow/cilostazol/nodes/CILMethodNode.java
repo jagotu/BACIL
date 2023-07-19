@@ -2,17 +2,20 @@ package com.vztekoverflow.cilostazol.nodes;
 
 import static com.vztekoverflow.cil.parser.bytecode.BytecodeInstructions.*;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.HostCompilerDirectives;
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.BytecodeOSRNode;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.vztekoverflow.cil.parser.bytecode.BytecodeBuffer;
-import com.vztekoverflow.cil.parser.bytecode.BytecodeInstructions;
 import com.vztekoverflow.cil.parser.cli.AssemblyIdentity;
+import com.vztekoverflow.cilostazol.exceptions.InterpreterException;
 import com.vztekoverflow.cilostazol.exceptions.InvalidCLIException;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
+import com.vztekoverflow.cilostazol.runtime.other.TypeHelpers;
 import com.vztekoverflow.cilostazol.runtime.symbols.*;
 import java.util.Arrays;
 
@@ -50,44 +53,50 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
     return execute(frame, 0, CILOSTAZOLFrame.getStartStackOffset(method));
   }
 
-  private void initializeFrame(VirtualFrame frame) {
-    // Init arguments
-    Object[] args = frame.getArguments();
+  /**
+   * Do a binary comparison of values on the evaluation stack and return the result as a boolean.
+   *
+   * <p>Possible operands: - int32 - maps to Java int - int64 - maps to Java long - native int -
+   * unsupported - float (internal representation that can be implementation-dependent) - maps to
+   * Java double - object reference - maps to Java Object - managed pointer - unsupported
+   *
+   * <p>Possible combinations: - int32, int32 - int64, int64 - float, float - object reference,
+   * object reference (only for beq[.s], bne.un[.s], ceq)
+   *
+   * @return the comparison result as a boolean
+   */
+  private static boolean binaryCompareResult(int opcode, VirtualFrame frame, int slot1, int slot2) {
 
-    boolean hasReceiver =
-        !getMethod().getMethodFlags().hasFlag(MethodSymbol.MethodFlags.Flag.STATIC);
-    int receiverSlot = CILOSTAZOLFrame.getStartLocalsOffset(getMethod());
-    if (hasReceiver) {
-      throw new NotImplementedException();
+    var descriptor = frame.getFrameDescriptor();
+    var slot1Type = descriptor.getSlotKind(slot1);
+    var slot2Type = descriptor.getSlotKind(slot2);
+
+    if (slot1Type == FrameSlotKind.Int && slot2Type == FrameSlotKind.Int) {
+      long op1 = frame.getInt(slot1);
+      long op2 = frame.getInt(slot2);
+      return binaryCompareInt32(opcode, op1, op2);
     }
 
-    TypeSymbol[] argTypes =
-        Arrays.stream(method.getParameters()).map(x -> x.getType()).toArray(TypeSymbol[]::new);
-    int topStack = CILOSTAZOLFrame.getStartArgsOffset(getMethod());
-
-    for (int i = 0; i < method.getParameters().length; i++) {
-      switch (argTypes[i].getStackTypeKind()) {
-        case Int:
-          CILOSTAZOLFrame.putInt(frame, topStack, (int) args[i + receiverSlot]);
-          break;
-        case Long:
-          CILOSTAZOLFrame.putLong(frame, topStack, (long) args[i + receiverSlot]);
-          break;
-        case Double:
-          CILOSTAZOLFrame.putDouble(frame, topStack, (double) args[i + receiverSlot]);
-          break;
-        case Float:
-          CILOSTAZOLFrame.putFloat(frame, topStack, (float) args[i + receiverSlot]);
-          break;
-        case Object:
-          CILOSTAZOLFrame.putObject(frame, topStack, (StaticObject) args[i + receiverSlot]);
-          break;
-        default:
-          throw new NotImplementedException();
-      }
-      taggedFrame[topStack] = argTypes[i + receiverSlot];
-      topStack--;
+    if (slot1Type == FrameSlotKind.Long && slot2Type == FrameSlotKind.Long) {
+      long op1 = frame.getLong(slot1);
+      long op2 = frame.getLong(slot2);
+      return binaryCompareInt64(opcode, op1, op2);
     }
+
+    if (slot1Type == FrameSlotKind.Double && slot2Type == FrameSlotKind.Double) {
+      double op1 = frame.getDouble(slot1);
+      double op2 = frame.getDouble(slot2);
+      return binaryCompareDouble(opcode, op1, op2);
+    }
+
+    if (slot1Type == FrameSlotKind.Object && slot2Type == FrameSlotKind.Object) {
+      var op1 = frame.getObject(slot1);
+      var op2 = frame.getObject(slot2);
+      return binaryCompareByReference(opcode, frame, op1, op2);
+    }
+
+    CompilerDirectives.transferToInterpreterAndInvalidate();
+    throw new InterpreterException("Invalid types for comparison: " + slot1Type + " " + slot2Type);
   }
   // endregion
 
@@ -108,97 +117,22 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
   }
   // endregion
 
-  @ExplodeLoop(kind = ExplodeLoop.LoopExplosionKind.MERGE_EXPLODE)
-  @HostCompilerDirectives.BytecodeInterpreterSwitch
-  private Object execute(VirtualFrame frame, int pc, int topStack) {
+  private static boolean binaryCompareByReference(
+      int opcode, VirtualFrame frame, Object op1, Object op2) {
 
-    while (true) {
-      int curOpcode = bytecodeBuffer.getOpcode(pc);
-      int nextpc = bytecodeBuffer.nextInstruction(pc);
-      switch (curOpcode) {
-        case NOP:
-        case POP:
-          popStack(topStack - 1);
-          break;
+    switch (opcode) {
+      case CEQ:
+      case BEQ:
+      case BEQ_S:
+        return op1 == op2;
 
-          // Loading on top of the stack
-        case LDNULL:
-          loadNull(frame, topStack);
-          break;
-        case LDC_I4_M1:
-        case LDC_I4_0:
-        case LDC_I4_1:
-        case LDC_I4_2:
-        case LDC_I4_3:
-        case LDC_I4_4:
-        case LDC_I4_5:
-        case LDC_I4_6:
-        case LDC_I4_7:
-        case LDC_I4_8:
-          loadValueOnTop(frame, topStack, curOpcode - LDC_I4_0);
-          break;
-        case LDC_I4_S:
-          loadValueOnTop(frame, topStack, bytecodeBuffer.getImmByte(pc));
-          break;
-        case LDC_I4:
-          loadValueOnTop(frame, topStack, bytecodeBuffer.getImmInt(pc));
-          break;
-        case LDC_I8:
-          loadValueOnTop(frame, topStack, bytecodeBuffer.getImmLong(pc));
-          break;
-        case LDC_R4:
-          loadValueOnTop(frame, topStack, Float.intBitsToFloat(bytecodeBuffer.getImmInt(pc)));
-          break;
-        case LDC_R8:
-          loadValueOnTop(frame, topStack, Double.longBitsToDouble(bytecodeBuffer.getImmLong(pc)));
-          break;
-
-          // Storing to locals
-        case STLOC_0:
-        case STLOC_1:
-        case STLOC_2:
-        case STLOC_3:
-          storeValueToLocal(frame, topStack - 1, topStack - 1);
-          break;
-        case STLOC_S:
-          storeValueToLocal(frame, bytecodeBuffer.getImmUByte(pc), topStack - 1);
-          break;
-
-          // Loading locals to top
-        case LDLOC_0:
-        case LDLOC_1:
-        case LDLOC_2:
-        case LDLOC_3:
-          loadLocalToTop(frame, curOpcode - LDLOC_0, topStack - 1);
-          break;
-        case LDLOC_S:
-          loadLocalToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack - 1);
-          break;
-        case LDLOCA_S:
-          loadLocalRefToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack);
-          break;
-
-          // Loading args to top
-        case LDARG_0:
-        case LDARG_1:
-        case LDARG_2:
-        case LDARG_3:
-          loadArgToTop(frame, curOpcode - LDARG_0, topStack);
-          break;
-        case LDARG_S:
-          loadArgToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack);
-          break;
-        case LDARGA_S:
-          loadArgRefToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack);
-          break;
-
-        case RET:
-          return getReturnValue(frame, topStack - 1);
-      }
-
-      topStack += BytecodeInstructions.getStackEffect(curOpcode);
-      pc = nextpc;
+      case BNE_UN:
+      case BNE_UN_S:
+        return op1 != op2;
     }
+
+    CompilerDirectives.transferToInterpreterAndInvalidate();
+    throw new InterpreterException("Unimplemented opcode for reference comparison: " + opcode);
   }
 
   // region Helpers
@@ -309,6 +243,408 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
         throw new InvalidCLIException();
       }
     }
+  }
+
+  private static boolean binaryCompareInt32(int opcode, long op1, long op2) {
+    switch (opcode) {
+      case CGT:
+      case BGT:
+      case BGT_S:
+      case BGE:
+      case BGE_S:
+      case CLT:
+      case BLT:
+      case BLT_S:
+      case BLE:
+      case BLE_S:
+      case CEQ:
+      case BEQ:
+      case BEQ_S:
+        op1 = TypeHelpers.signExtend32(op1);
+        op2 = TypeHelpers.signExtend32(op2);
+        break;
+      case CGT_UN:
+      case BGT_UN:
+      case BGT_UN_S:
+      case BGE_UN:
+      case BGE_UN_S:
+      case CLT_UN:
+      case BLT_UN:
+      case BLT_UN_S:
+      case BLE_UN:
+      case BLE_UN_S:
+        op1 = TypeHelpers.zeroExtend32(op1);
+        op2 = TypeHelpers.zeroExtend32(op2);
+        break;
+      default:
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        throw new InterpreterException("Unimplemented opcode for int32 comparison: " + opcode);
+    }
+
+    return binaryCompareInt64(opcode, op1, op2);
+  }
+
+  private static boolean binaryCompareInt64(int opcode, long op1, long op2) {
+    boolean result;
+    switch (opcode) {
+      case CGT:
+      case BGT:
+      case BGT_S:
+        result = op1 > op2;
+        break;
+
+      case BGE:
+      case BGE_S:
+        result = op1 >= op2;
+        break;
+
+      case CLT:
+      case BLT:
+      case BLT_S:
+        result = op1 < op2;
+        break;
+      case BLE:
+      case BLE_S:
+        result = op1 <= op2;
+        break;
+
+      case CEQ:
+      case BEQ:
+      case BEQ_S:
+        result = op1 == op2;
+        break;
+
+      case CGT_UN:
+      case BGT_UN:
+      case BGT_UN_S:
+        result = Long.compareUnsigned(op1, op2) > 0;
+        break;
+
+      case BGE_UN:
+      case BGE_UN_S:
+        result = Long.compareUnsigned(op1, op2) >= 0;
+        break;
+
+      case CLT_UN:
+      case BLT_UN:
+      case BLT_UN_S:
+        result = Long.compareUnsigned(op1, op2) < 0;
+        break;
+      case BLE_UN:
+      case BLE_UN_S:
+        result = Long.compareUnsigned(op1, op2) <= 0;
+        break;
+
+      case BNE_UN:
+      case BNE_UN_S:
+        result = op1 != op2;
+        break;
+      default:
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        throw new InterpreterException("Unimplemented opcode for int64 comparison: " + opcode);
+    }
+
+    return result;
+  }
+
+  private static boolean binaryCompareDouble(int opcode, double op1, double op2) {
+    boolean result;
+    switch (opcode) {
+        // Breaks standard: we implement unordered and ordered double compares identically
+      case CGT:
+      case BGT:
+      case BGT_S:
+      case CGT_UN:
+      case BGT_UN:
+      case BGT_UN_S:
+        result = op1 > op2;
+        break;
+      case BGE:
+      case BGE_S:
+      case BGE_UN:
+      case BGE_UN_S:
+        result = op1 >= op2;
+        break;
+
+      case CLT:
+      case BLT:
+      case BLT_S:
+      case CLT_UN:
+      case BLT_UN:
+      case BLT_UN_S:
+        result = op1 < op2;
+        break;
+      case BLE:
+      case BLE_S:
+      case BLE_UN:
+      case BLE_UN_S:
+        result = op1 <= op2;
+        break;
+
+      case CEQ:
+      case BEQ:
+      case BEQ_S:
+        result = op1 == op2;
+        break;
+
+      case BNE_UN:
+      case BNE_UN_S:
+        result = op1 != op2;
+        break;
+      default:
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        throw new InterpreterException("Unimplemented opcode for double comparison: " + opcode);
+    }
+
+    return result;
+  }
+
+  private void initializeFrame(VirtualFrame frame) {
+    // Init arguments
+    Object[] args = frame.getArguments();
+
+    boolean hasReceiver =
+        !getMethod().getMethodFlags().hasFlag(MethodSymbol.MethodFlags.Flag.STATIC);
+    int receiverSlot = CILOSTAZOLFrame.getStartLocalsOffset(getMethod());
+    if (hasReceiver) {
+      throw new NotImplementedException();
+    }
+
+    TypeSymbol[] argTypes =
+        Arrays.stream(method.getParameters()).map(x -> x.getType()).toArray(TypeSymbol[]::new);
+    int topStack = CILOSTAZOLFrame.getStartArgsOffset(getMethod());
+
+    for (int i = 0; i < method.getParameters().length; i++) {
+      switch (argTypes[i].getStackTypeKind()) {
+        case Int:
+          CILOSTAZOLFrame.putInt(frame, topStack, (int) args[i + receiverSlot]);
+          break;
+        case Long:
+          CILOSTAZOLFrame.putLong(frame, topStack, (long) args[i + receiverSlot]);
+          break;
+        case Float:
+        case Double:
+          CILOSTAZOLFrame.putDouble(frame, topStack, (double) args[i + receiverSlot]);
+          break;
+        case Object:
+          CILOSTAZOLFrame.putObject(frame, topStack, (StaticObject) args[i + receiverSlot]);
+          break;
+        default:
+          throw new NotImplementedException();
+      }
+      taggedFrame[topStack] = argTypes[i + receiverSlot];
+      topStack--;
+    }
+  }
+
+  @ExplodeLoop(kind = ExplodeLoop.LoopExplosionKind.MERGE_EXPLODE)
+  @HostCompilerDirectives.BytecodeInterpreterSwitch
+  private Object execute(VirtualFrame frame, int pc, int topStack) {
+
+    while (true) {
+      int curOpcode = bytecodeBuffer.getOpcode(pc);
+      int nextpc = bytecodeBuffer.nextInstruction(pc);
+      switch (curOpcode) {
+        case NOP:
+        case POP:
+          popStack(topStack - 1);
+          break;
+
+          // Loading on top of the stack
+        case LDNULL:
+          loadNull(frame, topStack);
+          break;
+        case LDC_I4_M1:
+        case LDC_I4_0:
+        case LDC_I4_1:
+        case LDC_I4_2:
+        case LDC_I4_3:
+        case LDC_I4_4:
+        case LDC_I4_5:
+        case LDC_I4_6:
+        case LDC_I4_7:
+        case LDC_I4_8:
+          loadValueOnTop(frame, topStack, curOpcode - LDC_I4_0);
+          break;
+        case LDC_I4_S:
+          loadValueOnTop(frame, topStack, bytecodeBuffer.getImmByte(pc));
+          break;
+        case LDC_I4:
+          loadValueOnTop(frame, topStack, bytecodeBuffer.getImmInt(pc));
+          break;
+        case LDC_I8:
+          loadValueOnTop(frame, topStack, bytecodeBuffer.getImmLong(pc));
+          break;
+        case LDC_R4:
+          loadValueOnTop(frame, topStack, Float.intBitsToFloat(bytecodeBuffer.getImmInt(pc)));
+          break;
+        case LDC_R8:
+          loadValueOnTop(frame, topStack, Double.longBitsToDouble(bytecodeBuffer.getImmLong(pc)));
+          break;
+
+          // Storing to locals
+        case STLOC_0:
+        case STLOC_1:
+        case STLOC_2:
+        case STLOC_3:
+          storeValueToLocal(frame, topStack - 1, topStack - 1);
+          break;
+        case STLOC_S:
+          storeValueToLocal(frame, bytecodeBuffer.getImmUByte(pc), topStack - 1);
+          break;
+
+          // Loading locals to top
+        case LDLOC_0:
+        case LDLOC_1:
+        case LDLOC_2:
+        case LDLOC_3:
+          loadLocalToTop(frame, curOpcode - LDLOC_0, topStack - 1);
+          break;
+        case LDLOC_S:
+          loadLocalToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack - 1);
+          break;
+        case LDLOCA_S:
+          loadLocalRefToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack);
+          break;
+
+          // Loading args to top
+        case LDARG_0:
+        case LDARG_1:
+        case LDARG_2:
+        case LDARG_3:
+          loadArgToTop(frame, curOpcode - LDARG_0, topStack);
+          break;
+        case LDARG_S:
+          loadArgToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack);
+          break;
+        case LDARGA_S:
+          loadArgRefToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack);
+          break;
+
+          // Branching
+        case BEQ:
+        case BGE:
+        case BGT:
+        case BLE:
+        case BLT:
+        case BGE_UN:
+        case BGT_UN:
+        case BLE_UN:
+        case BLT_UN:
+        case BNE_UN:
+          if (binaryCompareResult(curOpcode, frame, topStack - 2, topStack - 1)) {
+            // TODO: OSR support
+            pc = nextpc + bytecodeBuffer.getImmInt(pc);
+            topStack += getStackEffect(curOpcode);
+            continue;
+          }
+          break;
+
+          // Branching - short
+        case BEQ_S:
+        case BGE_S:
+        case BGT_S:
+        case BLE_S:
+        case BLT_S:
+        case BGE_UN_S:
+        case BGT_UN_S:
+        case BLE_UN_S:
+        case BLT_UN_S:
+        case BNE_UN_S:
+          if (binaryCompareResult(curOpcode, frame, topStack - 2, topStack - 1)) {
+            // TODO: OSR support
+            pc = nextpc + bytecodeBuffer.getImmByte(pc);
+            topStack += getStackEffect(curOpcode);
+            continue;
+          }
+          break;
+
+        case BR:
+          // TODO: OSR support
+          pc = nextpc + bytecodeBuffer.getImmInt(pc);
+          continue;
+        case BR_S:
+          // TODO: OSR support
+          pc = nextpc + bytecodeBuffer.getImmByte(pc);
+          continue;
+
+        case BRTRUE:
+        case BRFALSE:
+          if (shouldBranch(curOpcode, frame, topStack - 1)) {
+            // TODO: OSR support
+            pc = nextpc + bytecodeBuffer.getImmInt(pc);
+            topStack += getStackEffect(curOpcode);
+            continue;
+          }
+          break;
+
+        case BRTRUE_S:
+        case BRFALSE_S:
+          if (shouldBranch(curOpcode, frame, topStack - 1)) {
+            // TODO: OSR support
+            pc = nextpc + bytecodeBuffer.getImmByte(pc);
+            topStack += getStackEffect(curOpcode);
+            continue;
+          }
+          break;
+
+        case CEQ:
+        case CGT:
+        case CLT:
+        case CGT_UN:
+        case CLT_UN:
+          doCompareBinary(curOpcode, frame, topStack - 2, topStack - 1);
+          break;
+
+        case BREAK:
+          // Inform a debugger that a breakpoint has been reached
+          // This does not interest us at the moment
+          break;
+
+        case JMP:
+          // Exit current method and jump to the specified method
+
+        case SWITCH:
+          // TODO:
+          break;
+
+        case RET:
+          return getReturnValue(frame, topStack - 1);
+      }
+
+      topStack += getStackEffect(curOpcode);
+      pc = nextpc;
+    }
+  }
+
+  /**
+   * Evaluate whether the branch should be taken for simple (true/false) conditional branch
+   * instructions based on a value on the evaluation stack.
+   *
+   * @return whether to take the branch or not
+   */
+  private boolean shouldBranch(int opcode, VirtualFrame frame, int slot) {
+    boolean value;
+    if (frame.isObject(slot)) {
+      value = CILOSTAZOLFrame.popObject(frame, slot) != null;
+    } else {
+      value = CILOSTAZOLFrame.popInt(frame, slot) != 0;
+    }
+
+    if (opcode == BRFALSE || opcode == BRFALSE_S) {
+      value = !value;
+    }
+
+    return value;
+  }
+
+  /**
+   * Do a binary comparison of values on the evaluation stack and put the result on the evaluation
+   * stack.
+   */
+  private void doCompareBinary(int opcode, VirtualFrame frame, int slot1, int slot2) {
+    boolean result = binaryCompareResult(opcode, frame, slot1, slot2);
+    loadValueOnTop(frame, slot1, result ? 1 : 0);
   }
   // endregion
 }
