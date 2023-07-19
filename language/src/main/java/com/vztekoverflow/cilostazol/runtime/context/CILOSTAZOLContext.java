@@ -140,7 +140,7 @@ public class CILOSTAZOLContext {
     return result;
   }
 
-  // Built-in type symbols
+  //region Built-in type symbols
   public enum CILBuiltInType
   {
     Boolean("Boolean"),

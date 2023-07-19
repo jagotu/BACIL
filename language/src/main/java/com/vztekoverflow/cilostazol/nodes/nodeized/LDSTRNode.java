@@ -15,6 +15,8 @@ public class LDSTRNode extends NodeizedNodeBase
   public LDSTRNode(String value, int top, NamedTypeSymbol stringType)
   {
     this.value = stringType.getContext().getAllocator().createNew(stringType);
+    stringType.getInstanceFields()[0].setInt(this.value, value.length());
+    stringType.getInstanceFields()[1].setObject(this.value, value.toCharArray());
     this.top = top;
     stringTypeSymbol = stringType;
   }

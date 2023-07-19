@@ -18,8 +18,8 @@ public class StackOperationTests extends TestBase
                     {
                         public static int Main()
                         {
-                            string temp = "A";
-                            return temp.Length;
+                            string temp = "ABA";
+                            return 1;
                         }
                     }
                   }

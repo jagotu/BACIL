@@ -16,7 +16,7 @@ public final class ArrayTypeSymbol extends TypeSymbol {
       int[] lengths,
       int[] lowerBounds,
       ModuleSymbol definingModule) {
-    super(definingModule, CILOSTAZOLFrame.StackType.Object, SystemTypes.Object);
+    super(definingModule, CILOSTAZOLFrame.StackType.Object, SystemTypes.Array); //TODO: Klepitko -> arrays will be objects
     this.elementType = elementType;
     this.rank = rank;
     this.lengths = lengths;

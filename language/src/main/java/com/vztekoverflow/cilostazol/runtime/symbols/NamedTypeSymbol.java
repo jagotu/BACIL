@@ -12,6 +12,7 @@ import com.vztekoverflow.cilostazol.exceptions.InvalidCLIException;
 import com.vztekoverflow.cilostazol.exceptions.NotImplementedException;
 import com.vztekoverflow.cilostazol.exceptions.TypeSystemException;
 import com.vztekoverflow.cilostazol.nodes.CILOSTAZOLFrame;
+import com.vztekoverflow.cilostazol.runtime.context.CILOSTAZOLContext;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticField;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.SystemTypes;
@@ -21,6 +22,7 @@ import com.vztekoverflow.cilostazol.runtime.symbols.utils.NamedTypeSymbolSemanti
 import com.vztekoverflow.cilostazol.runtime.symbols.utils.NamedTypeSymbolVisibility;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class NamedTypeSymbol extends TypeSymbol {
   private static final int ABSTRACT_FLAG_MASK = 0x80;
@@ -419,6 +421,7 @@ public class NamedTypeSymbol extends TypeSymbol {
                 new TypeSymbol[0],
                 namedTypeSymbol.getTypeArguments(),
                 namedTypeSymbol.getDefiningModule());
+        field = patch(field, namedTypeSymbol);
 
         fields.add(field);
         fieldRow = fieldRow.next();
@@ -426,6 +429,17 @@ public class NamedTypeSymbol extends TypeSymbol {
 
       return fields.toArray(new FieldSymbol[0]);
     }
+  }
+
+  private static FieldSymbol patch(FieldSymbol symbol, NamedTypeSymbol type)
+  {
+    if (Objects.equals(type.getNamespace(), "System")
+    && Objects.equals(type.getName(), "String")
+    && symbol.getName().equals("_firstChar"))
+    {
+      return FieldSymbol.FieldSymbolFactory.createWith(symbol, ArrayTypeSymbol.ArrayTypeSymbolFactory.create(type.getContext().getType(CILOSTAZOLContext.CILBuiltInType.Char), type.getDefiningModule()));
+    }
+    return symbol;
   }
 
   public static class NamedTypeSymbolFactory {

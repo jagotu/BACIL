@@ -11,7 +11,8 @@ public enum SystemTypes {
   Long,
   Double,
   Void,
-  Object;
+  Object,
+  Array; // TODO: Klepitko -> array bude jako objekt
 
   // TODO: It should rely on Assembly as well...
   public static SystemTypes getTypeKind(String name, String namespace) {

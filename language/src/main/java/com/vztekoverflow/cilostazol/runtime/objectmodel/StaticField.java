@@ -39,6 +39,7 @@ public class StaticField extends StaticProperty {
       case Double -> double.class;
       case Int -> int.class;
       case Long -> long.class;
+      case Array -> Object.class; //TODO: Klepitko -> arrrays will be objects
       default -> StaticObject.class;
     };
   }
