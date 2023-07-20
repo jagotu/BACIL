@@ -396,4 +396,80 @@ public class StackOperationTests extends TestBase {
 
     assertEquals(1, result.exitCode());
   }
+
+  @Test
+  public void binaryNotEqualsInt32() {
+    var result =
+        runTestFromCode(
+            """
+                            int a = 42;
+                            if (a != 41)
+                            {
+                                return 1;
+                            }
+                            else
+                            {
+                                return 0;
+                            }
+                            """);
+
+    assertEquals(1, result.exitCode());
+  }
+
+  @Test
+  public void binaryNotEqualsInt64() {
+    var result =
+        runTestFromCode(
+            """
+                            long a = 42_000_000_000_000_000L;
+                            if (a != 41_000_000_000_000_000L)
+                            {
+                                return 1;
+                            }
+                            else
+                            {
+                                return 0;
+                            }
+                            """);
+
+    assertEquals(1, result.exitCode());
+  }
+
+  @Test
+  public void binaryNotEqualsFloat32() {
+    var result =
+        runTestFromCode(
+            """
+                            float a = 1.0f;
+                            if (a != 0.0f)
+                            {
+                                return 1;
+                            }
+                            else
+                            {
+                                return 0;
+                            }
+                            """);
+
+    assertEquals(1, result.exitCode());
+  }
+
+  @Test
+  public void binaryNotEqualsFloat64() {
+    var result =
+        runTestFromCode(
+            """
+                            double a = 1.0;
+                            if (a != 0.0d)
+                            {
+                                return 1;
+                            }
+                            else
+                            {
+                                return 0;
+                            }
+                            """);
+
+    assertEquals(1, result.exitCode());
+  }
 }
