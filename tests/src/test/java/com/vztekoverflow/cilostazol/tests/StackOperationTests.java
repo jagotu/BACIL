@@ -10,18 +10,8 @@ public class StackOperationTests extends TestBase {
     var result =
         runTestFromCode(
             """
-                  using System;
-                  namespace CustomTest
-                  {
-                    public class Program
-                    {
-                        public static int Main()
-                        {
-                            string temp = "ABA";
-                            return 1;
-                        }
-                    }
-                  }
+                    string temp = "ABA";
+                    return 1;
                     """);
 
     assertEquals(1, result.exitCode());
@@ -32,25 +22,15 @@ public class StackOperationTests extends TestBase {
     var result =
         runTestFromCode(
             """
-              using System;
-              namespace CustomTest
-              {
-                public class Program
+                int a = 42;
+                if (a < 43)
                 {
-                    public static int Main()
-                    {
-                        int a = 42;
-                        if (a < 43)
-                        {
-                            return 1;
-                        }
-                        else
-                        {
-                            return 0;
-                        }
-                    }
+                    return 1;
                 }
-              }
+                else
+                {
+                    return 0;
+                }
                 """);
 
     assertEquals(1, result.exitCode());
@@ -61,25 +41,15 @@ public class StackOperationTests extends TestBase {
     var result =
         runTestFromCode(
             """
-              using System;
-              namespace CustomTest
-              {
-                public class Program
+                long a = 42_000_000_000_000_000L;
+                if (a < 43_000_000_000_000_000L)
                 {
-                    public static int Main()
-                    {
-                        long a = 42_000_000_000_000_000L;
-                        if (a < 43_000_000_000_000_000L)
-                        {
-                            return 1;
-                        }
-                        else
-                        {
-                            return 0;
-                        }
-                    }
+                    return 1;
                 }
-              }
+                else
+                {
+                    return 0;
+                }
                 """);
 
     assertEquals(1, result.exitCode());
@@ -90,24 +60,14 @@ public class StackOperationTests extends TestBase {
     var result =
         runTestFromCode(
             """
-                    using System;
-                    namespace CustomTest
+                    float a = 1.0f;
+                    if (a < 43.0f)
                     {
-                    public class Program
-                    {
-                        public static int Main()
-                        {
-                            float a = 1.0f;
-                            if (a < 43.0f)
-                            {
-                                return 1;
-                            }
-                            else
-                            {
-                                return 0;
-                            }
-                        }
+                        return 1;
                     }
+                    else
+                    {
+                        return 0;
                     }
                     """);
 
@@ -119,26 +79,92 @@ public class StackOperationTests extends TestBase {
     var result =
         runTestFromCode(
             """
-                    using System;
-                    namespace CustomTest
+                    double a = 1.0;
+                    if (a < 43.0d)
                     {
-                    public class Program
-                    {
-                        public static int Main()
-                        {
-                            double a = 1.0;
-                            if (a < 43.0d)
-                            {
-                                return 1;
-                            }
-                            else
-                            {
-                                return 0;
-                            }
-                        }
+                        return 1;
                     }
+                    else
+                    {
+                        return 0;
                     }
                     """);
+
+    assertEquals(1, result.exitCode());
+  }
+
+  @Test
+  public void binaryLessThanEqualsInt32() {
+    var result =
+        runTestFromCode(
+            """
+                int a = 42;
+                if (a <= 42)
+                {
+                    return 1;
+                }
+                else
+                {
+                    return 0;
+                }
+                """);
+
+    assertEquals(1, result.exitCode());
+  }
+
+  @Test
+  public void binaryLessThanEqualsInt64() {
+    var result =
+        runTestFromCode(
+            """
+                  long a = 42_000_000_000_000_000L;
+                  if (a <= 42_000_000_000_000_000L)
+                  {
+                      return 1;
+                  }
+                  else
+                  {
+                      return 0;
+                  }
+                  """);
+
+    assertEquals(1, result.exitCode());
+  }
+
+  @Test
+  public void binaryLessThanEqualsFloat32() {
+    var result =
+        runTestFromCode(
+            """
+                      float a = 1.0f;
+                      if (a <= 1.0f)
+                      {
+                          return 1;
+                      }
+                      else
+                      {
+                          return 0;
+                      }
+                      """);
+
+    assertEquals(1, result.exitCode());
+  }
+
+  @Test
+  public void binaryLessThanEqualsFloat64() {
+    var result =
+        runTestFromCode(
+            """
+                        double a = 1.0;
+                        if (a <= 1.0d)
+                        {
+                            return 1;
+                        }
+                        else
+                        {
+                            return 0;
+                        }
+                        """);
 
     assertEquals(1, result.exitCode());
   }
