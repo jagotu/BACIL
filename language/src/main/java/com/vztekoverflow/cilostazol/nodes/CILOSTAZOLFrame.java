@@ -8,8 +8,8 @@ import com.vztekoverflow.cilostazol.runtime.symbols.MethodSymbol;
 import java.util.Objects;
 
 public final class CILOSTAZOLFrame {
-  public static FrameDescriptor create(int locals, int stack) {
-    int slotCount = locals + stack;
+  public static FrameDescriptor create(int params, int locals, int stack) {
+    int slotCount = params + locals + stack;
     FrameDescriptor.Builder builder = FrameDescriptor.newBuilder(slotCount);
     builder.addSlots(slotCount, FrameSlotKind.Static);
     /*

@@ -36,9 +36,20 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
   private CILMethodNode(MethodSymbol method, byte[] cilCode) {
     this.method = method;
     cil = cilCode;
-    frameDescriptor = CILOSTAZOLFrame.create(method.getLocals().length, method.getMaxStack());
+    frameDescriptor =
+        CILOSTAZOLFrame.create(
+            method.getParameters().length, method.getLocals().length, method.getMaxStack());
     this.bytecodeBuffer = new BytecodeBuffer(cil);
-    taggedFrame = new TypeSymbol[frameDescriptor.getNumberOfSlots()];
+    taggedFrame = createTaggedFrame(method.getLocals());
+  }
+
+  private TypeSymbol[] createTaggedFrame(LocalSymbol[] localSymbols) {
+    var taggedFrame = new TypeSymbol[frameDescriptor.getNumberOfSlots()];
+    for (int i = 0; i < localSymbols.length; i++) {
+      taggedFrame[i] = localSymbols[i].getType();
+    }
+
+    return taggedFrame;
   }
 
   public static CILMethodNode create(MethodSymbol method, byte[] cilCode) {
@@ -170,8 +181,7 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
         case STLOC_1:
         case STLOC_2:
         case STLOC_3:
-          // TODO: We are copying the same index - this is the equivalent of doing nothing
-          storeValueToLocal(frame, topStack - 1, topStack - 1);
+          storeValueToLocal(frame, curOpcode - STLOC_0, topStack - 1);
           break;
         case STLOC_S:
           storeValueToLocal(frame, bytecodeBuffer.getImmUByte(pc), topStack - 1);
@@ -182,10 +192,10 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
         case LDLOC_1:
         case LDLOC_2:
         case LDLOC_3:
-          loadLocalToTop(frame, curOpcode - LDLOC_0, topStack - 1);
+          loadLocalToTop(frame, curOpcode - LDLOC_0, topStack);
           break;
         case LDLOC_S:
-          loadLocalToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack - 1);
+          loadLocalToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack);
           break;
         case LDLOCA_S:
           loadLocalRefToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack);
@@ -287,9 +297,11 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
 
         case JMP:
           // Exit current method and jump to the specified method
+          // TODO - finish after function calls are done
+          break;
 
         case SWITCH:
-          // TODO:
+          // TODO: - find out the how to trigger this instruction from C#
           break;
 
         case RET:
@@ -340,14 +352,14 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
 
   private void loadLocalToTop(VirtualFrame frame, int localIdx, int top) {
     int localSlot = CILOSTAZOLFrame.getStartLocalsOffset(getMethod()) + localIdx;
-    CILOSTAZOLFrame.copy(frame, localSlot, top);
+    CILOSTAZOLFrame.copyStatic(frame, localSlot, top);
     // Tag the top of the stack
     taggedFrame[top] = taggedFrame[localSlot];
   }
 
   private void loadArgToTop(VirtualFrame frame, int argIdx, int top) {
     int argSlot = CILOSTAZOLFrame.getStartArgsOffset(getMethod()) + argIdx;
-    CILOSTAZOLFrame.copy(frame, argSlot, top);
+    CILOSTAZOLFrame.copyStatic(frame, argSlot, top);
     // Tag the top of the stack
     taggedFrame[top] = taggedFrame[argSlot];
   }
@@ -373,7 +385,7 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
   private void storeValueToLocal(VirtualFrame frame, int localIdx, int top) {
     // Locals are already typed
     // TODO: type checking
-    CILOSTAZOLFrame.copy(frame, top, localIdx);
+    CILOSTAZOLFrame.copyStatic(frame, top, localIdx);
     // pop taggedFrame
     taggedFrame[top] = null;
   }

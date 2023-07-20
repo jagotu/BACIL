@@ -472,4 +472,26 @@ public class StackOperationTests extends TestBase {
 
     assertEquals(1, result.exitCode());
   }
+
+  @Test
+  public void switchStatement() {
+    var result =
+        runTestFromCode(
+            """
+                            int a = 1;
+                            switch (a)
+                            {
+                                case 1:
+                                    return 10;
+                                case 2:
+                                    return 20;
+                                default:
+                                    return 30;
+                            }
+                            """);
+
+    assertEquals(10, result.exitCode());
+  }
+
+  // TODO: Test reference comparison once new object creation is implemented
 }
