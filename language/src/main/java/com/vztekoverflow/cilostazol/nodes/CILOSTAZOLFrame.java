@@ -12,6 +12,15 @@ public final class CILOSTAZOLFrame {
     int slotCount = locals + stack;
     FrameDescriptor.Builder builder = FrameDescriptor.newBuilder(slotCount);
     builder.addSlots(slotCount, FrameSlotKind.Static);
+    /*
+    Frame slots using this kind cannot be changed to another kind later on.
+    Static frame slots can simultaneously hold one primitive and one object value.
+    Static frame slots are intended for situations where the type of variable in frame
+    slots is known ahead of time and does not need any type checks.
+    Static frame slots are intended for situations where the type of variable in a frame
+    slots is known ahead-of-time and does not need any type checks (for example,
+    in statically typed languages).
+     */
     return builder.build();
   }
 
@@ -41,11 +50,6 @@ public final class CILOSTAZOLFrame {
     frame.setIntStatic(slot, value);
   }
 
-  public static void putFloat(Frame frame, int slot, float value) {
-    assert slot >= 0;
-    frame.setFloatStatic(slot, value);
-  }
-
   public static void putLong(Frame frame, int slot, long value) {
     assert slot >= 0;
     frame.setLongStatic(slot, value);
@@ -61,14 +65,6 @@ public final class CILOSTAZOLFrame {
   public static int popInt(Frame frame, int slot) {
     assert slot >= 0;
     int result = frame.getIntStatic(slot);
-    // Avoid keeping track of popped slots in FrameStates.
-    clearPrimitive(frame, slot);
-    return result;
-  }
-
-  public static float popFloat(Frame frame, int slot) {
-    assert slot >= 0;
-    float result = frame.getFloatStatic(slot);
     // Avoid keeping track of popped slots in FrameStates.
     clearPrimitive(frame, slot);
     return result;
@@ -166,7 +162,6 @@ public final class CILOSTAZOLFrame {
     Object,
     Int,
     Long,
-    Float,
     Double,
     Void,
   }
@@ -184,10 +179,9 @@ public final class CILOSTAZOLFrame {
         case "Int32":
         case "UInt32":
           return StackType.Int;
+        case "Single":
         case "Double":
           return StackType.Double;
-        case "Single":
-          return StackType.Float;
         case "Int64":
         case "UInt64":
           return StackType.Long;
@@ -202,5 +196,10 @@ public final class CILOSTAZOLFrame {
   public static void copy(Frame frame, int sourceSlot, int destSlot) {
     assert sourceSlot >= 0 && destSlot >= 0;
     frame.copy(sourceSlot, destSlot);
+  }
+
+  public static void copyStatic(Frame frame, int sourceSlot, int destSlot) {
+    assert sourceSlot >= 0 && destSlot >= 0;
+    frame.copyStatic(sourceSlot, destSlot);
   }
 }

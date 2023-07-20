@@ -6,7 +6,6 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.HostCompilerDirectives;
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.BytecodeOSRNode;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
@@ -86,7 +85,6 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
         case Long:
           CILOSTAZOLFrame.putLong(frame, topStack, (long) args[i + receiverSlot]);
           break;
-        case Float:
         case Double:
           CILOSTAZOLFrame.putDouble(frame, topStack, (double) args[i + receiverSlot]);
           break;
@@ -172,6 +170,7 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
         case STLOC_1:
         case STLOC_2:
         case STLOC_3:
+          // TODO: We are copying the same index - this is the equivalent of doing nothing
           storeValueToLocal(frame, topStack - 1, topStack - 1);
           break;
         case STLOC_S:
@@ -335,7 +334,7 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
 
   private void loadValueOnTop(VirtualFrame frame, int top, float value) {
     // We want to tag the stack by types in it
-    CILOSTAZOLFrame.putFloat(frame, top, value);
+    CILOSTAZOLFrame.putDouble(frame, top, value);
     taggedFrame[top] = getMethod().getContext().getType(CILOSTAZOLContext.CILBuiltInType.Single);
   }
 
@@ -390,9 +389,6 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
     switch (retType.getStackTypeKind()) {
       case Int -> {
         return CILOSTAZOLFrame.popInt(frame, top);
-      }
-      case Float -> {
-        return CILOSTAZOLFrame.popFloat(frame, top);
       }
       case Long -> {
         return CILOSTAZOLFrame.popLong(frame, top);
@@ -515,31 +511,34 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
    * @return the comparison result as a boolean
    */
   private boolean binaryCompare(int opcode, VirtualFrame frame, int slot1, int slot2) {
-    var descriptor = frame.getFrameDescriptor();
-    var slot1Type = descriptor.getSlotKind(slot1);
-    var slot2Type = descriptor.getSlotKind(slot2);
+    assert slot1 < slot2;
+    var slot1Type = taggedFrame[slot1].getStackTypeKind();
+    var slot2Type = taggedFrame[slot2].getStackTypeKind();
 
-    if (slot1Type == FrameSlotKind.Int && slot2Type == FrameSlotKind.Int) {
-      long op1 = frame.getInt(slot1);
-      long op2 = frame.getInt(slot2);
+    if (slot1Type == CILOSTAZOLFrame.StackType.Int && slot2Type == CILOSTAZOLFrame.StackType.Int) {
+      long op1 = CILOSTAZOLFrame.popInt(frame, slot1);
+      long op2 = CILOSTAZOLFrame.popInt(frame, slot2);
       return binaryCompareInt32(opcode, op1, op2);
     }
 
-    if (slot1Type == FrameSlotKind.Long && slot2Type == FrameSlotKind.Long) {
-      long op1 = frame.getLong(slot1);
-      long op2 = frame.getLong(slot2);
+    if (slot1Type == CILOSTAZOLFrame.StackType.Long
+        && slot2Type == CILOSTAZOLFrame.StackType.Long) {
+      long op1 = CILOSTAZOLFrame.popLong(frame, slot1);
+      long op2 = CILOSTAZOLFrame.popLong(frame, slot2);
       return binaryCompareInt64(opcode, op1, op2);
     }
 
-    if (slot1Type == FrameSlotKind.Double && slot2Type == FrameSlotKind.Double) {
-      double op1 = frame.getDouble(slot1);
-      double op2 = frame.getDouble(slot2);
+    if (slot1Type == CILOSTAZOLFrame.StackType.Double
+        && slot2Type == CILOSTAZOLFrame.StackType.Double) {
+      double op1 = CILOSTAZOLFrame.popDouble(frame, slot1);
+      double op2 = CILOSTAZOLFrame.popDouble(frame, slot2);
       return binaryCompareDouble(opcode, op1, op2);
     }
 
-    if (slot1Type == FrameSlotKind.Object && slot2Type == FrameSlotKind.Object) {
-      var op1 = frame.getObject(slot1);
-      var op2 = frame.getObject(slot2);
+    if (slot1Type == CILOSTAZOLFrame.StackType.Object
+        && slot2Type == CILOSTAZOLFrame.StackType.Object) {
+      var op1 = CILOSTAZOLFrame.popObject(frame, slot1);
+      var op2 = CILOSTAZOLFrame.popObject(frame, slot2);
       return binaryCompareByReference(opcode, frame, op1, op2);
     }
 
