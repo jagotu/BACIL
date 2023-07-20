@@ -590,6 +590,8 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
       case BLT_UN_S:
       case BLE_UN:
       case BLE_UN_S:
+      case BNE_UN:
+      case BNE_UN_S:
         op1 = TypeHelpers.zeroExtend32(op1);
         op2 = TypeHelpers.zeroExtend32(op2);
         break;
