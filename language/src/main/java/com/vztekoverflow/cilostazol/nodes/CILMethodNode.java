@@ -20,6 +20,7 @@ import com.vztekoverflow.cilostazol.nodes.nodeized.LDSTRNode;
 import com.vztekoverflow.cilostazol.nodes.nodeized.NodeizedNodeBase;
 import com.vztekoverflow.cilostazol.runtime.context.CILOSTAZOLContext;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
+import com.vztekoverflow.cilostazol.runtime.other.TypeHelpers;
 import com.vztekoverflow.cilostazol.runtime.symbols.*;
 import java.util.Arrays;
 
@@ -35,9 +36,20 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
   private CILMethodNode(MethodSymbol method, byte[] cilCode) {
     this.method = method;
     cil = cilCode;
-    frameDescriptor = CILOSTAZOLFrame.create(method.getLocals().length, method.getMaxStack());
+    frameDescriptor =
+        CILOSTAZOLFrame.create(
+            method.getParameters().length, method.getLocals().length, method.getMaxStack());
     this.bytecodeBuffer = new BytecodeBuffer(cil);
-    taggedFrame = new TypeSymbol[frameDescriptor.getNumberOfSlots()];
+    taggedFrame = createTaggedFrame(method.getLocals());
+  }
+
+  private TypeSymbol[] createTaggedFrame(LocalSymbol[] localSymbols) {
+    var taggedFrame = new TypeSymbol[frameDescriptor.getNumberOfSlots()];
+    for (int i = 0; i < localSymbols.length; i++) {
+      taggedFrame[i] = localSymbols[i].getType();
+    }
+
+    return taggedFrame;
   }
 
   public static CILMethodNode create(MethodSymbol method, byte[] cilCode) {
@@ -86,9 +98,6 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
           break;
         case Double:
           CILOSTAZOLFrame.putDouble(frame, topStack, (double) args[i + receiverSlot]);
-          break;
-        case Float:
-          CILOSTAZOLFrame.putFloat(frame, topStack, (float) args[i + receiverSlot]);
           break;
         case Object:
           CILOSTAZOLFrame.putObject(frame, topStack, (StaticObject) args[i + receiverSlot]);
@@ -172,7 +181,7 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
         case STLOC_1:
         case STLOC_2:
         case STLOC_3:
-          storeValueToLocal(frame, topStack - 1, topStack - 1);
+          storeValueToLocal(frame, curOpcode - STLOC_0, topStack - 1);
           break;
         case STLOC_S:
           storeValueToLocal(frame, bytecodeBuffer.getImmUByte(pc), topStack - 1);
@@ -183,10 +192,10 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
         case LDLOC_1:
         case LDLOC_2:
         case LDLOC_3:
-          loadLocalToTop(frame, curOpcode - LDLOC_0, topStack - 1);
+          loadLocalToTop(frame, curOpcode - LDLOC_0, topStack);
           break;
         case LDLOC_S:
-          loadLocalToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack - 1);
+          loadLocalToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack);
           break;
         case LDLOCA_S:
           loadLocalRefToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack);
@@ -204,6 +213,95 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
           break;
         case LDARGA_S:
           loadArgRefToTop(frame, bytecodeBuffer.getImmUByte(pc), topStack);
+          break;
+
+          // Branching
+        case BEQ:
+        case BGE:
+        case BGT:
+        case BLE:
+        case BLT:
+        case BGE_UN:
+        case BGT_UN:
+        case BLE_UN:
+        case BLT_UN:
+        case BNE_UN:
+          if (binaryCompare(curOpcode, frame, topStack - 2, topStack - 1)) {
+            // TODO: OSR support
+            pc = nextpc + bytecodeBuffer.getImmInt(pc);
+            topStack += BytecodeInstructions.getStackEffect(curOpcode);
+            continue;
+          }
+          break;
+
+          // Branching - short
+        case BEQ_S:
+        case BGE_S:
+        case BGT_S:
+        case BLE_S:
+        case BLT_S:
+        case BGE_UN_S:
+        case BGT_UN_S:
+        case BLE_UN_S:
+        case BLT_UN_S:
+        case BNE_UN_S:
+          if (binaryCompare(curOpcode, frame, topStack - 2, topStack - 1)) {
+            // TODO: OSR support
+            pc = nextpc + bytecodeBuffer.getImmByte(pc);
+            topStack += BytecodeInstructions.getStackEffect(curOpcode);
+            continue;
+          }
+          break;
+
+        case BR:
+          // TODO: OSR support
+          pc = nextpc + bytecodeBuffer.getImmInt(pc);
+          continue;
+        case BR_S:
+          // TODO: OSR support
+          pc = nextpc + bytecodeBuffer.getImmByte(pc);
+          continue;
+
+        case BRTRUE:
+        case BRFALSE:
+          if (shouldBranch(curOpcode, frame, topStack - 1)) {
+            // TODO: OSR support
+            pc = nextpc + bytecodeBuffer.getImmInt(pc);
+            topStack += BytecodeInstructions.getStackEffect(curOpcode);
+            continue;
+          }
+          break;
+
+        case BRTRUE_S:
+        case BRFALSE_S:
+          if (shouldBranch(curOpcode, frame, topStack - 1)) {
+            // TODO: OSR support
+            pc = nextpc + bytecodeBuffer.getImmByte(pc);
+            topStack += BytecodeInstructions.getStackEffect(curOpcode);
+            continue;
+          }
+          break;
+
+        case CEQ:
+        case CGT:
+        case CLT:
+        case CGT_UN:
+        case CLT_UN:
+          binaryCompareAndPutOnTop(curOpcode, frame, topStack - 2, topStack - 1);
+          break;
+
+        case BREAK:
+          // Inform a debugger that a breakpoint has been reached
+          // This does not interest us at the moment
+          break;
+
+        case JMP:
+          // Exit current method and jump to the specified method
+          // TODO - finish after function calls are done
+          break;
+
+        case SWITCH:
+          // TODO: - find out the how to trigger this instruction from C#
           break;
 
         case RET:
@@ -248,20 +346,20 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
 
   private void loadValueOnTop(VirtualFrame frame, int top, float value) {
     // We want to tag the stack by types in it
-    CILOSTAZOLFrame.putFloat(frame, top, value);
+    CILOSTAZOLFrame.putDouble(frame, top, value);
     taggedFrame[top] = getMethod().getContext().getType(CILOSTAZOLContext.CILBuiltInType.Single);
   }
 
   private void loadLocalToTop(VirtualFrame frame, int localIdx, int top) {
     int localSlot = CILOSTAZOLFrame.getStartLocalsOffset(getMethod()) + localIdx;
-    CILOSTAZOLFrame.copy(frame, localSlot, top);
+    CILOSTAZOLFrame.copyStatic(frame, localSlot, top);
     // Tag the top of the stack
     taggedFrame[top] = taggedFrame[localSlot];
   }
 
   private void loadArgToTop(VirtualFrame frame, int argIdx, int top) {
     int argSlot = CILOSTAZOLFrame.getStartArgsOffset(getMethod()) + argIdx;
-    CILOSTAZOLFrame.copy(frame, argSlot, top);
+    CILOSTAZOLFrame.copyStatic(frame, argSlot, top);
     // Tag the top of the stack
     taggedFrame[top] = taggedFrame[argSlot];
   }
@@ -287,7 +385,7 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
   private void storeValueToLocal(VirtualFrame frame, int localIdx, int top) {
     // Locals are already typed
     // TODO: type checking
-    CILOSTAZOLFrame.copy(frame, top, localIdx);
+    CILOSTAZOLFrame.copyStatic(frame, top, localIdx);
     // pop taggedFrame
     taggedFrame[top] = null;
   }
@@ -303,9 +401,6 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
     switch (retType.getStackTypeKind()) {
       case Int -> {
         return CILOSTAZOLFrame.popInt(frame, top);
-      }
-      case Float -> {
-        return CILOSTAZOLFrame.popFloat(frame, top);
       }
       case Long -> {
         return CILOSTAZOLFrame.popLong(frame, top);
@@ -336,7 +431,7 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
    * @param targetLength the length of the resulting patch, instruction will be padded with NOPs
    * @return The new instruction bytes.
    */
-  private static byte[] preparePatch(byte opcode, int imm, int targetLength) {
+  private byte[] preparePatch(byte opcode, int imm, int targetLength) {
     assert (targetLength >= 5); // Smaller instructions won't fit the 32-bit immediate
     byte[] patch = new byte[targetLength];
     patch[0] = opcode;
@@ -381,6 +476,303 @@ public class CILMethodNode extends CILNodeBase implements BytecodeOSRNode {
     int nodeIndex = nodes.length - 1; // latest empty slot
     nodes[nodeIndex] = insert(node);
     return nodeIndex;
+  }
+  // endregion
+
+  // region Branching
+  /**
+   * Evaluate whether the branch should be taken for simple (true/false) conditional branch
+   * instructions based on a value on the evaluation stack.
+   *
+   * @return whether to take the branch or not
+   */
+  private boolean shouldBranch(int opcode, VirtualFrame frame, int slot) {
+    boolean value;
+    if (frame.isObject(slot)) {
+      value = CILOSTAZOLFrame.popObject(frame, slot) != null;
+    } else {
+      value = CILOSTAZOLFrame.popInt(frame, slot) != 0;
+    }
+
+    if (opcode == BRFALSE || opcode == BRFALSE_S) {
+      value = !value;
+    }
+
+    return value;
+  }
+
+  /**
+   * Do a binary comparison of values on the evaluation stack and put the result on the evaluation
+   * stack.
+   */
+  private void binaryCompareAndPutOnTop(int opcode, VirtualFrame frame, int slot1, int slot2) {
+    boolean result = binaryCompare(opcode, frame, slot1, slot2);
+    loadValueOnTop(frame, slot1, result ? 1 : 0);
+  }
+
+  /**
+   * Do a binary comparison of values on the evaluation stack and return the result as a boolean.
+   *
+   * <p>Possible operands: - int32 -> maps to Java int; - int64 -> maps to Java long; - native int
+   * -> unsupported; - float (internal representation that can be implementation-dependent) -> maps
+   * to Java double; - object reference -> maps to Java Object; - managed pointer -> unsupported
+   *
+   * <p>Possible combinations: - int32, int32; - int64, int64; - float, float; - object reference,
+   * object reference (only for beq[.s], bne.un[.s], ceq)
+   *
+   * @return the comparison result as a boolean
+   */
+  private boolean binaryCompare(int opcode, VirtualFrame frame, int slot1, int slot2) {
+    assert slot1 < slot2;
+    var slot1Type = taggedFrame[slot1].getStackTypeKind();
+    var slot2Type = taggedFrame[slot2].getStackTypeKind();
+
+    if (slot1Type == CILOSTAZOLFrame.StackType.Int && slot2Type == CILOSTAZOLFrame.StackType.Int) {
+      long op1 = CILOSTAZOLFrame.popInt(frame, slot1);
+      long op2 = CILOSTAZOLFrame.popInt(frame, slot2);
+      return binaryCompareInt32(opcode, op1, op2);
+    }
+
+    if (slot1Type == CILOSTAZOLFrame.StackType.Long
+        && slot2Type == CILOSTAZOLFrame.StackType.Long) {
+      long op1 = CILOSTAZOLFrame.popLong(frame, slot1);
+      long op2 = CILOSTAZOLFrame.popLong(frame, slot2);
+      return binaryCompareInt64(opcode, op1, op2);
+    }
+
+    if (slot1Type == CILOSTAZOLFrame.StackType.Double
+        && slot2Type == CILOSTAZOLFrame.StackType.Double) {
+      double op1 = CILOSTAZOLFrame.popDouble(frame, slot1);
+      double op2 = CILOSTAZOLFrame.popDouble(frame, slot2);
+      return binaryCompareDouble(opcode, op1, op2);
+    }
+
+    if (slot1Type == CILOSTAZOLFrame.StackType.Object
+        && slot2Type == CILOSTAZOLFrame.StackType.Object) {
+      var op1 = CILOSTAZOLFrame.popObject(frame, slot1);
+      var op2 = CILOSTAZOLFrame.popObject(frame, slot2);
+      return binaryCompareByReference(opcode, frame, op1, op2);
+    }
+
+    CompilerDirectives.transferToInterpreterAndInvalidate();
+    throw new InterpreterException("Invalid types for comparison: " + slot1Type + " " + slot2Type);
+  }
+
+  private boolean binaryCompareByReference(int opcode, VirtualFrame frame, Object op1, Object op2) {
+    switch (opcode) {
+      case CEQ:
+      case BEQ:
+      case BEQ_S:
+        return op1 == op2;
+
+      case BNE_UN:
+      case BNE_UN_S:
+        return op1 != op2;
+    }
+
+    CompilerDirectives.transferToInterpreterAndInvalidate();
+    throw new InterpreterException("Unimplemented opcode for reference comparison: " + opcode);
+  }
+
+  private boolean binaryCompareInt32(int opcode, long op1, long op2) {
+    switch (opcode) {
+      case CGT:
+      case BGT:
+      case BGT_S:
+      case BGE:
+      case BGE_S:
+      case CLT:
+      case BLT:
+      case BLT_S:
+      case BLE:
+      case BLE_S:
+      case CEQ:
+      case BEQ:
+      case BEQ_S:
+        op1 = TypeHelpers.signExtend32(op1);
+        op2 = TypeHelpers.signExtend32(op2);
+        break;
+      case CGT_UN:
+      case BGT_UN:
+      case BGT_UN_S:
+      case BGE_UN:
+      case BGE_UN_S:
+      case CLT_UN:
+      case BLT_UN:
+      case BLT_UN_S:
+      case BLE_UN:
+      case BLE_UN_S:
+      case BNE_UN:
+      case BNE_UN_S:
+        op1 = TypeHelpers.zeroExtend32(op1);
+        op2 = TypeHelpers.zeroExtend32(op2);
+        break;
+      default:
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        throw new InterpreterException("Unimplemented opcode for int32 comparison: " + opcode);
+    }
+
+    return binaryCompareInt64(opcode, op1, op2);
+  }
+
+  private boolean binaryCompareInt64(int opcode, long op1, long op2) {
+    boolean result;
+    switch (opcode) {
+      case CGT:
+      case BGT:
+      case BGT_S:
+        result = op1 > op2;
+        break;
+
+      case BGE:
+      case BGE_S:
+        result = op1 >= op2;
+        break;
+
+      case CLT:
+      case BLT:
+      case BLT_S:
+        result = op1 < op2;
+        break;
+      case BLE:
+      case BLE_S:
+        result = op1 <= op2;
+        break;
+
+      case CEQ:
+      case BEQ:
+      case BEQ_S:
+        result = op1 == op2;
+        break;
+
+      case CGT_UN:
+      case BGT_UN:
+      case BGT_UN_S:
+        result = Long.compareUnsigned(op1, op2) > 0;
+        break;
+
+      case BGE_UN:
+      case BGE_UN_S:
+        result = Long.compareUnsigned(op1, op2) >= 0;
+        break;
+
+      case CLT_UN:
+      case BLT_UN:
+      case BLT_UN_S:
+        result = Long.compareUnsigned(op1, op2) < 0;
+        break;
+      case BLE_UN:
+      case BLE_UN_S:
+        result = Long.compareUnsigned(op1, op2) <= 0;
+        break;
+
+      case BNE_UN:
+      case BNE_UN_S:
+        result = op1 != op2;
+        break;
+      default:
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        throw new InterpreterException("Unimplemented opcode for int64 comparison: " + opcode);
+    }
+
+    return result;
+  }
+
+  private boolean binaryCompareDouble(int opcode, double op1, double op2) {
+    final boolean isUnordered = Double.isNaN(op1) || Double.isNaN(op2);
+    boolean result;
+    switch (opcode) {
+      case CGT:
+      case BGT:
+      case BGT_S:
+        if (isUnordered) {
+          return false;
+        }
+        result = op1 > op2;
+        break;
+
+      case CGT_UN:
+      case BGT_UN:
+      case BGT_UN_S:
+        if (isUnordered) {
+          return true;
+        }
+        result = op1 > op2;
+        break;
+
+      case BGE:
+      case BGE_S:
+        if (isUnordered) {
+          return false;
+        }
+        result = op1 >= op2;
+        break;
+
+      case BGE_UN:
+      case BGE_UN_S:
+        if (isUnordered) {
+          return true;
+        }
+        result = op1 >= op2;
+        break;
+
+      case CLT:
+      case BLT:
+      case BLT_S:
+        if (isUnordered) {
+          return false;
+        }
+        result = op1 < op2;
+        break;
+
+      case CLT_UN:
+      case BLT_UN:
+      case BLT_UN_S:
+        if (isUnordered) {
+          return true;
+        }
+        result = op1 < op2;
+        break;
+
+      case BLE:
+      case BLE_S:
+        if (isUnordered) {
+          return false;
+        }
+        result = op1 <= op2;
+        break;
+
+      case BLE_UN:
+      case BLE_UN_S:
+        if (isUnordered) {
+          return true;
+        }
+        result = op1 <= op2;
+        break;
+
+      case CEQ:
+      case BEQ:
+      case BEQ_S:
+        if (isUnordered) {
+          return false;
+        }
+
+        result = op1 == op2;
+        break;
+
+      case BNE_UN:
+      case BNE_UN_S:
+        if (isUnordered) {
+          return true;
+        }
+        result = op1 != op2;
+        break;
+      default:
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        throw new InterpreterException("Unimplemented opcode for double comparison: " + opcode);
+    }
+
+    return result;
   }
   // endregion
 }
