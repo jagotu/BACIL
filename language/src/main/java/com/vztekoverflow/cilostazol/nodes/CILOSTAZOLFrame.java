@@ -3,8 +3,10 @@ package com.vztekoverflow.cilostazol.nodes;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
+import com.vztekoverflow.cilostazol.exceptions.InterpreterException;
 import com.vztekoverflow.cilostazol.runtime.objectmodel.StaticObject;
 import com.vztekoverflow.cilostazol.runtime.symbols.MethodSymbol;
+import com.vztekoverflow.cilostazol.runtime.symbols.TypeSymbol;
 import java.util.Objects;
 
 public final class CILOSTAZOLFrame {
@@ -92,6 +94,26 @@ public final class CILOSTAZOLFrame {
     // Avoid keeping track of popped slots in FrameStates.
     clearPrimitive(frame, slot);
     return (StaticObject) result;
+  }
+
+  public static void pop(Frame frame, int slot, TypeSymbol type) {
+    switch (type.getStackTypeKind()) {
+      case Object -> {
+        popObject(frame, slot);
+      }
+      case Int -> {
+        popInt(frame, slot);
+      }
+      case Long -> {
+        popLong(frame, slot);
+      }
+      case Double -> {
+        popDouble(frame, slot);
+      }
+      case Void -> {
+        throw new InterpreterException();
+      }
+    }
   }
 
   private static void clearPrimitive(Frame frame, int slot) {
@@ -193,13 +215,27 @@ public final class CILOSTAZOLFrame {
   }
   // endregion
 
-  public static void copy(Frame frame, int sourceSlot, int destSlot) {
-    assert sourceSlot >= 0 && destSlot >= 0;
-    frame.copy(sourceSlot, destSlot);
-  }
-
   public static void copyStatic(Frame frame, int sourceSlot, int destSlot) {
     assert sourceSlot >= 0 && destSlot >= 0;
     frame.copyStatic(sourceSlot, destSlot);
   }
+
+  // region TaggedFrame
+  public static TypeSymbol popTaggedStack(TypeSymbol[] taggedFrame, int top) {
+    final var result = taggedFrame[top];
+    taggedFrame[top] = null;
+    return result;
+  }
+
+  public static void putTaggedStack(TypeSymbol[] taggedFrame, int top, TypeSymbol type) {
+    assert taggedFrame[top] == null;
+    taggedFrame[top] = type;
+  }
+
+  public static TypeSymbol getTaggedStack(TypeSymbol[] taggedFrame, int top) {
+    assert taggedFrame[top] != null;
+    return taggedFrame[top];
+  }
+
+  // endregion
 }
