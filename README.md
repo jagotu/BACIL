@@ -4,7 +4,7 @@ An experimental interpreter for .NET CIL binaries for [GraalVM](https://github.c
 
 The project is written like an interpreter (you will find a familiar `while(true) switch(opcode)` in [BytecodeNode.execute()](language/src/main/java/com/vztekoverflow/bacil/nodes/BytecodeNode.java)), and leverages [Truffle](https://github.com/oracle/graal/tree/master/truffle) and the Graal compiler to turn it into a Just-In-Time (JIT) compiler.
 
-Written as a part of a bachelor thesis called _Truffle based .NET IL interpreter and compiler: run C# on Java Virtual Machine_ at Charles University, Prague. The thesis text is slowly appearing [here](thesis_text/thesis_text.md). Once the thesis is complete, it will be linked here.
+Written as a part of a bachelor thesis called _Truffle based .NET IL interpreter and compiler: run C# on Java Virtual Machine_ at Charles University, Prague. [You can find the final thesis text here](https://dspace.cuni.cz/bitstream/handle/20.500.11956/176026/130342122.pdf).
 
 ## Building
 
