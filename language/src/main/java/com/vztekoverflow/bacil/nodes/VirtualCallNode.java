@@ -13,6 +13,7 @@ import com.vztekoverflow.bacil.runtime.types.builtin.SystemVoidType;
  * (III.4.2 callvirt – call a method associated, at runtime, with an object)
  * Stores the resolved vtable slot and the root method from the instruction.
  */
+// TODO: why not in "instructions" package
 public class VirtualCallNode extends EvaluationStackAwareNode {
 
     protected final int slot;
@@ -56,6 +57,7 @@ public class VirtualCallNode extends EvaluationStackAwareNode {
 
         //Call the method
         Object[] args = BytecodeNode.prepareArgs(primitives, refs, top, rootMethod, 0);
+        // Long term TODO: this should use IndirectCallNode to make the call
         Object returnValue = method.getMethodCallTarget().call(args);
 
         //Put returned value on the evaluation stack

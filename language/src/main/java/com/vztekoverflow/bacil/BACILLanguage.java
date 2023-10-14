@@ -80,6 +80,20 @@ public class BACILLanguage extends TruffleLanguage<BACILContext> {
     protected CallTarget parse(ParsingRequest request) {
         Source source = request.getSource();
 
+        // Long term TODO: parsing should be context independent, any changes
+        //  to the context specific state should happen when the CallTarget is executed
+        // CLIComponent should probably be split to context independent (shared, this will be mainly the AST)
+	// and context specific parts.
+	// Context independent parts can be stored in BACILLanguage, there should be no need to lookup context here.
+	// Truffle gives a hook to find out if the user configured the system such that multiple context
+	// are possible or not -- in such case one can optimize things for "single context" mode. See "initializeContext"
+	//
+        // Example to test this: create multiple BACIL contexts with one shared Engine,
+        // load different assemblies in them, contexts should be isolated from each other -- loading an assembly A
+	// in context C1 should not create a visible state change in another context C2. If C2 loads a new version
+	// of the same assembly, both contexts should see different assemblies and eventually execute different code.
+	// If the assembly has some global state, each context should have its own version of that global state.
+	// AFAIK Espresso goes as far as being able to run different Java versions in each context.
         CLIComponent c = getCurrentContext(BACILLanguage.class).loadAssembly(source);
 
         String sourcePath = request.getSource().getPath();
